@@ -1,71 +1,66 @@
 # Team Call Prep — Deliverable 0 (due Wed Sep 3, 11:59pm)
 
-Goal of the call: leave with everything needed to write the Deliverable 0 document — (1) team name, (2) role assignments, (3) a list of requirements clarification questions for the "customer" (Dr. Ren).
+Goal of the call: finalize the Deliverable 0 document — (1) team name, (2) role assignments, (3) the 14 requirements clarification questions below (Q1 already answered).
 
-## A. Decisions we must make on the call
+Working surfaces:
+- Google Doc (submission draft): <https://docs.google.com/document/d/15zd5QDdhedyz-L5WIdtdP7zIEUdCRm77v3wfbVkTK2k/edit>
+- Claude workspace (live answers + backend poll): <https://claude.ai/code/artifact/7565f63d-5bc6-4168-90a6-ba47595abc6c>
 
-### 1. Team name
-- Pick something short and professional (it will be on every deliverable).
+## Decided
 
-### 2. Role assignments (one or two ownership roles each; everyone still develops)
-- **Project Manager** — who is organized and comfortable being the liaison with Dr. Ren?
-- **Requirements Engineer** — leads Iteration 1 (Week 6), so heaviest workload first.
-- **Design Engineer** — leads Iteration 2; UML/architecture experience helps.
-- **Quality Assurance Engineer** — owns test strategy, JUnit, validation of requirements/design.
-- **Project Librarian** — meeting logs, artifact organization, likely owns the team website later.
-- If we have 4 members, who doubles up? (5 roles, 4–5 members.)
-- Reminder: **every member must own ≥3 use cases** end-to-end (analysis → design → implementation → unit testing). Commit history is graded, so work must be visibly distributed.
+- **Scope: multi-company job board (LinkedIn-like)** — many organizations post jobs; applicants browse and apply across companies.
 
-### 3. Logistics (worth settling now, not part of the submission)
-- Weekly meeting time + communication channel (Discord/Slack/iMessage?).
-- Git hosting: GitHub or GitLab? (Must be used **from the beginning**.) Everyone's usernames for collaborator invites.
-- Issue tracker: GitHub Issues / Jira / Trello?
-- Do we stick with the given project (Recruiting & Application Management System) or propose our own idea? (Own idea requires Dr. Ren's approval + extra problem statement — recommend sticking with the given one.)
-- Tech stack: recommended is Spring Boot + React + PostgreSQL/MySQL + JUnit + GCP. Note the project **must be Maven-based and JUnit-tested** regardless. Any deviation needs a documented rationale in Iteration 1.
-- Who submits Deliverable 0 on Canvas, and who converts our doc to PDF/DOCX?
+## A. Decisions to make on the call
 
-## B. Requirements clarification questions (for the submission)
+1. **Team name** — short and professional; it goes on every deliverable.
+2. **Roles** (one or two ownership roles each; everyone still develops and owns ≥3 use cases end-to-end; commit history is graded):
+   - Project Manager · Requirements Engineer · Design Engineer · QA Engineer · Project Librarian
+   - With 4 members, someone doubles up.
+3. **Backend language poll** (in the workspace artifact): Java (Spring Boot) / JavaScript (Node) / TypeScript (Node) / Python.
+   - Constraint: the course requires the project to be **Maven-based and JUnit-tested** — effectively Java; JS/TS/Python needs a documented rationale in Iteration 1 (and ideally Dr. Ren's approval).
+4. Logistics: meeting cadence + channel; GitHub usernames (add everyone to the repo); issue tracker (GitHub Issues recommended); who exports the doc to PDF and submits on Canvas.
 
-The assignment asks for **non-technical questions needing the user's/customer's clarification**. Draft list to review, trim, and prioritize on the call:
+## B. Final submission questions (14)
+
+Q1 goes in with our answer; Q2–Q14 are open questions for the customer.
 
 ### Scope & business model
-1. Is the system for a **single organization's** internal recruiting, or a **multi-company job board** (like LinkedIn/Indeed) where many organizations post jobs?
-2. If multi-company: can one recruiter belong to multiple organizations? Who creates an organization?
+1. Single organization's internal recruiting, or a multi-company job board where many organizations post jobs?
+   **Our answer:** multi-company job board (LinkedIn-like).
+2. Can one recruiter belong to multiple organizations?
 3. Should the public (not-logged-in visitors) be able to browse job postings, or is everything behind a login?
 
 ### Applicant experience
 4. Can an applicant apply to multiple jobs at once? Is there a limit on active applications?
 5. Can an applicant withdraw or edit an application after submitting it?
-6. Should applicants be able to save/bookmark jobs and get notified about new matching postings?
-7. One resume per applicant, or multiple resumes/cover letters tailored per application?
-8. What should an applicant see about their application status — every internal stage, or only coarse outcomes (received / in review / interview / offer / rejected)?
+6. One resume per applicant, or multiple resumes/cover letters tailored per application?
+7. What should an applicant see about their application status — every internal stage, or only coarse outcomes (received / in review / interview / offer / rejected)?
 
 ### Recruiter workflow
-9. What are the stages of the recruiting pipeline (e.g., applied → screening → interview → offer → hired/rejected)? Is the pipeline fixed or configurable per job?
-10. Do job postings need an approval step before going live, and do they expire (deadline, auto-close when filled)?
-11. How are interviews coordinated — does the recruiter propose time slots and the applicant picks one? Do we need calendar-style scheduling?
-12. Should rejected applicants be notified automatically? Are rejection reasons recorded and/or shared?
-13. Can multiple recruiters from the same organization work on the same job posting?
+8. What are the stages of the recruiting pipeline (e.g., applied → screening → interview → offer → hired/rejected)? Is the pipeline fixed or configurable per job?
+9. Do job postings need an approval step before going live, and do they expire (deadline, auto-close when filled)?
+10. Should rejected applicants be notified automatically? Are rejection reasons recorded and/or shared?
+11. Should interview coordination happen inside the system — e.g., the recruiter proposes interview times and the applicant confirms — or is it enough to record that an interview was scheduled and its outcome?
+12. What happens at the successful end of the process: is an offer extended and accepted/declined through the system, and should a job posting close automatically once it is filled?
 
-### Communication & notifications
-14. Do applicants and recruiters need in-app messaging, or are status changes/notifications enough?
-15. Should the system send email notifications, or are in-app notifications sufficient for this project?
+### Administration & privacy
+13. Who creates and approves new recruiter/organization accounts — the Administrator? Is applicant self-registration open?
+14. Are there privacy expectations we should honor (e.g., company A can't see applications to company B; recruiters can't see an applicant's other applications)?
 
-### Administration & policy
-16. Who approves new recruiter/organization accounts — the Administrator? Is applicant self-registration open?
-17. What data should be retained when an account is deleted (applications, decisions, logs)?
-18. Are there privacy expectations we should honor (e.g., recruiters can't see an applicant's other applications; applicants can't see each other)?
+## C. Not in the submission (ask Dr. Ren directly / decide internally)
 
-### AI features (optional per problem statement)
-19. Is an AI feature (resume parsing, job matching, interview question generation) expected for a top grade, or purely optional?
-20. If we include AI matching/screening, what level of human oversight is required before an AI recommendation affects an applicant?
+- Email vs. in-app notifications (technical — decide in Iteration 1)
+- Is an AI feature expected for a top grade, or purely optional? Oversight requirements if we add AI screening?
+- How many use cases total is reasonable (members × 3 minimum)?
+- Will the "customer" be Dr. Ren throughout the semester?
+- The Overview's AI policy says extra rules "can be found here" but there's no link on the Canvas page — where does the AI-use policy live?
 
-### Process questions (for Dr. Ren, non-requirements)
-21. How many use cases total is a reasonable scope for a team of our size (N members × 3 minimum)?
-22. Will the "customer" for requirements clarification be Dr. Ren throughout the semester?
+## D. After the call
 
-## C. After the call — to produce the submission
+1. Fill in team name + role table in the Google Doc.
+2. Export to PDF/DOCX → submit on Canvas before **Sep 3, 11:59pm**.
+3. Add all members to the GitHub repo and issue tracker.
 
-1. Fill in: team name, member ↔ role table, final question list (numbered, grouped).
-2. Export to **PDF or DOCX** and submit on Canvas before **Sep 3, 11:59pm**.
-3. Add all members to the GitHub repo and the issue tracker.
+---
+
+Review note: the 14-question list passed an independent coverage check against the problem statement — it covers all explicitly listed responsibilities of the Applicant, Recruiter/HR, and Administrator roles; interview coordination (Q11) and offer/closing (Q12) were added specifically to close the gaps that check found.
