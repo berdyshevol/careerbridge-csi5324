@@ -15,7 +15,8 @@ This file is the **current-state memory** of the project. It answers "what is tr
 
 - **Source of truth is this repo (markdown).** Google Docs are team-facing surfaces for calls/submission; after editing a doc, sync the canonical `.md` file (e.g., Deliverable 0: [deliverables/deliverable-0/deliverable-0.md](deliverables/deliverable-0/deliverable-0.md) ↔ the team Google Doc linked in its header).
 - Decisions get IDs (`D-xxx`) in [team/DECISIONS.md](team/DECISIONS.md); customer questions get IDs (`Q-xxx`) in [team/QUESTIONS.md](team/QUESTIONS.md); every meeting gets a log in [meetings/](meetings/).
-- After a team meeting or a decision in chat: append to DECISIONS.md / QUESTIONS.md, add a meeting log, update the facts above if they changed, commit.
+- After a team meeting or a decision in chat: use the **memory-ingest** skill (it appends to DECISIONS.md / QUESTIONS.md, adds a meeting log, updates the facts above, commits).
+- Before submitting any deliverable, and when asked to check the memory: use the **memory-lint** skill.
 - Course documents in English; never add Claude/AI attribution to commits or PRs.
 
 ## Repo structure
