@@ -1,7 +1,7 @@
 # Team Call Prep — Deliverable 0 (due Wed Sep 3, 11:59pm)
 
-> **ARCHIVED** — pre-call agenda for the Sep 2, 2026 team call, kept as a meeting artifact.
-> Outcomes are recorded in [deliverable-0.md](deliverable-0.md) (source of truth); statements below may be outdated (e.g., the backend was since approved to be Node.js).
+> **ARCHIVED** — pre-call agenda for the Sep 2, 2026 team call, kept as a meeting artifact. See the call outcomes in [2026-09-02-team-call.md](2026-09-02-team-call.md).
+> The deliverable itself: [deliverable-0.md](../deliverables/deliverable-0/deliverable-0.md) (source of truth); statements below may be outdated (e.g., the backend was since approved to be Node.js).
 
 Goal of the call: finalize the Deliverable 0 document — (1) team name, (2) role assignments, (3) the 14 requirements clarification questions below (Q1 already answered).
 
