@@ -69,6 +69,6 @@ One or two ownership roles each. All members also serve as developers/testers, e
 
 ## 4. Backend language (team poll)
 
-JavaScript, Node.js
+JavaScript (both frontend and backend, Node.js) — deliberately JavaScript, not TypeScript: one language across the whole stack.
 
-> ⚠️ Open issue: the course requires the project to be **Maven-based and JUnit-tested** (see [requirements/group-project-overview.md](../../requirements/group-project-overview.md)), which effectively assumes Java. A Node.js backend needs a documented technical rationale in Iteration 1 and, ideally, Dr. Ren's approval.
+> ✅ Resolved: Dr. Ren approved switching the backend to Node.js at the lecture (early Sep 2026), superseding the Maven/JUnit expectation in [requirements/group-project-overview.md](../../requirements/group-project-overview.md). The technical rationale should still be documented in Iteration 1.
