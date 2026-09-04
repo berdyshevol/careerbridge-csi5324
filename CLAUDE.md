@@ -17,6 +17,7 @@ This file is the **current-state memory** of the project. It answers "what is tr
 - Decisions get IDs (`D-xxx`) in [team/DECISIONS.md](team/DECISIONS.md); customer questions get IDs (`Q-xxx`) in [team/QUESTIONS.md](team/QUESTIONS.md); every meeting gets a log in [meetings/](meetings/).
 - After a team meeting or a decision in chat: use the **memory-ingest** skill (it appends to DECISIONS.md / QUESTIONS.md, adds a meeting log, updates the facts above, commits).
 - Before submitting any deliverable, and when asked to check the memory: use the **memory-lint** skill.
+- To compare a Google Doc against its canonical md (and always before exporting a deliverable): use the **doc-sync** skill. Submission chain: doc-sync → memory-lint → export → submit.
 - Course documents in English; never add Claude/AI attribution to commits or PRs.
 
 ## Repo structure
