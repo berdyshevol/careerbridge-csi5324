@@ -71,4 +71,4 @@ One or two ownership roles each. All members also serve as developers/testers, e
 
 JavaScript (both frontend and backend, Node.js) — deliberately JavaScript, not TypeScript: one language across the whole stack.
 
-> ✅ Resolved: Dr. Ren approved switching the backend to Node.js at the lecture (early Sep 2026), superseding the Maven/JUnit expectation in [requirements/group-project-overview.md](../../requirements/group-project-overview.md). The technical rationale should still be documented in Iteration 1.
+> ✅ Resolved: Dr. Ren approved switching the backend to Node.js at the lecture (early Sep 2026), superseding the Maven/JUnit expectation in [course/group-project-overview.md](../../course/group-project-overview.md). The technical rationale should still be documented in Iteration 1.

@@ -16,7 +16,7 @@ If the team decides to develop another project based on its own idea, ask approv
 
 ## Related documents
 
-- [Group Project – Overview](../../requirements/group-project-overview.md)
-- [Group Project – Problem Statement](../../requirements/group-project-problem-statement.md)
-- [Group Project – Role Description](../../requirements/group-project-role-description.md)
+- [Group Project – Overview](../../course/group-project-overview.md)
+- [Group Project – Problem Statement](../../course/group-project-problem-statement.md)
+- [Group Project – Role Description](../../course/group-project-role-description.md)
 - [Deliverable 0 – submission (source of truth)](deliverable-0.md)
