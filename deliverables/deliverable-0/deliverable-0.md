@@ -25,6 +25,8 @@ One or two ownership roles each. All members also serve as developers/testers, e
 
 ## 3. Requirements clarification questions
 
+> **Note:** The answers below are the team's working assumptions based on the problem statement. We ask the customer to confirm or correct each one.
+
 ### Scope & business model
 
 1. Is the system for a single organization's internal recruiting, or a multi-company job board where many organizations post jobs?
