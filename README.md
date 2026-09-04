@@ -9,4 +9,5 @@ Software Engineering group project (Baylor).
   - `deliverable-0/` — team formation: [deliverable-0.md](deliverables/deliverable-0/deliverable-0.md) is the source of truth (mirrored to the team Google Doc for submission)
 - `team/` — team memory: [TEAM.md](team/TEAM.md) (roles & logistics), [DECISIONS.md](team/DECISIONS.md) (decision log, `D-xxx`), [QUESTIONS.md](team/QUESTIONS.md) (customer Q&A, `Q-xxx`)
 - `meetings/` — meeting logs (`YYYY-MM-DD-<topic>.md`)
+- `inbox/` — drop zone for raw notes; Claude ingests them into the memory (normally empty)
 - [CLAUDE.md](CLAUDE.md) — current-state project memory (facts & conventions), auto-loaded by Claude sessions
