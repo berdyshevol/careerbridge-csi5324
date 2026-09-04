@@ -25,3 +25,4 @@ This file is the **current-state memory** of the project. It answers "what is tr
 - `deliverables/deliverable-N/` — per-deliverable: `assignment.md` (the task), working notes, and the deliverable itself. Deliverables are submission snapshots — do not use them as memory.
 - `team/` — team memory: TEAM.md (who/how), DECISIONS.md (what & why), QUESTIONS.md (customer Q&A).
 - `meetings/` — meeting logs (`YYYY-MM-DD-<topic>.md`).
+- `inbox/` — drop zone for raw input (notes, chat fragments, anything); memory-ingest distills it into the memory and empties the folder. Normally empty.
