@@ -2,7 +2,7 @@
 
 > Source: [Canvas – Group Project - Overview](https://baylor.instructure.com/courses/257917/pages/group-project-overview) (CSI 5324, Fall 2026)
 
-Read the Project Problem Description carefully before you assign project roles and make the project plan.
+Read the [Project Problem Description](group-project-problem-statement.md) carefully before you assign project roles and make the project plan.
 
 The project is a **semester-long software engineering project including 3 iterations**. Each team will analyze, design, implement, test, deploy, document, and demonstrate a substantial **web-based software system**.
 
