@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 
+# Personal Claude Code overrides for this project
+.claude/settings.local.json
+
 # OS / editor noise
 .DS_Store
 Thumbs.db
