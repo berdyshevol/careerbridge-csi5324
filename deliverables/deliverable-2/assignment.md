@@ -8,6 +8,9 @@
 
 Group submission — one copy per team. **The grade is individual**, based on each member's completion of their use cases and operation contracts.
 
+> **Read first:** [Iteration 1 — Common Documentation Pitfalls](pitfalls.md) — Dr. Ren's grading guidance,
+> posted Sep 9, 2026. It is where the points are actually lost.
+
 ## What the documentation PDF must contain
 
 1. (If there were any updates) Updated requirements clarification questions and answers.
@@ -29,6 +32,7 @@ Use the **given document template**.
 
 ## Related documents
 
+- [Iteration 1 — Common Documentation Pitfalls](pitfalls.md) — the instructor's grading guidance for this deliverable
 - [Group Project – Overview](../../course/group-project-overview.md)
 - [Group Project – Problem Statement](../../course/group-project-problem-statement.md)
 - [team/QUESTIONS.md](../../team/QUESTIONS.md) — the clarification questions to update

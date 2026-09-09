@@ -9,6 +9,7 @@ This file is the **current-state memory** of the project. It answers "what is tr
 - **Team:** CareerBridge (5 members). Roles and logistics: [team/TEAM.md](team/TEAM.md).
 - **Tech stack:** JavaScript across the whole stack — Node.js backend, JS frontend. Deliberately **JavaScript, not TypeScript**. Dr. Ren approved the Node.js backend at a lecture (early Sep 2026), superseding the course's default Maven/JUnit expectation; the rationale must still be documented in Iteration 1 (D-004).
 - **Customer:** Dr. Ren acts as the customer. Requirements answers we wrote so far are the team's assumptions pending his confirmation: [team/QUESTIONS.md](team/QUESTIONS.md).
+- **Iteration 1 grading guidance:** Dr. Ren posted [Common Documentation Pitfalls](deliverables/deliverable-2/pitfalls.md) (Sep 9, 2026) — read it before writing any Iteration 1 section. Hard rules: analysis before implementation, use cases describe system behavior (not UI clicks), explicit system boundary with system actors, domain model = nouns only, one SSD per system operation, **no placeholders or "TBD" in the submitted PDF**, and full traceability Requirements → Use Cases → SSDs → Operation Contracts.
 - **Admin model:** intentionally open for the customer. Team's working idea: two levels — platform System Admin (approves/manages organizations) vs Company Admin (manages their own recruiters). To be settled in Iteration 1 (D-005).
 
 ## Conventions
