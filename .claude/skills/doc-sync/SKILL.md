@@ -18,4 +18,11 @@ The convention (D-007/D-008): the Google Doc is the team-facing **surface**, the
 4. Also flag doc-only defects worth fixing before submission (garbled names, broken numbering).
 5. Verdict, explicitly: ✅ "doc == md — safe to export and submit" or ⚠️ "N discrepancies — not ready".
 
+## Known non-discrepancies
+
+Do not report these as differences:
+
+- The md's repo-only header blockquote ("**Source of truth.**", assignment/course links, due date) — by design it never goes into the Doc (see the `deliverable-new` skill).
+- **Part 1 — Call agenda (REMOVE BEFORE SUBMISSION)** while the deliverable is still being worked on: it belongs in both. At submission time it is removed from **both** the Doc and the md (the agenda is archived to `meetings/`, its decisions ingested as D-xxx) — so if it is gone from one and not the other, say so as a step still to finish, not as a conflict.
+
 Before a deliverable submission the full chain is: **doc-sync → memory-lint → export PDF/DOCX → submit**; after submission, record the snapshot fact in DECISIONS.md.
