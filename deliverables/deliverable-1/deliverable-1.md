@@ -44,7 +44,7 @@ Note: our weekly slot (Mondays 8pm) falls on the deadline day — finish over th
 ## 1. Scrum dashboard
 
 - **Platform:** Jira
-- **URL:** _TBD_
+- **URL:** <https://careerbridge-csi5324.atlassian.net>
 - **Screenshot:** _paste before export_
 
 ## 2. Code repository
