@@ -11,13 +11,20 @@ Goal: leave the call with the dashboard and the repository actually created, and
 
 ## A. Decisions
 
-1. **Scrum platform: Trello or Jira?**
+1. **Scrum platform: Trello or Jira? → Jira.**
    - Jira (free up to 10 users) gives real sprints, a backlog, user stories and acceptance — the Scrum artifacts the course teaches and grades.
+   - **Decided on the call: Jira — we prefer it for the Claude integration.**
    - Trello is faster to set up, but sprints have to be faked with columns.
    - Either way, Dr. Ren will be added as **stakeholder for user story acceptance** — this board is for the whole semester, not just for the screenshot.
 2. **Board setup:** who creates it (that person becomes admin), who else gets admin rights, and the column/workflow structure.
+   - **Decided: Oleg is in charge of the board.**
 3. **What goes on the board now.** Dr. Ren will look at it, so the cards should be real Iteration 1 tasks, not placeholders. Iteration 1 materials are already posted on Canvas; the documentation template arrives Friday, Sep 11.
-4. **Repository.** We already have <https://github.com/berdyshevol/careerbridge-csi5324> — Deliverable 0 and the team memory (decisions, questions, meeting logs) live there. It is currently **private**, and the assignment requires **public**: agree to flip it, and everyone sends their GitHub username for a collaborator invite.
+   - Topics raised on the call to turn into backlog items:
+     - which technology stacks we are going to use;
+     - UI theming (minimal, professional, cozy);
+     - how the data is stored (data schema, choice of source) — open question: how long are resumes retained?;
+     - how the AI is going to be integrated.
+4. **Repository.** <https://github.com/berdyshevol/careerbridge-csi5324> — Deliverable 0 and the team memory (decisions, questions, meeting logs) live there. **Now public** (done after the call). Oleg is the main collaborator; everyone else is added once they send their GitHub username.
 5. **Ask the customer to confirm our 14 assumptions?** She is now formally our stakeholder, and the PM's email about the Scrum platform is a natural moment to ask.
 
 ## B. Assignments and deadlines (fill in on the call)

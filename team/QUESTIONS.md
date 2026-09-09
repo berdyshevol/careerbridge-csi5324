@@ -45,3 +45,4 @@ All Q-001…Q-014 were submitted in [Deliverable 0](../deliverables/deliverable-
 - ~~Will Dr. Ren be the "customer" throughout the semester?~~ **Answered** by the Deliverable 1 assignment (Sep 8, 2026): Dr. Ren "will act as stakeholder for user story acceptance" and is to be added to our Scrum dashboard.
 - Where does the course AI-use policy live? (The Overview's "here" link is missing on Canvas.)
 - Data retention when an account is deleted (applications, decisions, logs).
+- **Q-015 — how long are resumes retained?** Raised on the Sep 8 call while discussing the data schema; status `open` (no team assumption yet).
