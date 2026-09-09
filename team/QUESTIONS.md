@@ -41,7 +41,7 @@ All Q-001…Q-014 were submitted in [Deliverable 0](../deliverables/deliverable-
 ## Not yet asked (backlog for Iteration 1)
 
 - Admin model: platform-level System Admin vs per-company Company Admin (D-005).
-- How many use cases total is a reasonable scope (members × 3 minimum)?
+- ~~How many use cases total is a reasonable scope (members × 3 minimum)?~~ **Answered** by the Deliverable 2 assignment: **exactly 3 use cases per team member** in fully-dressed form (15 for our team of five), each with an SSD and operation contracts.
 - ~~Will Dr. Ren be the "customer" throughout the semester?~~ **Answered** by the Deliverable 1 assignment (Sep 8, 2026): Dr. Ren "will act as stakeholder for user story acceptance" and is to be added to our Scrum dashboard.
 - Where does the course AI-use policy live? (The Overview's "here" link is missing on Canvas.)
 - Data retention when an account is deleted (applications, decisions, logs).

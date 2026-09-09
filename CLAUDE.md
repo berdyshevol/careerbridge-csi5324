@@ -24,6 +24,7 @@ This file is the **current-state memory** of the project. It answers "what is tr
 ## Repo structure
 
 - `course/` — materials provided by the course (overview, roles, the **example** problem statement) — not our system's requirements.
+- **Naming:** Canvas numbers the submissions "Project Deliverable N"; the course *iterations* are numbered separately. **Deliverable 2 = Iteration 1** (requirements & analysis, due Sep 28); Deliverable 3 = pre-Iteration 2 (due Oct 14). Deadlines: [team/TEAM.md](team/TEAM.md).
 - `deliverables/deliverable-N/` — per-deliverable: `assignment.md` (the task), working notes, and the deliverable itself. Deliverables are submission snapshots — do not use them as memory.
 - `team/` — team memory: TEAM.md (who/how), DECISIONS.md (what & why), QUESTIONS.md (customer Q&A).
 - `meetings/` — meeting logs (`YYYY-MM-DD-<topic>.md`).

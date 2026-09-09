@@ -14,6 +14,16 @@ CSI 5324 (Software Engineering, Baylor, Fall 2026). Every member also works as a
 
 Role focus by iteration: Requirements Engineer leads Iteration 1 (Week 6), Design Engineer leads Iteration 2 (Week 10), QA leads testing throughout; the Project Librarian keeps meeting logs, this `team/` memory, and (later) the team website.
 
+## Deadlines
+
+| Canvas assignment | What it really is | Due |
+| --- | --- | --- |
+| [Project Deliverable 1](../deliverables/deliverable-1/assignment.md) | Scrum board + public repo | Mon Sep 14, 2026 |
+| [Project Deliverable 2](../deliverables/deliverable-2/assignment.md) | **Iteration 1** — requirements & analysis (8 pts, graded individually on use cases + operation contracts) | Mon Sep 28, 2026 |
+| [Project Deliverable 3](../deliverables/deliverable-3/assignment.md) | Pre-Iteration 2 — first working code + **project website** | Wed Oct 14, 2026 |
+
+The project website (D3) falls to the Project Librarian; it must list the group name, each member's role **with their assigned use cases**, the Jira URL and the repo URL.
+
 ## Logistics
 
 - Communication channel: _TBD_
