@@ -1,0 +1,103 @@
+Summary,Issue Type,Description,Labels,Labels,Epic Name,Epic Link,Sprint
+Project setup,Epic,"Board, repo and team logistics required by Deliverable 1.",iteration-1,,Project setup,,
+Requirements & analysis,Epic,"Vision, scope, functional and non-functional requirements, and the open scope decisions for Iteration 1.",iteration-1,,Requirements & analysis,,
+Use cases,Epic,"The use case list, the use-case diagram, and three fully-dressed use cases per member.",iteration-1,,Use cases,,
+Models,Epic,"Domain model, System Sequence Diagrams with operation contracts, and the initial data schema.",iteration-1,,Models,,
+UI,Epic,"Visual direction and the wireframes for the main screens.",iteration-1,,UI,,
+Documentation & presentation,Epic,"The Iteration 1 document, the 10-minute presentation, and the metrics they require.",iteration-1,,Documentation & presentation,,
+BLOCKER: Identify the full use case list and assign exactly 3 per member (15 total),Story,"Owner: team
+
+Nothing in ""Use cases"" or ""Models"" can start until this is done. Deliverable 2 is graded individually on each member's 3 use cases and their operation contracts.",iteration-1,owner-team,,Use cases,Iteration 1
+Invite the team and Dr. Ren to the Jira board,Story,"Owner: Oleg
+
+Add all five members plus Dr. Ren (stakeholder for user story acceptance) to the CareerBridge Jira site. Required by Deliverable 1.",iteration-1,owner-oleg,,Project setup,Iteration 1
+"Collect GitHub usernames, add everyone as collaborators",Story,"Owner: Oleg
+
+Repo https://github.com/berdyshevol/careerbridge-csi5324 is public; each member is added as a collaborator once they send their GitHub username.",iteration-1,owner-oleg,,Project setup,Iteration 1
+PM email to Dr. Ren about the Scrum platform,Story,"Owner: Zeba
+
+Deliverable 1 extra task for the Project Manager: email Dr. Ren which Scrum platform the team uses (Jira). Due Mon Sep 14, 2026.",iteration-1,owner-zeba,,Project setup,Iteration 1
+Compile and submit the Deliverable 1 PDF (board screenshot + repo URL),Story,"Owner: TBD
+
+Single PDF on Canvas: Jira board URL + screenshot, public repo URL. Due Mon Sep 14, 2026, 11:59pm.",iteration-1,owner-tbd,,Project setup,Iteration 1
+Everyone: start logging hours worked,Story,"Owner: all
+
+The Iteration 1 presentation must show a roster of hours worked per member (a rough estimate is fine). Start tracking now.",iteration-1,owner-team,,Project setup,Iteration 1
+Update the requirements clarification questions and answers,Story,"Owner: Rabeya
+
+Revisit the 14 clarification questions from Deliverable 0, in particular the admin model (Q-013) and resume retention (Q-015). Deliverable 2 item 1.",iteration-1,owner-rabeya,,Requirements & analysis,Iteration 1
+Vision & scope statement,Story,"Owner: Rabeya
+
+Short vision and scope for CareerBridge, the multi-company job board.",iteration-1,owner-rabeya,,Requirements & analysis,Iteration 1
+Functional requirements list,Story,"Owner: Rabeya
+
+Enumerate the functional requirements; feeds the use case list.",iteration-1,owner-rabeya,,Requirements & analysis,Iteration 1
+Non-functional requirements list,Story,"Owner: Rabeya + Reagan
+
+Performance, security, usability, privacy (resume retention). QA reviews.",iteration-1,owner-rabeya,,Requirements & analysis,Iteration 1
+Decide the AI feature scope — in or out of this project,Story,"Owner: team
+
+Raised on the Sep 8 call: how AI is to be integrated, if at all. Decide and record the decision.",iteration-1,owner-team,,Requirements & analysis,Iteration 1
+"Decide remaining stack details (framework, database)",Story,"Owner: Josh + team
+
+The stack decision fixed JavaScript / Node.js (not TypeScript). Still open: web framework, database, hosting. The Node.js rationale must be documented in the Iteration 1 document.",iteration-1,owner-team,,Requirements & analysis,Iteration 1
+Use-case diagram with system boundary and actors (including system actors),Story,"Owner: Josh
+
+Deliverable 2 item 2: one diagram clearly showing the system boundary and all actors, system actors included.",iteration-1,owner-josh,,Use cases,Iteration 1
+Fully-dressed use cases x3 — Zeba,Story,"Owner: Zeba
+
+Deliverable 2 item 3 — three use cases in fully-dressed form, using the course document template. Graded individually.",iteration-1,owner-zeba,,Use cases,Iteration 1
+Fully-dressed use cases x3 — Rabeya,Story,"Owner: Rabeya
+
+Deliverable 2 item 3 — three use cases in fully-dressed form, using the course document template. Graded individually.",iteration-1,owner-rabeya,,Use cases,Iteration 1
+Fully-dressed use cases x3 — Josh,Story,"Owner: Josh
+
+Deliverable 2 item 3 — three use cases in fully-dressed form, using the course document template. Graded individually.",iteration-1,owner-josh,,Use cases,Iteration 1
+Fully-dressed use cases x3 — Reagan,Story,"Owner: Reagan
+
+Deliverable 2 item 3 — three use cases in fully-dressed form, using the course document template. Graded individually.",iteration-1,owner-reagan,,Use cases,Iteration 1
+Fully-dressed use cases x3 — Oleg,Story,"Owner: Oleg
+
+Deliverable 2 item 3 — three use cases in fully-dressed form, using the course document template. Graded individually.",iteration-1,owner-oleg,,Use cases,Iteration 1
+Domain model,Story,"Owner: Josh + team
+
+Deliverable 2 item 4: the domain model for CareerBridge.",iteration-1,owner-josh,,Models,Iteration 1
+SSD + operation contracts for 3 use cases — Zeba,Story,"Owner: Zeba
+
+Deliverable 2 item 5 — System Sequence Diagrams with operation contracts, only for this member's 3 use cases. Graded individually.",iteration-1,owner-zeba,,Models,Iteration 1
+SSD + operation contracts for 3 use cases — Rabeya,Story,"Owner: Rabeya
+
+Deliverable 2 item 5 — System Sequence Diagrams with operation contracts, only for this member's 3 use cases. Graded individually.",iteration-1,owner-rabeya,,Models,Iteration 1
+SSD + operation contracts for 3 use cases — Josh,Story,"Owner: Josh
+
+Deliverable 2 item 5 — System Sequence Diagrams with operation contracts, only for this member's 3 use cases. Graded individually.",iteration-1,owner-josh,,Models,Iteration 1
+SSD + operation contracts for 3 use cases — Reagan,Story,"Owner: Reagan
+
+Deliverable 2 item 5 — System Sequence Diagrams with operation contracts, only for this member's 3 use cases. Graded individually.",iteration-1,owner-reagan,,Models,Iteration 1
+SSD + operation contracts for 3 use cases — Oleg,Story,"Owner: Oleg
+
+Deliverable 2 item 5 — System Sequence Diagrams with operation contracts, only for this member's 3 use cases. Graded individually.",iteration-1,owner-oleg,,Models,Iteration 1
+Initial data schema / data modeling,Story,"Owner: Josh
+
+How the data is stored — raised on the Sep 8 call. Also feeds Deliverable 3 (first working code).",iteration-1,owner-josh,,Models,Iteration 1
+Sample jobs data file (CSV or XML),Story,"Owner: TBD
+
+Deliverable 3 requirement; can be started during Iteration 1.",iteration-1,owner-tbd,,Models,Iteration 1
+"UI theming decision — minimal, professional, cozy",Story,"Owner: Josh
+
+Raised on the Sep 8 call. Pick the visual direction before the wireframes.",iteration-1,owner-josh,,UI,Iteration 1
+Wireframes / initial UI drafts for the main screens,Story,"Owner: Josh + use case owners
+
+Deliverable 2 item 6: hand-drawn is acceptable, but the figures must be legible in both the PDF and the presentation.",iteration-1,owner-josh,,UI,Iteration 1
+Set up the Iteration 1 document from the course template,Story,"Owner: Oleg
+
+The documentation template is released Fri Sep 11, 2026. Pick it up and set up the Iteration 1 document; the deliverable must use the given template.",iteration-1,owner-oleg,,Documentation & presentation,Iteration 1
+Assemble the Iteration 1 documentation PDF,Story,"Owner: Oleg
+
+Collect every section into one PDF: updated Q&A, use-case diagram, fully-dressed use cases, domain model, SSDs + operation contracts, UI drafts. Due Mon Sep 28, 2026.",iteration-1,owner-oleg,,Documentation & presentation,Iteration 1
+Build the 10-minute Iteration 1 presentation,Story,"Owner: Zeba
+
+Separate PDF, shared with the class: project analysis, requirements + use cases, UI sketches, domain model + SSDs + operations, plus the metrics slide.",iteration-1,owner-zeba,,Documentation & presentation,Iteration 1
+Collect the metrics the slides require,Story,"Owner: Oleg
+
+Jira issues open and resolved, number of commits, roster of hours worked per member, including Jira history.",iteration-1,owner-oleg,,Documentation & presentation,Iteration 1
