@@ -1,0 +1,13 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+
+# Node (from Iteration 2 on, when the app lands here)
+node_modules/
+npm-debug.log*
