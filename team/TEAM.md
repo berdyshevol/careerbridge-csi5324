@@ -19,5 +19,5 @@ Role focus by iteration: Requirements Engineer leads Iteration 1 (Week 6), Desig
 - Communication channel: _TBD_
 - Weekly meeting time: Mondays, 8:00 pm
 - Git hosting: GitHub — <https://github.com/berdyshevol/careerbridge-csi5324>
-- Scrum board / issue tracker: **Jira** (D-009) — URL: _TBD_
+- Scrum board / issue tracker: **Jira** (D-009) — site <https://careerbridge-csi5324.atlassian.net>, board URL: _TBD_
 - Team Google Doc (Deliverable 0): <https://docs.google.com/document/d/15zd5QDdhedyz-L5WIdtdP7zIEUdCRm77v3wfbVkTK2k/edit>
