@@ -43,7 +43,7 @@ Note: our weekly slot (Mondays 8pm) falls on the deadline day — finish over th
 
 ## 1. Scrum dashboard
 
-- **Platform:** _TBD (Trello / Jira)_
+- **Platform:** Jira
 - **URL:** _TBD_
 - **Screenshot:** _paste before export_
 
