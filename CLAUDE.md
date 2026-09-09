@@ -18,6 +18,7 @@ This file is the **current-state memory** of the project. It answers "what is tr
 - After a team meeting or a decision in chat: use the **memory-ingest** skill (it appends to DECISIONS.md / QUESTIONS.md, adds a meeting log, updates the facts above, commits).
 - Before submitting any deliverable, and when asked to check the memory: use the **memory-lint** skill.
 - To compare a Google Doc against its canonical md (and always before exporting a deliverable): use the **doc-sync** skill. Submission chain: doc-sync → memory-lint → export → submit.
+- To start the next deliverable from its Canvas assignment page: use the **deliverable-new** skill (creates the folder, assignment.md, the working deliverable-N.md, and its Google Doc).
 - Course documents in English; never add Claude/AI attribution to commits or PRs.
 
 ## Repo structure
