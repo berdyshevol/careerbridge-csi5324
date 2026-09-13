@@ -5,45 +5,6 @@
 >
 > Assignment: [assignment.md](assignment.md) · Due: **Mon Sep 14, 2026, 11:59pm** · Submission: single PDF on Canvas, one copy for the whole team.
 
-# Part 1 — Call agenda, Sep 8, 2026 (REMOVE BEFORE SUBMISSION)
-
-Goal: leave the call with the dashboard and the repository actually created, and every task in Part 2 assigned.
-
-## A. Decisions
-
-1. **Scrum platform: Trello or Jira? → Jira.**
-   - Jira (free up to 10 users) gives real sprints, a backlog, user stories and acceptance — the Scrum artifacts the course teaches and grades.
-   - **Decided on the call: Jira — we prefer it for the Claude integration.**
-   - Trello is faster to set up, but sprints have to be faked with columns.
-   - Either way, Dr. Ren will be added as **stakeholder for user story acceptance** — this board is for the whole semester, not just for the screenshot.
-2. **Board setup:** who creates it (that person becomes admin), who else gets admin rights, and the column/workflow structure.
-   - **Decided: Oleg is in charge of the board.**
-3. **What goes on the board now.** Dr. Ren will look at it, so the cards should be real Iteration 1 tasks, not placeholders. Iteration 1 materials are already posted on Canvas; the documentation template arrives Friday, Sep 11.
-   - Topics raised on the call to turn into backlog items:
-     - which technology stacks we are going to use;
-     - UI theming (minimal, professional, cozy);
-     - how the data is stored (data schema, choice of source) — open question: how long are resumes retained?;
-     - how the AI is going to be integrated.
-4. **Repository.** <https://github.com/berdyshevol/careerbridge-csi5324> — Deliverable 0 and the team memory (decisions, questions, meeting logs) live there. **Now public** (done after the call). Oleg is the main collaborator; everyone else is added once they send their GitHub username.
-5. **Ask the customer to confirm our 14 assumptions?** She is now formally our stakeholder, and the PM's email about the Scrum platform is a natural moment to ask.
-
-## B. Assignments and deadlines (fill in on the call)
-
-| Task | Owner | By |
-| --- | --- | --- |
-| Create the Scrum dashboard, invite the team | | |
-| Populate the board with Iteration 1 tasks | | |
-| Make the repository public, invite collaborators | | |
-| Take the dashboard screenshot, compile the PDF | | |
-| Submit the PDF on Canvas | | Mon Sep 14, 11:59pm |
-| **PM:** email Dr. Ren about the Scrum platform | Zeba | Mon Sep 14, 11:59pm |
-
-Note: our weekly slot (Mondays 8pm) falls on the deadline day — finish over the weekend, not on Monday night.
-
----
-
-# Part 2 — The deliverable (this is what gets submitted)
-
 **Team:** CareerBridge — Zeba Tusnia Towshi (Project Manager), Rabeya Nazara (Requirements Engineer), Josh Job Joseph (Design Engineer), Reagan Rubio (Quality Assurance Engineer), Oleg Berdyshev (Project Librarian)
 
 **Project:** Recruiting and Application Management System — a multi-company job board (LinkedIn-like) where organizations post jobs and applicants apply across companies.
@@ -51,15 +12,11 @@ Note: our weekly slot (Mondays 8pm) falls on the deadline day — finish over th
 ## 1. Scrum dashboard
 
 - **Platform:** Jira
-- **URL:** <https://careerbridge-csi5324.atlassian.net>
-- **Screenshot:** _paste before export_
+- **URL:** <https://careerbridge-csi5324.atlassian.net/jira/software/projects/SCRUM/boards/1>
+- **Screenshot:** the "Iteration 1" sprint board (pasted in the Google Doc)
 
 ## 2. Code repository
 
 - **URL:** <https://github.com/berdyshevol/careerbridge-csi5324>
 - **Visibility:** public
-- All team members are collaborators. The repository holds all project documentation and, from Iteration 1 on, the source code.
-
-## 3. Requirements clarification questions — status
-
-The 14 clarification questions submitted with Deliverable 0 are unchanged. The answers there remain the team's **working assumptions**; the customer has not confirmed or corrected them yet, so there are no updates to report in this deliverable.
+- All team members have been invited as collaborators. The repository holds all project documentation and, from Iteration 1 on, the source code.
