@@ -18,7 +18,7 @@ Berdyshev (Project Librarian)
 (LinkedIn-like) where organizations post jobs and applicants apply across companies.
 
 **Contents:** 1. Use-case diagram · 2. Conventions and business rules · 3. Fully-dressed use cases ·
-4. Subfunction use cases · 5. Traceability and consistency check
+4. Subfunction use cases · 5. Traceability and consistency check · 6. Functional requirements · 7. Non-functional requirements · 8. System sequence diagrams and operation contracts
 
 ## Use-case index
 
@@ -103,7 +103,7 @@ flowchart LR
 
     %% Supporting actor: Notification Service
     UC02 & UC08 & UC09 & UC14 & UC15 & UC16 & UC17 --- NS
-    UC10 & UC12 & LOGIN & UC03 & UC04 & UC06 & UC07 --- NS
+    UC10 & UC12 & LOGIN & UC04 & UC06 & UC07 --- NS
     CLOSE & UC13 --- NS
 
     classDef usecase fill:#eef3fa,stroke:#1f4e79,color:#000
@@ -189,7 +189,14 @@ depends on under Open Issues.
 | A3 | When a posting is filled, its remaining active applications are rejected with the reason "Posting closed." When a posting only expires, it stops accepting applications, but those already submitted continue through the pipeline. |
 | A4 | The Administrator approves a recruiter joining an additional organization. |
 | A5 | An applicant cannot reapply to a posting they already applied to, including after withdrawing. |
-| A6 | Each submitted application keeps a copy of the resume as it was at submission, so later resume changes do not alter it (follows from BR-5 and BR-6). |
+| A6 | Each submitted application keeps a copy of the resume as it was at submission, so later resume changes do not alter it (follows from BR-5 and BR-6). A replaced resume is removed from the profile; it is kept only as the copies attached to submitted applications. |
+| A7 | Closed postings (deadline passed or filled) are not shown on public pages. (UC-01) |
+| A8 | Job search filters are keyword, location, organization and employment type, alone or combined. (UC-01) |
+| A9 | Job listings and search results are ordered by publication date, newest first. (UC-01) |
+| A10 | A posting's salary range is shown on its details when the recruiter provided one; it is not a search filter. (UC-01, UC-11) |
+| A11 | Only Applicant accounts can apply for jobs; Recruiters and Administrators cannot. (UC-01, UC-04) |
+| A12 | Applicants verify their email address before the account becomes active; the verification link is valid for 24 hours. Passwords have at least 10 characters, including a letter and a number. (UC-02) |
+| A13 | Required profile fields are full name and email address; the others are optional. Resumes are PDF or DOCX files of up to 5 MB. There is no free-text message to recruiters (BR-6). (UC-03) |
 
 ## 3. Fully-dressed use cases
 
@@ -223,7 +230,7 @@ depends on under Open Issues.
 3. Visitor enters search criteria: keywords, location, organization and/or employment type.
 4. System shows the open postings that match the criteria.
 5. Visitor selects a posting.
-6. System shows the posting's full details: description, requirements, organization, location, employment type, deadline, number of openings and an Apply option.
+6. System shows the posting's full details: description, requirements, organization, location, employment type, deadline and number of openings, and offers to apply.
 
 Visitor repeats steps 3–6 until done.
 
@@ -239,12 +246,12 @@ Visitor repeats steps 3–6 until done.
    2. Visitor revises the criteria; the use case resumes at step 3.
 - 5a. The selected posting closed after the list was shown (deadline passed or filled, BR-10):
    1. System shows "This posting is no longer accepting applications" and returns to the refreshed list at step 4.
-- 6a. Visitor selects Apply while not logged in:
+- 6a. Visitor asks to apply while not logged in:
    1. System asks the visitor to log in or register (UC-02).
    2. After the visitor logs in as an Applicant, the Apply for Job use case (UC-04) begins for this posting.
 - 6b. A logged-in Applicant already applied to this posting:
-   1. System shows the application's current stage instead of the Apply option, with a link to Track Application Status (UC-05).
-- 6c. A logged-in Recruiter or Administrator selects Apply:
+   1. System shows the application's current stage instead of offering to apply, with a link to Track Application Status (UC-05).
+- 6c. A logged-in Recruiter or Administrator asks to apply:
    1. System explains that only Applicant accounts can apply. The use case ends.
 
 **Special Requirements:**
@@ -253,18 +260,9 @@ Visitor repeats steps 3–6 until done.
 - Search results appear within 2 seconds for up to 10,000 open postings (team target).
 - Pages work on current desktop and mobile browsers and meet WCAG 2.1 AA.
 
-**Technology and Data Variations List:**
-
-- 3a. Criteria are entered as free-text keywords plus drop-down filters.
-- 4a. Results are paginated, 20 postings per page.
-
 **Frequency of Occurrence:** Continuous. This is the most frequent use case in the system.
 
-**Open Issues:**
-
-- Should closed postings stay viewable, read-only, for a period after closing?
-- Which filters are required, and should salary range be shown?
-- Should results be sortable by deadline as well as by date posted?
+**Open Issues:** None. Settled by team assumptions A7–A10.
 
 ### UC-02: Register as Applicant
 
@@ -290,14 +288,14 @@ Visitor repeats steps 3–6 until done.
 
 **Main Success Scenario:**
 
-1. Visitor chooses to register as an applicant.
-2. System shows the applicant registration form.
-3. Visitor enters full name, email address and password, and accepts the terms of use.
+1. Visitor asks to register as an applicant.
+2. System asks for full name, email address and password.
+3. Visitor enters full name, email address and password.
 4. System validates the data: required fields are present, the email is well formed and not already registered, and the password meets the password policy.
 5. System creates the Applicant account in Pending Verification state and asks the Notification Service to send a verification email with a link valid for 24 hours.
 6. Notification Service delivers the verification email.
 7. Visitor opens the verification link.
-8. System activates the account, logs the Applicant in and shows the profile page with a prompt to upload a resume (UC-03).
+8. System activates the account, logs the Applicant in and invites them to add a resume (UC-03).
 
 **Extensions:**
 
@@ -306,39 +304,25 @@ Visitor repeats steps 3–6 until done.
 - 3a. Visitor wants a recruiter account instead:
    1. System directs the visitor to Register Recruiter and Organization (UC-08). This use case ends.
 - 4a. A required field is missing or malformed:
-   1. System highlights each invalid field with the reason.
+   1. System reports each invalid field and the reason.
    2. Visitor corrects the data; the use case resumes at step 4.
 - 4b. The email address is already registered:
-   1. System says an account already exists for that email and offers Log In or password reset. No new account is created.
+   1. System reports that an account already exists for that email and suggests logging in. No new account is created. The use case ends.
 - 4c. The password does not meet the policy:
    1. System shows the policy (at least 10 characters, including a letter and a number).
    2. Visitor enters a new password; the use case resumes at step 4.
-- 6a. The Notification Service is unavailable:
-   1. System keeps the account in Pending Verification, queues the email and retries.
-   2. System tells the visitor the email may take a few minutes and offers a Resend option.
 - 7a. The verification link has expired:
-   1. System offers to send a new link; the use case resumes at step 5.
-- 7b. The visitor never verifies:
-   1. After 7 days, the system deletes the unverified account, and the email address becomes available again.
+   1. System issues a new verification link valid for 24 hours and asks the Notification Service to send it; the use case resumes at step 6.
 
 **Special Requirements:**
 
-- Passwords are stored only as salted hashes (for example, bcrypt), and all traffic uses HTTPS.
-- The verification email arrives within 1 minute under normal load.
-- The registration form meets WCAG 2.1 AA.
-
-**Technology and Data Variations List:**
-
-- 3a. The email address serves as the login ID.
-- 5a. Verification uses a single-use random token embedded in the link.
+- Passwords are stored only as salted hashes, and all traffic uses HTTPS.
+- The system hands the verification email to the Notification Service within 1 minute of registration.
+- Pages work on current desktop and mobile browsers and meet WCAG 2.1 AA.
 
 **Frequency of Occurrence:** Often. Every new applicant does this once.
 
-**Open Issues:**
-
-- Email verification is a team decision, not a customer requirement. Confirm that it is wanted.
-- Should sign-in with Google or LinkedIn be supported later?
-- Is 7 days the right retention period for unverified accounts?
+**Open Issues:** None. Settled by team assumption A12.
 
 ### UC-03: Maintain Profile and Resume
 
@@ -348,7 +332,7 @@ Visitor repeats steps 3–6 until done.
 
 **Primary Actor:** Applicant
 
-**Supporting Actors:** Notification Service (extension 4b only)
+**Supporting Actors:** None
 
 **Owner:** Oleg Berdyshev
 
@@ -364,7 +348,7 @@ Visitor repeats steps 3–6 until done.
 
 **Main Success Scenario:**
 
-1. Applicant opens their profile.
+1. Applicant asks to view their profile.
 2. System shows the current profile (name, email, phone, location, headline, skills, education and work experience) and the resume on file, if any.
 3. Applicant edits profile details.
 4. System validates and saves the details and confirms the save.
@@ -376,45 +360,22 @@ Visitor repeats steps 3–6 until done.
 
 - \*a. At any time, the system fails:
    1. System shows an error message. Profile data saved before the failure is kept, and the previous resume stays on file.
-- 3a. Applicant only wants to change the resume:
-   1. The use case continues at step 5.
 - 4a. A field is invalid (for example, name left empty or phone number malformed):
-   1. System highlights the field with the reason.
+   1. System reports the field and the reason.
    2. Applicant corrects it; the use case resumes at step 4.
-- 4b. Applicant changes the email address:
-   1. System sends a verification link to the new address through the Notification Service.
-   2. The old address stays active until the new one is verified.
-- 5a. Applicant already has a resume on file (BR-6):
-   1. System warns that the new file will replace the current resume, because only one resume is allowed.
-   2. Applicant confirms, and the use case continues at step 6, or cancels, and the current resume is kept.
-- 5b. Applicant deletes the resume instead of uploading one:
-   1. System asks for confirmation and warns that the applicant cannot apply for jobs without a resume (UC-04).
-   2. Applicant confirms; System removes the resume. Submitted applications keep their copies (A6).
 - 6a. The file is not a PDF or DOCX, or is larger than 5 MB:
-   1. System rejects the file, states the accepted types and size limit, and keeps the current resume.
+   1. System rejects the file, states the accepted types and size limit, and keeps the current resume. Applicant selects another file; the use case resumes at step 5.
 - 6b. The malware scan flags the file:
-   1. System rejects the file, keeps the current resume and logs the incident for the Administrator.
-- 6c. The upload is interrupted:
-   1. System discards the partial file and keeps the current resume.
+   1. System rejects the file and keeps the current resume. Applicant selects another file; the use case resumes at step 5.
 
 **Special Requirements:**
 
-- Resume files are encrypted at rest.
-- Only the applicant, recruiters of organizations the applicant applied to, and the Administrator can open the resume (BR-15).
-- Upload and scan finish within 10 seconds for a 5 MB file.
-
-**Technology and Data Variations List:**
-
-- 6a. Accepted resume formats are PDF and DOCX.
-- 6b. Files are kept in object storage; the database stores only a reference to each file.
+- The system validates, scans and stores a 5 MB resume within 10 seconds after receiving it.
+- Resume files are encrypted at rest. Only the applicant and the Administrator can open the resume on file; a recruiter sees only the resume copy attached to an application to their organization's posting (BR-15, A6).
 
 **Frequency of Occurrence:** Occasional. Usually once after registration, then a few times a year.
 
-**Open Issues:**
-
-- A6: confirm that each application keeps the resume as it was at submission, instead of always showing the current resume.
-- Which profile fields are required, and which are optional?
-- BR-6 rules out cover letters. Confirm that there is no free-text "message to recruiter" field either.
+**Open Issues:** None. Settled by team assumptions A6 and A13.
 
 ### UC-04: Apply for Job
 
@@ -1491,7 +1452,7 @@ by at least one use case.
 | Q4 5 active applications | BR-4 | UC-04, UC-06, UC-07, UC-13, UC-17, Close Job Posting |
 | Q5 Withdraw, not edit | BR-5 | UC-03, UC-04, UC-05, UC-06 |
 | Q6 One resume | BR-6 | UC-03, UC-04 |
-| Q7 Applicant sees all stages | BR-7 | UC-05, UC-14 |
+| Q7 Applicant sees all stages | BR-7 | UC-01, UC-05, UC-14 |
 | Q8 Fixed pipeline | BR-8 | UC-04, UC-14, UC-16, UC-17 |
 | Q9 Posting approval and expiry | BR-9, BR-10 | UC-01, UC-04, UC-05, UC-07, UC-11, UC-12, UC-13, Close Job Posting |
 | Q10 Automatic rejection notice with reason | BR-11 | UC-05, UC-07, UC-17, Close Job Posting |
@@ -1509,3 +1470,127 @@ by at least one use case.
 | Supporting actors listed in the text match the diagram's lines | Pass after one fix: Log In to Notification Service (password reset) added |
 | «include» and «extend» targets exist | Pass: Close Job Posting is written up; UC-07 names its Posting Filled extension point |
 | Ownership | Pass: Oleg 3, Rabeya 4, Reagan 3, Zeba 3, Josh 4 |
+
+
+## 6. Functional requirements
+
+Grouped by use case. IDs are `FR-<UC>.<n>`. An open posting is a Published posting that is before its deadline and not filled (BR-9, BR-10).
+
+**UC-01 Browse Job Postings (Oleg Berdyshev)**
+
+- FR-01.1: The system shall let any visitor, without logging in, view the open job postings of all organizations, newest first. (BR-1, BR-3, BR-9, BR-10, A9; UC-01 steps 1-2)
+- FR-01.2: The system shall let a visitor search open postings by keyword, location, organization and employment type. (A8; UC-01 steps 3-4)
+- FR-01.3: The system shall show the full details of a selected open posting. (UC-01 steps 5-6)
+
+**UC-02 Register as Applicant (Oleg Berdyshev)**
+
+- FR-02.1: The system shall let a visitor create an Applicant account with full name, email address and password, without Administrator approval. (BR-14; UC-02 steps 1-5)
+- FR-02.2: The system shall reject a registration with a missing field, a malformed or already registered email address, or a password shorter than 10 characters or lacking a letter or a number. (A12; UC-02 step 4, ext. 4a-4c)
+- FR-02.3: The system shall email the new Applicant a verification link valid for 24 hours and activate the account only when the link is opened before it expires. (A12; UC-02 steps 5-8, ext. 7a)
+
+**UC-03 Maintain Profile and Resume (Oleg Berdyshev)**
+
+- FR-03.1: The system shall let an applicant view their profile details and edit their full name, phone, location, headline, skills, education and work experience, and shall reject the changes if the full name is empty or the phone number is malformed. (A13; UC-03 steps 1-4, ext. 4a)
+- FR-03.2: The system shall let an applicant upload one resume, a PDF or DOCX file of up to 5 MB, that replaces any previous resume, and shall reject any other file or a file flagged by the malware scan. (BR-6, A13; UC-03 steps 5-7, ext. 6a, 6b)
+- FR-03.3: The system shall keep the resume copy attached to each submitted application unchanged when the applicant replaces their resume. (BR-5, A6; UC-03 step 6, Success Guarantee)
+
+## 7. Non-functional requirements
+
+**UC-01 Browse Job Postings (Oleg Berdyshev)**
+
+- NFR-01.1 (Performance): Search results appear within 2 seconds for up to 10,000 open postings.
+- NFR-01.2 (Usability): Pages work on current desktop and mobile browsers and meet WCAG 2.1 AA.
+
+**UC-02 Register as Applicant (Oleg Berdyshev)**
+
+- NFR-02.1 (Security): Passwords are stored only as salted hashes, and all traffic uses HTTPS.
+- NFR-02.2 (Performance): The system hands the verification email to the Notification Service within 1 minute of registration.
+- UC-02 also reuses NFR-01.2 (WCAG 2.1 AA).
+
+**UC-03 Maintain Profile and Resume (Oleg Berdyshev)**
+
+- NFR-03.1 (Performance): The system validates, scans and stores a 5 MB resume within 10 seconds after receiving it.
+- NFR-03.2 (Security): Resume files are encrypted at rest. Only the applicant and the Administrator can open the resume on file; a recruiter sees only the resume copy attached to an application to their organization's posting (BR-15, A6).
+
+## 8. System sequence diagrams and operation contracts
+
+**UC-01 Browse Job Postings (Oleg Berdyshev)**
+
+![SSD-01](diagrams/SSD-01.png)
+
+**SSD-01: UC-01 Browse Job Postings** (main success scenario; the system is a black box)
+
+1. Visitor to System: searchPostings(criteria); System returns the open postings, newest first (steps 1-2, criteria empty).
+2. Visitor to System: searchPostings(criteria); System returns the matching open postings (steps 3-4).
+3. Visitor to System: viewPosting(postingId); System returns the posting details (steps 5-6).
+
+**CO-01.1: searchPostings**
+
+- Operation: searchPostings(criteria); criteria may be empty (steps 1-2)
+- Cross-references: UC-01 steps 1-4; FR-01.1, FR-01.2
+- Preconditions: None
+- Postconditions: None (query operation)
+- Output: The open JobPostings that match the criteria, newest first.
+
+**CO-01.2: viewPosting**
+
+- Operation: viewPosting(postingId)
+- Cross-references: UC-01 steps 5-6, ext. 5a; FR-01.3
+- Preconditions: The JobPosting exists and was published (BR-9).
+- Postconditions: None (query operation)
+- Output: The posting's full details, or a notice that it no longer accepts applications if it has closed.
+
+**UC-02 Register as Applicant (Oleg Berdyshev)**
+
+![SSD-02](diagrams/SSD-02.png)
+
+**SSD-02: UC-02 Register as Applicant** (main success scenario; the system is a black box)
+
+1. Visitor to System: register(fullName, email, password); System asks the Notification Service to send the verification email and returns "verification email sent" (steps 3-6).
+2. Visitor to System: verifyEmail(token); System returns "account activated, Applicant logged in" (steps 7-8).
+
+**CO-02.1: register**
+
+- Operation: register(fullName, email, password)
+- Cross-references: UC-02 steps 3-5, ext. 4a-4c; FR-02.1, FR-02.2, FR-02.3
+- Preconditions: The visitor is not logged in.
+- Postconditions: An Applicant was created with the full name, email address and a hashed password, in the Pending Verification state. An empty ApplicantProfile was created and associated with the Applicant. The Applicant's verification token and its expiry (24 hours after creation) were set.
+
+**CO-02.2: verifyEmail**
+
+- Operation: verifyEmail(token)
+- Cross-references: UC-02 steps 7-8, ext. 7a; FR-02.3
+- Preconditions: A Pending Verification Applicant has this verification token.
+- Postconditions: If the token had expired (ext. 7a): a new verification token and its expiry (24 hours later) were set, and the Applicant stayed Pending Verification. Otherwise: the Applicant changed from Pending Verification to Active, the verification token was cleared, and the Applicant is logged in.
+
+**UC-03 Maintain Profile and Resume (Oleg Berdyshev)**
+
+![SSD-03](diagrams/SSD-03.png)
+
+**SSD-03: UC-03 Maintain Profile and Resume** (main success scenario; the system is a black box)
+
+1. Applicant to System: viewProfile(); System returns the profile details and the resume on file (steps 1-2).
+2. Applicant to System: updateProfile(details); System returns "profile saved" (steps 3-4).
+3. Applicant to System: uploadResume(file); System returns the resume file name and upload date (steps 5-7).
+
+**CO-03.1: viewProfile**
+
+- Operation: viewProfile()
+- Cross-references: UC-03 steps 1-2; FR-03.1
+- Preconditions: The Applicant is logged in.
+- Postconditions: None (query operation)
+- Output: The Applicant's full name and email address, the ApplicantProfile details, and the file name and upload date of the Resume on file, if any.
+
+**CO-03.2: updateProfile**
+
+- Operation: updateProfile(details)
+- Cross-references: UC-03 steps 3-4, ext. 4a; FR-03.1
+- Preconditions: The Applicant is logged in.
+- Postconditions: The Applicant's full name and the attributes of their ApplicantProfile were set to the valid details.
+
+**CO-03.3: uploadResume**
+
+- Operation: uploadResume(file)
+- Cross-references: UC-03 steps 5-7, ext. 6a, 6b; FR-03.2, FR-03.3
+- Preconditions: The Applicant is logged in.
+- Postconditions: A Resume was created for the accepted file, with its file name and upload date, and associated with the Applicant's ApplicantProfile. Any previous Resume was dissociated from the profile (BR-6).

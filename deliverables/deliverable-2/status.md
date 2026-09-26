@@ -46,6 +46,7 @@ The doc settles D-005 as a single Administrator role (A1, A4).
 | 1 | Is the rubric's "Vision Document" (1 pt) the template's §1+§2, or a separate artifact? | A scored item with no section in the template | open |
 | 2 | Are operation contracts required for Iteration 1? | SSDs are now confirmed (announcement: docs = template §1–§6, §6 = Sequence Diagrams); contracts have no template section but the grading intro names them | partly answered — SSDs yes; contracts open, default: include |
 | 3 | Admin model: platform System Admin vs Company Admin (D-005) | Changes the actors on the use case diagram | open |
+| 4 | Template §6 is "Sequence Diagrams (Design)" (controllers, domain objects), but the pitfalls ask for black-box SSDs. What goes into §6 for Iteration 1: SSDs, design SDs, or both? | Decides what every member draws; chains currently use SSDs | open |
 
 Give these Q-xxx IDs in [team/QUESTIONS.md](../../team/QUESTIONS.md) before the next call.
 
