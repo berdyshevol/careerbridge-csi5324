@@ -42,9 +42,13 @@ move your card to In Progress / Done, and log time on it (card → ⋯ → Log w
 - **Use cases:** your 3 (or 4) from Josh's doc. Review them and make sure you can defend them.
 - **SSDs:** 1 per use case (main success scenario). Actor ↔ System as one black box, no internal
   objects or method calls. Not too detailed, but not one "do everything" message either.
+  Title each one `SSD-<nn>: UC-<nn> <name>` so it is traceable once pasted into §6.
 - **Operation contracts:** 1 per system operation, i.e. each arrow from the actor to the system in
   your SSD. Usually 2–4 per SSD. Each contract: Operation, Cross-references (UC), Preconditions,
-  Postconditions.
+  Postconditions. Postconditions list state changes only; for a query operation write "None —
+  query operation" and add an **Output** row with what it returns.
+
+To check a finished chain, ask Claude Code: "review UC-02" (the `chain-review` skill).
 
 ## Dr. Ren's pitfalls (where points get lost)
 
