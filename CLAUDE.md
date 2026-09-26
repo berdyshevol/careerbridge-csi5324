@@ -24,7 +24,7 @@ decision to DECISIONS.md.
 
 ## Conventions
 
-- **Source of truth is this repo (markdown).** Google Docs are team-facing surfaces for calls/submission; after editing a doc, sync the canonical `.md` file (e.g., Deliverable 0: [deliverables/deliverable-0/deliverable-0.md](deliverables/deliverable-0/deliverable-0.md) ↔ the team Google Doc linked in its header).
+- **Source of truth is this repo (markdown).** Google Docs / Word docs on OneDrive are team-facing surfaces for calls/submission (D-016); after editing a doc, sync the canonical `.md` file (e.g., Deliverable 0: [deliverables/deliverable-0/deliverable-0.md](deliverables/deliverable-0/deliverable-0.md) ↔ the team Google Doc linked in its header).
 - Decisions get IDs (`D-xxx`) in [team/DECISIONS.md](team/DECISIONS.md); customer questions get IDs (`Q-xxx`) in [team/QUESTIONS.md](team/QUESTIONS.md); every meeting gets a log in [meetings/](meetings/).
 - After a team meeting or a decision in chat: use the **memory-ingest** skill (it appends to DECISIONS.md / QUESTIONS.md, adds a meeting log, refreshes STATUS.md, commits).
 - Before submitting any deliverable, and when asked to check the memory: use the **memory-lint** skill.
@@ -40,5 +40,5 @@ decision to DECISIONS.md.
 - `deliverables/deliverable-N/` — per-deliverable: `assignment.md` (the task as given), `status.md` (its live state — owners, blockers, what is left), working notes, and the deliverable itself. When the team moves on, the folder is left as it is; only STATUS.md changes.
 - `team/` — team memory: TEAM.md (who/how), DECISIONS.md (what & why), QUESTIONS.md (customer Q&A).
 - `meetings/` — meeting logs (`YYYY-MM-DD-<topic>.md`).
-- `.claude/` — shared Claude Code configuration: `skills/` (deliverable-new, memory-ingest, memory-lint, doc-sync). `settings.json` enables the official `atlassian` plugin (Jira MCP) for the whole team (each member authenticates with `/mcp`), but **its calls currently fail** with "We are having trouble completing this action": the tool-execution gateway rejects the tokens the plugin obtains (D-012; the Sep 9, 2026 retry failed the same way, D-013). The config stays in the repo so anyone can re-test; until it works, manage the Jira board in the web UI or via the Jira REST API with a personal API token.
+- `.claude/` — shared Claude Code configuration: `skills/` (deliverable-new, memory-ingest, memory-lint, doc-sync). `settings.json` enables the official `atlassian` plugin (Jira MCP), but its calls fail at the tool-execution gateway (D-012, D-013). **Use the claude.ai Atlassian connector instead** — it works since Sep 25, 2026 (D-015): board, cards, assignees, comments, worklogs. It cannot delete issues or reach admin.atlassian.com (access requests, users, billing).
 - `inbox/` — drop zone for raw input (notes, chat fragments, anything); memory-ingest distills it into the memory and empties the folder. Normally empty.

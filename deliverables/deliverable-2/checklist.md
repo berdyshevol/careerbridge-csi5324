@@ -22,14 +22,20 @@ Derived from [assignment.md](assignment.md), the Canvas rubric, and
       extensions and business rules **(2 pts)**
 - [ ] §5 Domain model — **nouns only**, no methods, no UI or persistence classes **(2 pts)**
 - [ ] Wireframes / UI drafts — legible at 100% zoom **(0.5 pt)**
-- [ ] §10 Team contribution — roles, responsibilities, contribution %
+- [ ] §6 Sequence diagrams — one **SSD** per system operation of each member's use cases, system as a
+      single black-box lifeline; operation contracts next to them (safe default, see open question)
+- [ ] Sections §7 and later **removed** (announcement: submit only §1–§6)
 - [ ] Traceability cross-check: requirements → use cases → (SSDs → operation contracts)
 - [ ] Consistent naming and IDs across every artifact
 - [ ] Diagrams exported as PDF, then inserted as pictures; readable when zoomed in
 
-## Presentation PDF — 15 minutes, shared with the class
+## Presentation PDF — 15 min + 5 min Q&A, **Tue Sep 29**, shared with the class
 
-- [ ] Project analysis: main features + team assumptions
+Minimal content per lecture slide 20; **every member must speak**.
+
+- [ ] Project and team information
+
+- [ ] Project analysis: main features (**≥ 5 features** delivered in the final) + team assumptions
 - [ ] Requirements (functional + non-functional)
 - [ ] One use case presented **by each member**, their own
 - [ ] UI sketches
@@ -37,7 +43,8 @@ Derived from [assignment.md](assignment.md), the Canvas rubric, and
 - [ ] Ticketing system: **all** issues, open and resolved
 - [ ] Number of commits
 - [ ] Roster of hours per member (estimate acceptable)
-- [ ] Trello/Jira history
+- [ ] Scrum dashboard — screenshot or live — plus Jira history
+- [ ] All figures and tables readable on the projector
 
 ## Before submitting
 

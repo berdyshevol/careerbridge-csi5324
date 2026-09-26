@@ -24,6 +24,9 @@ Canvas requires the documentation PDF to **use this template**
 
 ## Full section list (spans all three iterations)
 
+For Iteration 1, Dr. Ren's Sep 22 announcement: *finish the first 6 sections (before DCD); other
+sections can be removed.*
+
 | § | Section | Needed for Iteration 1? |
 |---|---|---|
 | 1 | Introduction | **yes** — purpose, what the system is, target users, problem solved; high-level, no implementation |
@@ -38,11 +41,11 @@ Canvas requires the documentation PDF to **use this template**
 | 4.1 | Use Case Diagram | **yes** — system boundary, actors, major use cases |
 | 4.2 | Fully-Dressed Use Cases | **yes** — ≥3 main use cases per student, no cap on the total |
 | 5 | Domain Model (Analysis) | **yes** — real-world concepts, attributes, relationships. **Not a design model: no methods, no implementation** |
-| 6 | Sequence Diagrams (Design) | unclear — see the open question in the deliverable |
+| 6 | Sequence Diagrams (Design) | **yes** — Dr. Ren's Sep 22 announcement: submit the first 6 sections (everything before the DCD) |
 | 7 | Design Class Diagram (DCD) | no — Iteration 2 |
 | 8 | Implementation Overview (Architecture, Key Design Decisions) | no — Iteration 2 |
 | 9 | Testing (JUnit summary, test case table) | no — Iteration 2/3 |
-| 10 | Team Contribution | likely — roles, responsibilities, contribution % (new page) |
+| 10 | Team Contribution | no — may be removed for Iteration 1 (Sep 22 announcement) |
 | 11 | Setup / Installation Guide | no — Iteration 3 (new page) |
 | 12 | User Manual | no — Iteration 3 (new page) |
 

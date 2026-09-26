@@ -2,6 +2,10 @@
 
 > Source: [Canvas page "Iteration 1 – Common Documentation Pitfalls (Read Carefully)"](https://baylor.instructure.com/courses/257917/pages/iteration-1-common-documentation-pitfalls-read-carefully?module_item_id=5544227), posted by Dr. Ren, retrieved Sep 9, 2026.
 >
+> **Canvas edit on Sep 15, 2026:** the page now lists **six** pitfalls — section 5 below ("SSDs that are
+> too detailed") was removed from the page. It is kept here as good practice, since SSDs are still in
+> scope (template §6) and the traceability pitfall still names SSDs and operation contracts.
+>
 > This is the grading guidance for [Deliverable 2 = Iteration 1](assignment.md). Read it before writing any section; the "How we avoid it" column is ours, not the instructor's.
 
 Dr. Ren's framing: *Iteration 1 is the foundation of the entire project — most major project issues originate here*, and these seven mistakes are the most common reasons teams lose points.
@@ -34,7 +38,7 @@ Dr. Ren's framing: *Iteration 1 is the foundation of the entire project — most
 - **Fix:** use **nouns from the problem statement**. No methods, no UI classes, no persistence details.
 - **How we avoid it:** the domain model is built from the problem-statement vocabulary (Applicant, Organization, Job Posting, Application, Resume, Recruiter…). The data-schema task is kept as a **separate** artifact feeding Deliverable 3, and stays out of the domain model.
 
-## 5. SSDs that are too detailed (or too empty)
+## 5. SSDs that are too detailed (or too empty) — *removed from Canvas on Sep 15, kept as guidance*
 
 - **Symptom:** SSDs with internal objects and method calls; or an SSD with a single "do everything" message.
 - **Why it costs points:** SSDs are system-level, not object-level. They define system operations, not internal design.

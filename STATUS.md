@@ -4,16 +4,16 @@
      Nothing here that will still be true in December — that belongs in CLAUDE.md.
      Per-deliverable detail belongs in deliverables/deliverable-N/status.md, not here. -->
 
-**Active:** [Deliverable 2 = Iteration 1](deliverables/deliverable-2/status.md) — requirements & analysis, 8 pts, due **Mon Sep 28, 2026**.
+**Active:** [Deliverable 2 = Iteration 1](deliverables/deliverable-2/status.md) — requirements & analysis, 8 pts, docs due **Mon Sep 28, 2026**; presentation in class **Tue Sep 29** (15 min + 5 Q&A, every member speaks).
 
-**Next actions** (detail and owners: the deliverable's `status.md`)
+**Next actions** (who does what: [team-guide.md](deliverables/deliverable-2/team-guide.md))
 
-1. Split the 15 fully-dressed use cases — 3 per member — at the Monday 8pm call. Nothing else can start first.
-2. Ask Dr. Ren the two open questions: Vision Document scope, and whether SSDs / operation contracts are required.
-3. Draft requirements (functional + non-functional) so every planned feature maps to a use case.
-4. Fill the course template from `course/templates/`; the domain model and the use cases are 4 of the 8 points.
-5. Bring the Jira board up to date — it is worth 0.5 pt on its own.
+1. Each member writes their chain FR + NFR → UC → SSD → operation contracts for their own use cases (Jira: 4 cards each).
+2. Shared parts: Vision & scope (Zeba), domain model (Reagan), wireframes (Josh), AI scope (Rabeya); §3.3 clarifications still has no owner.
+3. Fill template §1–§6 only (announcement: sections before the DCD) from [deliverable-2.md](deliverables/deliverable-2/deliverable-2.md).
+4. Slides to the lecture-slide-20 minimum list; everyone moves their Jira cards and logs time (0.5 pt, shown in the talk).
+5. Ask Dr. Ren: Vision Document scope; are operation contracts required (SSDs already confirmed).
 
-**Blocked on the customer:** Vision Document scope · SSD/operation-contract requirement · admin model (D-005).
+**Blocked on the customer:** Vision Document scope · operation contracts · admin model (D-005).
 
-**Last done:** 2026-09-22 — re-read the Canvas assignment, captured the rubric, downloaded the documentation template.
+**Last done:** 2026-09-25 — Josh's use cases adopted as the working doc; Jira cleaned up (per-member chain cards, assignees, D0 cards); Josh, Reagan and Dr. Ren admitted to Jira; Dr. Ren invited to GitHub.
