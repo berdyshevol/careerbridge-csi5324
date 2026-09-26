@@ -262,6 +262,45 @@ Visitor repeats steps 3–6 until done.
 
 **Open Issues:** None. Settled by team assumptions A7–A10.
 
+**UC-01 requirements, SSD and operation contracts (Oleg Berdyshev)**
+
+An open posting is a Published posting that is before its deadline and not filled (BR-9, BR-10).
+
+**Functional requirements**
+
+- FR-01.1: The system shall let any visitor, without logging in, view the open job postings of all organizations, newest first. (BR-1, BR-3, BR-9, BR-10, A9; UC-01 steps 1-2)
+- FR-01.2: The system shall let a visitor search open postings by keyword, location, organization and employment type. (A8; UC-01 steps 3-4)
+- FR-01.3: The system shall show the full details of a selected open posting. (UC-01 steps 5-6)
+
+**Non-functional requirements**
+
+- NFR-01.1 (Performance): Search results appear within 2 seconds for up to 10,000 open postings.
+- NFR-01.2 (Usability): Pages work on current desktop and mobile browsers and meet WCAG 2.1 AA.
+
+**SSD-01: UC-01 Browse Job Postings** (main success scenario; the system is a black box)
+
+1. Visitor to System: searchPostings(criteria); System returns the open postings, newest first (steps 1-2, criteria empty).
+2. Visitor to System: searchPostings(criteria); System returns the matching open postings (steps 3-4).
+3. Visitor to System: viewPosting(postingId); System returns the posting details (steps 5-6).
+
+**Operation contracts**
+
+**CO-01.1: searchPostings**
+
+- Operation: searchPostings(criteria); criteria may be empty (steps 1-2)
+- Cross-references: UC-01 steps 1-4; FR-01.1, FR-01.2
+- Preconditions: None
+- Postconditions: None (query operation)
+- Output: The open JobPostings that match the criteria, newest first.
+
+**CO-01.2: viewPosting**
+
+- Operation: viewPosting(postingId)
+- Cross-references: UC-01 steps 5-6, ext. 5a; FR-01.3
+- Preconditions: The JobPosting exists and was published (BR-9).
+- Postconditions: None (query operation)
+- Output: The posting's full details, or a notice that it no longer accepts applications if it has closed.
+
 ### UC-02: Register as Applicant
 
 **Scope:** CareerBridge job board
