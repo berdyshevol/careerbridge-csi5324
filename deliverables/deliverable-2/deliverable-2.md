@@ -18,7 +18,7 @@ Berdyshev (Project Librarian)
 (LinkedIn-like) where organizations post jobs and applicants apply across companies.
 
 **Contents:** 1. Use-case diagram · 2. Conventions and business rules · 3. Fully-dressed use cases ·
-4. Subfunction use cases · 5. Traceability and consistency check
+4. Subfunction use cases · 5. Traceability and consistency check · 6. Functional requirements · 7. Non-functional requirements · 8. System sequence diagrams and operation contracts
 
 ## Use-case index
 
@@ -195,6 +195,7 @@ depends on under Open Issues.
 | A9 | Job listings and search results are ordered by publication date, newest first. (UC-01) |
 | A10 | A posting's salary range is shown on its details when the recruiter provided one; it is not a search filter. (UC-01, UC-11) |
 | A11 | Only Applicant accounts can apply for jobs; Recruiters and Administrators cannot. (UC-01, UC-04) |
+| A12 | Applicants verify their email address before the account becomes active; the verification link is valid for 24 hours. Passwords have at least 10 characters, including a letter and a number. (UC-02) |
 
 ## 3. Fully-dressed use cases
 
@@ -262,45 +263,6 @@ Visitor repeats steps 3–6 until done.
 
 **Open Issues:** None. Settled by team assumptions A7–A10.
 
-**UC-01 requirements, SSD and operation contracts (Oleg Berdyshev)**
-
-An open posting is a Published posting that is before its deadline and not filled (BR-9, BR-10).
-
-**Functional requirements**
-
-- FR-01.1: The system shall let any visitor, without logging in, view the open job postings of all organizations, newest first. (BR-1, BR-3, BR-9, BR-10, A9; UC-01 steps 1-2)
-- FR-01.2: The system shall let a visitor search open postings by keyword, location, organization and employment type. (A8; UC-01 steps 3-4)
-- FR-01.3: The system shall show the full details of a selected open posting. (UC-01 steps 5-6)
-
-**Non-functional requirements**
-
-- NFR-01.1 (Performance): Search results appear within 2 seconds for up to 10,000 open postings.
-- NFR-01.2 (Usability): Pages work on current desktop and mobile browsers and meet WCAG 2.1 AA.
-
-**SSD-01: UC-01 Browse Job Postings** (main success scenario; the system is a black box)
-
-1. Visitor to System: searchPostings(criteria); System returns the open postings, newest first (steps 1-2, criteria empty).
-2. Visitor to System: searchPostings(criteria); System returns the matching open postings (steps 3-4).
-3. Visitor to System: viewPosting(postingId); System returns the posting details (steps 5-6).
-
-**Operation contracts**
-
-**CO-01.1: searchPostings**
-
-- Operation: searchPostings(criteria); criteria may be empty (steps 1-2)
-- Cross-references: UC-01 steps 1-4; FR-01.1, FR-01.2
-- Preconditions: None
-- Postconditions: None (query operation)
-- Output: The open JobPostings that match the criteria, newest first.
-
-**CO-01.2: viewPosting**
-
-- Operation: viewPosting(postingId)
-- Cross-references: UC-01 steps 5-6, ext. 5a; FR-01.3
-- Preconditions: The JobPosting exists and was published (BR-9).
-- Postconditions: None (query operation)
-- Output: The posting's full details, or a notice that it no longer accepts applications if it has closed.
-
 ### UC-02: Register as Applicant
 
 **Scope:** CareerBridge job board
@@ -325,14 +287,14 @@ An open posting is a Published posting that is before its deadline and not fille
 
 **Main Success Scenario:**
 
-1. Visitor chooses to register as an applicant.
-2. System shows the applicant registration form.
-3. Visitor enters full name, email address and password, and accepts the terms of use.
+1. Visitor asks to register as an applicant.
+2. System asks for full name, email address and password.
+3. Visitor enters full name, email address and password.
 4. System validates the data: required fields are present, the email is well formed and not already registered, and the password meets the password policy.
 5. System creates the Applicant account in Pending Verification state and asks the Notification Service to send a verification email with a link valid for 24 hours.
 6. Notification Service delivers the verification email.
 7. Visitor opens the verification link.
-8. System activates the account, logs the Applicant in and shows the profile page with a prompt to upload a resume (UC-03).
+8. System activates the account, logs the Applicant in and invites them to add a resume (UC-03).
 
 **Extensions:**
 
@@ -341,39 +303,25 @@ An open posting is a Published posting that is before its deadline and not fille
 - 3a. Visitor wants a recruiter account instead:
    1. System directs the visitor to Register Recruiter and Organization (UC-08). This use case ends.
 - 4a. A required field is missing or malformed:
-   1. System highlights each invalid field with the reason.
+   1. System reports each invalid field and the reason.
    2. Visitor corrects the data; the use case resumes at step 4.
 - 4b. The email address is already registered:
-   1. System says an account already exists for that email and offers Log In or password reset. No new account is created.
+   1. System reports that an account already exists for that email and suggests logging in. No new account is created. The use case ends.
 - 4c. The password does not meet the policy:
    1. System shows the policy (at least 10 characters, including a letter and a number).
    2. Visitor enters a new password; the use case resumes at step 4.
-- 6a. The Notification Service is unavailable:
-   1. System keeps the account in Pending Verification, queues the email and retries.
-   2. System tells the visitor the email may take a few minutes and offers a Resend option.
 - 7a. The verification link has expired:
-   1. System offers to send a new link; the use case resumes at step 5.
-- 7b. The visitor never verifies:
-   1. After 7 days, the system deletes the unverified account, and the email address becomes available again.
+   1. System issues a new verification link valid for 24 hours and asks the Notification Service to send it; the use case resumes at step 6.
 
 **Special Requirements:**
 
-- Passwords are stored only as salted hashes (for example, bcrypt), and all traffic uses HTTPS.
-- The verification email arrives within 1 minute under normal load.
-- The registration form meets WCAG 2.1 AA.
-
-**Technology and Data Variations List:**
-
-- 3a. The email address serves as the login ID.
-- 5a. Verification uses a single-use random token embedded in the link.
+- Passwords are stored only as salted hashes, and all traffic uses HTTPS.
+- The system hands the verification email to the Notification Service within 1 minute of registration.
+- Pages work on current desktop and mobile browsers and meet WCAG 2.1 AA.
 
 **Frequency of Occurrence:** Often. Every new applicant does this once.
 
-**Open Issues:**
-
-- Email verification is a team decision, not a customer requirement. Confirm that it is wanted.
-- Should sign-in with Google or LinkedIn be supported later?
-- Is 7 days the right retention period for unverified accounts?
+**Open Issues:** None. Settled by team assumption A12.
 
 ### UC-03: Maintain Profile and Resume
 
@@ -1544,3 +1492,84 @@ by at least one use case.
 | Supporting actors listed in the text match the diagram's lines | Pass after one fix: Log In to Notification Service (password reset) added |
 | «include» and «extend» targets exist | Pass: Close Job Posting is written up; UC-07 names its Posting Filled extension point |
 | Ownership | Pass: Oleg 3, Rabeya 4, Reagan 3, Zeba 3, Josh 4 |
+
+
+## 6. Functional requirements
+
+Grouped by use case. IDs are `FR-<UC>.<n>`. An open posting is a Published posting that is before its deadline and not filled (BR-9, BR-10).
+
+**UC-01 Browse Job Postings (Oleg Berdyshev)**
+
+- FR-01.1: The system shall let any visitor, without logging in, view the open job postings of all organizations, newest first. (BR-1, BR-3, BR-9, BR-10, A9; UC-01 steps 1-2)
+- FR-01.2: The system shall let a visitor search open postings by keyword, location, organization and employment type. (A8; UC-01 steps 3-4)
+- FR-01.3: The system shall show the full details of a selected open posting. (UC-01 steps 5-6)
+
+**UC-02 Register as Applicant (Oleg Berdyshev)**
+
+- FR-02.1: The system shall let a visitor create an Applicant account with full name, email address and password, without Administrator approval. (BR-14; UC-02 steps 1-5)
+- FR-02.2: The system shall reject a registration with a missing field, a malformed or already registered email address, or a password shorter than 10 characters or lacking a letter or a number. (A12; UC-02 step 4, ext. 4a-4c)
+- FR-02.3: The system shall email the new Applicant a verification link valid for 24 hours and activate the account only when the link is opened before it expires. (A12; UC-02 steps 5-8, ext. 7a)
+
+## 7. Non-functional requirements
+
+**UC-01 Browse Job Postings (Oleg Berdyshev)**
+
+- NFR-01.1 (Performance): Search results appear within 2 seconds for up to 10,000 open postings.
+- NFR-01.2 (Usability): Pages work on current desktop and mobile browsers and meet WCAG 2.1 AA.
+
+**UC-02 Register as Applicant (Oleg Berdyshev)**
+
+- NFR-02.1 (Security): Passwords are stored only as salted hashes, and all traffic uses HTTPS.
+- NFR-02.2 (Performance): The system hands the verification email to the Notification Service within 1 minute of registration.
+- UC-02 also reuses NFR-01.2 (WCAG 2.1 AA).
+
+## 8. System sequence diagrams and operation contracts
+
+**UC-01 Browse Job Postings (Oleg Berdyshev)**
+
+![SSD-01](diagrams/SSD-01.png)
+
+**SSD-01: UC-01 Browse Job Postings** (main success scenario; the system is a black box)
+
+1. Visitor to System: searchPostings(criteria); System returns the open postings, newest first (steps 1-2, criteria empty).
+2. Visitor to System: searchPostings(criteria); System returns the matching open postings (steps 3-4).
+3. Visitor to System: viewPosting(postingId); System returns the posting details (steps 5-6).
+
+**CO-01.1: searchPostings**
+
+- Operation: searchPostings(criteria); criteria may be empty (steps 1-2)
+- Cross-references: UC-01 steps 1-4; FR-01.1, FR-01.2
+- Preconditions: None
+- Postconditions: None (query operation)
+- Output: The open JobPostings that match the criteria, newest first.
+
+**CO-01.2: viewPosting**
+
+- Operation: viewPosting(postingId)
+- Cross-references: UC-01 steps 5-6, ext. 5a; FR-01.3
+- Preconditions: The JobPosting exists and was published (BR-9).
+- Postconditions: None (query operation)
+- Output: The posting's full details, or a notice that it no longer accepts applications if it has closed.
+
+**UC-02 Register as Applicant (Oleg Berdyshev)**
+
+![SSD-02](diagrams/SSD-02.png)
+
+**SSD-02: UC-02 Register as Applicant** (main success scenario; the system is a black box)
+
+1. Visitor to System: register(fullName, email, password); System asks the Notification Service to send the verification email and returns "verification email sent" (steps 3-6).
+2. Visitor to System: verifyEmail(token); System returns "account activated, Applicant logged in" (steps 7-8).
+
+**CO-02.1: register**
+
+- Operation: register(fullName, email, password)
+- Cross-references: UC-02 steps 3-5, ext. 4a-4c; FR-02.1, FR-02.2, FR-02.3
+- Preconditions: The visitor is not logged in.
+- Postconditions: An Applicant was created with the full name, email address and a hashed password, in the Pending Verification state. An empty ApplicantProfile was created and associated with the Applicant. The Applicant's verification token and its expiry (24 hours after creation) were set.
+
+**CO-02.2: verifyEmail**
+
+- Operation: verifyEmail(token)
+- Cross-references: UC-02 steps 7-8, ext. 7a; FR-02.3
+- Preconditions: A Pending Verification Applicant has this verification token.
+- Postconditions: If the token had expired (ext. 7a): a new verification token and its expiry (24 hours later) were set, and the Applicant stayed Pending Verification. Otherwise: the Applicant changed from Pending Verification to Active, the verification token was cleared, and the Applicant is logged in.
