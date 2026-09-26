@@ -2,7 +2,7 @@
 
 > Owner: **Oleg Berdyshev** · Jira: FRs SCRUM-46 · UC SCRUM-28 · SSD SCRUM-34 · contracts SCRUM-51
 > Chain: **FR + NFR → UC → SSD → operation contracts** ([team-guide.md](../team-guide.md)).
-> Draft for review — once agreed, each part moves into [deliverable-2.md](../deliverable-2.md)
+> Working copy — once the team agrees, each part moves into [deliverable-2.md](../deliverable-2.md)
 > (§3.1, §3.2, §4.2, §6).
 
 IDs: `FR-01.n` = functional requirement *n* of UC-01 (the UC number is built into the ID, so the
@@ -36,7 +36,7 @@ From the Special Requirements of UC-01.
 
 Rewritten from Josh's draft in the course format: the fields of template §4.2, and the two-column
 Actor | System scenario with TUCBW / TUCEW from Dr. Ren's *Sample Documentation*. Josh's Open
-Issues are settled as team assumptions (below the extensions), so nothing is left as "TBD".
+Issues are settled as team assumptions A7–A9, so nothing is left as "TBD".
 
 | Field | |
 |---|---|
@@ -50,9 +50,9 @@ Issues are settled as team assumptions (below the extensions), so nothing is lef
 
 | Actor: Visitor | System: CareerBridge |
 |---|---|
-| 1. TUCBW the visitor opens the CareerBridge job board. | 2. The system shows the open postings of all organizations, newest first, each with its title, organization, location, employment type and application deadline (BR-1, BR-9, BR-10). |
+| 1. TUCBW the visitor asks to see the open jobs. | 2. The system shows the open postings of all organizations, newest first, each with its title, organization, location, employment type and application deadline (BR-1, BR-9, BR-10). |
 | 3. The visitor enters search criteria: keywords, location, organization and/or employment type. | 4. The system shows the open postings that match all the given criteria. |
-| 5. The visitor selects a posting. | 6. The system shows the posting's full details — description, requirements, organization, location, employment type, deadline and number of openings — and offers to apply for it. |
+| 5. The visitor chooses a posting to read in full. | 6. The system shows the posting's full details — description, requirements, organization, location, employment type, deadline and number of openings — and offers to apply for it. |
 | 7. TUCEW the visitor has found the postings they were looking for. Steps 3–6 may repeat. | |
 
 **Extensions**
@@ -72,8 +72,10 @@ Issues are settled as team assumptions (below the extensions), so nothing is lef
 - **6c.** The visitor is logged in as a Recruiter or Administrator and asks to apply: the system
   explains that only Applicant accounts can apply. The use case ends.
 
-*Team assumptions (from Josh's Open Issues):* closed postings are not shown publicly; the filters
-are keyword, location, organization and employment type; results are ordered newest first.
+*Team assumptions this use case relies on* (settled from Josh's Open Issues; listed in
+[deliverable-2.md → Working assumptions](../deliverable-2.md#working-assumptions)): **A7** closed
+postings are not shown publicly · **A8** the search filters are keyword, location, organization and
+employment type · **A9** results are ordered newest first.
 
 **Special Requirements**
 
@@ -105,7 +107,8 @@ sequenceDiagram
 ## 5. Operation contracts (§6)
 
 UC-01 is read-only, so both operations are **queries**: they return information and change no
-objects. In Larman's format that shows as "no state change" in the postconditions. The contracts
+objects. In Larman's format postconditions describe only state changes, so they read "None —
+query operation"; what the operation returns goes in a separate **Output** row. The contracts
 with real state changes are in UC-02 (an Applicant account is created) and UC-03 (the profile
 and resume change).
 
@@ -116,7 +119,8 @@ and resume change).
 | **Operation** | `searchPostings(criteria: SearchCriteria)` — criteria may be empty (keywords, location, organization, employment type) |
 | **Cross-references** | UC-01 steps 1–4, extensions 2a, 4a · FR-01.1, FR-01.2, FR-01.3, FR-01.5 · NFR-01.1, NFR-01.2 |
 | **Preconditions** | None — the job board is public (BR-3). |
-| **Postconditions** | No objects were created, deleted or modified (query). The result contains every `JobPosting` that is approved, before its deadline, not filled (BR-9, BR-10) and matches all given criteria, ordered newest first; each with title, organization name, location, employment type and deadline. |
+| **Postconditions** | None — query operation; no objects are created, deleted or modified, and no associations change. |
+| **Output** | Every `JobPosting` that is approved, before its deadline, not filled (BR-9, BR-10) and matches all given criteria, newest first (A8, A9); each with title, organization name, location, employment type and deadline. |
 
 ### Contract CO-01.2: viewPosting
 
@@ -125,7 +129,8 @@ and resume change).
 | **Operation** | `viewPosting(postingId: PostingID)` |
 | **Cross-references** | UC-01 steps 5–6, extensions 5a, 6b · FR-01.4, FR-01.5, FR-01.7 · NFR-01.2 |
 | **Preconditions** | A `JobPosting` with this `postingId` exists. |
-| **Postconditions** | No objects were created, deleted or modified (query). If the posting is approved, before its deadline and not filled, its full details are returned; otherwise the visitor is told it no longer accepts applications (ext. 5a). If the visitor is a logged-in Applicant with an `Application` to this posting, that application's current stage is returned instead of the option to apply (BR-7). |
+| **Postconditions** | None — query operation; no objects are created, deleted or modified, and no associations change. |
+| **Output** | If the posting is approved, before its deadline and not filled: its full details. Otherwise: a notice that it no longer accepts applications (ext. 5a). If the visitor is a logged-in Applicant with an `Application` to this posting: that application's current stage instead of the offer to apply (BR-7). |
 
 ## 6. Traceability
 
@@ -136,9 +141,9 @@ and resume change).
 | FR-01.3 | steps 3–4 | `searchPostings(criteria)` | CO-01.1 |
 | FR-01.4 | steps 5–6 | `viewPosting` | CO-01.2 |
 | FR-01.5 | steps 2, 4, ext. 5a | both | CO-01.1, CO-01.2 |
-| FR-01.6 | ext. 6a | — (continues in UC-02 / UC-04) | — |
+| FR-01.6 | ext. 6a | realized in UC-02 / UC-04 (their SSDs) | realized in UC-02 / UC-04 contracts |
 | FR-01.7 | ext. 6b | `viewPosting` | CO-01.2 |
-| FR-01.8 | ext. 6c | — (enforced when applying, UC-04) | — |
+| FR-01.8 | ext. 6c | realized in UC-04 (its SSD) | realized in UC-04 contracts |
 | NFR-01.1 | Special Req. | `searchPostings` | CO-01.1 |
 | NFR-01.2 | Special Req. | both | CO-01.1, CO-01.2 |
-| NFR-01.3 | Special Req. | — (all pages) | — |
+| NFR-01.3 | Special Req. | all operations (quality attribute) | not a contract item |

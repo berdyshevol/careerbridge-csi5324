@@ -33,9 +33,10 @@ move your card to In Progress / Done, and log time on it (card → ⋯ → Log w
 ## How many (best practice)
 
 - **FRs:** about 2–5 per use case. One requirement = one testable sentence ("The system shall…").
-  Number them (FR-01, FR-02…) and tag each with its use case (→ UC-04). Every feature we plan must
-  appear in at least one use case. A use case usually realizes several FRs; an FR shared by several
-  use cases (e.g. "must be logged in") is the exception.
+  Number them `FR-<UC>.<n>` — e.g. FR-04.1, FR-04.2 for UC-04 — so the use case is part of the ID;
+  NFRs the same way (NFR-04.1). Example: [chains/uc-01-browse-job-postings.md](chains/uc-01-browse-job-postings.md).
+  Every feature we plan must appear in at least one use case. A use case usually realizes several
+  FRs; an FR shared by several use cases (e.g. "must be logged in") is the exception.
 - **NFRs:** 1–3 per use case, measurable (e.g. "search results appear within 2 seconds"). Take them
   from the Special Requirements section of your use cases.
 - **Use cases:** your 3 (or 4) from Josh's doc. Review them and make sure you can defend them.
