@@ -14,3 +14,6 @@ Thumbs.db
 # Node (from Iteration 2 on, when the app lands here)
 node_modules/
 npm-debug.log*
+
+# Playwright MCP browser artifacts
+.playwright-mcp/
