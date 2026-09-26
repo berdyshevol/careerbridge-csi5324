@@ -48,6 +48,10 @@ the workflow proposes. For each one decide:
 | **Needs <member>** | the fix is in someone else's use case, the diagram or the domain model — name the owner (`team-guide.md`) and draft a one-line message for them; prefer a fix that keeps this chain self-contained |
 | **Skip** | taste, over-engineering, implementation/security detail beyond analysis level, or already fixed — give the reason |
 
+This is a course project — **simplicity wins**. Reviews tend to inflate a chain (split this FR,
+add that extension); reject anything that makes it bigger without a clear grading reason, and keep
+each use case near 5 FRs, 3 NFRs and 4–5 extensions.
+
 Weigh it against: the rubric and pitfalls (`assignment.md`, `pitfalls.md`), the deadline and
 what is left (`status.md`), the team conventions (`team-guide.md`), and earlier decisions on this
 file (`git log -p` on it — do not undo a fix made on purpose). The workflow's score is input, not
