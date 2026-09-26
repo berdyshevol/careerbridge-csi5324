@@ -25,7 +25,7 @@ posting that is before its deadline and not filled (BR-9, BR-10).
 
 ## 3. Use case
 
-UC-01 is used **exactly as Josh wrote it**, unchanged:
+UC-01 is Josh's use case; its steps and extensions are unchanged:
 [deliverable-2.md → UC-01 Browse Job Postings](../deliverable-2.md#uc-01-browse-job-postings).
 The step and extension numbers in this file refer to that use case.
 

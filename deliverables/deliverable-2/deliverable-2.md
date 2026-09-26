@@ -228,7 +228,7 @@ depends on under Open Issues.
 3. Visitor enters search criteria: keywords, location, organization and/or employment type.
 4. System shows the open postings that match the criteria.
 5. Visitor selects a posting.
-6. System shows the posting's full details: description, requirements, organization, location, employment type, deadline, number of openings and an Apply option.
+6. System shows the posting's full details: description, requirements, organization, location, employment type, deadline and number of openings, and offers to apply.
 
 Visitor repeats steps 3–6 until done.
 
@@ -244,12 +244,12 @@ Visitor repeats steps 3–6 until done.
    2. Visitor revises the criteria; the use case resumes at step 3.
 - 5a. The selected posting closed after the list was shown (deadline passed or filled, BR-10):
    1. System shows "This posting is no longer accepting applications" and returns to the refreshed list at step 4.
-- 6a. Visitor selects Apply while not logged in:
+- 6a. Visitor asks to apply while not logged in:
    1. System asks the visitor to log in or register (UC-02).
    2. After the visitor logs in as an Applicant, the Apply for Job use case (UC-04) begins for this posting.
 - 6b. A logged-in Applicant already applied to this posting:
-   1. System shows the application's current stage instead of the Apply option, with a link to Track Application Status (UC-05).
-- 6c. A logged-in Recruiter or Administrator selects Apply:
+   1. System shows the application's current stage instead of offering to apply, with a link to Track Application Status (UC-05).
+- 6c. A logged-in Recruiter or Administrator asks to apply:
    1. System explains that only Applicant accounts can apply. The use case ends.
 
 **Special Requirements:**
@@ -258,18 +258,9 @@ Visitor repeats steps 3–6 until done.
 - Search results appear within 2 seconds for up to 10,000 open postings (team target).
 - Pages work on current desktop and mobile browsers and meet WCAG 2.1 AA.
 
-**Technology and Data Variations List:**
-
-- 3a. Criteria are entered as free-text keywords plus drop-down filters.
-- 4a. Results are paginated, 20 postings per page.
-
 **Frequency of Occurrence:** Continuous. This is the most frequent use case in the system.
 
-**Open Issues:**
-
-- Should closed postings stay viewable, read-only, for a period after closing?
-- Which filters are required, and should salary range be shown?
-- Should results be sortable by deadline as well as by date posted?
+**Open Issues:** None. Settled by team assumptions A7–A10.
 
 ### UC-02: Register as Applicant
 
