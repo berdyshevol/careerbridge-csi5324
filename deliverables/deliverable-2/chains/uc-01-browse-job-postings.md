@@ -17,15 +17,11 @@ or UC-13).
 
 | ID | Requirement | Business rule / assumption | UC-01 step |
 |---|---|---|---|
-| FR-01.1 | The system shall let any visitor, logged in or not, view the list of open job postings from all organizations. | BR-1, BR-3 | 1–2 |
-| FR-01.2 | The system shall show, for each posting in the list, its title, organization, location, employment type and application deadline. | — | 2 |
-| FR-01.3 | The system shall order listings and search results by publication date, newest first. | A9 | 2, 4 |
-| FR-01.4 | The system shall let a visitor search open postings by keyword and filter them by location, organization and employment type, alone or combined. | A8 | 3–4 |
-| FR-01.5 | The system shall show the full details of a selected open posting: title, description, requirements, organization, location, employment type, salary range (if given), deadline and number of openings. | A2, A10 | 5–6 |
-| FR-01.6 | The system shall include only open postings in listings and search results. | BR-9, BR-10, A7 | 2, 4 |
-| FR-01.7 | The system shall show an Applicant who has already applied to a posting the current stage of that application instead of the offer to apply. | BR-7, A5 | ext. 6b |
-| FR-01.8 | The system shall offer to apply for a posting only to visitors who are not logged in and to Applicants. | A11 | 6, ext. 6c |
-| FR-01.9 | When a visitor opens a posting that has closed or passed its deadline, the system shall show that it no longer accepts applications; a posting that was never published shall be treated as not found. | BR-9, BR-10 | 6, ext. 5a |
+| FR-01.1 | The system shall let any visitor, logged in or not, view the open job postings of all organizations, newest first, each with its title, organization, location, employment type and application deadline. | BR-1, BR-3, A9 | 1–2 |
+| FR-01.2 | The system shall let a visitor search open postings by keyword and filter them by location, organization and employment type, alone or combined. | A8 | 3–4 |
+| FR-01.3 | The system shall show the full details of a selected open posting: title, description, requirements, organization, location, employment type, salary range (if given), deadline and number of openings. | A2, A10 | 5–6 |
+| FR-01.4 | The system shall list and show only open postings: for a posting that has closed or passed its deadline it shall say that the posting no longer accepts applications, and a posting that was never published shall be treated as not found. | BR-9, BR-10, A7 | 2, 4, 6, ext. 5a |
+| FR-01.5 | The system shall offer to apply for a posting only to visitors who are not logged in and to Applicants; an Applicant who has already applied sees the current stage of that application instead. | A11, BR-7, A5 | 6, ext. 6b, 6c |
 
 ## 2. Non-functional requirements
 
@@ -33,8 +29,7 @@ or UC-13).
 |---|---|---|---|
 | NFR-01.1 | Performance | Search results appear within 2 seconds for up to 10,000 open postings. | — |
 | NFR-01.2 | Privacy | Job listings and posting details show no applicant or application data, except that a logged-in Applicant sees the stage of their own application to that posting. | BR-7, BR-15 |
-| NFR-01.3 | Compatibility | Job board pages work in the latest versions of the major desktop and mobile browsers (Chrome, Firefox, Safari, Edge). | — |
-| NFR-01.4 | Accessibility | Job board pages conform to WCAG 2.1 Level AA. | — |
+| NFR-01.3 | Compatibility and accessibility | Job board pages work in the latest versions of the major desktop and mobile browsers (Chrome, Firefox, Safari, Edge) and conform to WCAG 2.1 Level AA. | — |
 
 ## 3. Use case
 
@@ -80,8 +75,7 @@ The visitor may repeat steps 3–6 any number of times.
 - No login is needed (BR-3); no applicant or application data is shown, except an Applicant's own
   application stage (BR-7, BR-15) → NFR-01.2.
 - Search results appear within 2 seconds for up to 10,000 open postings → NFR-01.1.
-- Works in the latest major desktop and mobile browsers and conforms to WCAG 2.1 AA → NFR-01.3,
-  NFR-01.4.
+- Works in the latest major desktop and mobile browsers and conforms to WCAG 2.1 AA → NFR-01.3.
 
 ## 4. System sequence diagram
 
@@ -117,7 +111,7 @@ associations, so the Output row states what they return.
 | | |
 |---|---|
 | **Operation** | `searchPostings(criteria: SearchCriteria)` — criteria: keywords, location, organization, employment type; all may be empty (steps 1–2) |
-| **Cross-references** | UC-01 steps 1–4, extensions 2a, 4a · FR-01.1, FR-01.2, FR-01.3, FR-01.4, FR-01.6 · NFR-01.1, NFR-01.2 |
+| **Cross-references** | UC-01 steps 1–4, extensions 2a, 4a · FR-01.1, FR-01.2, FR-01.4 · NFR-01.1, NFR-01.2 |
 | **Preconditions** | None — the job board is public (BR-3). |
 | **Postconditions** | None — query operation; no objects are created, deleted or modified, and no associations change. |
 | **Output** | Every `JobPosting` in the *Published* state whose deadline has not passed (BR-9, BR-10) and that matches all given criteria (A8), ordered by publication date, newest first (A9); each with title, organization name, location, employment type and deadline. |
@@ -127,25 +121,20 @@ associations, so the Output row states what they return.
 | | |
 |---|---|
 | **Operation** | `viewPosting(postingId: PostingID)` |
-| **Cross-references** | UC-01 steps 5–6, extensions 5a, 6b, 6c · FR-01.5, FR-01.7, FR-01.8, FR-01.9 · NFR-01.2 |
+| **Cross-references** | UC-01 steps 5–6, extensions 5a, 6b, 6c · FR-01.3, FR-01.4, FR-01.5 · NFR-01.2 |
 | **Preconditions** | None — the job board is public (BR-3). |
 | **Postconditions** | None — query operation; no objects are created, deleted or modified, and no associations change. |
-| **Output** | If the `JobPosting` is *Published* and its deadline has not passed: its full details (FR-01.5), with the offer to apply for visitors who are not logged in and for Applicants (FR-01.8, A11); for an Applicant who has an `Application` to it, that application's current stage instead of the offer (BR-7). If it is *Closed* or past its deadline: a notice that it no longer accepts applications (ext. 5a, FR-01.9). If it does not exist or was never published: not found (BR-9, FR-01.9). |
+| **Output** | If the `JobPosting` is *Published* and its deadline has not passed: its full details (FR-01.3), with the offer to apply for visitors who are not logged in and for Applicants (A11); for an Applicant who has an `Application` to it, that application's current stage instead of the offer (FR-01.5, BR-7). If it is *Closed* or past its deadline: a notice that it no longer accepts applications (ext. 5a, FR-01.4). If it does not exist or was never published: not found (BR-9, FR-01.4). |
 
 ## 6. Traceability
 
 | FR / NFR | UC-01 | SSD-01 operation | Contract |
 |---|---|---|---|
 | FR-01.1 | steps 1–2 | `searchPostings(criteria)` | CO-01.1 |
-| FR-01.2 | step 2 | `searchPostings(criteria)` | CO-01.1 |
-| FR-01.3 | steps 2, 4 | `searchPostings(criteria)` | CO-01.1 |
-| FR-01.4 | steps 3–4 | `searchPostings(criteria)` | CO-01.1 |
-| FR-01.5 | steps 5–6 | `viewPosting(postingId)` | CO-01.2 |
-| FR-01.6 | steps 2, 4 | `searchPostings(criteria)` | CO-01.1 |
-| FR-01.7 | ext. 6b | `viewPosting(postingId)` | CO-01.2 |
-| FR-01.8 | step 6, ext. 6c | `viewPosting(postingId)` | CO-01.2 |
-| FR-01.9 | step 6, ext. 5a | `viewPosting(postingId)` | CO-01.2 |
+| FR-01.2 | steps 3–4 | `searchPostings(criteria)` | CO-01.1 |
+| FR-01.3 | steps 5–6 | `viewPosting(postingId)` | CO-01.2 |
+| FR-01.4 | steps 2, 4, 6, ext. 5a | both | CO-01.1, CO-01.2 |
+| FR-01.5 | step 6, ext. 6b, 6c | `viewPosting(postingId)` | CO-01.2 |
 | NFR-01.1 | Special Req. | `searchPostings(criteria)` | CO-01.1 |
 | NFR-01.2 | Special Req. | both | CO-01.1, CO-01.2 |
 | NFR-01.3 | Special Req. | all operations (quality attribute) | not a contract item |
-| NFR-01.4 | Special Req. | all operations (quality attribute) | not a contract item |
