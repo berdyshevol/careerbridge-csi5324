@@ -6,13 +6,13 @@
 
 Business rules (BR) and assumptions (A) are the team's lists in
 [deliverable-2.md §2](../deliverable-2.md#business-rules). An **open posting** is a *Published*
-posting whose deadline has not passed (BR-9, BR-10).
+posting that is before its deadline and not filled (BR-9, BR-10).
 
 ## 1. Functional requirements
 
 | ID | Requirement | BR / A | UC-01 step |
 |---|---|---|---|
-| FR-01.1 | The system shall let any visitor, without logging in, view the open job postings of all organizations, newest first. | BR-1, BR-3, BR-9, BR-10 | 1–2 |
+| FR-01.1 | The system shall let any visitor, without logging in, view the open job postings of all organizations, newest first. | BR-1, BR-3, BR-9, BR-10, A9 | 1–2 |
 | FR-01.2 | The system shall let a visitor search open postings by keyword, location, organization and employment type. | A8 | 3–4 |
 | FR-01.3 | The system shall show the full details of a selected open posting. | — | 5–6 |
 
@@ -20,36 +20,14 @@ posting whose deadline has not passed (BR-9, BR-10).
 
 | ID | Category | Requirement |
 |---|---|---|
-| NFR-01.1 | Performance | Search results appear within 2 seconds. |
-| NFR-01.2 | Usability | Pages work on desktop and mobile browsers. |
+| NFR-01.1 | Performance | Search results appear within 2 seconds for up to 10,000 open postings. |
+| NFR-01.2 | Usability | Pages work on current desktop and mobile browsers and meet WCAG 2.1 AA. |
 
 ## 3. Use case
 
-| Field | |
-|---|---|
-| **Use Case Name** | UC-01 Browse Job Postings |
-| **Author** | Oleg Berdyshev |
-| **Actor** | Visitor (anyone, logged in or not) |
-| **Preconditions** | None. The job board is public (BR-3). |
-| **Postconditions** | The visitor has seen the open postings matching their criteria and, optionally, the details of one posting. No data has changed. |
-
-**Main Success Scenario**
-
-| Actor: Visitor | System: CareerBridge |
-|---|---|
-| 1. TUCBW the visitor asks to see the open jobs. | 2. The system shows the open postings of all organizations, newest first. |
-| 3. The visitor enters search criteria. | 4. The system shows the open postings that match. |
-| 5. The visitor chooses a posting. | 6. The system shows the posting's full details and offers to apply. |
-| 7. TUCEW the visitor views the posting details. | |
-
-**Extensions**
-
-- **4a.** Nothing matches: the system says so; the visitor changes the criteria (step 3).
-- **5a.** The posting closed after the list was shown (BR-10): the system says it no longer accepts
-  applications (step 4).
-- **6a.** The visitor asks to apply: Apply for Job (UC-04) begins.
-
-**Special Requirements** — NFR-01.1, NFR-01.2.
+UC-01 is used **exactly as Josh wrote it**, unchanged:
+[deliverable-2.md → UC-01 Browse Job Postings](../deliverable-2.md#uc-01-browse-job-postings).
+The step and extension numbers in this file refer to that use case.
 
 ## 4. System sequence diagram
 
@@ -81,7 +59,7 @@ they return.
 | **Operation** | `searchPostings(criteria)` — criteria may be empty (steps 1–2) |
 | **Cross-references** | UC-01 steps 1–4 · FR-01.1, FR-01.2 |
 | **Preconditions** | None |
-| **Postconditions** | None (query) |
+| **Postconditions** | None — query operation |
 | **Output** | The open `JobPosting`s that match the criteria, newest first. |
 
 ### CO-01.2: viewPosting
@@ -90,8 +68,8 @@ they return.
 |---|---|
 | **Operation** | `viewPosting(postingId)` |
 | **Cross-references** | UC-01 steps 5–6, ext. 5a · FR-01.3 |
-| **Preconditions** | The `JobPosting` exists. |
-| **Postconditions** | None (query) |
+| **Preconditions** | The `JobPosting` exists and was published (BR-9). |
+| **Postconditions** | None — query operation |
 | **Output** | The posting's full details, or a notice that it no longer accepts applications if it has closed. |
 
 ## 6. Traceability
