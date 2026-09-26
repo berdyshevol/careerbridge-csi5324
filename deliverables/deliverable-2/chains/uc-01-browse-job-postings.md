@@ -2,15 +2,16 @@
 
 > Owner: **Oleg Berdyshev** · Jira: FRs SCRUM-46 · UC SCRUM-28 · SSD SCRUM-34 · contracts SCRUM-51
 > Chain: **FR + NFR → UC → SSD → operation contracts** ([team-guide.md](../team-guide.md)).
-> Working copy: once the team agrees, each part moves into [deliverable-2.md](../deliverable-2.md)
-> (§3.1, §3.2, §4.2, §6). The use case is rewritten from Josh's draft in the course format
+> Working copy: once the team agrees, each part moves into the submission document built from the
+> course template (template §3.1 FRs, §3.2 NFRs, §4.2 use case, §6 SSD and contracts). The use case is rewritten from Josh's draft in the course format
 > (template §4.2 fields; two-column Actor | System scenario with TUCBW / TUCEW, as in Dr. Ren's
 > sample documentation); his open issues are settled as assumptions A7–A10.
 
 IDs: `FR-01.n` = functional requirement *n* of UC-01. Business rules BR-1…BR-15 and assumptions
-A1…A10 are the team's lists in [deliverable-2.md §2](../deliverable-2.md#business-rules).
+A1…A11 are the team's lists in [deliverable-2.md §2](../deliverable-2.md#business-rules).
 An **open posting** is a posting in the *Published* state whose application deadline has not
-passed (BR-9, BR-10); filled postings are *Closed* (Close Job Posting).
+passed (BR-9, BR-10); filled or expired postings become *Closed* (Close Job Posting, from UC-07
+or UC-13).
 
 ## 1. Functional requirements
 
@@ -20,10 +21,11 @@ passed (BR-9, BR-10); filled postings are *Closed* (Close Job Posting).
 | FR-01.2 | The system shall show, for each posting in the list, its title, organization, location, employment type and application deadline. | — | 2 |
 | FR-01.3 | The system shall order listings and search results by publication date, newest first. | A9 | 2, 4 |
 | FR-01.4 | The system shall let a visitor search open postings by keyword and filter them by location, organization and employment type, alone or combined. | A8 | 3–4 |
-| FR-01.5 | The system shall show the full details of a selected open posting: title, description, requirements, organization, location, employment type, salary range (if given), deadline and number of openings. | A10 | 5–6 |
-| FR-01.6 | The system shall include in listings, searches and posting details only open postings; a posting that is not published is treated as not found. | BR-9, BR-10, A7 | 2, 4, 6, ext. 5a |
+| FR-01.5 | The system shall show the full details of a selected open posting: title, description, requirements, organization, location, employment type, salary range (if given), deadline and number of openings. | A2, A10 | 5–6 |
+| FR-01.6 | The system shall include only open postings in listings and search results. | BR-9, BR-10, A7 | 2, 4 |
 | FR-01.7 | The system shall show an Applicant who has already applied to a posting the current stage of that application instead of the offer to apply. | BR-7, A5 | ext. 6b |
-| FR-01.8 | The system shall offer to apply for a posting only to visitors who are not logged in and to Applicants. | BR-14 | 6, ext. 6c |
+| FR-01.8 | The system shall offer to apply for a posting only to visitors who are not logged in and to Applicants. | A11 | 6, ext. 6c |
+| FR-01.9 | When a visitor opens a posting that has closed or passed its deadline, the system shall show that it no longer accepts applications; a posting that was never published shall be treated as not found. | BR-9, BR-10 | 6, ext. 5a |
 
 ## 2. Non-functional requirements
 
@@ -70,8 +72,8 @@ The visitor may repeat steps 3–6 any number of times.
   visitor who is not logged in to log in or register first.)
 - **6b.** The visitor is an Applicant who already applied to this posting: instead of offering to
   apply, the system shows the current stage of that application (BR-7) and a way to track it (UC-05).
-- **6c.** The visitor is logged in as a Recruiter: the system shows the posting's details without the
-  offer to apply, since only Applicants can apply (BR-14).
+- **6c.** The visitor is logged in with any role other than Applicant: the system shows the
+  posting's details without the offer to apply, since only Applicants can apply (A11).
 
 **Special Requirements**
 
@@ -125,10 +127,10 @@ associations, so the Output row states what they return.
 | | |
 |---|---|
 | **Operation** | `viewPosting(postingId: PostingID)` |
-| **Cross-references** | UC-01 steps 5–6, extensions 5a, 6b, 6c · FR-01.5, FR-01.6, FR-01.7, FR-01.8 · NFR-01.2 |
+| **Cross-references** | UC-01 steps 5–6, extensions 5a, 6b, 6c · FR-01.5, FR-01.7, FR-01.8, FR-01.9 · NFR-01.2 |
 | **Preconditions** | None — the job board is public (BR-3). |
 | **Postconditions** | None — query operation; no objects are created, deleted or modified, and no associations change. |
-| **Output** | If the `JobPosting` is *Published* and its deadline has not passed: its full details (FR-01.5), with the offer to apply for visitors who are not logged in and for Applicants (FR-01.8); for an Applicant who has an `Application` to it, that application's current stage instead of the offer (BR-7). If it is *Closed* or past its deadline: a notice that it no longer accepts applications (ext. 5a). If it does not exist or is not published (Pending Approval, Returned): not found (BR-9). |
+| **Output** | If the `JobPosting` is *Published* and its deadline has not passed: its full details (FR-01.5), with the offer to apply for visitors who are not logged in and for Applicants (FR-01.8, A11); for an Applicant who has an `Application` to it, that application's current stage instead of the offer (BR-7). If it is *Closed* or past its deadline: a notice that it no longer accepts applications (ext. 5a, FR-01.9). If it does not exist or was never published: not found (BR-9, FR-01.9). |
 
 ## 6. Traceability
 
@@ -139,9 +141,10 @@ associations, so the Output row states what they return.
 | FR-01.3 | steps 2, 4 | `searchPostings(criteria)` | CO-01.1 |
 | FR-01.4 | steps 3–4 | `searchPostings(criteria)` | CO-01.1 |
 | FR-01.5 | steps 5–6 | `viewPosting(postingId)` | CO-01.2 |
-| FR-01.6 | steps 2, 4, 6, ext. 5a | both | CO-01.1, CO-01.2 |
+| FR-01.6 | steps 2, 4 | `searchPostings(criteria)` | CO-01.1 |
 | FR-01.7 | ext. 6b | `viewPosting(postingId)` | CO-01.2 |
 | FR-01.8 | step 6, ext. 6c | `viewPosting(postingId)` | CO-01.2 |
+| FR-01.9 | step 6, ext. 5a | `viewPosting(postingId)` | CO-01.2 |
 | NFR-01.1 | Special Req. | `searchPostings(criteria)` | CO-01.1 |
 | NFR-01.2 | Special Req. | both | CO-01.1, CO-01.2 |
 | NFR-01.3 | Special Req. | all operations (quality attribute) | not a contract item |

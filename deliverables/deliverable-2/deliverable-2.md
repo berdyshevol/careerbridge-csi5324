@@ -194,6 +194,7 @@ depends on under Open Issues.
 | A8 | Job search filters are keyword, location, organization and employment type, alone or combined. (UC-01) |
 | A9 | Job listings and search results are ordered by publication date, newest first. (UC-01) |
 | A10 | A posting's salary range is shown on its details when the recruiter provided one; it is not a search filter. (UC-01, UC-11) |
+| A11 | Only Applicant accounts can apply for jobs; Recruiters and Administrators cannot. (UC-01, UC-04) |
 
 ## 3. Fully-dressed use cases
 
@@ -1495,7 +1496,7 @@ by at least one use case.
 | Q4 5 active applications | BR-4 | UC-04, UC-06, UC-07, UC-13, UC-17, Close Job Posting |
 | Q5 Withdraw, not edit | BR-5 | UC-03, UC-04, UC-05, UC-06 |
 | Q6 One resume | BR-6 | UC-03, UC-04 |
-| Q7 Applicant sees all stages | BR-7 | UC-05, UC-14 |
+| Q7 Applicant sees all stages | BR-7 | UC-01, UC-05, UC-14 |
 | Q8 Fixed pipeline | BR-8 | UC-04, UC-14, UC-16, UC-17 |
 | Q9 Posting approval and expiry | BR-9, BR-10 | UC-01, UC-04, UC-05, UC-07, UC-11, UC-12, UC-13, Close Job Posting |
 | Q10 Automatic rejection notice with reason | BR-11 | UC-05, UC-07, UC-17, Close Job Posting |
