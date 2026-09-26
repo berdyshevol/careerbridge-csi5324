@@ -192,7 +192,8 @@ depends on under Open Issues.
 | A6 | Each submitted application keeps a copy of the resume as it was at submission, so later resume changes do not alter it (follows from BR-5 and BR-6). |
 | A7 | Closed postings (deadline passed or filled) are not shown on public pages. (UC-01) |
 | A8 | Job search filters are keyword, location, organization and employment type, alone or combined. (UC-01) |
-| A9 | Search results are ordered newest first. (UC-01) |
+| A9 | Job listings and search results are ordered by publication date, newest first. (UC-01) |
+| A10 | A posting's salary range is shown on its details when the recruiter provided one; it is not a search filter. (UC-01, UC-11) |
 
 ## 3. Fully-dressed use cases
 
