@@ -9,7 +9,7 @@ export const meta = {
   ],
 }
 
-// args: { target: absolute path of the chain file, ucId: e.g. "UC-02", root?: repo root }
+// args: { target: absolute path of deliverable-2.md, ucId: e.g. "UC-02", root?: repo root }
 if (!args || !args.target || !args.ucId) throw new Error('chain-review needs args {target, ucId}')
 
 const ROOT = args.root || '/Users/berdyshevo/Documents/Baylor/SW-Engineering/group_project'
@@ -18,16 +18,16 @@ const TARGET = args.target
 const UC = args.ucId
 
 const CONTEXT = `
-Target under review (read it fully): ${TARGET}
-It is one team member's "chain" for use case ${UC} in a university software-engineering team project (CSI 5324, Dr. Ren):
-FR + NFR -> fully-dressed use case -> System Sequence Diagram (Mermaid) -> operation contracts -> traceability table.
+Target under review: ${TARGET} — the team's final Iteration 1 document (source of truth). Review ONLY the parts that belong to ${UC}:
+its FRs FR-${UC.replace('-', '')}.n (§3.1), NFRs (§3.2), its traceability rows (§3.4), its fully-dressed use case (§4.2) and its SSD and operation contracts CO-${UC.slice(3)}.n (§4.3). Together they form the "chain"
+FR + NFR -> fully-dressed use case -> System Sequence Diagram -> operation contracts, in a university software-engineering team project (CSI 5324, Dr. Ren).
+The SSD is an image under ${D2}/diagrams/ (open it to read it).
 
 Reference material (all inside the team repo; do NOT open any repository or folder outside ${ROOT}):
 - ${D2}/assignment.md — the Canvas assignment, rubric, Sep 22 announcement (docs = template sections 1–6), lecture slide 20
 - ${D2}/pitfalls.md — Dr. Ren's "Common Documentation Pitfalls" (pitfall 5 about SSDs was removed from Canvas on Sep 15 but is kept as guidance)
-- ${D2}/team-guide.md — the team's conventions (IDs FR-<UC>.<n> / NFR-<UC>.<n>, one SSD per UC titled SSD-<nn>, one contract per system operation, Output row for query contracts)
-- ${D2}/deliverable-2.md — the team working document: business rules BR-1.., assumptions A1.., use-case diagram, and Josh's original drafts of all use cases (section 3)
-- ${D2}/chains/ — the other members' chain files; the approved reference layout is chains/uc-01-browse-job-postings.md. Names, states and IDs must be consistent across chains.
+- ${D2}/team-guide.md — the team's conventions (IDs FR-UC<nn>.<n>, one SSD per UC titled SSD-<nn>, one contract per system operation)
+- ${TARGET} itself also holds the business rules (§3.3), assumptions A1.. (§2.2), the use-case diagram (§4.1) and the domain model (§5) that the chain must be consistent with
 - ${ROOT}/course/templates/README.md — summary of the course template; the template itself is ${ROOT}/course/templates/CSI5324_Project_Documentation_Template.docx (unzip -p ... word/document.xml) and Dr. Ren's example is ${ROOT}/course/templates/Sample\\ Documentation.pdf (pdftotext -layout)
 - ${ROOT}/course/group-project-problem-statement.md — the problem statement
 
@@ -89,7 +89,7 @@ Check every cross-reference: each FR's step and business-rule/assumption column 
   {
     key: 'completeness',
     prompt: `Dimension: COMPLETENESS.
-Is anything missing? Every behaviour in the main scenario and every extension covered by some FR; every Special Requirement by a measurable NFR; all template §4.2 fields present (Use Case Name, Author, Actor, Preconditions, Postconditions, Main Success Scenario, Extensions, Special Requirements); every system operation in the SSD has a contract; contracts have Operation, Cross-references, Preconditions, Postconditions (and Output for queries); nothing from Josh's original draft of ${UC} in deliverable-2.md lost without a reason (extensions, business rules, open issues — each open issue must be settled, e.g. as an assumption).`,
+Is anything missing? Every behaviour in the main scenario and every extension covered by some FR; every Special Requirement by a measurable NFR; all template §4.2 fields present (Use Case Name, Author, Actor, Preconditions, Postconditions, Main Success Scenario, Extensions, Special Requirements); every system operation in the SSD has a contract; contracts have Operation, Cross-references, Preconditions, Postconditions (and Output for queries); no open issue left unsettled.`,
   },
   {
     key: 'dr-ren',

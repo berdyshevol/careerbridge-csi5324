@@ -10,35 +10,35 @@ workflow's verdict as is.
 
 ## 1. Resolve what to review
 
-The user may give any of these; turn it into chain file(s) under `deliverables/deliverable-2/chains/`:
+The chains live in the final document `deliverables/deliverable-2/deliverable-2.md` (source of
+truth, D-017): for use case UC-nn its FRs `FR-UCnn.n` (§3.1), NFRs (§3.2), traceability rows
+(§3.4), the fully-dressed use case (§4.2) and the SSD `SSD-nn` with contracts `CO-nn.n` (§4.3).
 
 | Input | Resolves to |
 |---|---|
-| a use case, `UC-02` | `chains/uc-02-*.md` |
-| a requirement, `FR-02.3` / `NFR-02.1` | its use case (`FR-<UC>.<n>`) → `chains/uc-02-*.md`; mention in the report which requirement the user asked about |
-| a member, "Rabeya" | her use cases from the ownership table in `team-guide.md` → one review per chain file |
-| a path | that file |
+| a use case, `UC-02` | UC-02 |
+| a requirement, `FR-UC02.3` / `NFR-UC02.1` | its use case, UC-02; mention which requirement the user asked about |
+| a member, "Rabeya" | her three use cases from Table 21 / `team-guide.md` → one review per use case |
 
-If the file does not exist, say so and stop (offer to draft the chain first, using
-`chains/uc-01-browse-job-postings.md` as the reference layout). Note the current git branch and
-whether the file has uncommitted changes — the review reads the file on disk.
+Note the current git branch and whether `deliverable-2.md` has uncommitted changes — the review
+reads the file on disk.
 
 ## 2. Run the workflow
 
 Call the Workflow tool with the saved workflow and parameters — do not copy or edit the script:
 
 ```
-Workflow({ name: "chain-review", args: { target: "<absolute path>", ucId: "UC-02" } })
+Workflow({ name: "chain-review", args: { target: "<absolute path of deliverable-2.md>", ucId: "UC-02" } })
 ```
 
-One run per chain file (several files → several runs; they can run at the same time). It runs in
+One run per use case (several → several runs; they can run at the same time). It runs in
 the background (~4–5 min, 9 agents); tell the user it started and what it checks, then wait for
 the completion notification. If the notification's result is truncated, read the `verdict` agent's
 result from `journal.jsonl` in the run's transcript directory.
 
 ## 3. Own judgment — the part that matters
 
-Re-open the chain file (it may have changed while the workflow ran) and go through **every** fix
+Re-open the use case's sections (they may have changed while the workflow ran) and go through **every** fix
 the workflow proposes. For each one decide:
 
 | Decision | When |
@@ -54,7 +54,7 @@ each use case near 3 FRs, 1–2 NFRs and 3 extensions.
 
 Weigh it against: the rubric and pitfalls (`assignment.md`, `pitfalls.md`), the deadline and
 what is left (`status.md`), the team conventions (`team-guide.md`), and earlier decisions on this
-file (`git log -p` on it — do not undo a fix made on purpose). The workflow's score is input, not
+file (`git log -p deliverable-2.md` — do not undo a fix made on purpose). The workflow's score is input, not
 the answer: give **your own** verdict and score, and say where you disagree with the workflow.
 
 ## 4. Report
@@ -66,6 +66,5 @@ In the user's language (Russian for Oleg), short:
 3. What is already good (keep it).
 4. Messages for other members, if any, ready to paste.
 
-Do not edit files until the user agrees. After applying, commit to the chain's branch and push
-if a PR is open. Don't re-run the workflow after every edit — once more when all of a member's
+Do not edit files until the user agrees. After applying, commit and push. Don't re-run the workflow after every edit — once more when all of a member's
 chains are done is enough.

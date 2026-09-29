@@ -19,10 +19,10 @@ Every item links to the previous one. Traceability is graded (pitfall 7).
 | Member | Use cases | FRs + NFRs | Use cases | SSDs | Operation contracts |
 |---|---|---|---|---|---|
 | Oleg | UC-01 – UC-03 | SCRUM-46 | SCRUM-28 | SCRUM-34 | SCRUM-51 |
-| Rabeya | UC-04 – UC-07 | SCRUM-47 | SCRUM-25 | SCRUM-31 | SCRUM-52 |
+| Rabeya | UC-05 – UC-07 | SCRUM-47 | SCRUM-25 | SCRUM-31 | SCRUM-52 |
 | Reagan | UC-08 – UC-10 | SCRUM-48 | SCRUM-27 | SCRUM-33 | SCRUM-53 |
 | Zeba | UC-11 – UC-13 | SCRUM-49 | SCRUM-24 | SCRUM-30 | SCRUM-54 |
-| Josh | UC-14 – UC-17 | SCRUM-50 | SCRUM-26 | SCRUM-32 | SCRUM-55 |
+| Josh | UC-04, UC-14, UC-15 | SCRUM-50 | SCRUM-26 | SCRUM-32 | SCRUM-55 |
 
 Shared parts: Project Scope & Vision — Zeba (SCRUM-18) · AI feature scope — Rabeya (SCRUM-21) ·
 Domain Model — Reagan (SCRUM-29) · Wireframes — Josh (SCRUM-38).
@@ -33,13 +33,13 @@ move your card to In Progress / Done, and log time on it (card → ⋯ → Log w
 ## How many (best practice)
 
 - **FRs:** about 3 per use case — keep it simple, this is a course project. One requirement = one testable sentence ("The system shall…").
-  Number them `FR-<UC>.<n>` — e.g. FR-04.1, FR-04.2 for UC-04 — so the use case is part of the ID;
-  NFRs the same way (NFR-04.1). Example: [chains/uc-01-browse-job-postings.md](chains/uc-01-browse-job-postings.md).
+  Number them `FR-UC<nn>.<n>` — e.g. FR-UC04.1, FR-UC04.2 for UC-04 — so the use case is part of the ID;
+  NFRs the same way (NFR-UC04.1). See [deliverable-2.md](deliverable-2.md) §3.
   Every feature we plan must appear in at least one use case. A use case usually realizes several
   FRs; an FR shared by several use cases (e.g. "must be logged in") is the exception.
 - **NFRs:** 1–2 per use case, measurable (e.g. "search results appear within 2 seconds"). Take them
   from the Special Requirements section of your use cases.
-- **Use cases:** your 3 (or 4) from Josh's doc. Review them and make sure you can defend them.
+- **Use cases:** your 3 (Table 21 of the final document). Review them and make sure you can defend them.
 - **SSDs:** 1 per use case (main success scenario). Actor ↔ System as one black box, no internal
   objects or method calls. Not too detailed, but not one "do everything" message either.
   Title each one `SSD-<nn>: UC-<nn> <name>` so it is traceable once pasted into §6.
@@ -48,7 +48,7 @@ move your card to In Progress / Done, and log time on it (card → ⋯ → Log w
   Postconditions. Postconditions list state changes only; for a query operation write "None —
   query operation" and add an **Output** row with what it returns.
 
-To check a finished chain, ask Claude Code: "review UC-02" (the `chain-review` skill).
+To check a use case's chain, ask Claude Code: "review UC-02" (the `chain-review` skill).
 
 ## Dr. Ren's pitfalls (where points get lost)
 

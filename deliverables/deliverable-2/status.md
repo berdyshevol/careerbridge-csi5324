@@ -16,28 +16,20 @@ slides are in [assignment.md](assignment.md#update-2026-09-25--dr-rens-announcem
 
 ## Where we are
 
-Use cases are drafted: Josh's doc (17 fully-dressed use cases + 2 subfunctions, use-case diagram,
-business rules BR-1…BR-15, assumptions A1–A6) is the working document
-[deliverable-2.md](deliverable-2.md) (team surface: [Word doc on OneDrive](https://baylor0-my.sharepoint.com/:w:/r/personal/josh_joseph3_baylor_edu/Documents/Microsoft%20Teams%20Chat%20Files/CSI%205324%20%E2%80%93%20Deliverable%202%20Use%20Cases.docx?d=wc0e6e8360799410caaeada9754bb7b60&csf=1&web=1&e=7HArpk)).
-Each member now writes the full chain **FR + NFR → UC → SSD → operation contracts** for their own
-use cases — see [team-guide.md](team-guide.md), posted to the team chat on Sep 25. Jira updated
-the same day: 4 cards per member, all assigned (SCRUM-24…34, 46…55).
+The final documentation is [deliverable-2.md](deliverable-2.md), converted from
+`CareerBridge_Iteration1_Documentation.pdf` (Sep 28) — the source of truth for Iteration 1:
+15 use cases, three per member, each with FRs/NFRs (§3.1–3.2), traceability (§3.4), SSDs and
+operation contracts (§4.3), plus UI drafts, the domain model and team contribution.
 
-Missing: every member's FRs/NFRs, SSDs and contracts; §1–§2 vision; §3.3 clarifications; domain
-model; wireframes; slides.
-
-## Use case ownership (Josh's split, Sep 25)
+## Use case ownership (final document, Table 21)
 
 | Member | Role | Use cases |
 |---|---|---|
 | Oleg Berdyshev | Project Librarian | UC-01 Browse Job Postings · UC-02 Register as Applicant · UC-03 Maintain Profile and Resume |
-| Rabeya Nazara | Requirements Engineer | UC-04 Apply for Job · UC-05 Track Application Status · UC-06 Withdraw Application · UC-07 Respond to Job Offer |
+| Rabeya Nazara | Requirements Engineer | UC-05 Track Application Status · UC-06 Withdraw Application · UC-07 Respond to Job Offer |
 | Reagan Rubio | QA Engineer | UC-08 Register Recruiter and Organization · UC-09 Join Additional Organization · UC-10 Approve Recruiter/Organization Request |
 | Zeba Tusnia Towshi | Project Manager | UC-11 Create Job Posting · UC-12 Approve Job Posting · UC-13 Expire Job Posting |
-| Josh Job Joseph | Design Engineer | UC-14 Screen Applications · UC-15 Record Interview · UC-16 Extend Job Offer · UC-17 Reject Application |
-
-Still to settle: the assignment says "only 3 use cases per team member" — Rabeya and Josh have 4.
-The doc settles D-005 as a single Administrator role (A1, A4).
+| Josh Job Joseph | Design Engineer | UC-04 Apply for Job · UC-14 Screen Applications · UC-15 Extend Job Offer |
 
 ## Open questions for the customer (Dr. Ren)
 
