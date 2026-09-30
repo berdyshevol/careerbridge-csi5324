@@ -4,16 +4,14 @@
      Nothing here that will still be true in December — that belongs in CLAUDE.md.
      Per-deliverable detail belongs in deliverables/deliverable-N/status.md, not here. -->
 
-**Active:** [Deliverable 2 = Iteration 1](deliverables/deliverable-2/status.md) — requirements & analysis, 8 pts, docs due **Mon Sep 28, 2026**; presentation in class **Tue Sep 29** (15 min + 5 Q&A, every member speaks).
+**Active:** [Deliverable 3 = Pre-Iteration 2](deliverables/deliverable-3/status.md) — first working code (ApplyJob + UI, sample jobs data) + project website, 3 pts, PDF due **Wed Oct 14, 2026**.
 
-**Next actions** (who does what: [team-guide.md](deliverables/deliverable-2/team-guide.md))
+**Next actions**
 
-1. Each member writes their chain FR + NFR → UC → SSD → operation contracts for their own use cases (Jira: 4 cards each).
-2. Shared parts: Vision & scope (Zeba), domain model (Reagan), wireframes (Josh), AI scope (Rabeya); §3.3 clarifications still has no owner.
-3. Fill template §1–§6 only (announcement: sections before the DCD) from [deliverable-2.md](deliverables/deliverable-2/deliverable-2.md).
-4. Slides to the lecture-slide-20 minimum list; everyone moves their Jira cards and logs time (0.5 pt, shown in the talk).
-5. Ask Dr. Ren: Vision Document scope; are operation contracts required (SSDs already confirmed).
+1. **Team vote, due Thu Oct 1** (sent by Oleg Sep 29): backend stack (Java Spring MVC vs Node.js with Spring-style layers on Vercel) and work split (vertical slices vs by layer). Oleg votes Node.js + vertical slices. Details in [D3 status](deliverables/deliverable-3/status.md).
+2. After the vote: record a D-xxx, set up the project skeleton, create D3 cards in Jira.
+3. Every member needs at least one meaningful commit in the group repo.
 
-**Blocked on the customer:** Vision Document scope · operation contracts · admin model (D-005).
+**Blocked on the customer:** admin model (D-005).
 
-**Last done:** 2026-09-25 — Josh's use cases adopted as the working doc; Jira cleaned up (per-member chain cards, assignees, D0 cards); Josh, Reagan and Dr. Ren admitted to Jira; Dr. Ren invited to GitHub.
+**Last done:** 2026-09-28 — Deliverable 2 (Iteration 1) documents submitted; presentation in class Sep 29.
