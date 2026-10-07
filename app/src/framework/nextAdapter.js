@@ -3,8 +3,18 @@
 // src/app/api/[...path]/route.js. Endpoints, services and repositories
 // never see a Request or a Response.
 
+import { DomainError } from "@/services/errors";
+
 const DEFAULT_COOKIE_NAME = "session";
 const DEFAULT_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
+
+// Domain error code -> HTTP status, for every endpoint. An endpoint's own
+// `errors` table adds codes or overrides these.
+const DEFAULT_ERROR_STATUS = {
+  VALIDATION_ERROR: 400,
+  NOT_FOUND: 404,
+  CONFLICT: 409,
+};
 
 // Matches "/:id/apply" against ["12", "apply"]; returns the params or null.
 function matchPath(pattern, segments) {
@@ -105,9 +115,16 @@ export function createRouteHandlers({ endpointMap, authProvider, config }) {
       const result = await endpoint.handler(ctx);
       return Response.json(result ?? null, { headers });
     } catch (err) {
-      const info = err?.code && endpoint.errors?.[err.code];
-      if (info) {
-        return Response.json({ code: err.code, error: info.message }, { status: info.code });
+      // Only errors a service threw on purpose are shown to the client.
+      if (err instanceof DomainError) {
+        const custom = endpoint.errors?.[err.code];
+        const status = custom?.code ?? DEFAULT_ERROR_STATUS[err.code];
+        if (status) {
+          return Response.json(
+            { code: err.code, error: custom?.message ?? err.message },
+            { status, headers }
+          );
+        }
       }
       console.error(err);
       return Response.json({ error: "Internal Server Error" }, { status: 500 });

@@ -41,11 +41,22 @@ Helpers shared by several parts live in `src/utils/`. Sample data lives in `data
   access: "public",          // or "private": needs a session
   roles: ["Applicant"],      // optional
   handler: ({ params }) => domain.jobs.getById(params.id),
-  errors: { NOT_FOUND: { code: 404, message: "Job posting not found" } },
 }
 ```
 
-The handler receives `{ body, query, params, auth }` and returns data. To fail, a service throws `new DomainError(code, message)`; the `errors` table turns the code into an HTTP status.
+The handler receives `{ body, query, params, auth }` and returns data.
+
+## Errors
+
+To fail, a service throws `new DomainError(code, message)`. The adapter turns it into a response: the code picks the HTTP status and the message is sent to the client.
+
+| Code | Status |
+| --- | --- |
+| `VALIDATION_ERROR` | 400 |
+| `NOT_FOUND` | 404 |
+| `CONFLICT` | 409 |
+
+For any other code, add it to the endpoint: `errors: { APPLICATION_LIMIT_REACHED: { code: 409 } }` (an optional `message` replaces the service's text). Anything that is not a `DomainError` becomes a plain 500 and is only logged on the server.
 
 ## Worked example
 
