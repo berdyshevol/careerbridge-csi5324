@@ -1,0 +1,4 @@
+jobPostId,title,organizationName,description,jobRequirements,location,employmentType,salaryRange,numberOfOpenings,datePosted,applicationDeadline,postStatus
+1,Junior Software Engineer,Brazos Analytics,"Build and test features for our reporting web app.","JavaScript, Git, basic SQL",Hybrid,Full-time,"$65,000 - $80,000",2,2026-10-01,2026-11-15,Open
+2,Data Analyst Intern,Waco Health Partners,"Clean clinic data and prepare weekly dashboards.","Excel, SQL, attention to detail",On-site,Internship,,1,2026-10-03,2026-11-01,Open
+3,QA Engineer,Lone Star Logistics,"Write and run test plans for the dispatch system.","Test design, bug reporting, Jira",Remote,Full-time,"$70,000 - $90,000",1,2026-09-20,2026-10-05,Closed
