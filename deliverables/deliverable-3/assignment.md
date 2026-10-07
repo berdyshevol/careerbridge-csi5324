@@ -3,6 +3,8 @@
 > Source: [Canvas – Assignment](https://baylor.instructure.com/courses/257917/assignments/2911224) (CSI 5324, Fall 2026)
 >
 > **Due: Wed Oct 14, 2026, 11:59pm** · 3 points · Unlimited attempts · Submission: PDF upload
+>
+> Re-synced from Canvas 2026-10-07 — the instructor changed the task: **two documents** instead of one PDF, documentation must include SDs and DCD, commits must be code. Lines about the IndieDev team are left out (not us).
 
 Keep working on the project and plan ahead for Iterations 2 and 3.
 
@@ -10,7 +12,7 @@ Keep working on the project and plan ahead for Iterations 2 and 3.
 
 - The group repo must be set up on GitHub and its URL included in the submission.
 - The current project must live in the group repo.
-- **Each member must have at least one meaningful commit** to the group repo.
+- **Each member must have at least one meaningful code commit** to the group repo.
 
 ## Implementation scope
 
@@ -40,10 +42,11 @@ Any host is acceptable — including a Wiki page in the group GitHub repo, a per
 
 ## What to submit
 
-A single PDF summarizing:
+**Two documents:**
 
-- The group's current implementation status.
-- Main roadblocks, if any, to completing Iteration 2 on time.
-- URL to the group's project website.
-- **Screenshots of all implemented UIs**, each annotated with: the relevant use case (and its owner), who implemented the UI, and whether it is connected to the backend service.
-- Updated project documentation.
+1. **A single PDF with the status summary.** This is separate from the official documentation — **do NOT use the given documentation template** for it. It contains:
+   - The group's current implementation status.
+   - Main roadblocks, if any, to completing Iteration 2 on time.
+   - URL to the group's project website.
+   - **Screenshots of all implemented UIs**, each annotated with: the relevant use case (and its owner), who implemented the UI, and whether it is connected to the backend service.
+2. **Updated project documentation** — revise the previous sections based on the comments from Iteration 1, and at least include **SDs (sequence diagrams) and the DCD (design class diagram)**.
