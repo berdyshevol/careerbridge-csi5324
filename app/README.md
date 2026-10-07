@@ -14,29 +14,47 @@ npm run dev
 
 Open <http://localhost:3000>. `npm run lint` checks the code; `npm run build` makes a production build.
 
-## Layers
+## How it is built
 
-Each use case goes through the same layers, top to bottom. A layer only calls the one below it.
+The API is assembled from configuration. Business code never touches Next.js: one adapter reads a map of endpoints and serves them.
 
-| Layer | Folder | Does |
+| Part | Folder | Does |
 | --- | --- | --- |
 | UI | `src/app/**/page.js`, `src/components/` | Screens and shared components |
-| API route | `src/app/api/**/route.js` | Maps a URL to a controller function, nothing else |
-| Controller | `src/controllers/` | Reads the request, calls a service, builds the response |
-| Service | `src/services/` | Business rules; no HTTP, no file access |
+| Adapter | `src/framework/nextAdapter.js` | The only file that handles Next.js requests; serves the endpoint map |
+| Endpoints | `src/endpoints/` | Plain objects: path, method, access, roles, handler, errors |
+| Auth provider | `src/auth/` | `restoreSession`, `startSession`, `endSession`; a test applicant for now |
+| Service | `src/services/` | Business rules; receives repositories, throws `DomainError` |
 | Repository | `src/repositories/` | Reads and writes data |
 | Model | `src/models/` | Classes from the domain model |
 
-Helpers shared by several layers live in `src/utils/`. Sample data lives in `data/` (`jobs.csv`).
+Everything is wired in three small files: `src/repositories/index.js` → `src/services/index.js` → `src/endpoints/index.js`. `src/app/api/[...path]/route.js` hands the result to the adapter.
+
+Helpers shared by several parts live in `src/utils/`. Sample data lives in `data/` (`jobs.csv`).
+
+## An endpoint
+
+```js
+{
+  path: "/:id",
+  method: "GET",
+  access: "public",          // or "private": needs a session
+  roles: ["Applicant"],      // optional
+  handler: ({ params }) => domain.jobs.getById(params.id),
+  errors: { NOT_FOUND: { code: 404, message: "Job posting not found" } },
+}
+```
+
+The handler receives `{ body, query, params, auth }` and returns data. To fail, a service throws `new DomainError(code, message)`; the `errors` table turns the code into an HTTP status.
 
 ## Worked example
 
-Job postings are wired end to end:
-`src/app/jobs/page.js` → `jobPostingService` → `jobPostingRepository` → `data/jobs.csv`, and the same service is exposed at `/api/jobs` and `/api/jobs/:id` through `jobPostingController`.
+Job postings are wired end to end: `data/jobs.csv` → `jobPostingRepository` → `jobPostingService` → `endpoints/jobs.js`, served at `/api/jobs` and `/api/jobs/:id`. The page `src/app/jobs/page.js` calls the same service directly. `/api/auth/me` shows a private endpoint.
 
 ## Adding your use case
 
 1. Find your stub page (the home page lists them with owners) and replace `<Placeholder />` with your screen.
-2. Add the model, repository, service and controller files your use case needs, following the job postings example.
-3. Add an API route under `src/app/api/` that calls your controller.
-4. Work in your own branch and open a pull request.
+2. Add your model and repository, and register the repository in `src/repositories/index.js`.
+3. Add your service as a factory (`createXService({ repositories })`) and register it in `src/services/index.js`.
+4. Add your endpoints in `src/endpoints/<name>.js` and register them in `src/endpoints/index.js`. No new route files.
+5. Work in your own branch and open a pull request.

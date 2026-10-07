@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { listOpenPostings } from "@/services/jobPostingService";
+import domain from "@/services";
 
 // Read the sample file on every request, not once at build time.
 export const dynamic = "force-dynamic";
 
 export default async function JobsPage() {
-  const postings = await listOpenPostings();
+  const postings = await domain.jobs.listOpen();
 
   return (
     <section>
