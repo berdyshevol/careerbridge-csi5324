@@ -19,22 +19,16 @@ Open points:
 
 ## Where we are
 
-Not started. First step: the team agrees on the stack and the work split.
+Stack decided: **Java Spring Boot + Next.js** (D-018, Oct 7), replacing Node.js. A first skeleton is
+on branch `oleg/spring-skeleton`: Spring JSON API in `app/` with the layers of DS 4 and sample postings
+loaded from `jobs.csv`; Next.js frontend with Tailwind and daisyUI in `app/frontend/`. UC-01 Browse Job
+Postings works end to end; the other use cases have stub pages. The applicant desk follows the design
+canvas and shows sample data until UC-05, UC-07 and UC-03 exist.
 
-## Open vote (sent by Oleg Sep 29, answers due Thu Oct 1)
+Still open:
 
-1. **Backend stack**
-   - **A — Java Spring MVC** (course default). No good free hosting; the project would live on GitHub only.
-   - **B — Node.js with Spring-style layers** (model → repository → service → controller). Already
-     approved by Dr. Ren. Free deploy on Vercel; Vercel team collaboration is paid, so we develop in
-     one shared repo and each member mirrors it to their own account and deploys their own copy.
-2. **Work split**
-   - **Vertical slices** — each member builds one feature end to end (DB → UI); one person may build
-     a frontend shell with stub pages that the slices plug into.
-   - **By layer** — frontend / backend / data.
-
-Oleg's vote: **B + vertical slices**; he offers to set up the project skeleton.
-When the answers come in, record the outcome as a D-xxx in [DECISIONS.md](../../team/DECISIONS.md).
+- **Work split:** each member owns their use cases end to end (TEAM.md); who takes the shared parts
+  (data model, Log In) is not agreed yet.
 
 ## Minimum scope (from the assignment)
 

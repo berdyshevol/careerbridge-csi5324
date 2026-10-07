@@ -16,7 +16,7 @@ decision to DECISIONS.md.
 ## Durable facts
 
 - **Team:** CareerBridge (5 members). Roles and logistics: [team/TEAM.md](team/TEAM.md).
-- **Tech stack:** JavaScript across the whole stack — Node.js backend, JS frontend. Deliberately **JavaScript, not TypeScript**. Dr. Ren approved the Node.js backend at a lecture (early Sep 2026), superseding the course's default Maven/JUnit expectation; the rationale must still be documented in Iteration 1 (D-004).
+- **Tech stack:** Java Spring Boot — Spring Boot 4, Java 17, Maven, Spring Data JPA, H2, JUnit, the setup of Design Studio 4 (D-018, which replaced the Node.js stack of D-004). Chosen because most members do not know JavaScript and everyone learns Spring in class. Frontend: Next.js (TypeScript) with Tailwind and daisyUI, one theme in `globals.css`. Backend in `app/`, frontend in `app/frontend/`.
 - **Customer:** Dr. Ren acts as the customer. Requirements answers we wrote so far are the team's assumptions pending his confirmation: [team/QUESTIONS.md](team/QUESTIONS.md).
 - **Grading guidance is per-deliverable**, not global: read the active deliverable's `status.md` and the instructor's [Common Documentation Pitfalls](deliverables/deliverable-2/pitfalls.md) before writing any section.
 - **AI use in this project is allowed and encouraged** as an engineering tool, but every member must be able to explain their own artifacts: [course/project-ai-usage-policy.md](course/project-ai-usage-policy.md).

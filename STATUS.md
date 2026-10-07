@@ -8,8 +8,8 @@
 
 **Next actions**
 
-1. **Team vote, due Thu Oct 1** (sent by Oleg Sep 29): backend stack (Java Spring MVC vs Node.js with Spring-style layers on Vercel) and work split (vertical slices vs by layer). Oleg votes Node.js + vertical slices. Details in [D3 status](deliverables/deliverable-3/status.md).
-2. After the vote: record a D-xxx, set up the project skeleton, create D3 cards in Jira.
+1. Stack is **Java Spring Boot + Next.js with daisyUI** (D-018, Oct 7), replacing Node.js. Skeleton on branch `oleg/spring-skeleton` (`app/` backend, `app/frontend/`); merge it so everyone can start.
+2. Agree who builds the shared parts (data model, Log In). Josh: UC-04 Apply for Job, the required minimum.
 3. Every member needs at least one meaningful **code** commit in the group repo.
 4. Draw the SDs and the DCD; revise the documentation once the Iteration 1 comments appear in Canvas.
 

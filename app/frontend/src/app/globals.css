@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: careerbridge --default;
+}
+
+/* The CareerBridge look, in one place. Every daisyUI component (btn, card,
+   badge, ...) takes its colors and corner radius from here. */
+@plugin "daisyui/theme" {
+  name: "careerbridge";
+  default: true;
+  color-scheme: light;
+
+  --color-base-100: #ffffff;
+  --color-base-200: #f1f3ef;
+  --color-base-300: #dde2dc;
+  --color-base-content: #1c2623;
+
+  --color-primary: #1f5f56;
+  --color-primary-content: #ffffff;
+  --color-secondary: #e3eeea;
+  --color-secondary-content: #174840;
+  --color-accent: #8a4a0e;
+  --color-accent-content: #ffffff;
+  --color-neutral: #1c2623;
+  --color-neutral-content: #ffffff;
+
+  --color-info: #2b4c7e;
+  --color-info-content: #ffffff;
+  --color-success: #1f5f56;
+  --color-success-content: #ffffff;
+  --color-warning: #fbeedc;
+  --color-warning-content: #8a4a0e;
+  --color-error: #a3271f;
+  --color-error-content: #ffffff;
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.625rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.275rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@theme inline {
+  --font-sans: var(--font-figtree), system-ui, sans-serif;
+  --font-display: var(--font-bricolage), system-ui, sans-serif;
+  --color-muted: #55615c;
+}
