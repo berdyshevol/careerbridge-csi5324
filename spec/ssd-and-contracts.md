@@ -158,7 +158,7 @@ startApplication(postingId) only presents the application summary and changes no
 
 **Postconditions:**
 
-- An Application instance was created and associated with the Job Posting and with the Applicant's Resume.
+- An Application instance was created and associated with the Job Posting and with the Applicant.
 
 - The Application's _applicationStatus_ became Applied and its _dateApplied_ became the current date.
 
