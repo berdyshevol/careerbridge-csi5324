@@ -5,9 +5,10 @@ description: Review a frontend pull request or branch of CareerBridge for the on
 
 # Screen review
 
-You check that a new or changed screen looks like the rest of CareerBridge. The rules are in
-`spec/adr/0004-frontend.md` (Decision, rule 6) and the allowed blocks are on `/styleguide`
-(`app/frontend/src/app/styleguide/page.tsx`). You report; you do not edit unless asked.
+You check that a new or changed screen follows `spec/adr/0004-frontend.md`. Read that file first:
+it is the only statement of the rules, and the table below is just the order to check them in. The
+allowed blocks are on `/styleguide` (`app/frontend/src/app/styleguide/page.tsx`). You report; you
+do not edit unless asked.
 
 ## Steps
 
