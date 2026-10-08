@@ -1,13 +1,21 @@
-# Group Project
+# CareerBridge
 
-Software Engineering group project (Baylor).
+A recruiting and application management system: a job board where many organizations publish
+postings and applicants apply across them. Semester project of team CareerBridge for CSI 5324
+Software Engineering (Baylor University, Fall 2026).
 
-## Structure
+- **Application:** <https://careerbridge-csi5324.vercel.app>
+- **Scrum board:** <https://careerbridge-csi5324.atlassian.net/jira/software/projects/SCRUM/boards/1>
 
-- `spec/course/` — materials provided by the course (overview, role descriptions, and the **example** problem statement we chose to follow) — *not* our system's requirements; those will be written by the team in Iteration 1
-- `spec/deliverables/` — one folder per deliverable; each contains the assignment (`assignment.md`), working notes, and the deliverable itself
-  - `deliverable-0/` — team formation: [deliverable-0.md](spec/deliverables/deliverable-0/deliverable-0.md) is the source of truth (mirrored to the team Google Doc for submission)
-- `spec/team/` — team memory: [TEAM.md](spec/team/TEAM.md) (roles & logistics), [DECISIONS.md](spec/team/DECISIONS.md) (decision log, `D-xxx`), [QUESTIONS.md](spec/team/QUESTIONS.md) (customer Q&A, `Q-xxx`)
-- `spec/meetings/` — meeting logs (`YYYY-MM-DD-<topic>.md`)
-- `spec/inbox/` — drop zone for raw notes; Claude ingests them into the memory (normally empty)
-- [CLAUDE.md](CLAUDE.md) — current-state project memory (facts & conventions), auto-loaded by Claude sessions
+## What is where
+
+- [spec/](spec/README.md) — the specification: requirements, use cases, domain model, design,
+  architecture and decision records.
+- [app/](app/README.md) — the application: [backend/](app/backend/) (Spring Boot) and
+  [frontend/](app/frontend/) (Next.js). Start with `app/README.md` to run it.
+- [spec/team.md](spec/team.md) — who does what.
+
+## Contributing
+
+Work in your own branch and open a pull request into `main`. The tests run on the pull request and
+must pass before it can be merged.
