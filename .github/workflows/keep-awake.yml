@@ -1,0 +1,21 @@
+name: Keep backend awake
+
+# Render's free plan puts the backend to sleep after 15 minutes without
+# requests, and the next visitor waits about a minute. A request every
+# 10 minutes keeps it awake.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    name: Ping the backend
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl --silent --show-error --output /dev/null --max-time 120 \
+            --write-out "HTTP %{http_code} in %{time_total}s\n" \
+            https://careerbridge-api-et18.onrender.com/api/version
