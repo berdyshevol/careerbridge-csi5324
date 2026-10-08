@@ -22,6 +22,13 @@ npm run dev                   # frontend on http://localhost:3000
 
 Open <http://localhost:3000>. `./mvnw test` runs the backend tests. The H2 console is at <http://localhost:8080/h2-console> (JDBC URL `jdbc:h2:mem:careerbridge`, user `sa`, no password).
 
+## Tests run before every push
+
+After `npm install` in `app/frontend`, git runs the tests on `git push` (a husky pre-push hook): backend JUnit, frontend lint and Vitest, then Playwright end-to-end. A failing test stops the push. A push that changes nothing under `app/` skips them.
+
+- `SKIP_E2E=1 git push` skips the end-to-end tests (they take about a minute and need ports 3000 and 8080).
+- The same checks run on every pull request into `main`.
+
 ## Backend layers
 
 Packages under `src/main/java/baylor/csi5324/careerbridge/`. A layer only calls the one below it.
