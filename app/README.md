@@ -59,4 +59,7 @@ Only Published postings whose deadline has not passed are listed (BR-9, BR-10). 
 
 ## Deployment
 
-The backend runs on Render from the `Dockerfile` in this folder; the frontend runs on Vercel. The frontend finds the backend through `NEXT_PUBLIC_API_URL`, and the backend allows the frontend through `FRONTEND_ORIGIN`.
+- **Frontend:** <https://careerbridge-eight.vercel.app> (Vercel, project `careerbridge`, root `app/frontend`).
+- **Backend:** <https://careerbridge-api-et18.onrender.com/api/postings> (Render, service `careerbridge-api`, built from the `Dockerfile` in this folder).
+
+The frontend finds the backend through `NEXT_PUBLIC_API_URL`; the backend allows the frontend through `FRONTEND_ORIGIN`. Render's free plan sleeps when idle, so the first request after a pause takes about a minute. The database is in memory: every restart reloads `jobs.csv`.
