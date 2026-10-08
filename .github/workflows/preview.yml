@@ -1,0 +1,66 @@
+# The Preview button: Actions tab -> Preview -> Run workflow, leave "Use
+# workflow from" on main and type the branch you want to look at.
+# Puts that branch's frontend on a temporary Vercel address and posts the
+# link on the branch's pull request. Production is not touched.
+#
+# Safety, because the previewed branch is not reviewed code:
+# - This file always runs from main: the "preview" environment refuses any
+#   other branch, and each run waits for the repository owner's approval.
+# - The Vercel tool is installed before the branch is fetched, and the branch
+#   goes into its own folder. It is only uploaded; nothing from it runs here.
+# - Vercel builds it with the project's Preview variables, so that Vercel
+#   environment must never hold a real secret.
+name: Preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to preview
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    name: Frontend preview on Vercel
+    runs-on: ubuntu-latest
+    environment: preview
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      BRANCH: ${{ inputs.branch }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --global vercel@62.7.0
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          path: branch
+          persist-credentials: false
+      - run: rm -rf branch/.vercel
+      # Uploads the sources; Vercel builds them on its own servers.
+      - name: Deploy a preview
+        id: deploy
+        run: |
+          url=$(vercel deploy --cwd branch --yes --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Preview of \`$BRANCH\`: $url" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      - name: Post the link on the pull request
+        run: |
+          if gh pr view "$BRANCH" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh pr comment "$BRANCH" --repo "$GITHUB_REPOSITORY" \
+              --body "Preview of this branch (frontend only, talks to the live backend): $PREVIEW_URL"
+          else
+            echo "No open pull request for $BRANCH; the link is in the run summary."
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
