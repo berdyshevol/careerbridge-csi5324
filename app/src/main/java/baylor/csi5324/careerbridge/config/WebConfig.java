@@ -11,16 +11,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    private final String frontendOrigin;
+    private final String[] frontendOrigins;
 
-    public WebConfig(@Value("${careerbridge.frontend-origin}") String frontendOrigin) {
-        this.frontendOrigin = frontendOrigin;
+    public WebConfig(@Value("${careerbridge.frontend-origins}") String[] frontendOrigins) {
+        this.frontendOrigins = frontendOrigins;
     }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins(frontendOrigin)
+                .allowedOrigins(frontendOrigins)
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE");
     }
 }
