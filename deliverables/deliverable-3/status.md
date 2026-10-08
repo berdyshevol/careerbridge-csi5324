@@ -20,7 +20,7 @@ Open points:
 ## Where we are
 
 Stack decided: **Java Spring Boot + Next.js** (D-018, Oct 7), replacing Node.js. A first skeleton is
-on branch `oleg/spring-skeleton`: Spring JSON API in `app/` with the layers of DS 4 and sample postings
+in `main`: Spring JSON API in `app/backend/` with the layers of DS 4 and sample postings
 loaded from `jobs.csv`; Next.js frontend with Tailwind and daisyUI in `app/frontend/`. UC-01 Browse Job
 Postings works end to end; the other use cases have stub pages. The applicant desk follows the design
 canvas and shows sample data until UC-05, UC-07 and UC-03 exist.

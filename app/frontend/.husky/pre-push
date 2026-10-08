@@ -26,7 +26,7 @@ fi
 
 set -e
 echo "pre-push: backend tests (JUnit)"
-(cd "$root/app" && ./mvnw -q -B test)
+(cd "$root/app/backend" && ./mvnw -q -B test)
 
 echo "pre-push: frontend lint and unit tests (Vitest)"
 (cd "$root/app/frontend" && npm run lint && npm test)
