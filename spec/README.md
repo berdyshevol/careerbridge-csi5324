@@ -10,7 +10,7 @@ together with the code. If code and specification disagree, fix one of them in t
 | [use-cases.md](use-cases.md) | Use-case diagram, application pipeline, posting lifecycle, the 15 fully-dressed use cases, subfunctions | 4.1, 4.2 |
 | [ssd-and-contracts.md](ssd-and-contracts.md) | One system sequence diagram per use case and the operation contracts | 4.3 |
 | [ui-drafts.md](ui-drafts.md) | Wireframes | 4.4 |
-| [domain-model.md](domain-model.md) | Conceptual classes, attributes and associations | 5 |
+| [domain-model.md](domain-model.md) | Conceptual classes, attributes and associations, as a figure and as text | 5 |
 | [design.md](design.md) | Design sequence diagrams and the design class diagram | 6, 7 |
 | [architecture.md](architecture.md) | Parts of the system, layers, deployment | 8 |
 | [adr/](adr/) | Architecture decision records | — |
