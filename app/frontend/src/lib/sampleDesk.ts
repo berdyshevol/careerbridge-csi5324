@@ -9,10 +9,16 @@ export type Stage = (typeof STAGES)[number];
 
 export const APPLICATION_LIMIT = 5;
 
-export const applicant = { firstName: "Jordan", lastName: "Lee" };
+export const applicant = {
+  firstName: "Jordan",
+  lastName: "Lee",
+  email: "jordan.lee@example.com",
+  phone: "(254) 555-0142",
+};
 
 export type DeskApplication = {
   applicationId: number;
+  postingId: number; // jobPostId of the posting applied to
   title: string;
   organizationName: string;
   location: string;
@@ -23,6 +29,7 @@ export type DeskApplication = {
 export const applications: DeskApplication[] = [
   {
     applicationId: 1,
+    postingId: 4,
     title: "IT Support Specialist",
     organizationName: "Waco Health Partners",
     location: "On-site",
@@ -31,6 +38,7 @@ export const applications: DeskApplication[] = [
   },
   {
     applicationId: 2,
+    postingId: 3,
     title: "Backend Developer",
     organizationName: "Brazos Analytics",
     location: "Remote",
@@ -39,6 +47,7 @@ export const applications: DeskApplication[] = [
   },
   {
     applicationId: 3,
+    postingId: 1,
     title: "Junior Software Engineer",
     organizationName: "Brazos Analytics",
     location: "Hybrid",
@@ -53,4 +62,6 @@ export const offer = {
   expirationDate: "2026-10-16",
 };
 
-export const resume = { fileName: "Jordan_Lee_Resume.pdf", uploadDate: "2026-09-30" };
+export type DeskResume = { fileName: string; uploadDate: string };
+
+export const resume: DeskResume | null = { fileName: "Jordan_Lee_Resume.pdf", uploadDate: "2026-09-30" };

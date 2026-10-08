@@ -114,14 +114,20 @@ export default async function DeskPage() {
 
           <section className="flex flex-col gap-1 rounded-2xl border border-base-300 bg-base-100 p-5">
             <h2 className="font-semibold">Resume on file</h2>
-            <p>{resume.fileName}</p>
-            <p className="text-sm text-muted">Uploaded {formatDate(resume.uploadDate)}</p>
+            {resume ? (
+              <>
+                <p>{resume.fileName}</p>
+                <p className="text-sm text-muted">Uploaded {formatDate(resume.uploadDate)}</p>
+              </>
+            ) : (
+              <p className="text-muted">No resume yet.</p>
+            )}
             <div className="grow" />
             <Link
               href="/profile"
               className="link link-primary pt-2 font-semibold no-underline hover:underline"
             >
-              Replace resume
+              {resume ? "Replace resume" : "Upload a resume"}
             </Link>
           </section>
         </div>

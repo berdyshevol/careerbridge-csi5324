@@ -4,6 +4,7 @@ import ApplicationRow from "./ApplicationRow";
 
 const base: DeskApplication = {
   applicationId: 1,
+  postingId: 3,
   title: "Backend Developer",
   organizationName: "Brazos Analytics",
   location: "Remote",

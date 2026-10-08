@@ -33,13 +33,17 @@ Add both kinds for your use case. Every pull request into `main` runs them.
 
 ## Design
 
-The look comes from the team's design canvas. Use daisyUI components (`btn`, `card`, `badge`, `input`, `alert`) so everything picks up the theme; do not hard-code colors.
+The look comes from the team's design canvas; the reasons are in [ADR-0004](../../spec/adr/0004-frontend.md). Use daisyUI components (`btn`, `card`, `badge`, `input`, `alert`) so everything picks up the theme; do not hard-code colors.
+
+The site must look like one site. Build your screen from the same pieces as the existing ones: the shared layout, a `font-display` page title, `card`s with a `base-300` border, `alert`s for messages, one `btn btn-primary` for the main action and a plain `btn` for the way back, `link link-primary` for links. Reuse the components in `src/components/`; if you need a block twice, make it a component. Look at `/jobs/[id]` and `/jobs/[id]/apply` as the reference before you start.
 
 The desk navigation has three forms, in `src/components/DeskNav.tsx`: a side column on laptops, a row of tiles on tablets, a bottom bar on phones. Check your page at all three widths.
 
 ## Sample data
 
 The desk page shows applications, an offer and a resume from `src/lib/sampleDesk.ts`, because the backend cannot answer those yet. Replace each piece with a call in `src/lib/api.ts` when its use case is implemented (UC-05, UC-07, UC-03).
+
+UC-04 Apply for Job (`/jobs/[id]/apply`) runs its checks in the browser against that sample desk, in `src/lib/apply.ts`, because the backend has no `submitApplication` yet. When it does, add the call to `src/lib/api.ts` and let `submitApplication` in `apply.ts` delegate to it; the screen stays as it is.
 
 ## Adding your screen
 
