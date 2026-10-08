@@ -1,7 +1,10 @@
 import Link from "next/link";
 import ApplicationRow from "@/components/ApplicationRow";
 import BackendDown from "@/components/BackendDown";
+import OfferPanel from "@/components/OfferPanel";
+import PageTitle from "@/components/PageTitle";
 import PostingCard from "@/components/PostingCard";
+import SlotMeter from "@/components/SlotMeter";
 import { formatDate, searchPostings, type JobPosting } from "@/lib/api";
 import { APPLICATION_LIMIT, applicant, applications, offer, resume } from "@/lib/sampleDesk";
 
@@ -22,7 +25,6 @@ export default async function DeskPage() {
   } catch {
     postings = null;
   }
-  const slots = Array.from({ length: APPLICATION_LIMIT }, (_, index) => index < applications.length);
 
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-6">
@@ -30,10 +32,9 @@ export default async function DeskPage() {
           ordered around the side column; on laptops it is the white canvas. */}
       <div className="contents min-w-0 lg:flex lg:flex-1 lg:flex-col lg:gap-6 lg:rounded-2xl lg:border lg:border-base-300 lg:bg-base-100 lg:p-8">
         <div className="order-1">
-          <h1 className="font-display text-2xl font-semibold md:text-3xl">
+          <PageTitle subtitle="One offer is waiting for your answer.">
             Welcome back, {applicant.firstName}
-          </h1>
-          <p className="mt-1 text-muted">One offer is waiting for your answer.</p>
+          </PageTitle>
         </div>
 
         <section className="order-3 flex flex-col gap-3">
@@ -75,42 +76,18 @@ export default async function DeskPage() {
       </div>
 
       <aside className="order-2 flex flex-col gap-4 lg:order-none lg:w-80 lg:shrink-0">
-        <section className="flex flex-col gap-3 rounded-2xl bg-warning p-5 md:flex-row md:items-center md:gap-5 lg:flex-col lg:items-stretch lg:gap-3">
-          <div className="min-w-0 grow">
-            <p className="text-sm font-semibold uppercase tracking-wider text-warning-content">
-              Offer waiting
-            </p>
-            <p className="mt-1 font-display text-xl font-semibold">{offer.title}</p>
-            <p className="text-[#4a3a26]">
-              {offer.organizationName} · Respond by {longDate(offer.expirationDate)}
-            </p>
-          </div>
-          <Link href="/offers" className="btn btn-neutral h-12">
-            Review offer
-          </Link>
-        </section>
+        <OfferPanel
+          title={offer.title}
+          organizationName={offer.organizationName}
+          respondBy={longDate(offer.expirationDate)}
+        />
 
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-1 lg:gap-4">
-          <section className="flex flex-col gap-3 rounded-2xl border border-base-300 bg-base-100 p-5">
-            <h2 className="font-semibold">Application slots</h2>
-            <p className="flex items-baseline gap-2">
-              <span className="font-display text-4xl font-semibold leading-none">
-                {applications.length}
-              </span>
-              <span className="text-muted">of {APPLICATION_LIMIT} in use</span>
-            </p>
-            <div aria-hidden="true" className="flex gap-1.5">
-              {slots.map((used, index) => (
-                <span
-                  key={index}
-                  className={`h-2.5 grow rounded-full ${used ? "bg-primary" : "bg-base-300"}`}
-                />
-              ))}
-            </div>
-            <p className="text-sm text-muted">
-              A slot frees up when you withdraw an application or it reaches a final stage.
-            </p>
-          </section>
+          <SlotMeter
+            used={applications.length}
+            total={APPLICATION_LIMIT}
+            caption="A slot frees up when you withdraw an application or it reaches a final stage."
+          />
 
           <section className="flex flex-col gap-1 rounded-2xl border border-base-300 bg-base-100 p-5">
             <h2 className="font-semibold">Resume on file</h2>

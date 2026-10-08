@@ -1,16 +1,9 @@
 import Link from "next/link";
-import { STAGES, type DeskApplication, type Stage } from "@/lib/sampleDesk";
-
-const chipStyle: Record<Stage, string> = {
-  Applied: "bg-base-200 text-base-content",
-  Screening: "bg-secondary text-secondary-content",
-  Interview: "bg-secondary text-secondary-content",
-  Offer: "bg-warning text-warning-content",
-};
+import type { DeskApplication } from "@/lib/sampleDesk";
+import { StageBadge, StageProgress } from "./StageBadge";
 
 // One application on the desk: a row on tablets and laptops, a stacked card on phones.
 export default function ApplicationRow({ application }: { application: DeskApplication }) {
-  const stageNumber = STAGES.indexOf(application.applicationStatus) + 1;
   const isOffer = application.applicationStatus === "Offer";
 
   return (
@@ -23,25 +16,10 @@ export default function ApplicationRow({ application }: { application: DeskAppli
             <span className="hidden md:inline"> · {application.location}</span>
           </p>
         </div>
-        <span
-          className={`rounded-lg px-2.5 py-1 text-center text-sm font-semibold md:order-3 md:w-28 ${chipStyle[application.applicationStatus]}`}
-        >
-          {application.applicationStatus}
-        </span>
+        <StageBadge stage={application.applicationStatus} className="md:order-3 md:w-28" />
       </div>
 
-      <div
-        role="img"
-        aria-label={`Stage ${stageNumber} of ${STAGES.length}`}
-        className="flex gap-1 md:order-2 md:w-40"
-      >
-        {STAGES.map((stage, index) => (
-          <span
-            key={stage}
-            className={`h-1.5 grow rounded-full ${index < stageNumber ? "bg-primary" : "bg-base-300"}`}
-          />
-        ))}
-      </div>
+      <StageProgress stage={application.applicationStatus} className="md:order-2 md:w-40" />
 
       <Link
         href={isOffer ? "/offers" : "/applications"}

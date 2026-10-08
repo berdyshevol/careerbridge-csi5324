@@ -1,4 +1,6 @@
 import BackendDown from "@/components/BackendDown";
+import EmptyState from "@/components/EmptyState";
+import PageTitle from "@/components/PageTitle";
 import PostingCard from "@/components/PostingCard";
 import { searchPostings, type JobPosting } from "@/lib/api";
 
@@ -19,7 +21,7 @@ export default async function JobsPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="font-display text-3xl font-semibold">Open job postings</h1>
+      <PageTitle>Open job postings</PageTitle>
 
       <form action="/jobs" className="flex gap-2">
         <label htmlFor="keyword" className="sr-only">
@@ -41,7 +43,9 @@ export default async function JobsPage({
       {postings === null ? (
         <BackendDown />
       ) : postings.length === 0 ? (
-        <p className="text-muted">No open postings match your search.</p>
+        <EmptyState action={{ href: "/jobs", label: "Clear the search" }}>
+          No open postings match your search.
+        </EmptyState>
       ) : (
         <ul className="grid gap-3 md:grid-cols-2">
           {postings.map((posting) => (

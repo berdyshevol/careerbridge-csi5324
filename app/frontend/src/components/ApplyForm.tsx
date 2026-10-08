@@ -5,6 +5,8 @@ import { useState } from "react";
 import { formatDate, type JobPosting } from "@/lib/api";
 import { checkApplication, submitApplication, type Desk } from "@/lib/apply";
 import { APPLICATION_LIMIT, applicant } from "@/lib/sampleDesk";
+import PageTitle from "./PageTitle";
+import SlotMeter from "./SlotMeter";
 
 // UC-04 Apply for Job: the summary before submission (FR-UC04.1), the
 // confirmation (FR-UC04.2) and the result (FR-UC04.5). The desk is the
@@ -39,13 +41,12 @@ export default function ApplyForm({ posting, initialDesk }: { posting: JobPostin
           </Link>
 
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wider text-muted">
-              You are applying for
-            </p>
-            <h1 className="mt-1 font-display text-3xl font-semibold">{posting.title}</h1>
-            <p className="mt-1 text-muted">
-              {posting.organization.name} · {posting.location} · {posting.employmentType}
-            </p>
+            <PageTitle
+              eyebrow="You are applying for"
+              subtitle={`${posting.organization.name} · ${posting.location} · ${posting.employmentType}`}
+            >
+              {posting.title}
+            </PageTitle>
             <p className="text-sm text-muted">Apply by {formatDate(posting.applicationDeadline)}</p>
           </div>
 
@@ -126,7 +127,7 @@ export default function ApplyForm({ posting, initialDesk }: { posting: JobPostin
           </Link>
         </section>
 
-        <Slots count={desk.applications.length} />
+        <SlotMeter used={desk.applications.length} total={APPLICATION_LIMIT} />
       </aside>
     </form>
   );
@@ -194,28 +195,6 @@ function Blocked({ check }: { check: Exclude<ReturnType<typeof checkApplication>
   }
 }
 
-// The application slots, as on the desk.
-function Slots({ count }: { count: number }) {
-  const slots = Array.from({ length: APPLICATION_LIMIT }, (_, index) => index < count);
-  return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-base-300 bg-base-100 p-5">
-      <h2 className="font-semibold">Application slots</h2>
-      <p className="flex items-baseline gap-2">
-        <span className="font-display text-4xl font-semibold leading-none">{count}</span>
-        <span className="text-muted">of {APPLICATION_LIMIT} in use</span>
-      </p>
-      <div aria-hidden="true" className="flex gap-1.5">
-        {slots.map((used, index) => (
-          <span
-            key={index}
-            className={`h-2.5 grow rounded-full ${used ? "bg-primary" : "bg-base-300"}`}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
 // FR-UC04.5: the submission is confirmed with the new count and a link to UC-05.
 function Submitted({ posting, activeCount }: { posting: JobPosting; activeCount: number }) {
   return (
@@ -235,13 +214,11 @@ function Submitted({ posting, activeCount }: { posting: JobPosting; activeCount:
             <path d="M5 12.5l4.5 4.5L19 7.5" />
           </svg>
         </div>
-        <div>
-          <h1 className="font-display text-3xl font-semibold">Application submitted</h1>
-          <p className="mt-1 text-muted">
-            {posting.title} at {posting.organization.name}. You now have {activeCount} of{" "}
-            {APPLICATION_LIMIT} active applications.
-          </p>
-        </div>
+        <PageTitle
+          subtitle={`${posting.title} at ${posting.organization.name}. You now have ${activeCount} of ${APPLICATION_LIMIT} active applications.`}
+        >
+          Application submitted
+        </PageTitle>
         <p>
           A copy of your resume went with it. The recruiter sees your application at the Applied
           stage; every change of stage will appear in Track status.

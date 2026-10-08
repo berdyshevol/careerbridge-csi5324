@@ -62,7 +62,7 @@ Only Published postings whose deadline has not passed are listed (BR-9, BR-10). 
 1. Backend: add your entities to `model` (names from the domain model), a repository interface, a service with one method per system operation in your contracts, and a `@RestController`.
 2. Add a JUnit test for your service (see `JobPostingServiceTest`).
 3. Frontend: add your calls to `frontend/src/lib/api.ts` and replace your stub page (see [frontend/README.md](frontend/README.md)).
-4. Work in your own branch and open a pull request.
+4. Work in your own branch and open a pull request. Before asking for a merge, run the `screen-review` skill on it (Claude Code: "review the screen in PR N") or go through its checklist in `.claude/skills/screen-review/SKILL.md`.
 
 ## Deployment
 
