@@ -1,8 +1,8 @@
 # CareerBridge — application
 
-Two parts, laid out like Design Studio 4:
+Two parts, side by side:
 
-- **Backend** (this folder): Spring Boot 4, Java 17, Maven, Spring Data JPA, in-memory H2. It serves JSON only.
+- **Backend** ([backend/](backend/)): Spring Boot 4, Java 17, Maven, Spring Data JPA, in-memory H2. It serves JSON only. Inside, it is laid out like Design Studio 4.
 - **Frontend** ([frontend/](frontend/)): Next.js with Tailwind and daisyUI. It draws the pages and calls the backend.
 
 ## Run locally
@@ -10,7 +10,7 @@ Two parts, laid out like Design Studio 4:
 Two terminals:
 
 ```bash
-cd app
+cd app/backend
 ./mvnw spring-boot:run        # backend on http://localhost:8080
 ```
 
@@ -20,7 +20,7 @@ npm install
 npm run dev                   # frontend on http://localhost:3000
 ```
 
-Open <http://localhost:3000>. `./mvnw test` runs the backend tests. The H2 console is at <http://localhost:8080/h2-console> (JDBC URL `jdbc:h2:mem:careerbridge`, user `sa`, no password).
+Open <http://localhost:3000>. `./mvnw test` in `app/backend` runs the backend tests. The H2 console is at <http://localhost:8080/h2-console> (JDBC URL `jdbc:h2:mem:careerbridge`, user `sa`, no password).
 
 ## Tests run before every push
 
@@ -31,7 +31,7 @@ After `npm install` in `app/frontend`, git runs the tests on `git push` (a husky
 
 ## Backend layers
 
-Packages under `src/main/java/baylor/csi5324/careerbridge/`. A layer only calls the one below it.
+Packages under `backend/src/main/java/baylor/csi5324/careerbridge/`. A layer only calls the one below it.
 
 | Layer | Package | Does |
 | --- | --- | --- |
@@ -40,7 +40,7 @@ Packages under `src/main/java/baylor/csi5324/careerbridge/`. A layer only calls 
 | Repository | `repository` | Spring Data JPA interfaces |
 | Model | `model` | Entities, named as in the domain model (documentation, section 5) |
 
-`util` holds helper classes (`CsvReader`). `config/SampleDataLoader` fills the empty database from `src/main/resources/data/jobs.csv` at startup; `config/WebConfig` lets the frontend call the API from the browser.
+`util` holds helper classes (`CsvReader`). `config/SampleDataLoader` fills the empty database from `backend/src/main/resources/data/jobs.csv` at startup; `config/WebConfig` lets the frontend call the API from the browser.
 
 ## Naming follows the documentation
 
@@ -69,7 +69,7 @@ Only Published postings whose deadline has not passed are listed (BR-9, BR-10). 
 Deploying is a button: on GitHub open **Actions → Deploy → Run workflow** (branch `main`). It runs every check, then deploys both parts. Nothing deploys by itself.
 
 - **Frontend:** <https://careerbridge-csi5324.vercel.app> (Vercel, project `careerbridge-csi5324`, root `app/frontend`).
-- **Backend:** <https://careerbridge-api-et18.onrender.com/api/postings> (Render, service `careerbridge-api`, built from the `Dockerfile` in this folder).
+- **Backend:** <https://careerbridge-api-et18.onrender.com/api/postings> (Render, service `careerbridge-api`, root `app/backend`, built from the `Dockerfile` there).
 
 The frontend finds the backend through `NEXT_PUBLIC_API_URL`; the backend allows the frontend addresses listed in `careerbridge.frontend-origins` (`application.properties`). Render's free plan sleeps when idle, so the first request after a pause takes about a minute. The database is in memory: every restart reloads `jobs.csv`.
 

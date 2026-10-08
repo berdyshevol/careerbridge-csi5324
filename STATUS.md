@@ -8,7 +8,7 @@
 
 **Next actions**
 
-1. Stack is **Java Spring Boot + Next.js with daisyUI** (D-018, Oct 7), replacing Node.js. Skeleton on branch `oleg/spring-skeleton` (`app/` backend, `app/frontend/`); merge it so everyone can start.
+1. Stack is **Java Spring Boot + Next.js with daisyUI** (D-018, Oct 7), replacing Node.js. Skeleton is in `main` (`app/backend/`, `app/frontend/`, see `app/README.md`); work in branches and pull requests.
 2. Agree who builds the shared parts (data model, Log In). Josh: UC-04 Apply for Job, the required minimum.
 3. Every member needs at least one meaningful **code** commit in the group repo.
 4. Draw the SDs and the DCD; revise the documentation once the Iteration 1 comments appear in Canvas.

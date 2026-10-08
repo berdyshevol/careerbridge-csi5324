@@ -20,7 +20,7 @@ export default defineConfig({
   webServer: [
     {
       command: "./mvnw -q spring-boot:run",
-      cwd: "..",
+      cwd: "../backend",
       url: "http://localhost:8080/api/postings",
       reuseExistingServer: !process.env.CI,
       timeout: 240_000,
