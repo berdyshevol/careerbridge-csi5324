@@ -9,6 +9,18 @@ npm run dev
 
 Open <http://localhost:3000>. `npm run lint` checks the code; `npm run build` makes a production build. To point at another backend, set `NEXT_PUBLIC_API_URL` (default `http://localhost:8080`).
 
+## Tests
+
+```bash
+npm test              # unit and component tests (Vitest + React Testing Library)
+npm run test:e2e      # end-to-end tests (Playwright, headless)
+```
+
+- **Unit and component tests** sit next to the code as `*.test.ts` / `*.test.tsx` (see `src/components/ApplicationRow.test.tsx`).
+- **End-to-end tests** are in `e2e/`. Playwright starts the backend and the frontend itself, or reuses them if they are already running, and runs each test at laptop and phone size. The first time, run `npx playwright install chromium`.
+
+Add both kinds for your use case. Every pull request into `main` runs them.
+
 ## Where things are
 
 | What | Where |
