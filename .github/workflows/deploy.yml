@@ -31,20 +31,17 @@ jobs:
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: npm install --global vercel@62.7.0
+      # Uploads the sources; Vercel builds them on its own servers. No code
+      # from this repository runs here, so nothing here can read the token.
       # The Vercel project already knows the frontend lives in app/frontend.
-      - name: Fetch the project settings
-        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      # The build runs our code and its npm packages, so it gets no token.
-      - name: Build
-        run: vercel build --prod
       - name: Deploy
-        run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+        run: vercel deploy --prod --yes --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
