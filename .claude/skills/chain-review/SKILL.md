@@ -10,7 +10,7 @@ workflow's verdict as is.
 
 ## 1. Resolve what to review
 
-The chains live in the final document `deliverables/deliverable-2/deliverable-2.md` (source of
+The chains live in the final document `spec/deliverables/deliverable-2/deliverable-2.md` (source of
 truth, D-017): for use case UC-nn its FRs `FR-UCnn.n` (§3.1), NFRs (§3.2), traceability rows
 (§3.4), the fully-dressed use case (§4.2) and the SSD `SSD-nn` with contracts `CO-nn.n` (§4.3).
 

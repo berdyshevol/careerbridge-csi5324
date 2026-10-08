@@ -1,6 +1,6 @@
 # Decision log
 
-Append-only. One row per decision; newer rows at the bottom. Reference decisions as `D-xxx` from any document. When a decision changes a current fact, also update [CLAUDE.md](../CLAUDE.md).
+Append-only. One row per decision; newer rows at the bottom. Reference decisions as `D-xxx` from any document. When a decision changes a current fact, also update [CLAUDE.md](../../CLAUDE.md).
 
 | ID | Date | Decision | Context / source |
 | --- | --- | --- | --- |
@@ -22,3 +22,4 @@ Append-only. One row per decision; newer rows at the bottom. Reference decisions
 | D-016 | 2026-09-25 | **Josh's use-case document is the Iteration 1 starting point.** Its team-facing surface is the Word doc on Josh's OneDrive (shared in Teams); the canonical copy is [deliverable-2.md](../deliverables/deliverable-2/deliverable-2.md), converted verbatim with the diagrams redrawn in Mermaid. Split: Oleg UC-01–03, Rabeya UC-04–07, Reagan UC-08–10, Zeba UC-11–13, Josh UC-14–17. | Josh's doc, adopted by Oleg on Sep 25, 2026. |
 | D-017 | 2026-09-28 | **The final Iteration 1 document is the source of truth.** `deliverable-2.md` is replaced by the conversion of `CareerBridge_Iteration1_Documentation.pdf` (Josh's OneDrive, Sep 28): 15 use cases, FR IDs `FR-UC<nn>.<n>`, ownership per its Table 21 (Josh UC-04, UC-14, UC-15; Rabeya UC-05–07). Everything that diverged from it was removed or aligned: the `chains/` working files, the 17-use-case split of D-016, the `FR-<UC>.<n>` numbering. | Oleg, Sep 28, 2026. |
 | D-018 | 2026-10-07 | **The application is built on Java Spring Boot, replacing the Node.js stack of D-004.** Backend: Spring Boot 4, Java 17, Maven, Spring Data JPA, H2, JUnit — the setup of Design Studio 4. Reason: most members do not know JavaScript, and everyone is learning Spring in class. Supersedes D-004 and closes the Sep 29 stack vote. Frontend: Next.js (TypeScript) with Tailwind and daisyUI in `app/frontend/`, calling the Spring JSON API — the layout of DS 4. The look comes from a design canvas made first (laptop, tablet and phone) and is kept as one daisyUI theme. | Oleg, after talking with the members in person, Oct 7, 2026. |
+| D-019 | 2026-10-07 | **Repository layout: documents in `spec/`, code in `app/`.** `course/`, `deliverables/`, `inbox/`, `meetings/` and `team/` moved into `spec/`; the Spring project moved from `app/` into `app/backend/`, beside `app/frontend/`. Links written before this date show the old paths in their text but still resolve. | Oleg (Project Librarian), to make the top level readable before the team starts coding. |
