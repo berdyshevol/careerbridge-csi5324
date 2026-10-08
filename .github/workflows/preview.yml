@@ -27,6 +27,8 @@ permissions:
 jobs:
   preview:
     name: Frontend preview on Vercel
+    # Second lock, in case the environment's own rules are ever removed.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: preview
     env:
