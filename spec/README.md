@@ -14,7 +14,7 @@ together with the code. If code and specification disagree, fix one of them in t
 | [design.md](design.md) | Design sequence diagrams and the design class diagram | 6, 7 |
 | [architecture.md](architecture.md) | Parts of the system, layers, deployment | 8 |
 | [adr/](adr/) | Architecture decision records | — |
-| [team.md](team.md) | Roles and who owns which use cases | 10 |
+| [team.md](team.md) | Members and roles | 10 |
 
 Figures are in [diagrams/](diagrams/).
 
