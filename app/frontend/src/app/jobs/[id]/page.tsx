@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BackendDown from "@/components/BackendDown";
+import PageTitle from "@/components/PageTitle";
 import { formatDate, isOpen, viewPosting, type JobPosting } from "@/lib/api";
 
 // UC-01 Browse Job Postings: the details of one posting.
@@ -25,12 +26,11 @@ export default async function PostingPage({ params }: { params: Promise<{ id: st
           All jobs
         </Link>
 
-        <div>
-          <h1 className="font-display text-3xl font-semibold">{posting.title}</h1>
-          <p className="mt-1 text-muted">
-            {posting.organization.name} · {posting.location} · {posting.employmentType}
-          </p>
-        </div>
+        <PageTitle
+          subtitle={`${posting.organization.name} · ${posting.location} · ${posting.employmentType}`}
+        >
+          {posting.title}
+        </PageTitle>
 
         {!open && (
           <div role="status" className="alert alert-warning">

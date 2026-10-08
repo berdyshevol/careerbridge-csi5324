@@ -44,6 +44,10 @@ Tailwind with daisyUI.
    A screen never brings its own colors, fonts, spacing scale or component library. When a block is
    needed twice (a posting card, an application row, the slot meter), it becomes a component in
    `src/components/` and both screens use it.
+   `/styleguide` is the live catalogue of these blocks and the reference for pull request review;
+   a block that appears there is the only way to draw that thing. `npm run lint` refuses
+   hard-coded colors, inline styles and other component libraries; the `screen-review` skill in
+   `.claude/skills/` walks a reviewer through the rest.
 7. **Sample data is explicit.** What the backend cannot answer yet (the logged-in applicant, their
    applications, resume and offer) comes from `src/lib/sampleDesk.ts`, and each screen that uses it
    says so. A use case replaces its piece of sample data with an API call when it is implemented.

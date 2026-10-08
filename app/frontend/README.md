@@ -30,12 +30,13 @@ Add both kinds for your use case. Every pull request into `main` runs them.
 | Components | `src/components/` |
 | Calls to the backend | `src/lib/api.ts` |
 | Look: colors, corner radius, fonts | `src/app/globals.css` (one daisyUI theme, `careerbridge`) |
+| `/styleguide` | The component catalogue: every block a screen may use, with the component or classes to copy |
 
 ## Design
 
 The look comes from the team's design canvas; the reasons are in [ADR-0004](../../spec/adr/0004-frontend.md). Use daisyUI components (`btn`, `card`, `badge`, `input`, `alert`) so everything picks up the theme; do not hard-code colors.
 
-The site must look like one site. Build your screen from the same pieces as the existing ones: the shared layout, a `font-display` page title, `card`s with a `base-300` border, `alert`s for messages, one `btn btn-primary` for the main action and a plain `btn` for the way back, `link link-primary` for links. Reuse the components in `src/components/`; if you need a block twice, make it a component. Look at `/jobs/[id]` and `/jobs/[id]/apply` as the reference before you start.
+The site must look like one site. Build your screen from the same pieces as the existing ones: the shared layout, a `font-display` page title, `card`s with a `base-300` border, `alert`s for messages, one `btn btn-primary` for the main action and a plain `btn` for the way back, `link link-primary` for links. Reuse the components in `src/components/`; if you need a block twice, make it a component. Open `/styleguide` first: every block you may use is there with the component or classes to copy. `npm run lint` refuses hard-coded colors, inline styles and other component libraries.
 
 The desk navigation has three forms, in `src/components/DeskNav.tsx`: a side column on laptops, a row of tiles on tablets, a bottom bar on phones. Check your page at all three widths.
 
