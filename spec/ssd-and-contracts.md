@@ -6,7 +6,7 @@
 
 For each use case, the system sequence diagram (SSD) shows the main success scenario with CareerBridge as a black box, and the operation contracts define each system operation. Contract postconditions are written only as instances created or deleted, associations formed or broken and attributes modified, using the classes and attribute names of the domain model in section 5 (attribute names in italics). Messages that only return information are queries and have no contract.
 
-#### UC-01 Browse Job Postings (author: Oleg Berdyshev)
+#### UC-01 Browse Job Postings
 
 Figure 5 shows SSD-01, the system sequence diagram for the main success scenario of UC-01.
 
@@ -44,7 +44,7 @@ Figure 5 shows SSD-01, the system sequence diagram for the main success scenario
 
 **Output:** The posting's full details, or a notice that it no longer accepts applications if it has closed.
 
-#### UC-02 Register as Applicant (author: Oleg Berdyshev)
+#### UC-02 Register as Applicant
 
 Figure 6 shows SSD-02, the system sequence diagram for the main success scenario of UC-02.
 
@@ -88,7 +88,7 @@ Figure 6 shows SSD-02, the system sequence diagram for the main success scenario
 
 **Output:** System hands any new Notification to the Notification Service.
 
-#### UC-03 Maintain Profile and Resume (author: Oleg Berdyshev)
+#### UC-03 Maintain Profile and Resume
 
 Figure 7 shows SSD-03, the system sequence diagram for the main success scenario of UC-03.
 
@@ -134,7 +134,7 @@ Figure 7 shows SSD-03, the system sequence diagram for the main success scenario
 
 **Postconditions:** A Resume was created for the accepted file, with its _file Name_ and _upload Date_ , and associated with the Applicant. Any previous Resume was dissociated from the Applicant (BR-6).
 
-#### UC-04 Apply for Job (author: Josh Job Joseph)
+#### UC-04 Apply for Job
 
 Figure 8 shows SSD-04, the system sequence diagram for the main success scenario of UC-04.
 
@@ -180,7 +180,7 @@ startApplication(postingId) only presents the application summary and changes no
 
 - The Notification Service is unavailable (extension 6a): the postconditions still hold, and each Notification keeps _status_ Pending until the service accepts it.
 
-#### UC-14 Screen Applications (author: Josh Job Joseph)
+#### UC-14 Screen Applications
 
 Figure 9 shows SSD-14, the system sequence diagram for the main success scenario of UC-14.
 
@@ -280,7 +280,7 @@ listPostings() is a query that changes nothing, so it has no contract. At step 3
 
 - The Notification Service is unavailable (extension 7a): the postconditions still hold, and each Notification keeps _status_ Pending until the service accepts it.
 
-#### UC-15 Extend Job Offer (author: Josh Job Joseph)
+#### UC-15 Extend Job Offer
 
 Figure 10 shows SSD-15, the system sequence diagram for the main success scenario of UC-15.
 
@@ -342,7 +342,7 @@ startOffer(applicationId) only presents the offer form, or the current terms of 
 
 - The Notification Service is unavailable (extension 7a): the postconditions still hold, and each Notification keeps _status_ Pending until the service accepts it.
 
-#### UC-05 Track Application Status (author: Rabeya Nazara)
+#### UC-05 Track Application Status
 
 Figure 11 shows SSD-05, the system sequence diagram for the main success scenario of UC-05.
 
@@ -380,7 +380,7 @@ Figure 11 shows SSD-05, the system sequence diagram for the main success scenari
 
 If the application does not belong to the logged-in Applicant, no application information is returned.
 
-#### UC-06 Withdraw Application (author: Rabeya Nazara)
+#### UC-06 Withdraw Application
 
 Figure 12 shows SSD-06, the system sequence diagram for the main success scenario of UC-06.
 
@@ -442,7 +442,7 @@ Figure 12 shows SSD-06, the system sequence diagram for the main success scenari
 
 - The Notification Service is unavailable (extension 6a): the postconditions still hold, and each Notification keeps _status_ Pending until the service accepts it.
 
-#### UC-07 Respond to Job Offer (author: Rabeya Nazara)
+#### UC-07 Respond to Job Offer
 
 Figure 13 shows SSD-07, the system sequence diagram for the main success scenario of UC-07.
 
@@ -542,7 +542,7 @@ Figure 13 shows SSD-07, the system sequence diagram for the main success scenari
 
 - The Notification Service is unavailable (extension 7a): the postconditions still hold, and each Notification keeps _status_ Pending until the service accepts it.
 
-#### UC-08 Register Recruiter and Organization (author: Reagan Rubio)
+#### UC-08 Register Recruiter and Organization
 
 Figure 14 shows SSD-08, the system sequence diagram for the main success scenario of UC-08.
 
@@ -602,7 +602,7 @@ selectRegisterRecruiter() only opens the registration form and changes nothing, 
 
 - The Notification Service is unavailable (extension 7a): the postconditions still hold, and each Notification keeps _status_ Pending until the service accepts it.
 
-#### UC-09 Join Additional Organization (author: Reagan Rubio)
+#### UC-09 Join Additional Organization
 
 Figure 15 shows SSD-09, the system sequence diagram for the main success scenario of UC-09.
 
@@ -646,7 +646,7 @@ selectJoinOrganization(), searchOrganizations(query) and selectOrganization(orga
 
 - The Notification Service is unavailable (extension 7a): the postconditions still hold, and each Notification keeps _status_ Pending until the service accepts it.
 
-#### UC-10 Approve Recruiter/Organization Request (author: Reagan Rubio)
+#### UC-10 Approve Recruiter/Organization Request
 
 Figure 16 shows SSD-10, the system sequence diagram for the main success scenario of UC-10.
 
@@ -692,7 +692,7 @@ openApprovalQueue() and selectRequest(requestId) are queries that change nothing
 
 - The Notification Service is unavailable (extension 7a): the postconditions still hold, and each Notification keeps _status_ Pending until the service accepts it.
 
-#### UC-11 Create Job Posting (author: Zeba Tusnia Towshi)
+#### UC-11 Create Job Posting
 
 Figure 17 shows SSD-11, the system sequence diagram for the main success scenario of UC-11.
 
@@ -728,7 +728,7 @@ selectCreatePosting() only opens the posting form and changes nothing, so it has
 
 - The Recruiter no longer has an active membership in the selected organization (extension *a): no postcondition holds.
 
-#### UC-12 Approve Job Posting (author: Zeba Tusnia Towshi)
+#### UC-12 Approve Job Posting
 
 Figure 18 shows SSD-12, the system sequence diagram for the main success scenario of UC-12.
 
@@ -772,7 +772,7 @@ openPostingApprovalQueue() and selectPosting(postingId) are queries that change 
 
 - The Notification Service is unavailable (extension 7a): the postconditions still hold, and each Notification keeps _status_ Pending until the service accepts it.
 
-#### UC-13 Expire Job Posting (author: Zeba Tusnia Towshi)
+#### UC-13 Expire Job Posting
 
 Figure 19 shows SSD-13, the system sequence diagram for the main success scenario of UC-13.
 

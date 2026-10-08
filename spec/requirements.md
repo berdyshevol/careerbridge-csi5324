@@ -8,7 +8,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 ### 3.1 Functional Requirements
 
-#### UC-01 Browse Job Postings (Oleg Berdyshev)
+#### UC-01 Browse Job Postings
 
 - **FR-UC01.1:** The system shall let any visitor, without logging in, view the open job postings of all organizations, newest first. (BR-1, BR-3, BR-9, BR-10; UC-01 steps 1–2)
 
@@ -16,7 +16,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC01.3:** The system shall show the full details of a selected open posting. (UC-01 steps 5–6)
 
-#### UC-02 Register as Applicant (Oleg Berdyshev)
+#### UC-02 Register as Applicant
 
 - **FR-UC02.1:** The system shall let a visitor create an Applicant account with full name, email address and password, without Administrator approval. (BR-14; UC-02 steps 1–5)
 
@@ -24,7 +24,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC02.3:** The system shall email the new Applicant a verification link valid for 24 hours and activate the account only when the link is opened before it expires. (A15; UC-02 steps 5–8, extension 7a)
 
-#### UC-03 Maintain Profile and Resume (Oleg Berdyshev)
+#### UC-03 Maintain Profile and Resume
 
 - **FR-UC03.1:** The system shall let an applicant view their profile details and edit their full name, phone, location, headline, skills, education and work experience, and shall reject the changes if the full name is empty or the phone number is malformed. (UC-03 steps 1–4, extension 4a)
 
@@ -32,7 +32,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC03.3:** The system shall keep the resume copy attached to each submitted application unchanged when the applicant replaces their resume. (BR-5, A6; UC-03 step 6, Success Guarantee)
 
-#### UC-04 Apply for Job (Josh Job Joseph)
+#### UC-04 Apply for Job
 
 - **FR-UC04.1:** The system shall let a logged-in Applicant apply to an open posting and, before submission, show the posting title and organization, the Applicant's contact details, the resume on file and how many of the 5 active applications are in use. (BR-4; UC-04 steps 1–2)
 
@@ -50,7 +50,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC04.8:** If the Notification Service is unavailable, the system shall keep the application saved, retry the confirmation and still confirm the submission on screen. (UC-04 extension 6a)
 
-#### UC-14 Screen Applications (Josh Job Joseph)
+#### UC-14 Screen Applications
 
 - **FR-UC14.1:** The system shall present every posting of the organization the Recruiter is acting for, each with the number of applications at each stage. (A10; UC-14 steps 1–2)
 
@@ -74,7 +74,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC14.11:** The system shall let a Recruiter who belongs to several organizations switch the organization they act for, and then present only that organization's postings. (BR-2, A16; UC-14 extension 2a)
 
-#### UC-15 Extend Job Offer (Josh Job Joseph)
+#### UC-15 Extend Job Offer
 
 - **FR-UC15.1:** The system shall let a Recruiter extend an offer only on an application at the Interview stage, and shall present the offer terms to fill in, with the job title taken from the posting and the posting's openings, accepted offers and outstanding offers. (BR-8; UC-15 steps 1–2, extension 1a)
 
@@ -96,7 +96,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC15.10:** When a Recruiter asks for an application of an organization they are not an Active member of, the system shall reveal nothing, report that it was not found and record the attempt. (BR15; UC-15 extension *a)
 
-#### UC-05 Track Application Status (Rabeya Nazara)
+#### UC-05 Track Application Status
 
 - **FR-UC05.1:** The system shall let a logged-in Applicant view all applications that belong to that Applicant, with active applications shown first. Each application shall show the posting title, organization, submission date, current stage, and date of the most recent stage change. (BR-7, BR-15; UC-05 steps 1–2)
 
@@ -114,7 +114,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC05.8:** The system shall show the Applicant's current number of active applications relative to the maximum of five allowed active applications. (BR-4; UC-05 step 2)
 
-#### UC-06 Withdraw Application (Rabeya Nazara)
+#### UC-06 Withdraw Application
 
 - **FR-UC06.1:** The system shall let an Applicant withdraw an application only while it is in the Applied, Screening, or Interview stage. An application in the Offer stage shall be handled through UC-07 instead. (BR-5, BR-8; UC-06 Preconditions)
 
@@ -134,7 +134,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC06.9:** A withdrawn application shall remain stored as a read-only record for audit purposes and shall not be deleted by the withdrawal operation. (UC-06 Special Requirements)
 
-#### UC-07 Respond to Job Offer (Rabeya Nazara)
+#### UC-07 Respond to Job Offer
 
 - **FR-UC07.1:** The system shall let an Applicant whose application is in the Offer stage view the offer details, including the organization, job title, start date, compensation, other offer terms, and response deadline. (BR-13; UC-07 steps 1–2)
 
@@ -158,7 +158,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC07.11:** If the recruiter revised the offer after the Applicant viewed it, the system shall present the revised terms and record no response until the Applicant responds to them. (A14; UC-07 extension 6b)
 
-#### UC-08 Register Recruiter and Organization (Reagan Rubio)
+#### UC-08 Register Recruiter and Organization
 
 - **FR-UC08.1:** The system shall check that all required registration fields are present and valid and that the password meets the policy before creating the recruiter account. (UC-08 step 4, extension 4a)
 
@@ -168,7 +168,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC08.4:** When the visitor opens a valid verification link, the system shall mark the email verified, add the request to the Administrator's approval queue and ask the Notification Service to alert the Administrator. (UC-08 steps 6–7)
 
-#### UC-09 Join Additional Organization (Reagan Rubio)
+#### UC-09 Join Additional Organization
 
 - **FR-UC09.1:** Before creating a membership request, the system shall verify that the recruiter is not already a member of the organization and has no pending request for it. (UC-09 step 6, extensions 6a– 6b)
 
@@ -176,7 +176,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC09.3:** When a recruiter creates a new organization through UC-09, the system shall create the organization with a Pending Approval status. (UC-09 extension 3a)
 
-#### UC-10 Approve Recruiter/Organization Request (Reagan Rubio)
+#### UC-10 Approve Recruiter/Organization Request
 
 - **FR-UC10.1:** The system shall allow only authenticated users with the **Administrator** role to access the recruiter/organization approval queue. (UC-10 Preconditions, Special Requirements)
 
@@ -184,7 +184,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC10.3:** The system shall ask the Notification Service to tell the requester the decision, with the reason when the request is denied. (UC-10 step 7, extension 5a)
 
-#### UC-11 Create Job Posting (Zeba Tusnia Towshi)
+#### UC-11 Create Job Posting
 
 - **FR-UC11.1:** The system shall allow an approved Recruiter to create a job posting only for an organization in which the Recruiter has an active membership. (BR-14; UC-11 Preconditions, extension 2a)
 
@@ -202,7 +202,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC11.8:** The system shall show a Returned posting with the Administrator's comments and let a recruiter of the organization revise and resubmit it. (UC-11 extension 6a; UC-12 extension 5a)
 
-#### UC-12 Approve Job Posting (Zeba Tusnia Towshi)
+#### UC-12 Approve Job Posting
 
 - **FR-UC12.1:** The system shall allow only authenticated Administrators to access the job-posting approval queue. (UC-12 Preconditions)
 
@@ -220,7 +220,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC12.8:** The system shall notify the organization's recruiters after an approval, return, or rejection decision. (UC-12 step 7; extensions 5a, 5b)
 
-#### UC-13 Expire Job Posting (Zeba Tusnia Towshi)
+#### UC-13 Expire Job Posting
 
 - **FR-UC13.1:** The system shall run the expiration process at least every 15 minutes. (UC-13 step 1, Special Requirements)
 
@@ -240,13 +240,13 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 ### 3.2 Non-functional Requirements
 
-#### UC-01 Browse Job Postings (Oleg Berdyshev)
+#### UC-01 Browse Job Postings
 
 - **NFR-UC01.1 (Performance):** Search results appear within 2 seconds for up to 10,000 open postings.
 
 - **NFR-UC01.2 (Usability):** Pages work on current desktop and mobile browsers and meet WCAG 2.1 AA.
 
-#### UC-02 Register as Applicant (Oleg Berdyshev)
+#### UC-02 Register as Applicant
 
 - **NFR-UC02.1 (Security):** Passwords are stored only as salted hashes, and all traffic uses HTTPS.
 
@@ -254,13 +254,13 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **NFR-UC02.3 (Usability):** Pages work on current desktop and mobile browsers and meet WCAG 2.1 AA.
 
-#### UC-03 Maintain Profile and Resume (Oleg Berdyshev)
+#### UC-03 Maintain Profile and Resume
 
 - **NFR-UC03.1 (Performance):** The system validates, scans and stores a 5 MB resume within 10 seconds after receiving it.
 
 - **NFR-UC03.2 (Security/Privacy):** Resume files are encrypted at rest. Only the applicant and the Administrator can open the resume on file; a recruiter sees only the resume copy attached to an application to their organization's posting. (BR-15, A6)
 
-#### UC-04 Apply for Job (Josh Job Joseph)
+#### UC-04 Apply for Job
 
 - **NFR-UC04.1 (Integrity):** An Applicant shall never have more than 5 active applications, even when several submissions from the same Applicant arrive at the same moment. (BR-4; UC-04 Special Requirements)
 
@@ -272,7 +272,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **NFR-UC04.5 (Reliability):** If the Notification Service is unavailable, no submitted application shall be lost, and every held notice is sent within 15 minutes after the service is available again.
 
-#### UC-14 Screen Applications (Josh Job Joseph)
+#### UC-14 Screen Applications
 
 - **NFR-UC14.1 (Performance):** The applications to a posting with up to 1,000 applications shall be listed within 2 seconds. (UC-14 Special Requirements)
 
@@ -284,7 +284,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **NFR-UC14.5 (Reliability):** If the Notification Service is unavailable, no recorded stage change shall be lost, and every held notice shall still be sent within the time A11 allows for its stage. (UC-14 extension 7a)
 
-#### UC-15 Extend Job Offer (Josh Job Joseph)
+#### UC-15 Extend Job Offer
 
 - **NFR-UC15.1 (Performance):** The offer shall be sent to the applicant within 1 minute of the Recruiter's confirmation. (A11; UC-15 Special Requirements)
 
@@ -294,7 +294,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **NFR-UC15.4 (Reliability):** If the Notification Service is unavailable, no recorded offer or revision shall be lost, and every held notice is sent within 15 minutes after the service is available again.
 
-#### UC-05 Track Application Status (Rabeya Nazara)
+#### UC-05 Track Application Status
 
 - **NFR-UC05.1 (Performance):** The application-status page shall load within 2 seconds for an Applicant with up to 200 applications.
 
@@ -304,7 +304,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **NFR-UC05.4 (Privacy):** No applicant view shall show a recruiter's internal notes or an interview outcome (A12).
 
-#### UC-06 Withdraw Application (Rabeya Nazara)
+#### UC-06 Withdraw Application
 
 - **NFR-UC06.1 (Integrity):** After any withdrawal attempt, including one interrupted by a failure, the application's stage and the Applicant's count of active applications shall agree in 100% of cases. (UC06 extension *a, Special Requirements)
 
@@ -312,7 +312,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **NFR-UC06.3 (Reliability):** If the Notification Service is unavailable, no recorded withdrawal shall be lost, and every held notice is sent within 15 minutes after the service is available again.
 
-#### UC-07 Respond to Job Offer (Rabeya Nazara)
+#### UC-07 Respond to Job Offer
 
 - **NFR-UC07.1 (Integrity):** A posting shall never have more Hired applications than openings, even when two or more Applicants accept the last opening at the same moment. (A2; UC-07 Special Requirements)
 
@@ -320,29 +320,29 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **NFR-UC07.3 (Reliability):** If the Notification Service is unavailable, no recorded offer response shall be lost, and every held notice is sent within 15 minutes after the service is available again.
 
-#### UC-08 Register Recruiter and Organization (Reagan Rubio)
+#### UC-08 Register Recruiter and Organization
 
 - **NFR-UC08.1 (Performance):** A verified registration request shall appear in the Administrator's approval queue within 1 minute of email verification. (UC-08 Special Requirements)
 
-#### UC-09 Join Additional Organization (Reagan Rubio)
+#### UC-09 Join Additional Organization
 
 - **NFR-UC09.1 (Security):** A recruiter shall only be able to access data belonging to organizations for which the recruiter has an approved membership.
 
 - **NFR-UC09.2 (Integrity):** At most one pending membership request shall exist per recruiter and organization, even when two identical requests are submitted at the same moment.
 
-#### UC-10 Approve Recruiter/Organization Request (Reagan Rubio)
+#### UC-10 Approve Recruiter/Organization Request
 
 - **NFR-UC10.1 (Auditability):** 100% of approval decisions shall be logged with the deciding Administrator, the date and time, the decision and any reason. (UC-10 Special Requirements)
 
 - **NFR-UC10.2 (Integrity):** After any approval, including one interrupted by a failure, the recruiter account, any new organization and the membership shall be either all Active or all unchanged.
 
-#### UC-11 Create Job Posting (Zeba Tusnia Towshi)
+#### UC-11 Create Job Posting
 
 - **NFR-UC11.1 (Security):** Draft and pending postings shall be visible only to approved recruiters of the owning organization and Administrators.
 
 - **NFR-UC11.2 (Reliability):** After a session timeout, a recruiter who logs in again within 24 hours shall recover all posting-form input entered up to 30 seconds before the timeout. (UC-11 Special Requirements)
 
-#### UC-12 Approve Job Posting (Zeba Tusnia Towshi)
+#### UC-12 Approve Job Posting
 
 - **NFR-UC12.1 (Security):** Only users with the Administrator role shall be authorized to approve, return, or reject job postings.
 
@@ -350,7 +350,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **NFR-UC12.3 (Reliability):** If the Notification Service is unavailable, no recorded posting decision shall be lost, and every held notice is sent within 15 minutes after the service is available again.
 
-#### UC-13 Expire Job Posting (Zeba Tusnia Towshi)
+#### UC-13 Expire Job Posting
 
 - **NFR-UC13.1 (Reliability/Idempotency):** Running the expiration job more than once shall not close an already closed posting again.
 

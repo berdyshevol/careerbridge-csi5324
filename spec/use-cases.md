@@ -18,26 +18,26 @@ When one use case hands the actor to another (for example, Screen Applications h
 
 **Table 5: Use-case index**
 
-|**ID**|**Use case**|**Primary actor**|**Author**|
-|---|---|---|---|
-|UC-01|Browse Job Postings|Visitor|Oleg Berdyshev|
-|UC-02|Register as Applicant|Visitor|Oleg Berdyshev|
-|UC-03|Maintain Profile and Resume|Applicant|Oleg Berdyshev|
-|UC-04|Apply for Job|Applicant|Josh Job Joseph|
-|UC-05|Track Application Status|Applicant|Rabeya Nazara|
-|UC-06|Withdraw Application|Applicant|Rabeya Nazara|
-|UC-07|Respond to Job Offer|Applicant|Rabeya Nazara|
+|**ID**|**Use case**|**Primary actor**|
+|---|---|---|
+|UC-01|Browse Job Postings|Visitor|
+|UC-02|Register as Applicant|Visitor|
+|UC-03|Maintain Profile and Resume|Applicant|
+|UC-04|Apply for Job|Applicant|
+|UC-05|Track Application Status|Applicant|
+|UC-06|Withdraw Application|Applicant|
+|UC-07|Respond to Job Offer|Applicant|
 
-|**ID**<br>~~a~~<br>|**Use case**|**Primary actor**|**Author**|
-|---|---|---|---|
-|UC-08<br>~~a~~<br>~~a~~|Register Recruiter and Organization|Visitor|Reagan Rubio|
-|UC-09<br><br>~~a~~|Join Additional Organization|Recruiter|Reagan Rubio|
-|UC-10<br>~~a~~|Approve Recruiter/Organization Request<br>|Administrator<br>|Reagan Rubio<br>|
-|UC-11<br>|Create Job Posting<br>~~P~~|Recruiter<br>~~T~~|Zeba Tusnia Towshi<br>|
-|UC-12<br><br>~~a~~|Approve Job Posting<br>|Administrator<br>|Zeba Tusnia Towshi<br>|
-|UC-13<br><br>~~a~~|Expire Job Posting|Scheduler|Zeba Tusnia Towshi|
-|UC-14<br>~~a~~|Screen Applications<br>|Recruiter<br>|Josh Job Joseph<br>|
-|UC-15<br>|Extend Job Offer<br>|Recruiter<br>|Josh Job Joseph<br>|
+|**ID**<br>~~a~~<br>|**Use case**|**Primary actor**|
+|---|---|---|
+|UC-08<br>~~a~~<br>~~a~~|Register Recruiter and Organization|Visitor|
+|UC-09<br><br>~~a~~|Join Additional Organization|Recruiter|
+|UC-10<br>~~a~~|Approve Recruiter/Organization Request<br>|Administrator<br>|
+|UC-11<br>|Create Job Posting<br>~~P~~|Recruiter<br>~~T~~|
+|UC-12<br><br>~~a~~|Approve Job Posting<br>|Administrator<br>|
+|UC-13<br><br>~~a~~|Expire Job Posting|Scheduler|
+|UC-14<br>~~a~~|Screen Applications<br>|Recruiter<br>|
+|UC-15<br>|Extend Job Offer<br>|Recruiter<br>|
 |—<br>|Log In (subfunction)<br>~~p~~|Applicant, Recruiter,<br>Administrator<br>|—<br>~~p~~|
 |—<br>|Close Job Posting (subfunction)<br>|— (used by UC-07 and<br>UC-13)<br>|—<br>|
 
@@ -59,15 +59,14 @@ Recruiters save and submit postings in UC-11, and the Administrator approves, re
 
 ### 4.2 Fully-Dressed Use Cases
 
-Each use case below follows the template's table: name, author, actor, preconditions, postconditions, main success scenario, extensions and special requirements, with the stakeholders' interests and the frequency of occurrence added from Larman's format. The Actor row names the primary actor first and then the supporting actors. The use cases are grouped by author, three per team member; the questions each one raised for the customer are listed in Table 3.
+Each use case below follows the template's table: name, actor, preconditions, postconditions, main success scenario, extensions and special requirements, with the stakeholders' interests and the frequency of occurrence added from Larman's format. The Actor row names the primary actor first and then the supporting actors. The use cases are grouped by author, three per team member; the questions each one raised for the customer are listed in Table 3.
 
-#### Use cases authored by Oleg Berdyshev
+#### UC-01 to UC-03
 
 **Table 6: UC-01 Browse Job Postings**
 
 |**Use Case Name**|UC-01: Browse Job Postings|
 |---|---|
-|**Author**|Oleg Berdyshev|
 |**Actor**|Primary: Visitor (also Applicant, Recruiter and Administrator, through generalization).<br>Supporting: None.|
 |**Stakeholders and Interests**|<br>**Visitor:** wants to find relevant open jobs across all organizations quickly, without creating an<br>account (BR-1, BR-3).<br><br>**Applicant:** wants the same, plus a direct route to apply and a clear sign of postings they have<br>already applied to.<br><br>**Recruiter / Organization:** wants its published postings seen by as many qualified people as<br>possible, and never wants drafts or unapproved postings shown.<br><br>**Administrator:** wants only approved, open postings made public (BR-9, BR-10), and no<br>applicant or application data exposed on public pages (BR-15).|
 |**Preconditions**|None. The job board is a public page (BR-3).|
@@ -81,7 +80,6 @@ Each use case below follows the template's table: name, author, actor, precondit
 
 |**Use Case Name**|UC-02: Register as Applicant|
 |---|---|
-|**Author**|Oleg Berdyshev|
 |**Actor**|Primary: Visitor. Supporting: Notification Service.|
 |**Stakeholders and Interests**|<br>**Visitor:** wants to create an account quickly so they can apply, without waiting for anyone's<br>approval (BR-14).<br><br>**Administrator:** wants one account per email address, valid contact details and securely<br>stored credentials, without reviewing every applicant.<br><br>**Recruiter / Organization:** wants applicant contact details to be real, so offers and notices<br>reach the right person.|
 |**Preconditions**|The visitor is not logged in.|
@@ -98,7 +96,6 @@ Each use case below follows the template's table: name, author, actor, precondit
 
 |**Use Case Name**|UC-03: Maintain Profile and Resume|
 |---|---|
-|**Author**|Oleg Berdyshev|
 |**Actor**|Primary: Applicant. Supporting: None.|
 |**Stakeholders and Interests**|<br>**Applicant:** wants profile details and their resume to stay current and easy to replace.<br><br>**Recruiter / Organization:** wants an accurate resume for each application it reviews, and<br>wants that resume to stay the same after submission (BR-5).<br><br>**Administrator:** wants uploaded files to be safe (correct type, limited size, no malware) and<br>resumes visible only to people entitled to see them (BR-15).|
 |**Preconditions**|The Applicant is logged in (Log In).|
@@ -108,13 +105,12 @@ Each use case below follows the template's table: name, author, actor, precondit
 |**Special Requirements**|<br>The system validates, scans and stores a 5 MB resume within 10 seconds after receiving it.<br><br>Resume files are encrypted at rest. Only the applicant and the Administrator can open the<br>resume on file; a recruiter sees only the resume copy attached to an application to their<br>organization's posting (BR-15, A6).|
 |**Frequency of Occurrence**|Occasional. Usually once after registration, then a few times a year.|
 
-#### Use cases authored by Josh Job Joseph
+#### UC-04, UC-14 and UC-15
 
 **Table 9: UC-04 Apply for Job**
 
 |**Use Case Name**|UC-04: Apply for Job|
 |---|---|
-|**Author**|Josh Job Joseph|
 |**Actor**|Primary: Applicant. Supporting: Notification Service.|
 |**Stakeholders and Interests**|<br>**Applicant:** wants to apply quickly using the resume on file, get a confirmation, and know<br>how many application slots remain (BR-4).<br><br>**Recruiter / Organization:** wants complete applications only for open postings, with no<br>duplicates, and visible only to the posting's recruiters (BR-15, A10).<br><br>**Administrator:** wants the 5-application limit enforced consistently, even when submissions<br>arrive at the same moment.<br><br>**Other applicants:** benefit from the limit, which keeps applicant pools focused.|
 |**Preconditions**|<br>The Applicant is logged in (Log In).<br><br>The Applicant has chosen an open posting (UC-01).|
@@ -128,7 +124,6 @@ Each use case below follows the template's table: name, author, actor, precondit
 
 |**Use Case Name**|UC-14: Screen Applications|
 |---|---|
-|**Author**|Josh Job Joseph|
 |**Actor**|Primary: Recruiter. Supporting: Notification Service.|
 |**Stakeholders and Interests**|<br>**Recruiter:** wants to review the applications to their organization's postings and move<br>qualified candidates forward one stage at a time (BR-8).<br><br>**Applicant:** wants the application reviewed and wants to learn of each stage change within a<br>known time (BR-7, A11).<br><br>**Organization:** wants every posting to follow the same fixed pipeline (BR-8) and its<br>applications hidden from other organizations (BR-15).<br><br>**Administrator:** wants each stage change attributable to a specific recruiter for audit.|
 |**Preconditions**|The Recruiter is logged in and is an Active member of the organization they are acting for (BR-<br>14, A16).|
@@ -142,7 +137,6 @@ Each use case below follows the template's table: name, author, actor, precondit
 
 |**Use Case Name**|UC-15: Extend Job Offer|
 |---|---|
-|**Author**|Josh Job Joseph|
 |**Actor**|Primary: Recruiter. Supporting: Notification Service.|
 |**Stakeholders and Interests**|<br>**Recruiter:** wants to send an offer with its terms, revise it while it is unanswered, and track<br>the response in one place (BR-13, A14).<br><br>**Applicant:** wants the offer terms in writing, delivered promptly, with a known response<br>deadline.<br><br>**Organization:** wants no more acceptances than it has openings (A2), and offer terms visible<br>only to the candidate, the posting's recruiters and the Administrator (BR-15, A10).<br><br>**Administrator:** wants each offer and each revision attributable to a recruiter for audit.|
 |**Preconditions**|The Recruiter is logged in and is an Active member of at least one organization (BR-14).|
@@ -154,13 +148,12 @@ Each use case below follows the template's table: name, author, actor, precondit
 |**Special Requirements**|<br>Any active recruiter of the organization that owns the posting can extend offers on its<br>applications (A10).<br><br>Offer terms are visible only to the applicant, the posting's recruiters and the Administrator<br>(BR-15, A10).<br><br>The offer reaches the applicant within 1 minute under normal load (A11).<br><br>The offer letter is a PDF of at most 5 MB.<br><br>Every offer and revision is written to the audit log.<br><br>If the Notification Service is unavailable, held notices are sent within 15 minutes after it is<br>available again.<br>**Technology and data variations:**<br><br>3a. Compensation is given as an amount, a currency and a period (hourly, monthly or yearly).|
 |**Frequency of Occurrence**|Low. Roughly once per opening, plus any offers that are declined or revised.|
 
-#### Use cases authored by Rabeya Nazara
+#### UC-05 to UC-07
 
 **Table 12: UC-05 Track Application Status**
 
 |**Use Case Name**|UC-05: Track Application Status|
 |---|---|
-|**Author**|Rabeya Nazara|
 |**Actor**|Primary: Applicant. Supporting: None.|
 |**Stakeholders and Interests**|<br>**Applicant:** wants to see every pipeline stage of each application (BR-7), know why an<br>application was rejected (BR-11) and reach the next action, such as withdrawing or<br>responding to an offer.<br><br>**Recruiter / Organization:** wants applicants kept informed, which cuts status inquiries, while<br>its internal notes and interview outcomes stay private (A12).<br><br>**Other applicants and organizations:** want no application visible to anyone other than its<br>owner, the posting's recruiters and the Administrator (BR-15, A10).|
 |**Preconditions**|The Applicant is logged in (Log In).|
@@ -174,7 +167,6 @@ Each use case below follows the template's table: name, author, actor, precondit
 
 |**Use Case Name**|UC-06: Withdraw Application|
 |---|---|
-|**Author**|Rabeya Nazara|
 |**Actor**|Primary: Applicant. Supporting: Notification Service.|
 |**Stakeholders and Interests**|<br>**Applicant:** wants to withdraw an application quickly, free an application slot (BR-4) and<br>understand beforehand that withdrawal is final (A5).<br><br>**Recruiter / Organization:** wants to know promptly so it stops spending review time on the<br>candidate, and wants the withdrawn application kept on record.<br><br>**Administrator:** wants the 5-application limit to stay accurate and an audit trail of every<br>withdrawal.|
 |**Preconditions**|<br>The Applicant is logged in (Log In).<br><br>The application belongs to the Applicant and is in the Applied, Screening or Interview stage.<br>At the Offer stage the applicant declines through UC-07 instead.|
@@ -190,7 +182,6 @@ Each use case below follows the template's table: name, author, actor, precondit
 
 |**Use Case Name**|UC-07: Respond to Job Offer|
 |---|---|
-|**Author**|Rabeya Nazara|
 |**Actor**|Primary: Applicant. Supporting: Notification Service.|
 |**Stakeholders and Interests**|<br>**Applicant:** wants to see the full, current offer terms and accept or decline clearly, knowing<br>the decision is final (BR-13).<br><br>**Recruiter / Organization:** wants a prompt, recorded answer, and wants the posting closed as<br>soon as it is filled so no more applications arrive (BR-10).<br><br>**Other applicants to the posting:** want to learn promptly that the position is filled, which<br>also frees their application slots (A3, BR-4).<br><br>**Administrator:** wants no posting to end up with more hires than openings (A2).|
 |**Preconditions**|<br>The Applicant is logged in (Log In).<br><br>The application belongs to the Applicant and is in the Offer stage (UC-15).|
@@ -200,13 +191,12 @@ Each use case below follows the template's table: name, author, actor, precondit
 |**Special Requirements**|<br>A posting never records more hires than openings, even when two applicants accept at the<br>same moment.<br><br>A filled posting leaves public listings within 1 minute of the acceptance that filled it.<br><br>If the Notification Service is unavailable, held notices are sent within 15 minutes after it is<br>available again.<br>**Technology and data variations:**<br><br>2a. Offer terms are shown as the recruiter entered them in UC-15; an offer letter may be<br>attached as a PDF.|
 |**Frequency of Occurrence**|Low. Once per offer extended.|
 
-#### Use cases authored by Reagan Rubio
+#### UC-08 to UC-10
 
 **Table 15: UC-08 Register Recruiter and Organization**
 
 |**Use Case Name**|UC-08: Register Recruiter and Organization|
 |---|---|
-|**Author**|Reagan Rubio|
 |**Actor**|Primary: Visitor. Supporting: Notification Service.|
 |**Stakeholders and Interests**|<br>**Prospective recruiter:** wants to set up a recruiter account, and their organization if it is new,<br>in one pass and to hear back quickly.<br><br>**Organization:** wants only people it has authorized to post jobs or see applications in its<br>name.<br><br>**Administrator:** wants enough information to confirm that the person and organization are<br>genuine before granting access (BR-14), and wants no duplicate organizations.<br><br>**Applicants:** want every posting to come from a legitimate employer, not a scam.|
 |**Preconditions**|The visitor is not logged in.|
@@ -223,7 +213,6 @@ Each use case below follows the template's table: name, author, actor, precondit
 
 |**Use Case Name**|UC-09: Join Additional Organization|
 |---|---|
-|**Author**|Reagan Rubio|
 |**Actor**|Primary: Recruiter. Supporting: Notification Service.|
 |**Stakeholders and Interests**|<br>**Recruiter:** wants to recruit for another organization, such as a client or a sister company,<br>with the same login (BR-2).<br><br>**Target organization:** wants only authorized people to act for it, and wants to know who has<br>joined.<br><br>**Administrator:** wants to confirm the recruiter's affiliation before granting access (A4).<br><br>**Applicants:** want recruiters to see only applications to organizations they actually belong to<br>(BR-15).|
 |**Preconditions**|The Recruiter is logged in, the account is approved, and the recruiter belongs to at least one<br>organization.|
@@ -240,7 +229,6 @@ Each use case below follows the template's table: name, author, actor, precondit
 
 |**Use Case Name**|UC-10: Approve Recruiter/Organization Request|
 |---|---|
-|**Author**|Reagan Rubio|
 |**Actor**|Primary: Administrator. Supporting: Notification Service.|
 |**Stakeholders and Interests**|<br>**Administrator:** wants a clear queue with enough information to decide each request quickly<br>and defensibly.<br><br>**Requesting recruiter:** wants a fast decision, and a reason if denied.<br><br>**Organization:** wants no one acting in its name without authorization.<br><br>**Applicants:** want only genuine employers able to post jobs and read their applications (BR-<br>14, BR-15).|
 |**Preconditions**|The Administrator is logged in with the Administrator role (Log In).|
@@ -250,13 +238,12 @@ Each use case below follows the template's table: name, author, actor, precondit
 |**Special Requirements**|<br>Only accounts with the Administrator role can open the approval queue.<br><br>Every decision is logged with who decided, when, the decision and any reason.<br><br>Target: requests are decided within 2 business days.<br>**Technology and data variations:**<br><br>5a. The Administrator may open the organization's website from the request to check it.|
 |**Frequency of Occurrence**|Several times a week, rising as more organizations join.|
 
-#### Use cases authored by Zeba Tusnia Towshi
+#### UC-11 to UC-13
 
 **Table 18: UC-11 Create Job Posting**
 
 |**Use Case Name**|UC-11: Create Job Posting|
 |---|---|
-|**Author**|Zeba Tusnia Towshi|
 |**Actor**|Primary: Recruiter. Supporting: None.|
 |**Stakeholders and Interests**|<br>**Recruiter:** wants to draft a posting for one of their organizations, save it and submit it for<br>approval with little effort (BR-2).<br><br>**Organization:** wants postings in its name created only by its own approved recruiters, with<br>accurate details (BR-15).<br><br>**Administrator:** wants complete, lawful postings to review before anything goes public (BR-<br>9, A1).<br><br>**Applicants:** want clear information: role, location, type, requirements and deadline.|
 |**Preconditions**|The Recruiter is logged in, the account is approved, and the recruiter is an active member of at<br>least one organization (BR-14).|
@@ -273,7 +260,6 @@ Each use case below follows the template's table: name, author, actor, precondit
 
 |**Use Case Name**|UC-12: Approve Job Posting|
 |---|---|
-|**Author**|Zeba Tusnia Towshi|
 |**Actor**|Primary: Administrator. Supporting: Notification Service.|
 |**Stakeholders and Interests**|<br>**Administrator:** wants to see each posting exactly as the public will, and to decide quickly<br>against clear guidelines (BR-9).<br><br>**Recruiter / Organization:** wants a fast decision, and specific comments when changes are<br>needed.<br><br>**Applicants:** want only legitimate, non-discriminatory postings published.|
 |**Preconditions**|The Administrator is logged in with the Administrator role (Log In).|
@@ -287,7 +273,6 @@ Each use case below follows the template's table: name, author, actor, precondit
 
 |**Use Case Name**|UC-13: Expire Job Posting|
 |---|---|
-|**Author**|Zeba Tusnia Towshi|
 |**Actor**|Primary: Scheduler (system actor). Supporting: Notification Service.|
 |**Stakeholders and Interests**|<br>**Organization / Recruiter:** wants the posting to stop taking applications exactly at its<br>deadline, while it keeps processing applications already received.<br><br>**Applicants:** want no chance to apply to a posting whose deadline has passed; applicants who<br>already applied want their applications to continue (A3).<br><br>**Administrator:** wants no stale postings in public listings, and less wasted storage and effort<br>(D0 Q12).|
 |**Preconditions**|The Scheduler is running.|
