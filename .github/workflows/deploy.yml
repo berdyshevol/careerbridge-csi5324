@@ -2,7 +2,7 @@
 # Runs every check, then puts main on Vercel (frontend) and Render (backend).
 # Nothing deploys by itself; this button is the only way.
 #
-# The deploy secrets live in the "production" environment, which GitHub only
+# The deploy secrets live in the "deploy" environment, which GitHub only
 # opens to runs from main. A run started from any other branch gets no secrets,
 # whatever that branch's copy of this file says.
 name: Deploy
@@ -25,7 +25,7 @@ jobs:
     name: Frontend to Vercel
     needs: checks
     runs-on: ubuntu-latest
-    environment: production
+    environment: deploy
     env:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
@@ -49,14 +49,14 @@ jobs:
     name: Backend to Render
     needs: checks
     runs-on: ubuntu-latest
-    environment: production
+    environment: deploy
     steps:
       - name: Ask Render to build and deploy this commit
         env:
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
           if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
-            echo "::error::The RENDER_DEPLOY_HOOK_URL secret is not set in the production environment"
+            echo "::error::The RENDER_DEPLOY_HOOK_URL secret is not set in the deploy environment"
             exit 1
           fi
           curl --fail --silent --output /dev/null --request POST \
