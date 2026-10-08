@@ -63,3 +63,19 @@ jobs:
           fi
           curl --fail --silent --output /dev/null --request POST \
             "${RENDER_DEPLOY_HOOK_URL}&ref=${GITHUB_SHA}"
+      # The hook only starts the build. The job passes once the live backend
+      # reports this commit, and fails if that does not happen in 15 minutes.
+      - name: Wait until Render serves this commit
+        env:
+          BACKEND_URL: https://careerbridge-api-et18.onrender.com
+        run: |
+          for attempt in $(seq 1 60); do
+            commit=$(curl --silent --max-time 20 "$BACKEND_URL/api/version" | jq -r '.commit' 2>/dev/null || true)
+            if [ "$commit" = "$GITHUB_SHA" ]; then
+              echo "Render is serving $GITHUB_SHA"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::Render is still serving ${commit:-an unknown version}. The build probably failed; see the Render dashboard."
+          exit 1
