@@ -1,0 +1,51 @@
+# The Deploy button: Actions tab -> Deploy -> Run workflow.
+# Runs every check, then puts main on Vercel (frontend) and Render (backend).
+# Nothing deploys by itself; this button is the only way.
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+# One deploy at a time.
+concurrency: deploy
+
+jobs:
+  checks:
+    name: Checks
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/ci.yml
+
+  frontend:
+    name: Frontend to Vercel
+    needs: checks
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --global vercel@latest
+      # The Vercel project already knows the frontend lives in app/frontend.
+      - run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+      - run: vercel build --prod --token="$VERCEL_TOKEN"
+      - run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+
+  backend:
+    name: Backend to Render
+    needs: checks
+    runs-on: ubuntu-latest
+    env:
+      RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+    steps:
+      - name: Ask Render to build and deploy this commit
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "::error::The RENDER_DEPLOY_HOOK_URL secret is not set"
+            exit 1
+          fi
+          curl --fail --silent --show-error --request POST \
+            "${RENDER_DEPLOY_HOOK_URL}&ref=${GITHUB_SHA}"
