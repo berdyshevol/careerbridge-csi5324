@@ -3,9 +3,13 @@
 # Puts that branch's frontend on a temporary Vercel address and posts the
 # link on the branch's pull request. Production is not touched.
 #
-# This file always runs from main (the "deploy" environment refuses anything
-# else), so the branch being previewed is only uploaded, never executed here,
-# and cannot reach the token.
+# Safety, because the previewed branch is not reviewed code:
+# - This file always runs from main: the "preview" environment refuses any
+#   other branch, and each run waits for the repository owner's approval.
+# - The Vercel tool is installed before the branch is fetched, and the branch
+#   goes into its own folder. It is only uploaded; nothing from it runs here.
+# - Vercel builds it with the project's Preview variables, so that Vercel
+#   environment must never hold a real secret.
 name: Preview
 
 on:
@@ -24,25 +28,27 @@ jobs:
   preview:
     name: Frontend preview on Vercel
     runs-on: ubuntu-latest
-    environment: deploy
+    environment: preview
     env:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
       BRANCH: ${{ inputs.branch }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
-          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: npm install --global vercel@62.7.0
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          path: branch
+          persist-credentials: false
+      - run: rm -rf branch/.vercel
       # Uploads the sources; Vercel builds them on its own servers.
       - name: Deploy a preview
         id: deploy
         run: |
-          url=$(vercel deploy --yes --token="$VERCEL_TOKEN")
+          url=$(vercel deploy --cwd branch --yes --token="$VERCEL_TOKEN")
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Preview of \`$BRANCH\`: $url" >> "$GITHUB_STEP_SUMMARY"
         env:

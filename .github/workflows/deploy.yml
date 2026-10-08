@@ -2,8 +2,8 @@
 # Runs every check, then puts main on Vercel (frontend) and Render (backend).
 # Nothing deploys by itself; this button is the only way.
 #
-# The deploy secrets live in the "deploy" environment, which GitHub only
-# opens to runs from main. A run started from any other branch gets no secrets,
+# The deploy secrets live in the "deploy" environment. Its branch rule (set in
+# the repository settings, not in this file) only opens it to runs from main. A run started from any other branch gets no secrets,
 # whatever that branch's copy of this file says.
 name: Deploy
 
