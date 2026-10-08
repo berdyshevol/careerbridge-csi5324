@@ -66,7 +66,11 @@ Only Published postings whose deadline has not passed are listed (BR-9, BR-10). 
 
 ## Deployment
 
+Deploying is a button: on GitHub open **Actions → Deploy → Run workflow** (branch `main`). It runs every check, then deploys both parts. Nothing deploys by itself.
+
 - **Frontend:** <https://careerbridge-csi5324.vercel.app> (Vercel, project `careerbridge-csi5324`, root `app/frontend`).
 - **Backend:** <https://careerbridge-api-et18.onrender.com/api/postings> (Render, service `careerbridge-api`, built from the `Dockerfile` in this folder).
 
 The frontend finds the backend through `NEXT_PUBLIC_API_URL`; the backend allows the frontend addresses listed in `careerbridge.frontend-origins` (`application.properties`). Render's free plan sleeps when idle, so the first request after a pause takes about a minute. The database is in memory: every restart reloads `jobs.csv`.
+
+The workflow (`.github/workflows/deploy.yml`) reads two secrets, `VERCEL_TOKEN` and `RENDER_DEPLOY_HOOK_URL`, from the GitHub environment `production`, which only runs from `main` can use. The Vercel ids are repository variables.

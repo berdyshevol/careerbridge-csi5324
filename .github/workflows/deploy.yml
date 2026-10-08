@@ -1,0 +1,63 @@
+# The Deploy button: Actions tab -> Deploy -> Run workflow.
+# Runs every check, then puts main on Vercel (frontend) and Render (backend).
+# Nothing deploys by itself; this button is the only way.
+#
+# The deploy secrets live in the "production" environment, which GitHub only
+# opens to runs from main. A run started from any other branch gets no secrets,
+# whatever that branch's copy of this file says.
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+# One deploy at a time.
+concurrency: deploy
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Checks
+    uses: ./.github/workflows/ci.yml
+
+  frontend:
+    name: Frontend to Vercel
+    needs: checks
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --global vercel@62.7.0
+      # Uploads the sources; Vercel builds them on its own servers. No code
+      # from this repository runs here, so nothing here can read the token.
+      # The Vercel project already knows the frontend lives in app/frontend.
+      - name: Deploy
+        run: vercel deploy --prod --yes --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+  backend:
+    name: Backend to Render
+    needs: checks
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Ask Render to build and deploy this commit
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "::error::The RENDER_DEPLOY_HOOK_URL secret is not set in the production environment"
+            exit 1
+          fi
+          curl --fail --silent --output /dev/null --request POST \
+            "${RENDER_DEPLOY_HOOK_URL}&ref=${GITHUB_SHA}"
