@@ -73,4 +73,4 @@ Deploying is a button: on GitHub open **Actions → Deploy → Run workflow** (b
 
 The frontend finds the backend through `NEXT_PUBLIC_API_URL`; the backend allows the frontend addresses listed in `careerbridge.frontend-origins` (`application.properties`). Render's free plan sleeps when idle, so the first request after a pause takes about a minute. The database is in memory: every restart reloads `jobs.csv`.
 
-The workflow (`.github/workflows/deploy.yml`) needs two repository secrets, `VERCEL_TOKEN` and `RENDER_DEPLOY_HOOK_URL`, and two variables, `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID`.
+The workflow (`.github/workflows/deploy.yml`) reads two secrets, `VERCEL_TOKEN` and `RENDER_DEPLOY_HOOK_URL`, from the GitHub environment `production`, which only runs from `main` can use. The Vercel ids are repository variables.
