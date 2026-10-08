@@ -66,7 +66,7 @@ Only Published postings whose deadline has not passed are listed (BR-9, BR-10). 
 
 ## Deployment
 
-Deploying is a button: on GitHub open **Actions → Deploy → Run workflow** (branch `main`). It runs every check, then deploys both parts. Nothing deploys by itself.
+Deploying is a button: on GitHub open **Actions → Deploy → Run workflow** (branch `main`). It runs every check, then deploys both parts. Nothing deploys by itself. The backend job waits until the live backend reports the new commit at `/api/version`, so a failed Render build turns the run red.
 
 - **Frontend:** <https://careerbridge-csi5324.vercel.app> (Vercel, project `careerbridge-csi5324`, root `app/frontend`).
 - **Backend:** <https://careerbridge-api-et18.onrender.com/api/postings> (Render, service `careerbridge-api`, root `app/backend`, built from the `Dockerfile` there).
