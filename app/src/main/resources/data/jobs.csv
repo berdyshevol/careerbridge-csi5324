@@ -1,0 +1,8 @@
+title,organizationName,description,jobRequirements,location,employmentType,salaryRange,numberOfOpenings,datePosted,applicationDeadline,postStatus
+Junior Software Engineer,Brazos Analytics,"Build and test features for our reporting web app.","Java or JavaScript, Git, basic SQL",Hybrid,Full-time,"$65,000 - $80,000",2,2026-10-01,2026-12-20,Published
+Data Analyst Intern,Waco Health Partners,"Clean clinic data and prepare weekly dashboards.","Excel, SQL, attention to detail",On-site,Internship,,1,2026-10-03,2026-12-15,Published
+Backend Developer,Brazos Analytics,"Design REST services for the data ingestion pipeline.","Java, Spring Boot, PostgreSQL",Remote,Full-time,"$90,000 - $110,000",1,2026-10-05,2026-12-31,Published
+IT Support Specialist,Waco Health Partners,"Support clinic staff with hardware and account issues.","Customer service, Windows, networking basics",On-site,Part-time,"$22 - $26 per hour",2,2026-10-06,2026-12-10,Published
+QA Engineer,Lone Star Logistics,"Write and run test plans for the dispatch system.","Test design, bug reporting, Jira",Remote,Full-time,"$70,000 - $90,000",1,2026-09-01,2026-09-30,Closed
+Product Designer,Lone Star Logistics,"Design the driver mobile app screens.","Figma, user research",Hybrid,Full-time,,1,2026-10-06,2026-12-28,Pending Approval
+Marketing Coordinator,Brazos Analytics,"Plan campus recruiting events.","Writing, event planning",On-site,Full-time,,1,2026-10-07,2026-12-30,Draft

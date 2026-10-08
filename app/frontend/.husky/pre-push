@@ -1,0 +1,39 @@
+# Runs the tests before a push that changes the app.
+# Skip the slow end-to-end tests with:  SKIP_E2E=1 git push
+# Skip everything (emergencies only):   git push --no-verify
+
+root=$(git rev-parse --show-toplevel)
+zero=0000000000000000000000000000000000000000
+changed=0
+
+# Git lists what is being pushed on standard input, one branch per line.
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue # deleting a branch
+  if [ "$remote_sha" = "$zero" ]; then
+    base=$(git merge-base "$local_sha" origin/main 2>/dev/null || true) # new branch
+  else
+    base=$remote_sha
+  fi
+  if [ -z "$base" ] || ! git diff --quiet "$base" "$local_sha" -- app .github; then
+    changed=1
+  fi
+done
+
+if [ "$changed" = 0 ]; then
+  echo "pre-push: nothing under app/ changed, tests skipped"
+  exit 0
+fi
+
+set -e
+echo "pre-push: backend tests (JUnit)"
+(cd "$root/app" && ./mvnw -q -B test)
+
+echo "pre-push: frontend lint and unit tests (Vitest)"
+(cd "$root/app/frontend" && npm run lint && npm test)
+
+if [ -n "$SKIP_E2E" ]; then
+  echo "pre-push: end-to-end tests skipped (SKIP_E2E is set)"
+else
+  echo "pre-push: end-to-end tests (Playwright)"
+  (cd "$root/app/frontend" && npm run test:e2e)
+fi
