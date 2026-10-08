@@ -19,6 +19,8 @@ permissions:
 jobs:
   checks:
     name: Checks
+    # Second lock, in case the environment's own rules are ever removed.
+    if: github.ref == 'refs/heads/main'
     uses: ./.github/workflows/ci.yml
 
   frontend:
