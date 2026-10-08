@@ -38,7 +38,7 @@ Packages under `backend/src/main/java/baylor/csi5324/careerbridge/`. A layer onl
 | Controller | `controller` | `@RestController`: maps a URL under `/api` to a service call and returns JSON |
 | Service | `service` | Business rules; one method per system operation in the operation contracts |
 | Repository | `repository` | Spring Data JPA interfaces |
-| Model | `model` | Entities, named as in the domain model (documentation, section 5) |
+| Model | `model` | Entities, named as in the [domain model](../spec/domain-model.md) |
 
 `util` holds helper classes (`CsvReader`). `config/SampleDataLoader` fills the empty database from `backend/src/main/resources/data/jobs.csv` at startup; `config/WebConfig` lets the frontend call the API from the browser.
 
