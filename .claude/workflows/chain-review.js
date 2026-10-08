@@ -13,7 +13,7 @@ export const meta = {
 if (!args || !args.target || !args.ucId) throw new Error('chain-review needs args {target, ucId}')
 
 const ROOT = args.root || '/Users/berdyshevo/Documents/Baylor/SW-Engineering/group_project'
-const D2 = `${ROOT}/deliverables/deliverable-2`
+const D2 = `${ROOT}/spec/deliverables/deliverable-2`
 const TARGET = args.target
 const UC = args.ucId
 
@@ -28,8 +28,8 @@ Reference material (all inside the team repo; do NOT open any repository or fold
 - ${D2}/pitfalls.md — Dr. Ren's "Common Documentation Pitfalls" (pitfall 5 about SSDs was removed from Canvas on Sep 15 but is kept as guidance)
 - ${D2}/team-guide.md — the team's conventions (IDs FR-UC<nn>.<n>, one SSD per UC titled SSD-<nn>, one contract per system operation)
 - ${TARGET} itself also holds the business rules (§3.3), assumptions A1.. (§2.2), the use-case diagram (§4.1) and the domain model (§5) that the chain must be consistent with
-- ${ROOT}/course/templates/README.md — summary of the course template; the template itself is ${ROOT}/course/templates/CSI5324_Project_Documentation_Template.docx (unzip -p ... word/document.xml) and Dr. Ren's example is ${ROOT}/course/templates/Sample\\ Documentation.pdf (pdftotext -layout)
-- ${ROOT}/course/group-project-problem-statement.md — the problem statement
+- ${ROOT}/spec/course/templates/README.md — summary of the course template; the template itself is ${ROOT}/spec/course/templates/CSI5324_Project_Documentation_Template.docx (unzip -p ... word/document.xml) and Dr. Ren's example is ${ROOT}/spec/course/templates/Sample\\ Documentation.pdf (pdftotext -layout)
+- ${ROOT}/spec/course/group-project-problem-statement.md — the problem statement
 
 This is a course project: keep it simple. Target size per use case is about 3 FRs, 1–2 NFRs, 3 extensions, 1 SSD and one contract per system operation. Do not propose splitting requirements, adding extensions, or edge cases (security, rare states) unless a grader following the rubric or pitfalls would actually mark their absence down; proposals that simplify are welcome.
 Rules: read-only — do not edit any file. Report only real, specific problems in the TARGET (or real inconsistencies between the target and the reference files). Quote the exact text you criticize. Style preferences are not problems. Do not list things that are fine.

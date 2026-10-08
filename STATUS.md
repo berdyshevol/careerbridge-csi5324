@@ -2,9 +2,9 @@
 
 <!-- RULES FOR THIS FILE: max 20 lines below this comment. OVERWRITE, never append.
      Nothing here that will still be true in December — that belongs in CLAUDE.md.
-     Per-deliverable detail belongs in deliverables/deliverable-N/status.md, not here. -->
+     Per-deliverable detail belongs in spec/deliverables/deliverable-N/status.md, not here. -->
 
-**Active:** [Deliverable 3 = Pre-Iteration 2](deliverables/deliverable-3/status.md) — first working code (ApplyJob + UI, sample jobs data) + project website + updated documentation with SDs and DCD, 3 pts, two documents due **Wed Oct 14, 2026** (task changed by the instructor, re-synced Oct 7).
+**Active:** [Deliverable 3 = Pre-Iteration 2](spec/deliverables/deliverable-3/status.md) — first working code (ApplyJob + UI, sample jobs data) + project website + updated documentation with SDs and DCD, 3 pts, two documents due **Wed Oct 14, 2026** (task changed by the instructor, re-synced Oct 7).
 
 **Next actions**
 
