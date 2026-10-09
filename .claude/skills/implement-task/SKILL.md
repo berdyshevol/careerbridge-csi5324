@@ -44,8 +44,19 @@ opened.
    gh pr create --base main --title "SCRUM-NN <what changed>" --body "<description>"
    ```
 
-   The description says what changed and why, anything the next ticket needs to know, which tests
-   ran, and any review finding left open. If simplify or the review was declined, say so there.
+   The description says what changed and why, anything the next ticket needs to know, the local
+   test results, and any review finding left open. If simplify or the review was declined, say so
+   there.
+
+   The local test results are a `## Tests` section with one line per suite, taken from the push
+   you just made and never from memory:
+
+   - **JUnit:** the sum of `Tests run`, `Failures` and `Errors` in
+     `app/backend/target/surefire-reports/*.txt` (the hook runs Maven quietly, so the push prints
+     no numbers).
+   - **Vitest** and **Playwright:** the totals the push printed.
+   - A suite that did not run is written as "not run" with the reason: `SKIP_E2E`, `--no-verify`,
+     or nothing under `app/` changed.
 8. **Report** the pull request link, what was skipped, and what is left for a person to decide.
 
 ## The three questions
