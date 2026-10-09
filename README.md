@@ -19,3 +19,13 @@ Software Engineering (Baylor University, Fall 2026).
 
 Work in your own branch and open a pull request into `main`. The tests run on the pull request and
 must pass before it can be merged.
+
+## Jira from Claude Code
+
+The repository carries the address of the Jira server for Claude Code (`.mcp.json`), so nobody has to configure it.
+
+1. Open Claude Code in the repository folder. The first time it asks whether to use the `atlassian` server: say yes.
+2. Type `/mcp`, choose `atlassian` and sign in with your Atlassian account in the browser. Once per computer.
+3. Then ask in plain words: "show my cards in the current sprint", "implement SCRUM-69", "move SCRUM-69 to Done".
+
+Claude acts in Jira as you, with your permissions. Nothing secret is stored in the repository.
