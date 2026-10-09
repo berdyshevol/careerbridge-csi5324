@@ -49,12 +49,7 @@ UC-01 Browse Job Postings is wired end to end:
 
 Only Published postings whose deadline has not passed are listed (BR-9, BR-10). A posting that was published and then closed can still be opened and says it no longer accepts applications.
 
-## Adding your use case
-
-1. Backend: add your entities to `model`, a repository interface, a service and a `@RestController`. Test the service the way `JobPostingServiceTest` does.
-2. Frontend: add your calls to `frontend/src/lib/api.ts` and replace your stub page (see [frontend/README.md](frontend/README.md)).
-
-The rules a change has to follow (names, tests, pull requests, screens) are in [CLAUDE.md](../CLAUDE.md).
+Your use case follows the same path. The rules a change has to follow (names, tests, pull requests, screens) are in [CLAUDE.md](../CLAUDE.md).
 
 ## Jira from Claude Code
 
