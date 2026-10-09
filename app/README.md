@@ -45,6 +45,7 @@ Packages under `backend/src/main/java/baylor/csi5324/careerbridge/`. A layer onl
 ## Naming follows the documentation
 
 - **Classes and attributes** come from the domain model: `JobPosting.jobPostId`, `applicationDeadline`, `postStatus`, `Organization.name`.
+- **`User`** is stored in the table `users` (`user` is a reserved word in H2); _phone #_ is `phoneNumber`. `AccountStatus` has the values the operation contracts name: Pending Verification, Pending Approval, Active.
 - **Service methods** are the system operations from the SSDs and contracts: `searchPostings` (CO-01.1), `viewPosting` (CO-01.2).
 - **`PostStatus`** has the states of the job posting lifecycle (Figure 4): Draft, Pending Approval, Returned, Published, Closed, Rejected, Expired.
 
