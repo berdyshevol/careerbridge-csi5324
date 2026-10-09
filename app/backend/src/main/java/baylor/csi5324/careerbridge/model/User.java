@@ -7,19 +7,15 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 
 /**
  * User from the domain model (documentation, section 5): the parent of
- * Applicant, Recruiter and Administrator, which have no attributes of their own
- * and so share this table.
+ * Applicant, Recruiter and Administrator.
  * The table is "users" because "user" is a reserved word in H2.
  */
 @Entity
 @Table(name = "users")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public class User {
 
     @Id
