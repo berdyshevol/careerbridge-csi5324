@@ -64,6 +64,16 @@ Only Published postings whose deadline has not passed are listed (BR-9, BR-10). 
 3. Frontend: add your calls to `frontend/src/lib/api.ts` and replace your stub page (see [frontend/README.md](frontend/README.md)).
 4. Work in your own branch and open a pull request. Before asking for a merge, run the `screen-review` skill on it (Claude Code: "review the screen in PR N") or go through its checklist in `.claude/skills/screen-review/SKILL.md`.
 
+## Jira from Claude Code
+
+The repository carries the address of the Jira server for Claude Code (`.mcp.json`), so nobody has to configure it.
+
+1. Open Claude Code in the repository folder. The first time it asks whether to use the `atlassian` server: say yes.
+2. Type `/mcp`, choose `atlassian` and sign in with your Atlassian account in the browser. Once per computer.
+3. Then ask in plain words: "show my cards in the current sprint", "take SCRUM-69 and do it", "move SCRUM-69 to Done".
+
+Claude acts in Jira as you, with your permissions. Nothing secret is stored in the repository.
+
 ## Deployment
 
 Deploying is a button: on GitHub open **Actions → Deploy → Run workflow** (branch `main`). It runs every check, then deploys both parts. Nothing deploys by itself. The backend job waits until the live backend reports the new commit at `/api/version`, so a failed Render build turns the run red.
