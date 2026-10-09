@@ -1,4 +1,4 @@
-import { formatDate, isOpen, type JobPosting } from "./api";
+import { BACKEND_TIMEOUT_MS, formatDate, isOpen, searchPostings, type JobPosting } from "./api";
 
 function posting(overrides: Partial<JobPosting>): JobPosting {
   return {
@@ -35,5 +35,23 @@ describe("isOpen", () => {
 describe("formatDate", () => {
   it("shows the calendar day that was stored, whatever the time zone", () => {
     expect(formatDate("2026-12-20")).toBe("Dec 20, 2026");
+  });
+});
+
+describe("searchPostings", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("gives the backend a limited time to answer", async () => {
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    const fetch = vi.fn().mockRejectedValue(new Error("timed out"));
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(searchPostings()).rejects.toThrow("timed out");
+
+    expect(timeout).toHaveBeenCalledWith(BACKEND_TIMEOUT_MS);
+    expect(fetch.mock.calls[0][1].signal).toBe(timeout.mock.results[0].value);
   });
 });
