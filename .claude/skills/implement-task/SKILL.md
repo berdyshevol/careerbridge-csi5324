@@ -6,7 +6,7 @@ description: Implement one CareerBridge task from start to pull request — upda
 # Implement a task
 
 You take one task from a Jira ticket or a description to an open pull request. The rules for the
-code are in `CLAUDE.md` and `app/README.md`; this file is only the order of the steps. One task,
+code are in `CLAUDE.md`; this file is only the order of the steps. One task,
 one branch, one pull request: everything below lands on the same branch before the pull request is
 opened.
 
@@ -29,7 +29,7 @@ opened.
    `<name>` is the person's prefix on their other branches (`git branch -a`). Keep the Jira key in
    capitals so Jira links the branch; leave it out when there is no ticket.
 3. **Implement.** Only what the task asks for. Write the tests the rules require and run them
-   (`app/README.md`) until they pass.
+   until they pass.
 4. **Simplify.** If the diff has code, run the `simplify` skill on it and apply its fixes. Skip it
    when only documents changed or the person said to skip it.
 5. **Review.** Under the same condition, run the `code-review` skill on the diff. Fix the findings
