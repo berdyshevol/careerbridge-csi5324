@@ -10,9 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/**
- * JSON API of UC-01 Browse Job Postings.
- */
 @RestController
 @RequestMapping("/api/postings")
 public class JobPostingController {

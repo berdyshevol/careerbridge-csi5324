@@ -11,8 +11,6 @@ const items = [
   { href: "/profile", label: "Profile & resume", shortLabel: "Profile", Icon: ProfileIcon },
 ];
 
-// The desk navigation in its three forms: a side column on laptops, a row of
-// tiles on tablets and a bottom bar on phones. Only one is visible at a time.
 export default function DeskNav() {
   const pathname = usePathname();
   const isCurrent = (href: string) => pathname === href || pathname.startsWith(`${href}/`);

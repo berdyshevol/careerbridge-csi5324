@@ -5,10 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Reads CSV text into rows keyed by the header line.
- * Supports quoted fields with commas and doubled quotes ("").
- */
 public final class CsvReader {
 
     private CsvReader() {

@@ -10,7 +10,6 @@ name: Deploy
 on:
   workflow_dispatch:
 
-# One deploy at a time.
 concurrency: deploy
 
 permissions:

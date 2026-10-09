@@ -7,7 +7,6 @@ const chipStyle: Record<Stage, string> = {
   Offer: "bg-warning text-warning-content",
 };
 
-// The stage of an application as a chip (documentation, Figure 3).
 export function StageBadge({ stage, className = "" }: { stage: Stage; className?: string }) {
   return (
     <span
@@ -18,7 +17,6 @@ export function StageBadge({ stage, className = "" }: { stage: Stage; className?
   );
 }
 
-// How far along the pipeline an application is: one segment per stage.
 export function StageProgress({ stage, className = "" }: { stage: Stage; className?: string }) {
   const stageNumber = STAGES.indexOf(stage) + 1;
   return (

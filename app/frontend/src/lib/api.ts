@@ -1,5 +1,3 @@
-// Calls to the Spring backend. Field names match the domain model.
-
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 export type Organization = {
@@ -22,7 +20,6 @@ export type JobPosting = {
   organization: Organization;
 };
 
-// CO-01.1 searchPostings: the open postings that match the keyword, newest first.
 export async function searchPostings(keyword?: string): Promise<JobPosting[]> {
   const query = keyword ? `?keyword=${encodeURIComponent(keyword)}` : "";
   const response = await fetch(`${API_URL}/api/postings${query}`, { cache: "no-store" });
@@ -32,7 +29,6 @@ export async function searchPostings(keyword?: string): Promise<JobPosting[]> {
   return response.json();
 }
 
-// CO-01.2 viewPosting: one posting, or null when it does not exist or was never published.
 export async function viewPosting(postingId: string): Promise<JobPosting | null> {
   const response = await fetch(`${API_URL}/api/postings/${encodeURIComponent(postingId)}`, {
     cache: "no-store",

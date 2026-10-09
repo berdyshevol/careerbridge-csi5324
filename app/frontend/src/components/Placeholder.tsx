@@ -1,4 +1,3 @@
-// Stub screen for a use case that is not implemented yet.
 // The use case owner replaces the page that renders this.
 export default function Placeholder({ useCase, owner }: { useCase: string; owner: string }) {
   return (

@@ -1,7 +1,6 @@
 import Link from "next/link";
 
-// The one thing that needs an answer: an offer waiting (UC-07). The only
-// warning-colored panel on a screen.
+// The only warning-colored panel on a screen.
 export default function OfferPanel({
   title,
   organizationName,

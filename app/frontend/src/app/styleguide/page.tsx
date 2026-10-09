@@ -11,9 +11,8 @@ import { StageBadge, StageProgress } from "@/components/StageBadge";
 import { formatDate, type JobPosting } from "@/lib/api";
 import { APPLICATION_LIMIT, STAGES, applications, offer } from "@/lib/sampleDesk";
 
-// The live catalogue of the blocks a screen is built from (ADR-0004, rule 6).
 // Every block here is the real component, so this page cannot drift from the
-// screens. Under each block: the component or the classes to use.
+// screens (ADR-0004, rule 6).
 
 const samplePosting: JobPosting = {
   jobPostId: 3,

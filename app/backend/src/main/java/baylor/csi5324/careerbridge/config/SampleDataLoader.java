@@ -14,9 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Map;
 
-/**
- * Loads the sample job postings from data/jobs.csv into the empty database at startup.
- */
 @Component
 public class SampleDataLoader implements CommandLineRunner {
 

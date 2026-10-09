@@ -1,7 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// End-to-end tests: a real browser against the real frontend and backend.
-// Playwright starts both servers itself, or reuses them if they already run.
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,

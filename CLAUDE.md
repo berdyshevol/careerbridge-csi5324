@@ -26,5 +26,7 @@ semester project of team CareerBridge for CSI 5324 Software Engineering (Baylor,
   phone, tablet and laptop width. Before merging a screen, run the `screen-review` skill.
 - **To implement a ticket or a task, use the `implement-task` skill:** fresh `main`, one branch,
   simplify and code review offered before the pull request.
+- **Comments say why, not what.** Write a comment only for what the code cannot show: the reason
+  for a choice, or a trap for the next person. Do not restate the code or the specification.
 - A decision that shapes the code gets a record in [spec/adr/](spec/adr/README.md).
 - Documents are written in English. Never add Claude/AI attribution to commits or pull requests.

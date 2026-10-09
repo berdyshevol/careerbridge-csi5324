@@ -7,9 +7,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-/**
- * Organization from the domain model (documentation, section 5).
- */
 @Entity
 @Table(name = "organizations")
 public class Organization {
