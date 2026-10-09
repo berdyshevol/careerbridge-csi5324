@@ -36,19 +36,11 @@ Packages under `backend/src/main/java/baylor/csi5324/careerbridge/`. A layer onl
 | Layer | Package | Does |
 | --- | --- | --- |
 | Controller | `controller` | `@RestController`: maps a URL under `/api` to a service call and returns JSON |
-| Service | `service` | Business rules; one method per system operation in the operation contracts |
+| Service | `service` | Business rules |
 | Repository | `repository` | Spring Data JPA interfaces |
-| Model | `model` | Entities, named as in the [domain model](../spec/domain-model.md) |
+| Model | `model` | Entities |
 
 `util` holds helper classes (`CsvReader`). `config/SampleDataLoader` fills the empty database from `backend/src/main/resources/data/jobs.csv` at startup; `config/WebConfig` lets the frontend call the API from the browser.
-
-## Naming follows the documentation
-
-- **Classes and attributes** come from the domain model: `JobPosting.jobPostId`, `applicationDeadline`, `postStatus`, `Organization.name`.
-- **Service methods** are the system operations from the SSDs and contracts: `searchPostings` (CO-01.1), `viewPosting` (CO-01.2).
-- **`PostStatus`** has the states of the job posting lifecycle (Figure 4): Draft, Pending Approval, Returned, Published, Closed, Rejected, Expired.
-
-Keep it that way: if code and documentation disagree, fix one of them in the same pull request.
 
 ## Worked example
 
@@ -59,10 +51,10 @@ Only Published postings whose deadline has not passed are listed (BR-9, BR-10). 
 
 ## Adding your use case
 
-1. Backend: add your entities to `model` (names from the domain model), a repository interface, a service with one method per system operation in your contracts, and a `@RestController`.
-2. Add a JUnit test for your service (see `JobPostingServiceTest`).
-3. Frontend: add your calls to `frontend/src/lib/api.ts` and replace your stub page (see [frontend/README.md](frontend/README.md)).
-4. Work in your own branch and open a pull request; in Claude Code the `implement-task` skill does this from ticket to pull request ("implement SCRUM-NN"). Before asking for a merge, run the `screen-review` skill on it (Claude Code: "review the screen in PR N") or go through its checklist in `.claude/skills/screen-review/SKILL.md`.
+1. Backend: add your entities to `model`, a repository interface, a service and a `@RestController`. Test the service the way `JobPostingServiceTest` does.
+2. Frontend: add your calls to `frontend/src/lib/api.ts` and replace your stub page (see [frontend/README.md](frontend/README.md)).
+
+The rules a change has to follow (names, tests, pull requests, screens) are in [CLAUDE.md](../CLAUDE.md).
 
 ## Jira from Claude Code
 
