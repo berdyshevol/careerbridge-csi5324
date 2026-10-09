@@ -8,9 +8,6 @@ import { APPLICATION_LIMIT, applicant } from "@/lib/sampleDesk";
 import PageTitle from "./PageTitle";
 import SlotMeter from "./SlotMeter";
 
-// UC-04 Apply for Job: the summary before submission (FR-UC04.1), the
-// confirmation (FR-UC04.2) and the result (FR-UC04.5). The desk is the
-// applicant's state: resume on file and active applications.
 export default function ApplyForm({ posting, initialDesk }: { posting: JobPosting; initialDesk: Desk }) {
   const [desk, setDesk] = useState(initialDesk);
   const [acknowledged, setAcknowledged] = useState(false);
@@ -133,7 +130,6 @@ export default function ApplyForm({ posting, initialDesk }: { posting: JobPostin
   );
 }
 
-// Why the application cannot go ahead, with the way out (UC-04 extensions).
 function Blocked({ check }: { check: Exclude<ReturnType<typeof checkApplication>, { kind: "ok" }> }) {
   switch (check.kind) {
     case "closed":
@@ -195,7 +191,6 @@ function Blocked({ check }: { check: Exclude<ReturnType<typeof checkApplication>
   }
 }
 
-// FR-UC04.5: the submission is confirmed with the new count and a link to UC-05.
 function Submitted({ posting, activeCount }: { posting: JobPosting; activeCount: number }) {
   return (
     <article className="card border border-base-300 bg-base-100">

@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-// Nothing to show yet: one sentence, and optionally where to go.
 export default function EmptyState({
   children,
   action,

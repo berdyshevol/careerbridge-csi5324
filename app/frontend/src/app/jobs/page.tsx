@@ -4,7 +4,6 @@ import PageTitle from "@/components/PageTitle";
 import PostingCard from "@/components/PostingCard";
 import { searchPostings, type JobPosting } from "@/lib/api";
 
-// UC-01 Browse Job Postings: the list of open postings, with a keyword search.
 export default async function JobsPage({
   searchParams,
 }: {

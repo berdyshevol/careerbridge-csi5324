@@ -13,11 +13,8 @@ import jakarta.persistence.Table;
 
 import java.time.LocalDate;
 
-/**
- * Job Posting from the domain model (documentation, section 5).
- * Not mapped yet: the creating Recruiter and the approval attributes
- * (approvalStatus, approvedBy, approvedAt) - they arrive with UC-11 and UC-12.
- */
+// Not mapped yet: the creating Recruiter and the approval attributes
+// (approvalStatus, approvedBy, approvedAt) - they arrive with UC-11 and UC-12.
 @Entity
 @Table(name = "job_postings")
 public class JobPosting {
@@ -53,18 +50,12 @@ public class JobPosting {
     public JobPosting() {
     }
 
-    /**
-     * A posting is open while it is Published and its deadline has not passed (BR-9, BR-10).
-     */
     public boolean isOpen(LocalDate today) {
         return postStatus == PostStatus.PUBLISHED
                 && applicationDeadline != null
                 && !applicationDeadline.isBefore(today);
     }
 
-    /**
-     * True once the posting has been made public, even if it has closed since.
-     */
     public boolean wasPublished() {
         return postStatus == PostStatus.PUBLISHED || postStatus == PostStatus.CLOSED;
     }

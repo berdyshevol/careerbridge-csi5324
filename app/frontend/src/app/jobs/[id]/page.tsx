@@ -4,7 +4,6 @@ import BackendDown from "@/components/BackendDown";
 import PageTitle from "@/components/PageTitle";
 import { formatDate, isOpen, viewPosting, type JobPosting } from "@/lib/api";
 
-// UC-01 Browse Job Postings: the details of one posting.
 export default async function PostingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 

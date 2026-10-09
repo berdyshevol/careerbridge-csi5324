@@ -1,5 +1,4 @@
-// The title of a screen, with an optional line under it and an optional
-// eyebrow above it. One per screen.
+// One per screen.
 export default function PageTitle({
   eyebrow,
   children,

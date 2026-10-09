@@ -9,9 +9,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * System operations of UC-01 Browse Job Postings (operation contracts CO-01.1 and CO-01.2).
- */
 @Service
 public class JobPostingService {
 
@@ -21,10 +18,6 @@ public class JobPostingService {
         this.jobPostingRepository = jobPostingRepository;
     }
 
-    /**
-     * CO-01.1: the open postings that match the keyword, newest first.
-     * An empty or missing keyword matches every open posting.
-     */
     public List<JobPosting> searchPostings(String keyword) {
         List<JobPosting> openPostings = jobPostingRepository
                 .findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDesc(
@@ -40,9 +33,6 @@ public class JobPostingService {
                 .toList();
     }
 
-    /**
-     * CO-01.2: the details of a posting that exists and was published (BR-9).
-     */
     public JobPosting viewPosting(Long postingId) {
         return jobPostingRepository.findById(postingId)
                 .filter(JobPosting::wasPublished)

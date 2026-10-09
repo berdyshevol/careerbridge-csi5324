@@ -1,5 +1,3 @@
-# Checks every pull request into main: backend tests (JUnit), frontend lint,
-# unit tests (Vitest) and build, and end-to-end tests (Playwright, headless).
 name: CI
 
 on:

@@ -3,7 +3,6 @@
 // and the logged-in applicant with Log In. Replace each piece with an API
 // call in src/lib/api.ts when its use case is implemented.
 
-// Stages of the application pipeline (documentation, Figure 3).
 export const STAGES = ["Applied", "Screening", "Interview", "Offer"] as const;
 export type Stage = (typeof STAGES)[number];
 

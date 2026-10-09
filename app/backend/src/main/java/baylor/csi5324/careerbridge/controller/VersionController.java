@@ -7,10 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
-/**
- * Tells which commit is running. The Deploy workflow reads it to see
- * whether the new version went live.
- */
+// The Deploy workflow reads this to see whether the new version went live.
 @RestController
 @RequestMapping("/api/version")
 public class VersionController {

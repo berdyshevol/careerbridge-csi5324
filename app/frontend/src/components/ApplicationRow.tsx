@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { DeskApplication } from "@/lib/sampleDesk";
 import { StageBadge, StageProgress } from "./StageBadge";
 
-// One application on the desk: a row on tablets and laptops, a stacked card on phones.
 export default function ApplicationRow({ application }: { application: DeskApplication }) {
   const isOffer = application.applicationStatus === "Offer";
 

@@ -1,8 +1,5 @@
 package baylor.csi5324.careerbridge.model;
 
-/**
- * States of the job posting lifecycle (documentation, Figure 4).
- */
 public enum PostStatus {
     DRAFT("Draft"),
     PENDING_APPROVAL("Pending Approval"),

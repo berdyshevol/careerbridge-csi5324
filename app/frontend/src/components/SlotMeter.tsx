@@ -1,5 +1,3 @@
-// The application slots: how many of the allowed applications are in use
-// (BR-4). Shown on the desk and before applying.
 export default function SlotMeter({
   used,
   total,

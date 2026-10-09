@@ -16,8 +16,7 @@ function longDate(isoDate: string): string {
   });
 }
 
-// The applicant's desk. Postings come from the backend; the applications,
-// the offer and the resume are sample data (see src/lib/sampleDesk.ts).
+// The applications, the offer and the resume are sample data (see src/lib/sampleDesk.ts).
 export default async function DeskPage() {
   let postings: JobPosting[] | null = null;
   try {

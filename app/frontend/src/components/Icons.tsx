@@ -1,5 +1,4 @@
-// Line icons used by the desk navigation. Decorative: the label next to
-// each one carries the meaning.
+// Decorative: the label next to each icon carries the meaning.
 type IconProps = { className?: string };
 
 function Icon({ className, children }: IconProps & { children: React.ReactNode }) {
