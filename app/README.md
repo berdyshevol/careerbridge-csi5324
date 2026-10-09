@@ -5,6 +5,8 @@ Two parts, side by side:
 - **Backend** ([backend/](backend/)): Spring Boot 4, Java 17, Maven, Spring Data JPA, in-memory H2. It serves JSON only. Inside, it is laid out like Design Studio 4.
 - **Frontend** ([frontend/](frontend/)): Next.js with Tailwind and daisyUI. It draws the pages and calls the backend.
 
+How the code is laid out (the layers, how the specification maps to code, UC-01 as the worked example) is in [spec/architecture.md](../spec/architecture.md). The rules a change has to follow are in [CLAUDE.md](../CLAUDE.md).
+
 ## Run locally
 
 Two terminals:
@@ -28,28 +30,6 @@ After `npm install` in `app/frontend`, git runs the tests on `git push` (a husky
 
 - `SKIP_E2E=1 git push` skips the end-to-end tests (they take about a minute and need ports 3000 and 8080).
 - The same checks run on every pull request into `main`.
-
-## Backend layers
-
-Packages under `backend/src/main/java/baylor/csi5324/careerbridge/`. A layer only calls the one below it.
-
-| Layer | Package | Does |
-| --- | --- | --- |
-| Controller | `controller` | `@RestController`: maps a URL under `/api` to a service call and returns JSON |
-| Service | `service` | Business rules |
-| Repository | `repository` | Spring Data JPA interfaces |
-| Model | `model` | Entities |
-
-`util` holds helper classes (`CsvReader`). `config/SampleDataLoader` fills the empty database from `backend/src/main/resources/data/jobs.csv` at startup; `config/WebConfig` lets the frontend call the API from the browser.
-
-## Worked example
-
-UC-01 Browse Job Postings is wired end to end:
-`frontend/src/app/jobs/page.tsx` → `frontend/src/lib/api.ts` → `JobPostingController` (`/api/postings`) → `JobPostingService` → `JobPostingRepository` → H2.
-
-Only Published postings whose deadline has not passed are listed (BR-9, BR-10). A posting that was published and then closed can still be opened and says it no longer accepts applications.
-
-Your use case follows the same path. The rules a change has to follow (names, tests, pull requests, screens) are in [CLAUDE.md](../CLAUDE.md).
 
 ## Jira from Claude Code
 
