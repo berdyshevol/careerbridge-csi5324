@@ -25,6 +25,6 @@ semester project of team CareerBridge for CSI 5324 Software Engineering (Baylor,
   (`app/frontend/src/app/styleguide/page.tsx`) and `src/components/`, theme colors only, checked at
   phone, tablet and laptop width. Before merging a screen, run the `screen-review` skill.
 - **To implement a ticket or a task, use the `implement-task` skill:** fresh `main`, one branch,
-  simplify and code review before the pull request.
+  simplify and code review offered before the pull request.
 - A decision that shapes the code gets a record in [spec/adr/](spec/adr/README.md).
 - Documents are written in English. Never add Claude/AI attribution to commits or pull requests.
