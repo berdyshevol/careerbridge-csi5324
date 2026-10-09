@@ -213,8 +213,11 @@ export default function StyleguidePage() {
             No applications yet.
           </EmptyState>
         </Block>
-        <Block title="Backend not answering" use="<BackendDown /> — when a fetch in src/lib/api.ts throws">
-          <BackendDown />
+        <Block title="Backend not answering" use="<BackendDown /> — when a fetch in src/lib/api.ts throws or times out">
+          <div className="flex flex-col gap-3">
+            <BackendDown retry={false} local={false} />
+            <BackendDown retry={false} local />
+          </div>
         </Block>
         <Block title="Placeholder" use='<Placeholder useCase="UC-nn …" owner="…" /> — only until the screen exists'>
           <Placeholder useCase="UC-00 An example" owner="the owner" />
