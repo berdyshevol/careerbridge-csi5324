@@ -7,11 +7,15 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 
 @Entity
 // "user" is a reserved word in H2
 @Table(name = "users")
+// Joined, not single-table: the discriminator check constraint Hibernate generates is rejected by H2
+@Inheritance(strategy = InheritanceType.JOINED)
 public class User {
 
     @Id
