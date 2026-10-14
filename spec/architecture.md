@@ -26,6 +26,18 @@ A layer calls only the layer below it.
 | Repository | `repository` | Spring Data JPA interfaces |
 | Model | `model` | Entities, named as in the [domain model](domain-model.md) |
 
+Controllers and services also use the records in the `dto` package, which is not a layer. A record
+there is the shape of one request or one response:
+
+- **Request record:** when the client sends a set of fields and the server must set the others
+  itself (an id, a status, a date, the owner). `CreateJobPostingRequest` is the first one: a new
+  posting gets its status and its date from the service, never from the client.
+- **Response record:** when a screen shows data from several classes, or the actor must not see
+  every attribute of the entity (for example another user's contact details).
+- **No record:** when an operation takes only an id, a token, a keyword or one value, the
+  controller reads it from the path or the query; when an entity has nothing to hide, the
+  controller returns it as it is, as `/api/postings` does with `JobPosting`.
+
 ### Data
 
 An in-memory H2 database. At startup the backend loads sample job postings from a CSV file
