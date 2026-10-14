@@ -73,9 +73,10 @@ export async function createPosting(posting: NewPosting): Promise<JobPosting> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(posting),
   });
-  // Only a 400 in plain text is a reason for the recruiter; any other body is
-  // the server's own error report and must not reach the screen.
-  if (response.status === 400 && response.headers.get("Content-Type")?.startsWith("text/plain")) {
+  // Only a refusal in plain text is a reason for the recruiter; any other body
+  // is the server's own error report and must not reach the screen.
+  const refused = response.status === 400 || response.status === 403;
+  if (refused && response.headers.get("Content-Type")?.startsWith("text/plain")) {
     throw new PostingRejected(await response.text());
   }
   if (!response.ok) {
