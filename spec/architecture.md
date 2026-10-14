@@ -52,7 +52,10 @@ An in-memory H2 database. At startup the backend loads sample job postings from 
 | Posting lifecycle state ([use-cases.md](use-cases.md), Figure 4) | Value of the `PostStatus` enum |
 | Use case | A controller, a service, a page under `app/frontend/src/app/` |
 
-UC-04 Apply for Job has its screen and its checks on the frontend, against sample data, until the backend implements CO-04.1.
+UC-04 Apply for Job is implemented end to end: `ApplyForm` → `lib/api.ts` → `ApplicationController`
+(`POST /api/postings/{postingId}/apply`) → `ApplicationService` (`submitApplication`). Until Log In
+and UC-03 exist, the applicant is the sample applicant and the resume comes with the request; the
+confirmation Notification of CO-04.1 comes with the Notification Service.
 
 UC-01 Browse Job Postings is implemented end to end: page → `lib/api.ts` → `JobPostingController`
 (`/api/postings`) → `JobPostingService` (`searchPostings`, `viewPosting`) → `JobPostingRepository` → H2.

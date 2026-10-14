@@ -5,6 +5,8 @@ import {
   isOpen,
   PostingRejected,
   searchPostings,
+  submitApplication,
+  ApplicationRefused,
   type JobPosting,
   type NewPosting,
 } from "./api";
@@ -122,5 +124,49 @@ describe("createPosting", () => {
 
     expect(failed).not.toBeInstanceOf(PostingRejected);
     expect(failed.message).not.toContain("path");
+  });
+});
+
+describe("submitApplication", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const resume = { fileName: "cv.pdf", fileType: "application/pdf", fileSize: 2048 };
+
+  it("posts the resume on file and returns the backend's answer", async () => {
+    const answer = { applicationId: 7, applicationStatus: "APPLIED", activeApplicationCount: 4 };
+    const fetch = vi.fn().mockResolvedValue({ ok: true, headers: new Headers(), json: () => Promise.resolve(answer) });
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(submitApplication(2, resume)).resolves.toEqual(answer);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/postings/2/apply"),
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("sends no resume when none is on file, so the backend can refuse", async () => {
+    const fetch = vi.fn().mockResolvedValue({ ok: true, headers: new Headers(), json: () => Promise.resolve({}) });
+    vi.stubGlobal("fetch", fetch);
+
+    await submitApplication(2, null);
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({});
+  });
+
+  it("turns a plain-text refusal into ApplicationRefused with the backend's reason", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        headers: new Headers({ "Content-Type": "text/plain" }),
+        text: () => Promise.resolve("You already applied to this posting."),
+      }),
+    );
+
+    const refused = await submitApplication(2, resume).catch((error) => error);
+    expect(refused).toBeInstanceOf(ApplicationRefused);
+    expect(refused.message).toBe("You already applied to this posting.");
   });
 });
