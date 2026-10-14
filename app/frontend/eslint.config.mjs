@@ -13,10 +13,23 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  // A backend call whose answer nobody waits for can fail without the screen
+  // knowing, so it must be awaited or handled.
+  {
+    files: ["src/**/*.{ts,tsx}", "e2e/**/*.ts"],
+    languageOptions: {
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
+    rules: {
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/no-misused-promises": ["error", { checksVoidReturn: { attributes: false } }],
+    },
+  },
   // One look on every screen (ADR-0004): colors come from the theme in
   // globals.css and components from src/components/, never from a page.
+  // The last selector keeps a refusal visible, in the tests as well.
   {
-    files: ["src/**/*.{ts,tsx}"],
+    files: ["src/**/*.{ts,tsx}", "e2e/**/*.ts"],
     ignores: ["src/app/globals.css"],
     rules: {
       "no-restricted-syntax": [
@@ -30,6 +43,12 @@ const eslintConfig = defineConfig([
           selector: "JSXAttribute[name.name='style']",
           message:
             "No inline styles: use Tailwind classes and the theme from globals.css. See /styleguide.",
+        },
+        {
+          selector:
+            "CatchClause > BlockStatement[body.length=0], CallExpression[callee.property.name='catch'] > :function[body.type='BlockStatement'][body.body.length=0], CallExpression[callee.property.name='catch'] > ArrowFunctionExpression[body.type='Literal'][body.raw='null'], CallExpression[callee.property.name='catch'] > ArrowFunctionExpression > Identifier.body[name='undefined']",
+          message:
+            "Do not swallow an error: show the user what went wrong, or let it fail. A hidden backend refusal is how a screen says 'saved' when nothing was.",
         },
       ],
       "no-restricted-imports": [
