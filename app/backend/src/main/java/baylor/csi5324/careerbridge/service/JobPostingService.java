@@ -56,46 +56,50 @@ public class JobPostingService {
     public JobPosting createPosting(CreateJobPostingRequest request) {
 
         if (request == null) {
-            throw new IllegalArgumentException("Posting details are required");
+            throw new InvalidPostingException("Posting details are required");
         }
 
         // Make sure the organization exists
         if (request.organizationId() == null) {
-            throw new IllegalArgumentException("Organization is required");
+            throw new InvalidPostingException("Organization is required");
         }
 
         Organization organization = organizationRepository
                 .findById(request.organizationId())
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Organization not found"));
+                        new InvalidPostingException("Organization not found"));
 
         // Validate the job posting information
         if (request.title() == null || request.title().isBlank()) {
-            throw new IllegalArgumentException("Job title is required");
+            throw new InvalidPostingException("Job title is required");
         }
 
         if (request.title().trim().length() > 255) {
-            throw new IllegalArgumentException("Job title is too long");
+            throw new InvalidPostingException("Job title is too long");
         }
 
         if (request.description() != null
                 && request.description().length() > 10000) {
-            throw new IllegalArgumentException("Description is too long");
+            throw new InvalidPostingException("Description is too long");
         }
 
         if (request.jobRequirements() != null
                 && request.jobRequirements().length() > 2000) {
-            throw new IllegalArgumentException("Job requirements are too long");
+            throw new InvalidPostingException("Job requirements are too long");
         }
+
+        requireShortText(request.location(), "Location");
+        requireShortText(request.employmentType(), "Employment type");
+        requireShortText(request.salaryRange(), "Salary range");
 
         if (request.applicationDeadline() == null
                 || request.applicationDeadline().isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException(
+            throw new InvalidPostingException(
                     "Application deadline must be today or later");
         }
 
         if (request.numberOfOpenings() < 1) {
-            throw new IllegalArgumentException(
+            throw new InvalidPostingException(
                     "At least one opening is required");
         }
 
@@ -120,6 +124,13 @@ public class JobPostingService {
 
         // Save the new posting in the database
         return jobPostingRepository.save(posting);
+    }
+
+    // Longer text does not fit its column, and the database would answer with a server error
+    private static void requireShortText(String text, String fieldName) {
+        if (text != null && text.length() > 255) {
+            throw new InvalidPostingException(fieldName + " is too long");
+        }
     }
 
     private static boolean contains(String text, String needle) {

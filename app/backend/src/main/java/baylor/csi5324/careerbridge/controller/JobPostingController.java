@@ -3,6 +3,7 @@ package baylor.csi5324.careerbridge.controller;
 
 import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.service.InvalidPostingException;
 import baylor.csi5324.careerbridge.service.JobPostingService;
 
 import org.springframework.http.HttpStatus;
@@ -41,10 +42,10 @@ public class JobPostingController {
         return jobPostingService.createPosting(request);
     }
 
-    // Return a readable error for invalid posting information
-    @ExceptionHandler(IllegalArgumentException.class)
+    // Only this exception: any other failure is the server's, not the recruiter's
+    @ExceptionHandler(InvalidPostingException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public String handleInvalidRequest(IllegalArgumentException ex) {
+    public String handleInvalidPosting(InvalidPostingException ex) {
         return ex.getMessage();
     }
 }
