@@ -11,5 +11,7 @@ WORKDIR /app
 COPY --from=build /app/target/careerbridge-0.0.1-SNAPSHOT.jar app.jar
 # Whatever runs this image is reachable by anyone (ADR-0006)
 ENV PUBLIC_DEPLOYMENT=true
+# No administrator unless the host sets ADMIN_PASSWORD (ADR-0007)
+ENV ADMIN_PASSWORD=""
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

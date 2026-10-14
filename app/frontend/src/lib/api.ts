@@ -22,6 +22,7 @@ export type JobPosting = {
   applicationDeadline: string;
   postStatus: string;
   organization: Organization;
+  reviewComment?: string | null;
 };
 
 export type NewPosting = {

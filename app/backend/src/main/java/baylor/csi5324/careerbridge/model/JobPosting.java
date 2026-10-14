@@ -12,9 +12,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-// Not mapped yet: the creating Recruiter and the approval attributes
-// (approvalStatus, approvedBy, approvedAt) - they arrive with UC-11 and UC-12.
+// Not mapped yet: the creating Recruiter, and approvalStatus, which repeats postStatus
 @Entity
 @Table(name = "job_postings")
 public class JobPosting {
@@ -46,6 +46,14 @@ public class JobPosting {
     @ManyToOne(optional = false)
     @JoinColumn(name = "organization_id")
     private Organization organization;
+
+    // They record whoever decided, also for a return or a rejection
+    private String approvedBy;
+
+    private LocalDateTime approvedAt;
+
+    @Column(length = 2000)
+    private String reviewComment;
 
     public JobPosting() {
     }
@@ -154,5 +162,29 @@ public class JobPosting {
 
     public void setOrganization(Organization organization) {
         this.organization = organization;
+    }
+
+    public String getApprovedBy() {
+        return approvedBy;
+    }
+
+    public void setApprovedBy(String approvedBy) {
+        this.approvedBy = approvedBy;
+    }
+
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
+    }
+
+    public String getReviewComment() {
+        return reviewComment;
+    }
+
+    public void setReviewComment(String reviewComment) {
+        this.reviewComment = reviewComment;
     }
 }

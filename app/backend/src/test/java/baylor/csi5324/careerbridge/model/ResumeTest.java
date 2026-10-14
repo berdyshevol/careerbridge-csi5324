@@ -38,4 +38,3 @@ class ResumeTest {
         assertNotNull(found.getUploadDate());
     }
 }
-
