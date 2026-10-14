@@ -26,7 +26,6 @@ public class JobPostingService {
         this.organizationRepository = organizationRepository;
     }
 
-    // Find published jobs, optionally filtered by keyword
     public List<JobPosting> searchPostings(String keyword) {
         List<JobPosting> openPostings = jobPostingRepository
                 .findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDesc(
@@ -45,21 +44,18 @@ public class JobPostingService {
                 .toList();
     }
 
-    // View one previously published job posting
     public JobPosting viewPosting(Long postingId) {
         return jobPostingRepository.findById(postingId)
                 .filter(JobPosting::wasPublished)
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
     }
 
-    // UC-11: Create a new job posting
     public JobPosting createPosting(CreateJobPostingRequest request) {
 
         if (request == null) {
             throw new InvalidPostingException("Posting details are required");
         }
 
-        // Make sure the organization exists
         if (request.organizationId() == null) {
             throw new InvalidPostingException("Organization is required");
         }
@@ -69,7 +65,6 @@ public class JobPostingService {
                 .orElseThrow(() ->
                         new InvalidPostingException("Organization not found"));
 
-        // Validate the job posting information
         if (request.title() == null || request.title().isBlank()) {
             throw new InvalidPostingException("Job title is required");
         }
@@ -103,7 +98,6 @@ public class JobPostingService {
                     "At least one opening is required");
         }
 
-        // Create a job posting using the validated information
         JobPosting posting = new JobPosting();
 
         posting.setOrganization(organization);
@@ -119,10 +113,8 @@ public class JobPostingService {
         // UC-12 will handle approval and publication later
         posting.setPostStatus(PostStatus.DRAFT);
 
-        // Record when the posting was created
         posting.setDatePosted(LocalDate.now());
 
-        // Save the new posting in the database
         return jobPostingRepository.save(posting);
     }
 

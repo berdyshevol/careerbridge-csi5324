@@ -45,8 +45,6 @@ class JobPostingServiceTest {
                 new Organization("Test Organization"));
     }
 
-    // Existing search and view tests
-
     @Test
     void searchPostingsReturnsOnlyOpenPostingsNewestFirst() {
         save("Older", PostStatus.PUBLISHED, today.minusDays(5), today.plusDays(10));
@@ -103,8 +101,6 @@ class JobPostingServiceTest {
                 PostingNotFoundException.class,
                 () -> jobPostingService.viewPosting(-1L));
     }
-
-    // UC-11: Create Job Posting tests
 
     @Test
     void createPostingSavesDraftWithCorrectOrganization() {

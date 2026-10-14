@@ -21,20 +21,17 @@ public class JobPostingController {
         this.jobPostingService = jobPostingService;
     }
 
-    // UC-01: Browse job postings
     @GetMapping
     public List<JobPosting> searchPostings(
             @RequestParam(required = false) String keyword) {
         return jobPostingService.searchPostings(keyword);
     }
 
-    // UC-01: View job posting details
     @GetMapping("/{postingId}")
     public JobPosting viewPosting(@PathVariable Long postingId) {
         return jobPostingService.viewPosting(postingId);
     }
 
-    // UC-11: Create a new job posting
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public JobPosting createPosting(
