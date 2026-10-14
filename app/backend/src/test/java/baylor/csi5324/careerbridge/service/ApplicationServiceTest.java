@@ -135,6 +135,204 @@ class ApplicationServiceTest {
         assertEquals(ApplicationService.APPLICATION_LIMIT, submitted.activeApplicationCount());
     }
 
+    // Submits an appplication on the day of the deadline, but before it closes.
+    @Test
+    void acceptsApplicationOnTheDeadlineDate() {
+        JobPosting posting = save(
+                "Last Day Position",
+                PostStatus.PUBLISHED,
+                today
+        );
+
+        SubmittedApplication submitted =
+                applicationService.submitApplication(
+                        posting.getJobPostId(), RESUME);
+
+        assertEquals(1, applicationRepository.count());
+        assertEquals(1, submitted.activeApplicationCount());
+        assertEquals(
+                ApplicationStatus.APPLIED,
+                submitted.application().getApplicationStatus()
+        );
+    }
+
+
+    // Tests if a fifth application is accepted. The maximum limit is 5 applications so it should be accepted.
+    @Test
+    void acceptsFifthActiveApplication() {
+        for (int i = 1; i <= 4; i++) {
+            JobPosting posting = save(
+                    "Position " + i,
+                    PostStatus.PUBLISHED,
+                    today.plusDays(10)
+            );
+            applicationService.submitApplication(
+                    posting.getJobPostId(), RESUME);
+        }
+
+        JobPosting fifth = save(
+                "Position 5",
+                PostStatus.PUBLISHED,
+                today.plusDays(10)
+        );
+
+        SubmittedApplication submitted =
+                applicationService.submitApplication(
+                        fifth.getJobPostId(), RESUME);
+
+        assertEquals(5, applicationRepository.count());
+        assertEquals(5, submitted.activeApplicationCount());
+    }
+
+    // Makes sure that a rejected application is not saved in the database and properly discarded.
+    @Test
+    void refusesSixthApplicationWithoutSavingIt() {
+        for (int i = 1; i <= 5; i++) {
+            JobPosting posting = save(
+                    "Position " + i,
+                    PostStatus.PUBLISHED,
+                    today.plusDays(10)
+            );
+            applicationService.submitApplication(
+                    posting.getJobPostId(), RESUME);
+        }
+
+        JobPosting sixth = save(
+                "Position 6",
+                PostStatus.PUBLISHED,
+                today.plusDays(10)
+        );
+
+        assertThrows(
+                ApplicationRefusedException.class,
+                () -> applicationService.submitApplication(
+                        sixth.getJobPostId(), RESUME)
+        );
+
+        assertEquals(5, applicationRepository.count());
+        assertTrue(applicationRepository
+                .findAll()
+                .stream()
+                .noneMatch(a -> a.getJobPosting()
+                        .getJobPostId()
+                        .equals(sixth.getJobPostId())));
+    }
+
+    // Checks to see if a duplicate application overrides an original one.
+    @Test
+    void duplicateSubmissionDoesNotReplaceOriginalApplication() {
+        JobPosting posting = save(
+                "Security Engineer",
+                PostStatus.PUBLISHED,
+                today.plusDays(10)
+        );
+
+        SubmittedApplication original =
+                applicationService.submitApplication(
+                        posting.getJobPostId(), RESUME);
+
+        ResumeSnapshot differentResume =
+                new ResumeSnapshot(
+                        "updated-cv.pdf",
+                        "application/pdf",
+                        4096L
+                );
+
+        assertThrows(
+                ApplicationRefusedException.class,
+                () -> applicationService.submitApplication(
+                        posting.getJobPostId(), differentResume)
+        );
+
+        Application saved = applicationRepository.findById(
+                original.application().getApplicationId()
+        ).orElseThrow();
+
+        assertEquals(
+                "cv.pdf",
+                saved.getResumeSnapshot().getFileName()
+        );
+        assertEquals(1, applicationRepository.count());
+    }
+
+    // Checks to see if an application moving ot the HIRED state frees up a slot.
+    @Test
+    void aHiredApplicationFreesItsSlot() {
+        for (int i = 1; i <= 5; i++) {
+            JobPosting posting = save(
+                    "Position " + i,
+                    PostStatus.PUBLISHED,
+                    today.plusDays(10)
+            );
+            applicationService.submitApplication(
+                    posting.getJobPostId(), RESUME);
+        }
+
+        // move one application to HIRED.
+        Application hired = applicationRepository.findAll().get(0);
+        hired.setApplicationStatus(ApplicationStatus.HIRED);
+        applicationRepository.saveAndFlush(hired);
+
+        // four applications remain active.
+        assertEquals(
+                4,
+                applicationRepository.countActiveByApplicant(applicant)
+        );
+
+        // a new application should be accepted.
+        JobPosting sixth = save(
+                "Position 6",
+                PostStatus.PUBLISHED,
+                today.plusDays(10)
+        );
+
+        SubmittedApplication submitted =
+                applicationService.submitApplication(
+                        sixth.getJobPostId(), RESUME);
+
+        assertEquals(5, submitted.activeApplicationCount());
+        assertEquals(6, applicationRepository.count());
+    }
+
+    // Checks to see if an application being rejected frees up a slot
+    @Test
+    void anOfferDeclinedApplicationFreesItsSlot() {
+        for (int i = 1; i <= 5; i++) {
+            JobPosting posting = save(
+                    "Position " + i,
+                    PostStatus.PUBLISHED,
+                    today.plusDays(10)
+            );
+            applicationService.submitApplication(
+                    posting.getJobPostId(), RESUME);
+        }
+
+        // Move one application to OFFER_DECLINED.
+        Application declined = applicationRepository.findAll().get(0);
+        declined.setApplicationStatus(ApplicationStatus.OFFER_DECLINED);
+        applicationRepository.saveAndFlush(declined);
+
+        assertEquals(
+                4,
+                applicationRepository.countActiveByApplicant(applicant)
+        );
+
+        JobPosting sixth = save(
+                "Position 6",
+                PostStatus.PUBLISHED,
+                today.plusDays(10)
+        );
+
+        SubmittedApplication submitted =
+                applicationService.submitApplication(
+                        sixth.getJobPostId(), RESUME);
+
+        assertEquals(5, submitted.activeApplicationCount());
+        assertEquals(6, applicationRepository.count());
+    }
+
+
+
     private JobPosting save(String title, PostStatus status, LocalDate deadline) {
         JobPosting posting = new JobPosting();
         posting.setOrganization(organization);
