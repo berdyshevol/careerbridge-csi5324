@@ -20,7 +20,7 @@ public class JobPostingController {
         this.jobPostingService = jobPostingService;
     }
 
-    // UC-01: Browse job postings
+    // UC-01: Browse published job postings
     @GetMapping
     public List<JobPosting> searchPostings(
             @RequestParam(required = false) String keyword) {
@@ -33,7 +33,7 @@ public class JobPostingController {
         return jobPostingService.viewPosting(postingId);
     }
 
-    // UC-11: Create a new job posting
+    // UC-11: Create a new job posting as a draft
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public JobPosting createPosting(
@@ -41,11 +41,23 @@ public class JobPostingController {
         return jobPostingService.createPosting(request);
     }
 
-    // Return a readable error for invalid posting information
+    // UC-12: Submit a draft posting for administrator approval
+    @PostMapping("/{postingId}/submit")
+    public JobPosting submitForApproval(@PathVariable Long postingId) {
+        return jobPostingService.submitForApproval(postingId);
+    }
+
+    // Invalid posting information
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleInvalidRequest(IllegalArgumentException ex) {
         return ex.getMessage();
     }
-}
 
+    // Invalid status transitions
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String handleInvalidState(IllegalStateException ex) {
+        return ex.getMessage();
+    }
+}

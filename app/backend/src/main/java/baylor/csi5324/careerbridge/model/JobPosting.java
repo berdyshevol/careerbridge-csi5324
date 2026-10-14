@@ -1,3 +1,4 @@
+
 package baylor.csi5324.careerbridge.model;
 
 import jakarta.persistence.Column;
@@ -12,9 +13,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-// Not mapped yet: the creating Recruiter and the approval attributes
-// (approvalStatus, approvedBy, approvedAt) - they arrive with UC-11 and UC-12.
 @Entity
 @Table(name = "job_postings")
 public class JobPosting {
@@ -47,6 +47,15 @@ public class JobPosting {
     @JoinColumn(name = "organization_id")
     private Organization organization;
 
+    // UC-12: Administrator review information
+    // Reviewer identity must eventually come from authenticated user data.
+    private String reviewedBy;
+
+    private LocalDateTime reviewedAt;
+
+    @Column(length = 2000)
+    private String reviewComment;
+
     public JobPosting() {
     }
 
@@ -57,7 +66,8 @@ public class JobPosting {
     }
 
     public boolean wasPublished() {
-        return postStatus == PostStatus.PUBLISHED || postStatus == PostStatus.CLOSED;
+        return postStatus == PostStatus.PUBLISHED
+                || postStatus == PostStatus.CLOSED;
     }
 
     public Long getJobPostId() {
@@ -154,5 +164,29 @@ public class JobPosting {
 
     public void setOrganization(Organization organization) {
         this.organization = organization;
+    }
+
+    public String getReviewedBy() {
+        return reviewedBy;
+    }
+
+    public void setReviewedBy(String reviewedBy) {
+        this.reviewedBy = reviewedBy;
+    }
+
+    public LocalDateTime getReviewedAt() {
+        return reviewedAt;
+    }
+
+    public void setReviewedAt(LocalDateTime reviewedAt) {
+        this.reviewedAt = reviewedAt;
+    }
+
+    public String getReviewComment() {
+        return reviewComment;
+    }
+
+    public void setReviewComment(String reviewComment) {
+        this.reviewComment = reviewComment;
     }
 }

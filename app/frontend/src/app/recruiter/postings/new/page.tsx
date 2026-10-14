@@ -23,6 +23,7 @@ export default function NewPostingPage() {
   const [applicationDeadline, setApplicationDeadline] = useState("");
 
   const [saving, setSaving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [created, setCreated] = useState<CreatedPosting | null>(null);
 
@@ -53,8 +54,9 @@ export default function NewPostingPage() {
       });
 
       if (!response.ok) {
-        const message = await response.text();
-        throw new Error(message || `Server returned ${response.status}`);
+        throw new Error(
+          (await response.text()) || `Server returned ${response.status}`,
+        );
       }
 
       const posting = (await response.json()) as CreatedPosting;
@@ -70,41 +72,103 @@ export default function NewPostingPage() {
     }
   }
 
+  async function submitForApproval() {
+    if (!created) return;
+
+    setError("");
+    setSubmitting(true);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/postings/${created.jobPostId}/submit`,
+        {
+          method: "POST",
+          signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          (await response.text()) || `Server returned ${response.status}`,
+        );
+      }
+
+      const updated = (await response.json()) as CreatedPosting;
+      setCreated(updated);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to submit the posting for approval.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
         <p className="mb-2 text-sm font-semibold text-primary">
-          RECRUITER WORKSPACE / UC-11
+          RECRUITER WORKSPACE / UC-11 & UC-12
         </p>
+
         <h1 className="font-display text-3xl font-semibold">
           Create job posting
         </h1>
+
         <p className="mt-2 text-muted">
-          Complete the details below to save a new job posting as a draft.
-          Draft postings are not visible to applicants.
+          Create a job posting, save it as a draft, and submit it for
+          administrator approval before publication.
         </p>
       </div>
 
       <div className="alert alert-info text-sm">
         <span>
-          Development demo: choose one of the sample organizations below.
-          Recruiter authentication and organization ownership verification
-          have not been implemented yet.
+          Development demonstration: select a sample organization.
+          Recruiter authentication and organization ownership
+          verification are not yet implemented.
         </span>
       </div>
 
       {created && (
-        <div role="status" className="alert alert-success">
+        <div role="status" className="space-y-4 rounded-2xl border border-base-300 bg-base-100 p-5 shadow-sm">
           <div>
-            <p className="font-semibold">Job posting saved successfully!</p>
-            <p>
-              {created.title} — Posting #{created.jobPostId}
-              {" "}({created.postStatus})
+            <h2 className="text-lg font-semibold">
+              {created.postStatus === "PENDING_APPROVAL"
+                ? "Submitted for administrator review!"
+                : "Job posting saved successfully!"}
+            </h2>
+
+            <p className="mt-1">
+              {created.title} · Posting #{created.jobPostId}
             </p>
-            <p className="text-sm">
-              Your draft has been saved to the backend database.
+
+            <p className="mt-1 text-sm text-muted">
+              Current status:{" "}
+              <span className="font-semibold">
+                {created.postStatus.replaceAll("_", " ")}
+              </span>
             </p>
           </div>
+
+          {created.postStatus === "DRAFT" && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={submitForApproval}
+              disabled={submitting}
+            >
+              {submitting ? "Submitting..." : "Submit for approval"}
+            </button>
+          )}
+
+          {created.postStatus === "PENDING_APPROVAL" && (
+            <p className="text-sm text-success">
+              The posting is now awaiting an administrator decision.
+              It is not visible on the public job board yet.
+            </p>
+          )}
         </div>
       )}
 
@@ -127,7 +191,7 @@ export default function NewPostingPage() {
               id="organization"
               className="select w-full"
               value={organizationId}
-              onChange={(e) => setOrganizationId(e.target.value)}
+              onChange={(event) => setOrganizationId(event.target.value)}
               required
             >
               <option value="1">Brazos Analytics</option>
@@ -145,7 +209,7 @@ export default function NewPostingPage() {
               placeholder="e.g. Cybersecurity Analyst"
               maxLength={255}
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(event) => setTitle(event.target.value)}
               required
             />
           </fieldset>
@@ -160,7 +224,7 @@ export default function NewPostingPage() {
               placeholder="Describe the role and responsibilities"
               maxLength={10000}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(event) => setDescription(event.target.value)}
             />
           </fieldset>
 
@@ -174,7 +238,7 @@ export default function NewPostingPage() {
               placeholder="List the skills, experience, or qualifications"
               maxLength={2000}
               value={jobRequirements}
-              onChange={(e) => setJobRequirements(e.target.value)}
+              onChange={(event) => setJobRequirements(event.target.value)}
             />
           </fieldset>
 
@@ -188,7 +252,7 @@ export default function NewPostingPage() {
               placeholder="e.g. Waco, TX or Remote"
               maxLength={255}
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              onChange={(event) => setLocation(event.target.value)}
             />
           </fieldset>
 
@@ -200,7 +264,7 @@ export default function NewPostingPage() {
               id="employmentType"
               className="select w-full"
               value={employmentType}
-              onChange={(e) => setEmploymentType(e.target.value)}
+              onChange={(event) => setEmploymentType(event.target.value)}
             >
               <option value="Full-time">Full-time</option>
               <option value="Part-time">Part-time</option>
@@ -220,7 +284,7 @@ export default function NewPostingPage() {
               placeholder="e.g. $70,000 - $90,000"
               maxLength={255}
               value={salaryRange}
-              onChange={(e) => setSalaryRange(e.target.value)}
+              onChange={(event) => setSalaryRange(event.target.value)}
             />
           </fieldset>
 
@@ -235,7 +299,7 @@ export default function NewPostingPage() {
               min={1}
               step={1}
               value={numberOfOpenings}
-              onChange={(e) => setNumberOfOpenings(e.target.value)}
+              onChange={(event) => setNumberOfOpenings(event.target.value)}
               required
             />
           </fieldset>
@@ -250,7 +314,7 @@ export default function NewPostingPage() {
               className="input w-full"
               min={today}
               value={applicationDeadline}
-              onChange={(e) => setApplicationDeadline(e.target.value)}
+              onChange={(event) => setApplicationDeadline(event.target.value)}
               required
             />
           </fieldset>
@@ -263,7 +327,7 @@ export default function NewPostingPage() {
 
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || submitting}
             className="btn btn-primary"
           >
             {saving ? "Saving..." : "Save draft"}
@@ -273,4 +337,3 @@ export default function NewPostingPage() {
     </div>
   );
 }
-
