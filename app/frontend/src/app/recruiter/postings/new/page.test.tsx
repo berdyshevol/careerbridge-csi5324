@@ -58,4 +58,19 @@ describe("NewPostingPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Unable to save the posting. Please try again.");
   });
+
+  it("submits the saved draft for approval", async () => {
+    vi.mocked(createPosting).mockResolvedValue(saved);
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ...saved, postStatus: "PENDING_APPROVAL" }), { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    submitTheForm();
+    fireEvent.click(await screen.findByRole("button", { name: "Submit for approval" }));
+
+    expect(await screen.findByText("Submitted for administrator review!")).toBeInTheDocument();
+    expect(fetchMock.mock.calls[0][0]).toBe("http://localhost:8080/api/postings/7/submit");
+    vi.unstubAllGlobals();
+  });
 });

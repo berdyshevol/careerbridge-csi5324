@@ -17,7 +17,7 @@ npm install
 npm run dev                   # frontend on http://localhost:3000
 ```
 
-Open <http://localhost:3000>. `./mvnw test` in `app/backend` runs the backend tests. The H2 console is at <http://localhost:8080/h2-console> (JDBC URL `jdbc:h2:mem:careerbridge`, user `sa`, no password).
+Open <http://localhost:3000>. `./mvnw test` in `app/backend` runs the backend tests. The H2 console is at <http://localhost:8080/h2-console> (JDBC URL `jdbc:h2:mem:careerbridge`, user `sa`, no password). Posting approvals are at <http://localhost:3000/admin/postings>; the local administrator is `admin` / `admin` ([ADR-0007](../spec/adr/0007-administrator-signs-in-with-http-basic.md)).
 
 ## Deployment
 

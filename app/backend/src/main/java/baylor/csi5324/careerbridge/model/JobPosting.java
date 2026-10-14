@@ -1,4 +1,3 @@
-
 package baylor.csi5324.careerbridge.model;
 
 import jakarta.persistence.Column;
@@ -15,6 +14,7 @@ import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+// Not mapped yet: the creating Recruiter, and approvalStatus, which repeats postStatus
 @Entity
 @Table(name = "job_postings")
 public class JobPosting {
@@ -47,11 +47,10 @@ public class JobPosting {
     @JoinColumn(name = "organization_id")
     private Organization organization;
 
-    // UC-12: Administrator review information
-    // Reviewer identity must eventually come from authenticated user data.
-    private String reviewedBy;
+    // They record whoever decided, also for a return or a rejection
+    private String approvedBy;
 
-    private LocalDateTime reviewedAt;
+    private LocalDateTime approvedAt;
 
     @Column(length = 2000)
     private String reviewComment;
@@ -66,8 +65,7 @@ public class JobPosting {
     }
 
     public boolean wasPublished() {
-        return postStatus == PostStatus.PUBLISHED
-                || postStatus == PostStatus.CLOSED;
+        return postStatus == PostStatus.PUBLISHED || postStatus == PostStatus.CLOSED;
     }
 
     public Long getJobPostId() {
@@ -166,20 +164,20 @@ public class JobPosting {
         this.organization = organization;
     }
 
-    public String getReviewedBy() {
-        return reviewedBy;
+    public String getApprovedBy() {
+        return approvedBy;
     }
 
-    public void setReviewedBy(String reviewedBy) {
-        this.reviewedBy = reviewedBy;
+    public void setApprovedBy(String approvedBy) {
+        this.approvedBy = approvedBy;
     }
 
-    public LocalDateTime getReviewedAt() {
-        return reviewedAt;
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
     }
 
-    public void setReviewedAt(LocalDateTime reviewedAt) {
-        this.reviewedAt = reviewedAt;
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
     }
 
     public String getReviewComment() {

@@ -13,4 +13,6 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Long> {
 
     List<JobPosting> findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDesc(
             PostStatus postStatus, LocalDate today);
+
+    List<JobPosting> findByPostStatusOrderByDatePostedAscJobPostIdAsc(PostStatus postStatus);
 }

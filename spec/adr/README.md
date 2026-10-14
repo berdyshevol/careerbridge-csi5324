@@ -11,3 +11,4 @@ decision gets a new record that names the one it replaces.
 | [0004](0004-frontend.md) | One responsive frontend for phone, tablet and laptop, built with Tailwind and daisyUI | Accepted |
 | [0005](0005-user-inheritance.md) | Applicant, Recruiter and Administrator are stored with joined-table inheritance | Accepted |
 | [0006](0006-public-backend-is-read-only-without-login.md) | The public backend changes no data until users can log in | Accepted |
+| [0007](0007-administrator-signs-in-with-http-basic.md) | The Administrator signs in with HTTP Basic until Log In exists | Accepted |
