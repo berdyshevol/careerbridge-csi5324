@@ -256,4 +256,3 @@ class JobPostingServiceTest {
         return jobPostingRepository.save(posting);
     }
 }
-

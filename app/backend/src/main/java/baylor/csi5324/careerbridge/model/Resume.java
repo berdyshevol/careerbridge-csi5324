@@ -66,4 +66,3 @@ public class Resume {
         this.uploadDate = uploadDate;
     }
 }
-
