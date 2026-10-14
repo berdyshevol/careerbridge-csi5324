@@ -9,3 +9,4 @@ decision gets a new record that names the one it replaces.
 | [0002](0002-repository-layout.md) | `spec/` for the specification, `app/backend/` and `app/frontend/` for the code | Accepted |
 | [0003](0003-pull-requests-and-manual-deploy.md) | Changes reach `main` through pull requests; deploys are started by hand | Accepted |
 | [0004](0004-frontend.md) | One responsive frontend for phone, tablet and laptop, built with Tailwind and daisyUI | Accepted |
+| [0005](0005-user-inheritance.md) | Applicant, Recruiter and Administrator are stored with joined-table inheritance | Accepted |
