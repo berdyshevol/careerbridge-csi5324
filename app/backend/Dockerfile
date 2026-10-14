@@ -9,5 +9,7 @@ RUN mvn -q -B package -DskipTests
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=build /app/target/careerbridge-0.0.1-SNAPSHOT.jar app.jar
+# Whatever runs this image is reachable by anyone (ADR-0006)
+ENV PUBLIC_DEPLOYMENT=true
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

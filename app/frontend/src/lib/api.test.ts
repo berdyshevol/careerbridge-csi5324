@@ -100,13 +100,16 @@ describe("createPosting", () => {
     expect(init.signal).toBe(timeout.mock.results[0].value);
   });
 
-  it("passes on the reason when the backend refuses the posting", async () => {
-    answer(400, "Job title is required", "text/plain;charset=UTF-8");
+  it.each([
+    [400, "Job title is required"],
+    [403, "Saving is switched off"],
+  ])("passes on the reason when the backend refuses the posting: %i", async (status, reason) => {
+    answer(status, reason, "text/plain;charset=UTF-8");
 
     const refused = await createPosting(newPosting).catch((error) => error);
 
     expect(refused).toBeInstanceOf(PostingRejected);
-    expect(refused.message).toBe("Job title is required");
+    expect(refused.message).toBe(reason);
   });
 
   it.each([
