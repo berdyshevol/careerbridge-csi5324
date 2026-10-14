@@ -1,10 +1,10 @@
-
 package baylor.csi5324.careerbridge.controller;
 
 import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.service.InvalidPostingException;
 import baylor.csi5324.careerbridge.service.JobPostingService;
+import baylor.csi5324.careerbridge.service.PostingStateConflictException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -39,23 +39,21 @@ public class JobPostingController {
         return jobPostingService.createPosting(request);
     }
 
-    // UC-12: Submit a draft or returned posting for review
     @PostMapping("/{postingId}/submit")
     public JobPosting submitForApproval(@PathVariable Long postingId) {
         return jobPostingService.submitForApproval(postingId);
     }
 
-    // Preserve the existing UC-11 validation error handling
+    // Only these two exceptions: any other failure is the server's, not the recruiter's
     @ExceptionHandler(InvalidPostingException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleInvalidPosting(InvalidPostingException ex) {
         return ex.getMessage();
     }
 
-    // UC-12: Invalid approval workflow transitions
-    @ExceptionHandler(IllegalStateException.class)
+    @ExceptionHandler(PostingStateConflictException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public String handleInvalidState(IllegalStateException ex) {
+    public String handleStatusConflict(PostingStateConflictException ex) {
         return ex.getMessage();
     }
 }

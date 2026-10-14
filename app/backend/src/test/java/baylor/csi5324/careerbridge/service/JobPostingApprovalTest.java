@@ -70,12 +70,12 @@ class JobPostingApprovalTest {
         JobPosting pending = createPosting(
                 PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
 
-        JobPosting approved = jobPostingService.approvePosting(
+        JobPosting approved = jobPostingService.approveJobPosting(
                 pending.getJobPostId(), "Test Administrator", "Approved");
 
         assertEquals(PostStatus.PUBLISHED, approved.getPostStatus());
-        assertEquals("Test Administrator", approved.getReviewedBy());
-        assertNotNull(approved.getReviewedAt());
+        assertEquals("Test Administrator", approved.getApprovedBy());
+        assertNotNull(approved.getApprovedAt());
         assertEquals("Approved", approved.getReviewComment());
     }
 
@@ -84,7 +84,7 @@ class JobPostingApprovalTest {
         JobPosting pending = createPosting(
                 PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
 
-        jobPostingService.approvePosting(
+        jobPostingService.approveJobPosting(
                 pending.getJobPostId(), "Test Administrator", null);
 
         assertTrue(jobPostingService.searchPostings(null).stream()
@@ -97,7 +97,7 @@ class JobPostingApprovalTest {
         JobPosting pending = createPosting(
                 PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
 
-        JobPosting returned = jobPostingService.returnPosting(
+        JobPosting returned = jobPostingService.returnJobPosting(
                 pending.getJobPostId(),
                 "Test Administrator",
                 "Please clarify the job requirements");
@@ -105,7 +105,7 @@ class JobPostingApprovalTest {
         assertEquals(PostStatus.RETURNED, returned.getPostStatus());
         assertEquals("Please clarify the job requirements",
                 returned.getReviewComment());
-        assertNotNull(returned.getReviewedAt());
+        assertNotNull(returned.getApprovedAt());
     }
 
     @Test
@@ -113,13 +113,13 @@ class JobPostingApprovalTest {
         JobPosting pending = createPosting(
                 PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
 
-        JobPosting rejected = jobPostingService.rejectPosting(
+        JobPosting rejected = jobPostingService.rejectJobPosting(
                 pending.getJobPostId(),
                 "Test Administrator",
                 "Posting does not meet requirements");
 
         assertEquals(PostStatus.REJECTED, rejected.getPostStatus());
-        assertEquals("Test Administrator", rejected.getReviewedBy());
+        assertEquals("Test Administrator", rejected.getApprovedBy());
     }
 
     @Test
@@ -127,8 +127,8 @@ class JobPostingApprovalTest {
         JobPosting published = createPosting(
                 PostStatus.PUBLISHED, LocalDate.now().plusDays(10));
 
-        assertThrows(IllegalStateException.class,
-                () -> jobPostingService.approvePosting(
+        assertThrows(PostingStateConflictException.class,
+                () -> jobPostingService.approveJobPosting(
                         published.getJobPostId(), "Admin", "Approved"));
     }
 
@@ -137,19 +137,62 @@ class JobPostingApprovalTest {
         JobPosting rejected = createPosting(
                 PostStatus.REJECTED, LocalDate.now().plusDays(10));
 
-        assertThrows(IllegalStateException.class,
+        assertThrows(PostingStateConflictException.class,
                 () -> jobPostingService.submitForApproval(
                         rejected.getJobPostId()));
     }
 
     @Test
-    void pastDeadlineCannotBeApproved() {
+    void pastDeadlineReturnsThePostingForANewDeadline() {
         JobPosting pending = createPosting(
                 PostStatus.PENDING_APPROVAL, LocalDate.now().minusDays(1));
 
-        assertThrows(IllegalStateException.class,
-                () -> jobPostingService.approvePosting(
-                        pending.getJobPostId(), "Admin", "Approved"));
+        JobPosting result = jobPostingService.approveJobPosting(
+                pending.getJobPostId(), "Admin", "Approved");
+
+        assertEquals(PostStatus.RETURNED, result.getPostStatus());
+        assertEquals(JobPostingService.DEADLINE_PASSED, result.getReviewComment());
+        assertEquals("Admin", result.getApprovedBy());
+    }
+
+    @Test
+    void approvalRecordsThePublicationDate() {
+        JobPosting pending = createPosting(
+                PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
+        pending.setDatePosted(LocalDate.now().minusDays(30));
+
+        JobPosting approved = jobPostingService.approveJobPosting(
+                pending.getJobPostId(), "Admin", null);
+
+        assertEquals(LocalDate.now(), approved.getDatePosted());
+    }
+
+    @Test
+    void deadlineMustBeBetweenOneAndNinetyDaysAway() {
+        JobPosting today = createPosting(PostStatus.DRAFT, LocalDate.now());
+        JobPosting tooFar = createPosting(PostStatus.DRAFT, LocalDate.now().plusDays(91));
+        JobPosting lastDay = createPosting(PostStatus.DRAFT, LocalDate.now().plusDays(90));
+
+        assertThrows(InvalidPostingException.class,
+                () -> jobPostingService.submitForApproval(today.getJobPostId()));
+        assertThrows(InvalidPostingException.class,
+                () -> jobPostingService.submitForApproval(tooFar.getJobPostId()));
+        assertEquals(PostStatus.PENDING_APPROVAL,
+                jobPostingService.submitForApproval(lastDay.getJobPostId()).getPostStatus());
+    }
+
+    @Test
+    void pendingListIsOldestFirst() {
+        JobPosting newer = createPosting(
+                PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
+        JobPosting older = createPosting(
+                PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
+        older.setDatePosted(LocalDate.now().minusDays(5));
+
+        List<JobPosting> results = jobPostingService.getPendingPostings();
+
+        assertEquals(List.of(older.getJobPostId(), newer.getJobPostId()),
+                results.stream().map(JobPosting::getJobPostId).toList());
     }
 
     @Test
@@ -157,8 +200,8 @@ class JobPostingApprovalTest {
         JobPosting pending = createPosting(
                 PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> jobPostingService.rejectPosting(
+        assertThrows(InvalidPostingException.class,
+                () -> jobPostingService.rejectJobPosting(
                         pending.getJobPostId(), "Admin", " "));
     }
 
@@ -182,7 +225,7 @@ class JobPostingApprovalTest {
         JobPosting returned = createPosting(
                 PostStatus.RETURNED, LocalDate.now().plusDays(10));
 
-        returned.setReviewedBy("Previous Administrator");
+        returned.setApprovedBy("Previous Administrator");
         returned.setReviewComment("Needs corrections");
 
         JobPosting result =
@@ -190,8 +233,8 @@ class JobPostingApprovalTest {
 
         assertEquals(PostStatus.PENDING_APPROVAL,
                 result.getPostStatus());
-        assertNull(result.getReviewedBy());
-        assertNull(result.getReviewedAt());
+        assertNull(result.getApprovedBy());
+        assertNull(result.getApprovedAt());
         assertNull(result.getReviewComment());
     }
 

@@ -18,6 +18,16 @@ import java.util.Locale;
 @Service
 public class JobPostingService {
 
+    // UC-11, extension 5b
+    private static final int MIN_DAYS_TO_DEADLINE = 1;
+    private static final int MAX_DAYS_TO_DEADLINE = 90;
+
+    // UC-12, extension 6a
+    static final String DEADLINE_PASSED =
+            "The application deadline passed while the posting was waiting. Set a new deadline and submit it again.";
+
+    private static final int MAX_COMMENT_LENGTH = 2000;
+
     private final JobPostingRepository jobPostingRepository;
     private final OrganizationRepository organizationRepository;
 
@@ -52,7 +62,6 @@ public class JobPostingService {
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
     }
 
-    // UC-11: Create a posting as a draft
     public JobPosting createPosting(CreateJobPostingRequest request) {
         if (request == null) {
             throw new InvalidPostingException("Posting details are required");
@@ -116,83 +125,62 @@ public class JobPostingService {
         return jobPostingRepository.save(posting);
     }
 
-    // UC-12: Submit a draft or returned posting for approval
-    @Transactional
     public JobPosting submitForApproval(Long postingId) {
         JobPosting posting = findPosting(postingId);
 
         if (posting.getPostStatus() != PostStatus.DRAFT
                 && posting.getPostStatus() != PostStatus.RETURNED) {
-            throw new IllegalStateException(
-                    "Only draft or returned postings can be submitted");
+            throw new PostingStateConflictException(
+                    "Only a draft or a returned posting can be submitted; this one is "
+                            + posting.getPostStatus().getLabel());
         }
 
-        if (posting.getApplicationDeadline() == null
-                || posting.getApplicationDeadline().isBefore(LocalDate.now())) {
-            throw new IllegalStateException(
-                    "The posting must have a valid future deadline");
+        LocalDate deadline = posting.getApplicationDeadline();
+        LocalDate today = LocalDate.now();
+        if (deadline == null
+                || deadline.isBefore(today.plusDays(MIN_DAYS_TO_DEADLINE))
+                || deadline.isAfter(today.plusDays(MAX_DAYS_TO_DEADLINE))) {
+            throw new InvalidPostingException("The application deadline must be between "
+                    + MIN_DAYS_TO_DEADLINE + " and " + MAX_DAYS_TO_DEADLINE + " days away");
         }
 
         posting.setPostStatus(PostStatus.PENDING_APPROVAL);
-        posting.setReviewedBy(null);
-        posting.setReviewedAt(null);
+        posting.setApprovedBy(null);
+        posting.setApprovedAt(null);
         posting.setReviewComment(null);
-
         return jobPostingRepository.save(posting);
     }
 
-    // UC-12: List postings awaiting administrator review
     public List<JobPosting> getPendingPostings() {
-        return jobPostingRepository.findAll().stream()
-                .filter(posting ->
-                        posting.getPostStatus() == PostStatus.PENDING_APPROVAL)
-                .toList();
+        return jobPostingRepository.findByPostStatusOrderByDatePostedAscJobPostIdAsc(
+                PostStatus.PENDING_APPROVAL);
     }
 
-    // UC-12: Approve and publish a posting
     @Transactional
-    public JobPosting approvePosting(
-            Long postingId, String reviewer, String comment) {
-
+    public JobPosting approveJobPosting(Long postingId, String administrator, String comment) {
         JobPosting posting = findPendingPosting(postingId);
 
         if (posting.getApplicationDeadline() == null
                 || posting.getApplicationDeadline().isBefore(LocalDate.now())) {
-            throw new IllegalStateException(
-                    "Cannot publish a posting with an expired deadline");
+            recordDecision(posting, PostStatus.RETURNED, administrator, DEADLINE_PASSED);
+        } else {
+            recordDecision(posting, PostStatus.PUBLISHED, administrator, comment);
+            posting.setDatePosted(LocalDate.now());
         }
-
-        recordReview(posting, reviewer, comment);
-        posting.setPostStatus(PostStatus.PUBLISHED);
-
         return jobPostingRepository.save(posting);
     }
 
-    // UC-12: Return a posting so the recruiter can correct it
     @Transactional
-    public JobPosting returnPosting(
-            Long postingId, String reviewer, String comment) {
-
+    public JobPosting returnJobPosting(Long postingId, String administrator, String comment) {
         JobPosting posting = findPendingPosting(postingId);
-        requireComment(comment);
-
-        recordReview(posting, reviewer, comment);
-        posting.setPostStatus(PostStatus.RETURNED);
-
+        recordDecision(posting, PostStatus.RETURNED, administrator, requireComment(comment));
         return jobPostingRepository.save(posting);
     }
 
-    // UC-12: Reject a posting
     @Transactional
-    public JobPosting rejectPosting(
-            Long postingId, String reviewer, String comment) {
-
+    public JobPosting rejectJobPosting(Long postingId, String administrator, String comment) {
         JobPosting posting = findPendingPosting(postingId);
-        requireComment(comment);
-
-        recordReview(posting, reviewer, comment);
-        posting.setPostStatus(PostStatus.REJECTED);
-
+        recordDecision(posting, PostStatus.REJECTED, administrator, requireComment(comment));
         return jobPostingRepository.save(posting);
     }
 
@@ -203,40 +191,33 @@ public class JobPostingService {
 
     private JobPosting findPendingPosting(Long postingId) {
         JobPosting posting = findPosting(postingId);
-
         if (posting.getPostStatus() != PostStatus.PENDING_APPROVAL) {
-            throw new IllegalStateException(
-                    "Only pending postings can be reviewed");
+            throw new PostingStateConflictException(
+                    "This posting was already decided: it is " + posting.getPostStatus().getLabel());
         }
-
         return posting;
     }
 
-    private void recordReview(
-            JobPosting posting, String reviewer, String comment) {
-
-        if (reviewer == null || reviewer.isBlank()) {
-            throw new IllegalArgumentException("Reviewer is required");
+    private static void recordDecision(
+            JobPosting posting, PostStatus decision, String administrator, String comment) {
+        if (comment != null && comment.length() > MAX_COMMENT_LENGTH) {
+            throw new InvalidPostingException("The comment is too long");
         }
-
-        if (comment != null && comment.length() > 2000) {
-            throw new IllegalArgumentException("Review comment is too long");
-        }
-
-        posting.setReviewedBy(reviewer.trim());
-        posting.setReviewedAt(LocalDateTime.now());
-        posting.setReviewComment(
-                comment == null ? null : comment.trim());
+        posting.setPostStatus(decision);
+        posting.setApprovedBy(administrator);
+        posting.setApprovedAt(LocalDateTime.now());
+        posting.setReviewComment(comment == null || comment.isBlank() ? null : comment.trim());
     }
 
-    private void requireComment(String comment) {
+    private static String requireComment(String comment) {
         if (comment == null || comment.isBlank()) {
-            throw new IllegalArgumentException(
-                    "A reason is required for returning or rejecting a posting");
+            throw new InvalidPostingException(
+                    "A reason is required to return or reject a posting");
         }
+        return comment;
     }
 
-    // Preserve UC-11 database column-length validation
+    // Longer text does not fit its column, and the database would answer with a server error
     private static void requireShortText(String text, String fieldName) {
         if (text != null && text.length() > 255) {
             throw new InvalidPostingException(fieldName + " is too long");
@@ -244,7 +225,6 @@ public class JobPostingService {
     }
 
     private static boolean contains(String text, String needle) {
-        return text != null
-                && text.toLowerCase(Locale.ROOT).contains(needle);
+        return text != null && text.toLowerCase(Locale.ROOT).contains(needle);
     }
 }

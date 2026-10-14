@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -96,7 +95,6 @@ export default function DeskNav() {
 
   return (
     <>
-      {/* Desktop sidebar */}
       <nav
         aria-label="CareerBridge navigation"
         className="hidden w-64 shrink-0 flex-col gap-2 lg:flex"
@@ -124,10 +122,9 @@ export default function DeskNav() {
         {adminItems.map(renderDesktopLink)}
       </nav>
 
-      {/* Tablet navigation */}
       <nav
         aria-label="CareerBridge navigation"
-        className="hidden grid-cols-2 gap-3 sm:grid-cols-3 md:grid lg:hidden"
+        className="hidden grid-cols-3 gap-3 md:grid lg:hidden"
       >
         {allItems.map(({ href, label, Icon }) => (
           <Link
@@ -146,7 +143,7 @@ export default function DeskNav() {
         ))}
       </nav>
 
-      {/* Mobile navigation */}
+      {/* The phone dock holds only the desk; the footer links the recruiter and admin pages */}
       <nav
         aria-label="CareerBridge navigation"
         className="dock border-t border-base-300 bg-base-100 md:hidden"

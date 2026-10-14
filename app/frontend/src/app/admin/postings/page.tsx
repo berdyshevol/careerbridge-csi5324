@@ -89,13 +89,6 @@ export default function AdminPostingsPage() {
       return;
     }
 
-    const actionLabel =
-      action === "approve"
-        ? "approve"
-        : action === "return"
-          ? "return"
-          : "reject";
-
     if (
       action === "reject" &&
       !window.confirm("Reject this posting? This action cannot be undone.")
@@ -121,31 +114,33 @@ export default function AdminPostingsPage() {
         },
       );
 
-      if (!response.ok) {
-        const details = await response.text();
+      if (response.status === 401 || response.status === 403) {
+        setConnected(false);
+        throw new Error("Administrator access was denied.");
+      }
 
-        if (response.status === 401 || response.status === 403) {
-          setConnected(false);
-          throw new Error("Administrator access was denied.");
-        }
-
-        throw new Error(
-          details || `Unable to ${actionLabel} posting.`,
+      // UC-12, extension 6c: another administrator decided it, so it leaves the queue too
+      if (response.ok || response.status === 409) {
+        setPostings((current) =>
+          current.filter((posting) => posting.jobPostId !== postingId),
         );
       }
 
-      setPostings((current) =>
-        current.filter((posting) => posting.jobPostId !== postingId),
-      );
+      if (!response.ok) {
+        throw new Error(
+          (await response.text()) || `Unable to ${action} posting.`,
+        );
+      }
 
+      const decided = (await response.json()) as JobPosting;
       setMessage(
-        `Posting #${postingId} successfully ${
-          action === "approve"
-            ? "approved and published"
-            : action === "return"
-              ? "returned for corrections"
-              : "rejected"
-        }.`,
+        `Posting #${postingId} ${
+          decided.postStatus === "PUBLISHED"
+            ? "is approved and published."
+            : decided.postStatus === "REJECTED"
+              ? "is rejected."
+              : `is returned to the recruiters: ${decided.reviewComment ?? ""}`
+        }`,
       );
     } catch (err) {
       setError(
