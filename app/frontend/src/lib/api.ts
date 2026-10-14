@@ -36,7 +36,7 @@ export type NewPosting = {
   applicationDeadline: string;
 };
 
-// The backend refused the posting; the message is its reason, written for the recruiter.
+// Its message is the backend's reason, written for the recruiter
 export class PostingRejected extends Error {}
 
 function backendFetch(path: string, init?: Omit<RequestInit, "signal">): Promise<Response> {
