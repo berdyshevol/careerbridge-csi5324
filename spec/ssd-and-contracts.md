@@ -708,6 +708,11 @@ selectCreatePosting() only opens the posting form and changes nothing, so it has
 
 **Cross-references:** UC-11 steps 4–7; extensions *a, 5a, 5b; FR-UC11.2 through FR-UC11.5
 
+A posting saved as a Draft (extension 3b) or Returned by the Administrator (extension 6a) is
+submitted by its id, submitJobPosting(postingId). The stored data is validated as postingData would
+be; instead of a new instance, the existing Job Posting becomes Pending Approval, and the previous
+decision (_approvedBy_, _approvedAt_, _reviewComment_) is cleared.
+
 **Preconditions:**
 
 - The Recruiter is authenticated and approved.

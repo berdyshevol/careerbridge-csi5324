@@ -47,7 +47,7 @@ class JobPostingApprovalTest {
                 PostStatus.DRAFT, LocalDate.now().plusDays(10));
 
         JobPosting result =
-                jobPostingService.submitForApproval(draft.getJobPostId());
+                jobPostingService.submitJobPosting(draft.getJobPostId());
 
         assertEquals(PostStatus.PENDING_APPROVAL,
                 result.getPostStatus());
@@ -59,7 +59,7 @@ class JobPostingApprovalTest {
                 PostStatus.RETURNED, LocalDate.now().plusDays(10));
 
         JobPosting result =
-                jobPostingService.submitForApproval(returned.getJobPostId());
+                jobPostingService.submitJobPosting(returned.getJobPostId());
 
         assertEquals(PostStatus.PENDING_APPROVAL,
                 result.getPostStatus());
@@ -138,7 +138,7 @@ class JobPostingApprovalTest {
                 PostStatus.REJECTED, LocalDate.now().plusDays(10));
 
         assertThrows(PostingStateConflictException.class,
-                () -> jobPostingService.submitForApproval(
+                () -> jobPostingService.submitJobPosting(
                         rejected.getJobPostId()));
     }
 
@@ -174,11 +174,11 @@ class JobPostingApprovalTest {
         JobPosting lastDay = createPosting(PostStatus.DRAFT, LocalDate.now().plusDays(90));
 
         assertThrows(InvalidPostingException.class,
-                () -> jobPostingService.submitForApproval(today.getJobPostId()));
+                () -> jobPostingService.submitJobPosting(today.getJobPostId()));
         assertThrows(InvalidPostingException.class,
-                () -> jobPostingService.submitForApproval(tooFar.getJobPostId()));
+                () -> jobPostingService.submitJobPosting(tooFar.getJobPostId()));
         assertEquals(PostStatus.PENDING_APPROVAL,
-                jobPostingService.submitForApproval(lastDay.getJobPostId()).getPostStatus());
+                jobPostingService.submitJobPosting(lastDay.getJobPostId()).getPostStatus());
     }
 
     @Test
@@ -189,7 +189,7 @@ class JobPostingApprovalTest {
                 PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
         older.setDatePosted(LocalDate.now().minusDays(5));
 
-        List<JobPosting> results = jobPostingService.getPendingPostings();
+        List<JobPosting> results = jobPostingService.openPostingApprovalQueue();
 
         assertEquals(List.of(older.getJobPostId(), newer.getJobPostId()),
                 results.stream().map(JobPosting::getJobPostId).toList());
@@ -213,7 +213,7 @@ class JobPostingApprovalTest {
         createPosting(PostStatus.DRAFT, LocalDate.now().plusDays(10));
         createPosting(PostStatus.PUBLISHED, LocalDate.now().plusDays(10));
 
-        List<JobPosting> results = jobPostingService.getPendingPostings();
+        List<JobPosting> results = jobPostingService.openPostingApprovalQueue();
 
         assertEquals(1, results.size());
         assertEquals(pending.getJobPostId(),
@@ -229,7 +229,7 @@ class JobPostingApprovalTest {
         returned.setReviewComment("Needs corrections");
 
         JobPosting result =
-                jobPostingService.submitForApproval(returned.getJobPostId());
+                jobPostingService.submitJobPosting(returned.getJobPostId());
 
         assertEquals(PostStatus.PENDING_APPROVAL,
                 result.getPostStatus());

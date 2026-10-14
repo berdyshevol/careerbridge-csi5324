@@ -27,7 +27,7 @@ Figure 25; classes and associations that are not in the figure are listed in sec
 | Status History Entry | status, date |
 | Organization Membership | status, membershipId, requested at, approved at |
 | Organization | organizationId, name, organization Status, website, description |
-| Job Posting | jobPostId, title, description, location, applicationDeadline, postStatus, date posted, numberOfOpenings, salaryRange, approvalStatus, approvedBy, approvedAt, employmentType, jobRequirements |
+| Job Posting | jobPostId, title, description, location, applicationDeadline, postStatus, date posted, numberOfOpenings, salaryRange, approvalStatus, approvedBy, approvedAt, reviewComment, employmentType, jobRequirements |
 | Offer | offerId, dateExtended, expirationDate, status, responseDate, salary |
 | Interview | interviewId, scheduledTime, outcome, notes |
 | Notification | notificationId, type, message, sentAt, status |
@@ -62,8 +62,8 @@ Multiplicities are read as "one A is linked to … B".
 
 ### 5.4 Differences from Figure 25
 
-The figure was drawn for Iteration 1 and has not been redrawn. The text above corrects it in five
-places, all needed for UC-04 Apply for Job:
+The figure was drawn for Iteration 1 and has not been redrawn. The text above corrects it in six
+places: five needed for UC-04 Apply for Job and one for UC-12 Approve Job Posting:
 
 | # | Figure 25 | Current model | Why |
 | --- | --- | --- | --- |
@@ -72,6 +72,7 @@ places, all needed for UC-04 Apply for Job:
 | 3 | Applicant 1 — 1 Resume | Applicant 1 — 0..1 Resume | UC-02 postcondition: "An empty applicant profile with no resume has been created". UC-04 extension 2a handles an applicant with no resume. |
 | 4 | Application has the attribute resumeSnapshot | Class Resume Snapshot (file Name, file Type, file Size) | The copy has its own data ("available as a PDF or DOCX, in the format the applicant uploaded"), so it is a class, not a simple attribute. |
 | 5 | Application has the attribute statusHistory | Class Status History Entry (status, date) | The history has one entry per stage, each with its own date, so it is a class, not a simple attribute. |
+| 6 | Job Posting has no review comment; approvedBy and approvedAt suggest an approval only | Job Posting has reviewComment; approvedBy and approvedAt record the Administrator who made any decision (approve, return or reject) and when | UC-12 requires comments to return or reject a posting (extensions 5a, 5b), and logs every decision with who decided and when (Special Requirements). |
 
 Two more things in the figure are not carried into the text:
 
@@ -91,7 +92,7 @@ are left for the iteration that implements the use cases named.
 | Recruiter | No job title | UC-08 step 3 |
 | Organization | No industry, headquarters location, size, time zone | UC-08 step 3; A11 |
 | Organization Membership | No role, justification, denial reason, review flag; no link to the deciding Administrator | CO-09.1; UC-10; A17 |
-| Job Posting | approvedBy is an attribute, not an association to Administrator; approvalStatus repeats postStatus; no submission date, close reason, closing time, review comments | CO-12.1; UC-12; Close Job Posting |
+| Job Posting | approvedBy is an attribute, not an association to Administrator; approvalStatus repeats postStatus; no submission date, close reason, closing time | CO-12.1; UC-12; Close Job Posting |
 | Offer | No start date, other terms, offer letter | UC-15 postconditions; CO-07.1 |
 | Interview | No format, location, interviewers; the limit of two rounds (A13) is not in the multiplicity | FR-UC14.7; CO-14.4 |
 | Status History Entry | No note or reason, no link to the Recruiter who made the change | CO-14.2, CO-14.3, CO-06.2, CO-07.3 |
