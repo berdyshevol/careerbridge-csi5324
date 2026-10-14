@@ -2,34 +2,40 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { formatDate, submitApplicationApi, type JobPosting } from "@/lib/api";
-import { checkApplication, submitApplication, type Desk } from "@/lib/apply";
+import { ApplicationRefused, formatDate, submitApplication, type JobPosting } from "@/lib/api";
+import { checkApplication, type Desk } from "@/lib/apply";
 import { APPLICATION_LIMIT, applicant } from "@/lib/sampleDesk";
 import PageTitle from "./PageTitle";
 import SlotMeter from "./SlotMeter";
 
-export default function ApplyForm({ posting, initialDesk }: { posting: JobPosting; initialDesk: Desk }) {
-  const [desk, setDesk] = useState(initialDesk);
+export default function ApplyForm({ posting, desk }: { posting: JobPosting; desk: Desk }) {
   const [acknowledged, setAcknowledged] = useState(false);
-  const [submitted, setSubmitted] = useState<number | null>(null); // applicationId
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [activeCount, setActiveCount] = useState<number | null>(null); // set once submitted
 
-  if (submitted !== null) {
-    return <Submitted posting={posting} activeCount={desk.applications.length} />;
+  if (activeCount !== null) {
+    return <Submitted posting={posting} activeCount={activeCount} />;
   }
 
   const check = checkApplication(posting, desk);
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    submitApplicationApi(posting.jobPostId, desk.resume?.fileName).catch(() => {
-      // Offline fallback: when running frontend standalone with sample desk data
-    });
-    const result = submitApplication(posting, desk);
-    if (result.ok) {
-      setDesk(result.desk);
-      setSubmitted(result.application.applicationId);
+    setError("");
+    setSubmitting(true);
+    try {
+      const submitted = await submitApplication(posting.jobPostId, desk.resume);
+      setActiveCount(submitted.activeApplicationCount);
+    } catch (err) {
+      setError(
+        err instanceof ApplicationRefused && err.message
+          ? err.message
+          : "Unable to submit the application. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
     }
-    // A failed check is already on screen: the form re-renders from the desk.
   }
 
   return (
@@ -51,6 +57,11 @@ export default function ApplyForm({ posting, initialDesk }: { posting: JobPostin
           </div>
 
           {check.kind !== "ok" && <Blocked check={check} />}
+          {error && (
+            <div role="alert" className="alert alert-error">
+              <span>{error}</span>
+            </div>
+          )}
 
           <section>
             <h2 className="text-lg font-semibold">Your details</h2>
@@ -96,7 +107,7 @@ export default function ApplyForm({ posting, initialDesk }: { posting: JobPostin
                 <Link href={`/jobs/${posting.jobPostId}`} className="btn">
                   Cancel
                 </Link>
-                <button type="submit" className="btn btn-primary" disabled={!acknowledged}>
+                <button type="submit" className="btn btn-primary" disabled={!acknowledged || submitting}>
                   Submit application
                 </button>
               </div>

@@ -1,10 +1,18 @@
 package baylor.csi5324.careerbridge.config;
 
+import baylor.csi5324.careerbridge.model.AccountStatus;
+import baylor.csi5324.careerbridge.model.Applicant;
+import baylor.csi5324.careerbridge.model.Application;
+import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
+import baylor.csi5324.careerbridge.model.ResumeSnapshot;
+import baylor.csi5324.careerbridge.repository.ApplicantRepository;
+import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
+import baylor.csi5324.careerbridge.service.ApplicationService;
 import baylor.csi5324.careerbridge.util.CsvReader;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
@@ -12,20 +20,31 @@ import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.Map;
 
 @Component
 public class SampleDataLoader implements CommandLineRunner {
 
     private static final String JOBS_FILE = "data/jobs.csv";
+    // The sample applicant's desk, the same as src/lib/sampleDesk.ts in the frontend
+    private static final String APPLICATIONS_FILE = "data/applications.csv";
+    private static final ResumeSnapshot SAMPLE_RESUME =
+            new ResumeSnapshot("Jordan_Lee_Resume.pdf", "application/pdf", 184_320L);
 
     private final JobPostingRepository jobPostingRepository;
     private final OrganizationRepository organizationRepository;
+    private final ApplicantRepository applicantRepository;
+    private final ApplicationRepository applicationRepository;
 
     public SampleDataLoader(JobPostingRepository jobPostingRepository,
-                            OrganizationRepository organizationRepository) {
+                            OrganizationRepository organizationRepository,
+                            ApplicantRepository applicantRepository,
+                            ApplicationRepository applicationRepository) {
         this.jobPostingRepository = jobPostingRepository;
         this.organizationRepository = organizationRepository;
+        this.applicantRepository = applicantRepository;
+        this.applicationRepository = applicationRepository;
     }
 
     @Override
@@ -33,10 +52,33 @@ public class SampleDataLoader implements CommandLineRunner {
         if (jobPostingRepository.count() > 0) {
             return;
         }
-        String text = new ClassPathResource(JOBS_FILE).getContentAsString(StandardCharsets.UTF_8);
-        for (Map<String, String> record : CsvReader.parse(text)) {
-            jobPostingRepository.save(toJobPosting(record));
+        Map<String, JobPosting> postingsByTitle = new HashMap<>();
+        for (Map<String, String> record : CsvReader.parse(read(JOBS_FILE))) {
+            JobPosting posting = jobPostingRepository.save(toJobPosting(record));
+            postingsByTitle.put(posting.getTitle(), posting);
         }
+
+        Applicant applicant = applicantRepository.save(sampleApplicant());
+        for (Map<String, String> record : CsvReader.parse(read(APPLICATIONS_FILE))) {
+            Application application = new Application(applicant, postingsByTitle.get(record.get("jobTitle")),
+                    SAMPLE_RESUME, LocalDate.parse(record.get("dateApplied")));
+            application.setApplicationStatus(ApplicationStatus.valueOf(record.get("applicationStatus")));
+            applicationRepository.save(application);
+        }
+    }
+
+    private static String read(String file) throws Exception {
+        return new ClassPathResource(file).getContentAsString(StandardCharsets.UTF_8);
+    }
+
+    private static Applicant sampleApplicant() {
+        Applicant applicant = new Applicant();
+        applicant.setFirstName("Jordan");
+        applicant.setLastName("Lee");
+        applicant.setEmail(ApplicationService.SAMPLE_APPLICANT_EMAIL);
+        applicant.setPhone("(254) 555-0142");
+        applicant.setAccountStatus(AccountStatus.ACTIVE);
+        return applicant;
     }
 
     private JobPosting toJobPosting(Map<String, String> record) {

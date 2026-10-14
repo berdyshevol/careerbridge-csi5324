@@ -5,6 +5,7 @@ import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
+import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +34,9 @@ class JobPostingServiceTest {
     private JobPostingRepository jobPostingRepository;
 
     @Autowired
+    private ApplicationRepository applicationRepository;
+
+    @Autowired
     private OrganizationRepository organizationRepository;
 
     private final LocalDate today = LocalDate.now();
@@ -40,6 +44,7 @@ class JobPostingServiceTest {
 
     @BeforeEach
     void replaceSampleData() {
+        applicationRepository.deleteAll();
         jobPostingRepository.deleteAll();
         organization = organizationRepository.save(
                 new Organization("Test Organization"));

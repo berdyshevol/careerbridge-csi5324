@@ -3,12 +3,17 @@ import { expect, test } from "@playwright/test";
 // UC-04 Apply for Job, against the sample postings in jobs.csv and the
 // sample desk (three active applications, resume on file).
 
-test("an applicant reviews, confirms and submits an application", async ({ page }) => {
-  await page.goto("/jobs/2");
+// The application is saved, and a posting takes one application from the
+// sample applicant, so each device applies to a posting of its own.
+const postingFor = { laptop: { id: 2, title: "Data Analyst Intern" }, phone: { id: 8, title: "Logistics Analyst" } };
+
+test("an applicant reviews, confirms and submits an application", async ({ page }, testInfo) => {
+  const posting = postingFor[testInfo.project.name as keyof typeof postingFor];
+  await page.goto(`/jobs/${posting.id}`);
   await page.getByRole("link", { name: "Apply" }).click();
 
-  await expect(page).toHaveURL(/\/jobs\/2\/apply$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Data Analyst Intern" })).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/jobs/${posting.id}/apply$`));
+  await expect(page.getByRole("heading", { level: 1, name: posting.title })).toBeVisible();
   await expect(page.getByText("Jordan_Lee_Resume.pdf")).toBeVisible();
   await expect(page.getByText("of 5 in use")).toBeVisible();
 
@@ -18,7 +23,8 @@ test("an applicant reviews, confirms and submits an application", async ({ page 
   await submit.click();
 
   await expect(page.getByRole("heading", { level: 1, name: "Application submitted" })).toBeVisible();
-  await expect(page.getByText("4 of 5 active applications")).toBeVisible();
+  // 4 of 5, or 5 of 5 when the other device has applied first
+  await expect(page.getByText(/[45] of 5 active applications/)).toBeVisible();
   await expect(page.getByRole("link", { name: "Track application status" })).toBeVisible();
 });
 

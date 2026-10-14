@@ -36,19 +36,23 @@ export type NewPosting = {
   applicationDeadline: string;
 };
 
-export type ApplicationResponse = {
+export type ResumeOnFile = {
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+};
+
+export type SubmittedApplication = {
   applicationId: number;
-  jobPostId: number;
-  jobTitle: string;
-  organizationName: string;
-  dateApplied: string;
   applicationStatus: string;
-  resumeFileName?: string | null;
   activeApplicationCount: number;
 };
 
 // Its message is the backend's reason, written for the recruiter
 export class PostingRejected extends Error {}
+
+// Its message is the backend's reason, written for the applicant
+export class ApplicationRefused extends Error {}
 
 function backendFetch(path: string, init?: Omit<RequestInit, "signal">): Promise<Response> {
   return fetch(`${API_URL}${path}`, {
@@ -84,11 +88,9 @@ export async function createPosting(posting: NewPosting): Promise<JobPosting> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(posting),
   });
-  // Only a refusal in plain text is a reason for the recruiter; any other body
-  // is the server's own error report and must not reach the screen.
-  const refused = response.status === 400 || response.status === 403;
-  if (refused && response.headers.get("Content-Type")?.startsWith("text/plain")) {
-    throw new PostingRejected(await response.text());
+  const reason = await refusal(response);
+  if (reason !== null) {
+    throw new PostingRejected(reason);
   }
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
@@ -96,46 +98,36 @@ export async function createPosting(posting: NewPosting): Promise<JobPosting> {
   return response.json();
 }
 
-export async function submitApplicationApi(
-  postingId: number | string,
-  resumeFileName?: string,
-  applicantId?: number
-): Promise<ApplicationResponse> {
-  const response = await backendFetch(`/api/postings/${encodeURIComponent(postingId)}/apply`, {
+export async function submitApplication(
+  postingId: number,
+  resume: ResumeOnFile | null,
+): Promise<SubmittedApplication> {
+  const body = resume
+    ? { resumeFileName: resume.fileName, resumeFileType: resume.fileType, resumeFileSize: resume.fileSize }
+    : {};
+  const response = await backendFetch(`/api/postings/${postingId}/apply`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      applicantId: applicantId,
-      resumeFileName: resumeFileName ?? "resume.pdf",
-      resumeFileType: "application/pdf",
-      resumeFileSize: 1024,
-    }),
+    body: JSON.stringify(body),
   });
-  if (!response.ok) {
-    throw new Error(`Application failed with status ${response.status}`);
+  const reason = await refusal(response);
+  if (reason !== null) {
+    throw new ApplicationRefused(reason);
   }
-  return response.json();
-}
-
-export async function getActiveCountApi(applicantId?: number): Promise<{ activeCount: number; limit: number }> {
-  const query = applicantId ? `?applicantId=${encodeURIComponent(applicantId)}` : "";
-  const response = await backendFetch(`/api/applications/active-count${query}`);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }
   return response.json();
 }
 
-export async function checkAppliedApi(
-  postingId: number | string,
-  applicantId?: number
-): Promise<{ applied: boolean }> {
-  const query = applicantId ? `?applicantId=${encodeURIComponent(applicantId)}` : "";
-  const response = await backendFetch(`/api/postings/${encodeURIComponent(postingId)}/applied${query}`);
-  if (!response.ok) {
-    throw new Error(`Backend answered ${response.status}`);
+// Only a refusal in plain text is a reason for the user; any other body is the
+// server's own error report and must not reach the screen.
+async function refusal(response: Response): Promise<string | null> {
+  const refused = response.status === 400 || response.status === 403;
+  if (refused && response.headers.get("Content-Type")?.startsWith("text/plain")) {
+    return response.text();
   }
-  return response.json();
+  return null;
 }
 
 export function isOpen(posting: JobPosting): boolean {

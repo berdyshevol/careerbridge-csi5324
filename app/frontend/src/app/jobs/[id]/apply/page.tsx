@@ -19,5 +19,5 @@ export default async function ApplyPage({ params }: { params: Promise<{ id: stri
     notFound();
   }
 
-  return <ApplyForm posting={posting} initialDesk={{ applications, resume }} />;
+  return <ApplyForm posting={posting} desk={{ applications, resume }} />;
 }

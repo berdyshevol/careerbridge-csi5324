@@ -3,6 +3,8 @@
 // and the logged-in applicant with Log In. Replace each piece with an API
 // call in src/lib/api.ts when its use case is implemented.
 
+import type { ResumeOnFile } from "./api";
+
 export const STAGES = ["Applied", "Screening", "Interview", "Offer"] as const;
 export type Stage = (typeof STAGES)[number];
 
@@ -61,6 +63,13 @@ export const offer = {
   expirationDate: "2026-10-16",
 };
 
-export type DeskResume = { fileName: string; uploadDate: string };
+export type DeskResume = ResumeOnFile & { uploadDate: string };
 
-export const resume: DeskResume | null = { fileName: "Jordan_Lee_Resume.pdf", uploadDate: "2026-09-30" };
+// The backend loads the same resume and applications for the same applicant
+// (data/applications.csv), so its counts agree with this desk.
+export const resume: DeskResume | null = {
+  fileName: "Jordan_Lee_Resume.pdf",
+  fileType: "application/pdf",
+  fileSize: 184_320,
+  uploadDate: "2026-09-30",
+};

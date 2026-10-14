@@ -5,8 +5,8 @@ import {
   isOpen,
   PostingRejected,
   searchPostings,
-  submitApplicationApi,
-  getActiveCountApi,
+  submitApplication,
+  ApplicationRefused,
   type JobPosting,
   type NewPosting,
 } from "./api";
@@ -127,56 +127,46 @@ describe("createPosting", () => {
   });
 });
 
-describe("submitApplicationApi", () => {
+describe("submitApplication", () => {
   afterEach(() => {
-    vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 
-  it("posts application to the backend and returns the created application", async () => {
-    const mockApp = {
-      applicationId: 101,
-      jobPostId: 1,
-      jobTitle: "Backend Developer",
-      organizationName: "Brazos Analytics",
-      dateApplied: "2026-10-13",
-      applicationStatus: "APPLIED",
-      resumeFileName: "resume.pdf",
-      activeApplicationCount: 1,
-    };
-    const fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockApp),
-    });
+  const resume = { fileName: "cv.pdf", fileType: "application/pdf", fileSize: 2048 };
+
+  it("posts the resume on file and returns the backend's answer", async () => {
+    const answer = { applicationId: 7, applicationStatus: "APPLIED", activeApplicationCount: 4 };
+    const fetch = vi.fn().mockResolvedValue({ ok: true, headers: new Headers(), json: () => Promise.resolve(answer) });
     vi.stubGlobal("fetch", fetch);
 
-    const result = await submitApplicationApi(1, "my_cv.pdf");
-
-    expect(result.applicationId).toBe(101);
-    expect(result.applicationStatus).toBe("APPLIED");
+    await expect(submitApplication(2, resume)).resolves.toEqual(answer);
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining("/api/postings/1/apply"),
-      expect.objectContaining({ method: "POST" })
+      expect.stringContaining("/api/postings/2/apply"),
+      expect.objectContaining({ method: "POST" }),
     );
   });
-});
 
-describe("getActiveCountApi", () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-    vi.unstubAllGlobals();
-  });
-
-  it("fetches active count and limit from the backend", async () => {
-    const fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ activeCount: 2, limit: 5 }),
-    });
+  it("sends no resume when none is on file, so the backend can refuse", async () => {
+    const fetch = vi.fn().mockResolvedValue({ ok: true, headers: new Headers(), json: () => Promise.resolve({}) });
     vi.stubGlobal("fetch", fetch);
 
-    const result = await getActiveCountApi();
+    await submitApplication(2, null);
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({});
+  });
 
-    expect(result.activeCount).toBe(2);
-    expect(result.limit).toBe(5);
+  it("turns a plain-text refusal into ApplicationRefused with the backend's reason", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        headers: new Headers({ "Content-Type": "text/plain" }),
+        text: () => Promise.resolve("You already applied to this posting."),
+      }),
+    );
+
+    const refused = await submitApplication(2, resume).catch((error) => error);
+    expect(refused).toBeInstanceOf(ApplicationRefused);
+    expect(refused.message).toBe("You already applied to this posting.");
   });
 });

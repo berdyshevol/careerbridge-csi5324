@@ -1,4 +1,4 @@
-applicantEmail,jobTitle,organizationName,dateApplied,status,resumeFileName
-grace.hopper@careerbridge.local,Lead Backend Engineer,Acme Corporation,2026-10-10,APPLIED,grace_hopper_resume.pdf
-grace.hopper@careerbridge.local,Full Stack Developer,Globex Industries,2026-10-11,SCREENING,grace_hopper_resume.pdf
-grace.hopper@careerbridge.local,Cloud Solutions Architect,Initech LLC,2026-10-12,INTERVIEW,grace_hopper_resume.pdf
+jobTitle,dateApplied,applicationStatus
+IT Support Specialist,2026-09-22,OFFER
+Backend Developer,2026-09-29,INTERVIEW
+Junior Software Engineer,2026-10-02,APPLIED

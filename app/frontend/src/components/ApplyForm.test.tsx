@@ -31,12 +31,22 @@ const desk: Desk = {
       applicationStatus: "Interview",
     },
   ],
-  resume: { fileName: "Jordan_Lee_Resume.pdf", uploadDate: "2026-09-30" },
+  resume: { fileName: "Jordan_Lee_Resume.pdf", fileType: "application/pdf", fileSize: 184_320, uploadDate: "2026-09-30" },
 };
 
+function backendAnswers(response: Partial<Response>) {
+  const fetch = vi.fn().mockResolvedValue({ headers: new Headers(), ...response });
+  vi.stubGlobal("fetch", fetch);
+  return fetch;
+}
+
 describe("ApplyForm", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("shows the posting, the contact details, the resume and the slots in use (FR-UC04.1)", () => {
-    render(<ApplyForm posting={posting} initialDesk={desk} />);
+    render(<ApplyForm posting={posting} desk={desk} />);
 
     expect(screen.getByRole("heading", { level: 1, name: "Data Analyst Intern" })).toBeInTheDocument();
     expect(screen.getByText("Jordan Lee")).toBeInTheDocument();
@@ -47,7 +57,7 @@ describe("ApplyForm", () => {
 
   it("submits only after the applicant acknowledges that it cannot be edited (FR-UC04.2)", async () => {
     const user = userEvent.setup();
-    render(<ApplyForm posting={posting} initialDesk={desk} />);
+    render(<ApplyForm posting={posting} desk={desk} />);
 
     const submit = screen.getByRole("button", { name: "Submit application" });
     expect(submit).toBeDisabled();
@@ -57,14 +67,25 @@ describe("ApplyForm", () => {
     expect(screen.getByRole("link", { name: "Cancel" })).toHaveAttribute("href", "/jobs/2");
   });
 
-  it("confirms the submission with the new count and a link to tracking (FR-UC04.4, FR-UC04.5)", async () => {
+  it("confirms the submission with the backend's count and a link to tracking (FR-UC04.4, FR-UC04.5)", async () => {
+    const fetch = backendAnswers({
+      ok: true,
+      status: 201,
+      json: () => Promise.resolve({ applicationId: 7, applicationStatus: "APPLIED", activeApplicationCount: 2 }),
+    });
     const user = userEvent.setup();
-    render(<ApplyForm posting={posting} initialDesk={desk} />);
+    render(<ApplyForm posting={posting} desk={desk} />);
 
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: "Submit application" }));
 
-    expect(screen.getByRole("heading", { level: 1, name: "Application submitted" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Application submitted" })).toBeInTheDocument();
+    expect(fetch.mock.calls[0][0]).toContain("/api/postings/2/apply");
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+      resumeFileName: "Jordan_Lee_Resume.pdf",
+      resumeFileType: "application/pdf",
+      resumeFileSize: 184_320,
+    });
     expect(screen.getByText(/2 of 5 active applications/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Track application status" })).toHaveAttribute(
       "href",
@@ -72,8 +93,25 @@ describe("ApplyForm", () => {
     );
   });
 
+  it("shows the backend's refusal and stays on the form (ADR-0006, extensions 4a-4c)", async () => {
+    backendAnswers({
+      ok: false,
+      status: 403,
+      headers: new Headers({ "Content-Type": "text/plain;charset=UTF-8" }),
+      text: () => Promise.resolve("Saving is switched off on the public site until users can log in."),
+    });
+    const user = userEvent.setup();
+    render(<ApplyForm posting={posting} desk={desk} />);
+
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Submit application" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Saving is switched off");
+    expect(screen.queryByRole("heading", { name: "Application submitted" })).not.toBeInTheDocument();
+  });
+
   it("explains an earlier application to the same posting and offers no submit (extension 4c)", () => {
-    render(<ApplyForm posting={{ ...posting, jobPostId: 3 }} initialDesk={desk} />);
+    render(<ApplyForm posting={{ ...posting, jobPostId: 3 }} desk={desk} />);
 
     expect(screen.getByRole("status")).toHaveTextContent("You already applied to this posting");
     expect(screen.getByRole("status")).toHaveTextContent("Interview");
@@ -81,7 +119,7 @@ describe("ApplyForm", () => {
   });
 
   it("asks for a resume first when none is on file (FR-UC04.6)", () => {
-    render(<ApplyForm posting={posting} initialDesk={{ ...desk, resume: null }} />);
+    render(<ApplyForm posting={posting} desk={{ ...desk, resume: null }} />);
 
     expect(screen.getByRole("status")).toHaveTextContent("A resume is required");
     expect(screen.getByRole("link", { name: "Upload a resume" })).toHaveAttribute("href", "/profile");
@@ -97,7 +135,7 @@ describe("ApplyForm", () => {
         title: `Posting ${postingId}`,
       })),
     };
-    render(<ApplyForm posting={posting} initialDesk={full} />);
+    render(<ApplyForm posting={posting} desk={full} />);
 
     expect(screen.getByRole("status")).toHaveTextContent("5 active applications");
     expect(screen.getAllByRole("listitem")).toHaveLength(5);

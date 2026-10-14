@@ -1,6 +1,5 @@
 package baylor.csi5324.careerbridge.service;
 
-import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
@@ -21,13 +20,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @Transactional
 class ApplicationServiceTest {
+
+    private static final ResumeSnapshot RESUME = new ResumeSnapshot("cv.pdf", "application/pdf", 2048L);
 
     @Autowired
     private ApplicationService applicationService;
@@ -49,95 +49,93 @@ class ApplicationServiceTest {
     private Applicant applicant;
 
     @BeforeEach
-    void setUp() {
+    void startWithAnEmptyDesk() {
         applicationRepository.deleteAll();
-        jobPostingRepository.deleteAll();
-        applicantRepository.deleteAll();
-
-        organization = organizationRepository.save(new Organization("Baylor Tech Inc"));
-
-        applicant = new Applicant();
-        applicant.setFirstName("Grace");
-        applicant.setLastName("Hopper");
-        applicant.setEmail("grace.hopper@careerbridge.local");
-        applicant.setPhone("254-555-0100");
-        applicant.setAccountStatus(AccountStatus.ACTIVE);
-        applicant = applicantRepository.save(applicant);
+        organization = organizationRepository.save(new Organization("Test Organization"));
+        applicant = applicantRepository.findByEmail(ApplicationService.SAMPLE_APPLICANT_EMAIL).orElseThrow();
     }
 
     @Test
-    void submitApplicationCreatesApplicationInAppliedStageWithSnapshotAndHistory() {
-        JobPosting posting = savePosting("Software Engineer", PostStatus.PUBLISHED, today.plusDays(14));
-        ResumeSnapshot resume = new ResumeSnapshot("my_resume.pdf", "application/pdf", 2048L);
+    void createsTheApplicationAtAppliedWithACopyOfTheResume() {
+        JobPosting posting = save("Software Engineer", PostStatus.PUBLISHED, today.plusDays(14));
 
-        Application application = applicationService.submitApplication(
-                posting.getJobPostId(), applicant.getUserId(), resume);
+        SubmittedApplication submitted = applicationService.submitApplication(posting.getJobPostId(), RESUME);
 
-        assertNotNull(application.getApplicationId());
+        Application application = applicationRepository.findById(
+                submitted.application().getApplicationId()).orElseThrow();
+        assertEquals(applicant.getUserId(), application.getApplicant().getUserId());
         assertEquals(ApplicationStatus.APPLIED, application.getApplicationStatus());
         assertEquals(today, application.getDateApplied());
-        assertEquals("my_resume.pdf", application.getResumeSnapshot().getFileName());
-        assertEquals(1, application.getStatusHistory().size());
+        assertEquals("cv.pdf", application.getResumeSnapshot().getFileName());
         assertEquals(ApplicationStatus.APPLIED, application.getStatusHistory().get(0).getStatus());
-
-        assertEquals(1, applicationService.getActiveApplicationCount(applicant.getUserId()));
-        assertTrue(applicationService.hasApplied(posting.getJobPostId(), applicant.getUserId()));
+        assertEquals(1, submitted.activeApplicationCount());
     }
 
     @Test
-    void submitApplicationRejectsClosedPosting() {
-        JobPosting closedPosting = savePosting("Closed Role", PostStatus.CLOSED, today.plusDays(10));
+    void refusesAPostingThatIsNotOpen() {
+        JobPosting closed = save("Closed", PostStatus.CLOSED, today.plusDays(10));
+        JobPosting expired = save("Expired", PostStatus.PUBLISHED, today.minusDays(1));
+        JobPosting draft = save("Draft", PostStatus.DRAFT, today.plusDays(10));
+        JobPosting noDeadline = save("No deadline", PostStatus.PUBLISHED, null);
 
-        assertThrows(PostingClosedException.class, () ->
-                applicationService.submitApplication(closedPosting.getJobPostId(), applicant.getUserId(), null));
-    }
-
-    @Test
-    void submitApplicationRejectsExpiredDeadline() {
-        JobPosting expiredPosting = savePosting("Expired Role", PostStatus.PUBLISHED, today.minusDays(1));
-
-        assertThrows(PostingClosedException.class, () ->
-                applicationService.submitApplication(expiredPosting.getJobPostId(), applicant.getUserId(), null));
-    }
-
-    @Test
-    void submitApplicationRejectsDraftOrPendingPostings() {
-        JobPosting draftPosting = savePosting("Draft Role", PostStatus.DRAFT, today.plusDays(10));
-        JobPosting pendingPosting = savePosting("Pending Role", PostStatus.PENDING_APPROVAL, today.plusDays(10));
-
-        assertThrows(PostingClosedException.class, () ->
-                applicationService.submitApplication(draftPosting.getJobPostId(), applicant.getUserId(), null));
-        assertThrows(PostingClosedException.class, () ->
-                applicationService.submitApplication(pendingPosting.getJobPostId(), applicant.getUserId(), null));
-    }
-
-    @Test
-    void submitApplicationRejectsDuplicateApplication() {
-        JobPosting posting = savePosting("DevOps Specialist", PostStatus.PUBLISHED, today.plusDays(14));
-
-        applicationService.submitApplication(posting.getJobPostId(), applicant.getUserId(), null);
-
-        assertThrows(DuplicateApplicationException.class, () ->
-                applicationService.submitApplication(posting.getJobPostId(), applicant.getUserId(), null));
-    }
-
-    @Test
-    void submitApplicationEnforcesFiveActiveApplicationsLimit() {
-        // Submit 5 active applications (BR-4)
-        for (int i = 1; i <= 5; i++) {
-            JobPosting posting = savePosting("Position " + i, PostStatus.PUBLISHED, today.plusDays(10));
-            applicationService.submitApplication(posting.getJobPostId(), applicant.getUserId(), null);
+        for (JobPosting posting : new JobPosting[] {closed, expired, draft, noDeadline}) {
+            ApplicationRefusedException refused = assertThrows(ApplicationRefusedException.class,
+                    () -> applicationService.submitApplication(posting.getJobPostId(), RESUME));
+            assertEquals("This posting no longer accepts applications.", refused.getMessage());
         }
-
-        assertEquals(5, applicationService.getActiveApplicationCount(applicant.getUserId()));
-
-        // 6th application must be rejected with ApplicationLimitExceededException
-        JobPosting sixthPosting = savePosting("Position 6", PostStatus.PUBLISHED, today.plusDays(10));
-        assertThrows(ApplicationLimitExceededException.class, () ->
-                applicationService.submitApplication(sixthPosting.getJobPostId(), applicant.getUserId(), null));
+        assertEquals(0, applicationRepository.count());
     }
 
-    private JobPosting savePosting(String title, PostStatus status, LocalDate deadline) {
+    @Test
+    void refusesWithoutAResume() {
+        JobPosting posting = save("Software Engineer", PostStatus.PUBLISHED, today.plusDays(14));
+
+        ApplicationRefusedException refused = assertThrows(ApplicationRefusedException.class,
+                () -> applicationService.submitApplication(posting.getJobPostId(), null));
+
+        assertTrue(refused.getMessage().startsWith("A resume is required"));
+        assertEquals(0, applicationRepository.count());
+    }
+
+    @Test
+    void refusesASecondApplicationToTheSamePosting() {
+        JobPosting posting = save("DevOps Specialist", PostStatus.PUBLISHED, today.plusDays(14));
+        applicationService.submitApplication(posting.getJobPostId(), RESUME);
+
+        assertThrows(ApplicationRefusedException.class,
+                () -> applicationService.submitApplication(posting.getJobPostId(), RESUME));
+        assertEquals(1, applicationRepository.count());
+    }
+
+    @Test
+    void refusesASixthActiveApplication() {
+        for (int i = 1; i <= ApplicationService.APPLICATION_LIMIT; i++) {
+            JobPosting posting = save("Position " + i, PostStatus.PUBLISHED, today.plusDays(10));
+            applicationService.submitApplication(posting.getJobPostId(), RESUME);
+        }
+        JobPosting sixth = save("Position 6", PostStatus.PUBLISHED, today.plusDays(10));
+
+        assertThrows(ApplicationRefusedException.class,
+                () -> applicationService.submitApplication(sixth.getJobPostId(), RESUME));
+        assertEquals(ApplicationService.APPLICATION_LIMIT, applicationRepository.count());
+    }
+
+    @Test
+    void anEndedApplicationFreesItsSlot() {
+        for (int i = 1; i <= ApplicationService.APPLICATION_LIMIT; i++) {
+            JobPosting posting = save("Position " + i, PostStatus.PUBLISHED, today.plusDays(10));
+            applicationService.submitApplication(posting.getJobPostId(), RESUME);
+        }
+        Application ended = applicationRepository.findAll().get(0);
+        ended.setApplicationStatus(ApplicationStatus.REJECTED);
+        JobPosting sixth = save("Position 6", PostStatus.PUBLISHED, today.plusDays(10));
+
+        SubmittedApplication submitted = applicationService.submitApplication(sixth.getJobPostId(), RESUME);
+
+        assertEquals(ApplicationService.APPLICATION_LIMIT, submitted.activeApplicationCount());
+    }
+
+    private JobPosting save(String title, PostStatus status, LocalDate deadline) {
         JobPosting posting = new JobPosting();
         posting.setOrganization(organization);
         posting.setTitle(title);

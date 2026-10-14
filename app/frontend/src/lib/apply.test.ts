@@ -1,5 +1,5 @@
 import type { JobPosting } from "./api";
-import { checkApplication, submitApplication, type Desk } from "./apply";
+import { checkApplication, type Desk } from "./apply";
 import type { DeskApplication } from "./sampleDesk";
 
 function posting(overrides: Partial<JobPosting> = {}): JobPosting {
@@ -34,7 +34,7 @@ function application(postingId: number): DeskApplication {
 
 const desk: Desk = {
   applications: [application(1), application(3), application(4)],
-  resume: { fileName: "Jordan_Lee_Resume.pdf", uploadDate: "2026-09-30" },
+  resume: { fileName: "Jordan_Lee_Resume.pdf", fileType: "application/pdf", fileSize: 184_320, uploadDate: "2026-09-30" },
 };
 
 describe("checkApplication (FR-UC04.3, FR-UC04.6, FR-UC04.7)", () => {
@@ -64,31 +64,6 @@ describe("checkApplication (FR-UC04.3, FR-UC04.6, FR-UC04.7)", () => {
     expect(check.kind).toBe("limit");
     if (check.kind === "limit") {
       expect(check.active).toHaveLength(5);
-    }
-  });
-});
-
-describe("submitApplication (FR-UC04.4)", () => {
-  it("creates the application in the Applied stage and adds it to the desk", () => {
-    const result = submitApplication(posting(), desk);
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.application).toMatchObject({
-        postingId: 2,
-        title: "Data Analyst Intern",
-        organizationName: "Waco Health Partners",
-        applicationStatus: "Applied",
-      });
-      expect(result.desk.applications).toHaveLength(4);
-      expect(desk.applications).toHaveLength(3); // the input is left alone
-    }
-  });
-
-  it("changes nothing when a check fails", () => {
-    const result = submitApplication(posting({ jobPostId: 3 }), desk);
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.check.kind).toBe("already-applied");
     }
   });
 });
