@@ -1,6 +1,7 @@
 import {
   BACKEND_TIMEOUT_MS,
   createPosting,
+  fetchActiveApplications,
   formatDate,
   isOpen,
   PostingRejected,
@@ -168,5 +169,46 @@ describe("submitApplication", () => {
     const refused = await submitApplication(2, resume).catch((error) => error);
     expect(refused).toBeInstanceOf(ApplicationRefused);
     expect(refused.message).toBe("You already applied to this posting.");
+  });
+});
+
+describe("fetchActiveApplications", () => {
+  const answer = {
+    applicationId: 3,
+    postingId: 1,
+    title: "Junior Software Engineer",
+    organizationName: "Brazos Analytics",
+    location: "Hybrid",
+    employmentType: "Full-time",
+    applicationStatus: "APPLIED",
+  };
+
+  it("returns the active applications with their stage named as on the screen", async () => {
+    const fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve([answer, { ...answer, applicationId: 2, applicationStatus: "INTERVIEW" }]),
+    });
+    vi.stubGlobal("fetch", fetch);
+
+    const applications = await fetchActiveApplications();
+
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/applicant/applications"), expect.anything());
+    expect(applications.map((a) => a.applicationStatus)).toEqual(["Applied", "Interview"]);
+    expect(applications[0]).toMatchObject({ applicationId: 3, postingId: 1, title: "Junior Software Engineer" });
+  });
+
+  it("refuses a stage it does not know instead of showing a guess", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve([{ ...answer, applicationStatus: "HIRED" }]) }),
+    );
+
+    await expect(fetchActiveApplications()).rejects.toThrow("HIRED");
+  });
+
+  it("fails when the backend does not answer well", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
+
+    await expect(fetchActiveApplications()).rejects.toThrow("500");
   });
 });

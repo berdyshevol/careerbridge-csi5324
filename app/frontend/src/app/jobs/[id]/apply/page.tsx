@@ -1,17 +1,18 @@
 import { notFound } from "next/navigation";
 import ApplyForm from "@/components/ApplyForm";
 import BackendDown from "@/components/BackendDown";
-import { viewPosting, type JobPosting } from "@/lib/api";
-import { applications, resume } from "@/lib/sampleDesk";
+import { fetchActiveApplications, viewPosting, type JobPosting } from "@/lib/api";
+import { resume, type DeskApplication } from "@/lib/sampleDesk";
 
-// The applicant's resume and active applications are sample data until UC-03
-// and UC-05 exist (see src/lib/sampleDesk.ts and src/lib/apply.ts).
+// The active applications come from the backend; the resume stays sample data
+// until UC-03 keeps it there (see src/lib/sampleDesk.ts and src/lib/apply.ts).
 export default async function ApplyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   let posting: JobPosting | null;
+  let applications: DeskApplication[];
   try {
-    posting = await viewPosting(id);
+    [posting, applications] = await Promise.all([viewPosting(id), fetchActiveApplications()]);
   } catch {
     return <BackendDown />;
   }

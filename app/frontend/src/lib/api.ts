@@ -1,3 +1,5 @@
+import { STAGES, type DeskApplication, type Stage } from "./sampleDesk";
+
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 // Render's free plan takes minutes to wake a sleeping backend. Without a limit
@@ -119,6 +121,28 @@ export async function submitApplication(
     throw new Error(`Backend answered ${response.status}`);
   }
   return response.json();
+}
+
+// The backend answers only active applications, so a finished stage is a mistake to report.
+export async function fetchActiveApplications(): Promise<DeskApplication[]> {
+  const response = await backendFetch("/api/applicant/applications");
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  const applications: (Omit<DeskApplication, "applicationStatus"> & { applicationStatus: string })[] =
+    await response.json();
+  return applications.map((application) => ({
+    ...application,
+    applicationStatus: stageNamed(application.applicationStatus),
+  }));
+}
+
+function stageNamed(backendStatus: string): Stage {
+  const stage = STAGES.find((name) => name.toUpperCase() === backendStatus);
+  if (!stage) {
+    throw new Error(`Unknown active stage ${backendStatus}`);
+  }
+  return stage;
 }
 
 // Only a refusal in plain text is a reason for the user; any other body is the

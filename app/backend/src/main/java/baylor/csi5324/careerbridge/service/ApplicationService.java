@@ -2,6 +2,7 @@ package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
+import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @Transactional
@@ -51,8 +53,7 @@ public class ApplicationService {
                     + "Upload one in Profile & resume, then come back to this posting.");
         }
 
-        Applicant applicant = applicantRepository.findByEmail(SAMPLE_APPLICANT_EMAIL)
-                .orElseThrow(() -> new IllegalStateException("The sample applicant was not loaded"));
+        Applicant applicant = sampleApplicant();
         if (applicationRepository.existsByApplicantAndJobPosting(applicant, posting)) {
             throw new ApplicationRefusedException(ALREADY_APPLIED);
         }
@@ -71,5 +72,15 @@ public class ApplicationService {
             // A double click: the other request passed the check above first
             throw new ApplicationRefusedException(ALREADY_APPLIED);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<Application> activeApplications() {
+        return applicationRepository.findByApplicantAndApplicationStatusIn(sampleApplicant(), ApplicationStatus.ACTIVE);
+    }
+
+    private Applicant sampleApplicant() {
+        return applicantRepository.findByEmail(SAMPLE_APPLICANT_EMAIL)
+                .orElseThrow(() -> new IllegalStateException("The sample applicant was not loaded"));
     }
 }

@@ -1,6 +1,6 @@
-// STAND-IN: the backend decides on submit (CO-04.1), but until UC-05 brings the
-// applicant's desk from it, these checks run against the sample desk so the
-// screen can say up front why a posting cannot be applied to.
+// The backend decides on submit (CO-04.1); these checks only let the screen say
+// up front why a posting cannot be applied to. The resume is still sample data
+// until UC-03; the active applications come from the backend.
 
 import { isOpen, type JobPosting } from "./api";
 import { APPLICATION_LIMIT, type DeskApplication, type DeskResume } from "./sampleDesk";

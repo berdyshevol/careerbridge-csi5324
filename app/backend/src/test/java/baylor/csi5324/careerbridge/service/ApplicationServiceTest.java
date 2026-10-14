@@ -135,6 +135,27 @@ class ApplicationServiceTest {
         assertEquals(ApplicationService.APPLICATION_LIMIT, submitted.activeApplicationCount());
     }
 
+    @Test
+    void listsOnlyTheActiveApplicationsOfTheApplicant() {
+        JobPosting kept = save("Kept", PostStatus.PUBLISHED, today.plusDays(10));
+        JobPosting ended = save("Ended", PostStatus.PUBLISHED, today.plusDays(10));
+        applicationService.submitApplication(kept.getJobPostId(), RESUME);
+        applicationService.submitApplication(ended.getJobPostId(), RESUME);
+        applicationRepository.findAll().stream()
+                .filter(a -> a.getJobPosting().getJobPostId().equals(ended.getJobPostId()))
+                .findFirst().orElseThrow().setApplicationStatus(ApplicationStatus.WITHDRAWN);
+
+        var active = applicationService.activeApplications();
+
+        assertEquals(1, active.size());
+        assertEquals(kept.getJobPostId(), active.get(0).getJobPosting().getJobPostId());
+    }
+
+    @Test
+    void listsNothingWhenTheApplicantHasNotApplied() {
+        assertTrue(applicationService.activeApplications().isEmpty());
+    }
+
     private JobPosting save(String title, PostStatus status, LocalDate deadline) {
         JobPosting posting = new JobPosting();
         posting.setOrganization(organization);
