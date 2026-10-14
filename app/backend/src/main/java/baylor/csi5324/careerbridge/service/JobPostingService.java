@@ -125,7 +125,7 @@ public class JobPostingService {
         return jobPostingRepository.save(posting);
     }
 
-    public JobPosting submitForApproval(Long postingId) {
+    public JobPosting submitJobPosting(Long postingId) {
         JobPosting posting = findPosting(postingId);
 
         if (posting.getPostStatus() != PostStatus.DRAFT
@@ -151,7 +151,7 @@ public class JobPostingService {
         return jobPostingRepository.save(posting);
     }
 
-    public List<JobPosting> getPendingPostings() {
+    public List<JobPosting> openPostingApprovalQueue() {
         return jobPostingRepository.findByPostStatusOrderByDatePostedAscJobPostIdAsc(
                 PostStatus.PENDING_APPROVAL);
     }

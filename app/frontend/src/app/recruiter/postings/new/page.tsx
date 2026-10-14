@@ -60,8 +60,7 @@ export default function NewPostingPage() {
     }
   }
 
-  // UC-12: Submit a saved draft for administrator review.
-  async function submitForApproval() {
+  async function submitJobPosting() {
     if (!created || created.postStatus !== "DRAFT") {
       return;
     }
@@ -151,7 +150,7 @@ export default function NewPostingPage() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={submitForApproval}
+              onClick={submitJobPosting}
               disabled={submitting}
             >
               {submitting ? "Submitting..." : "Submit for approval"}

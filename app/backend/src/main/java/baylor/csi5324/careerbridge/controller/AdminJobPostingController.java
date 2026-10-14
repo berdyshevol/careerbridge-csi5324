@@ -29,7 +29,7 @@ public class AdminJobPostingController {
 
     @GetMapping("/pending")
     public List<JobPosting> openPostingApprovalQueue() {
-        return jobPostingService.getPendingPostings();
+        return jobPostingService.openPostingApprovalQueue();
     }
 
     @PostMapping("/{postingId}/approve")

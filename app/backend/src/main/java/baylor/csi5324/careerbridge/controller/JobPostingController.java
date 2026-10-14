@@ -40,8 +40,8 @@ public class JobPostingController {
     }
 
     @PostMapping("/{postingId}/submit")
-    public JobPosting submitForApproval(@PathVariable Long postingId) {
-        return jobPostingService.submitForApproval(postingId);
+    public JobPosting submitJobPosting(@PathVariable Long postingId) {
+        return jobPostingService.submitJobPosting(postingId);
     }
 
     // Only these two exceptions: any other failure is the server's, not the recruiter's
