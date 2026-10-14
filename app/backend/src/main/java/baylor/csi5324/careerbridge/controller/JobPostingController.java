@@ -3,6 +3,7 @@ package baylor.csi5324.careerbridge.controller;
 
 import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.service.InvalidPostingException;
 import baylor.csi5324.careerbridge.service.JobPostingService;
 
 import org.springframework.http.HttpStatus;
@@ -20,20 +21,17 @@ public class JobPostingController {
         this.jobPostingService = jobPostingService;
     }
 
-    // UC-01: Browse published job postings
     @GetMapping
     public List<JobPosting> searchPostings(
             @RequestParam(required = false) String keyword) {
         return jobPostingService.searchPostings(keyword);
     }
 
-    // UC-01: View job posting details
     @GetMapping("/{postingId}")
     public JobPosting viewPosting(@PathVariable Long postingId) {
         return jobPostingService.viewPosting(postingId);
     }
 
-    // UC-11: Create a new job posting as a draft
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public JobPosting createPosting(
@@ -41,20 +39,20 @@ public class JobPostingController {
         return jobPostingService.createPosting(request);
     }
 
-    // UC-12: Submit a draft posting for administrator approval
+    // UC-12: Submit a draft or returned posting for review
     @PostMapping("/{postingId}/submit")
     public JobPosting submitForApproval(@PathVariable Long postingId) {
         return jobPostingService.submitForApproval(postingId);
     }
 
-    // Invalid posting information
-    @ExceptionHandler(IllegalArgumentException.class)
+    // Preserve the existing UC-11 validation error handling
+    @ExceptionHandler(InvalidPostingException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public String handleInvalidRequest(IllegalArgumentException ex) {
+    public String handleInvalidPosting(InvalidPostingException ex) {
         return ex.getMessage();
     }
 
-    // Invalid status transitions
+    // UC-12: Invalid approval workflow transitions
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public String handleInvalidState(IllegalStateException ex) {

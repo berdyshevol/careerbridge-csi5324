@@ -24,9 +24,25 @@ export type JobPosting = {
   organization: Organization;
 };
 
-function backendFetch(path: string): Promise<Response> {
+export type NewPosting = {
+  organizationId: number;
+  title: string;
+  description: string;
+  jobRequirements: string;
+  location: string;
+  employmentType: string;
+  salaryRange: string | null;
+  numberOfOpenings: number;
+  applicationDeadline: string;
+};
+
+// Its message is the backend's reason, written for the recruiter
+export class PostingRejected extends Error {}
+
+function backendFetch(path: string, init?: Omit<RequestInit, "signal">): Promise<Response> {
   return fetch(`${API_URL}${path}`, {
     cache: "no-store",
+    ...init,
     signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
   });
 }
@@ -44,6 +60,24 @@ export async function viewPosting(postingId: string): Promise<JobPosting | null>
   const response = await backendFetch(`/api/postings/${encodeURIComponent(postingId)}`);
   if (response.status === 404 || response.status === 400) {
     return null;
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function createPosting(posting: NewPosting): Promise<JobPosting> {
+  const response = await backendFetch("/api/postings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(posting),
+  });
+  // Only a refusal in plain text is a reason for the recruiter; any other body
+  // is the server's own error report and must not reach the screen.
+  const refused = response.status === 400 || response.status === 403;
+  if (refused && response.headers.get("Content-Type")?.startsWith("text/plain")) {
+    throw new PostingRejected(await response.text());
   }
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);

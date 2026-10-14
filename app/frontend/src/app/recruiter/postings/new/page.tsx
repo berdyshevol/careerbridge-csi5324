@@ -3,13 +3,13 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { API_URL, BACKEND_TIMEOUT_MS } from "@/lib/api";
-
-type CreatedPosting = {
-  jobPostId: number;
-  title: string;
-  postStatus: string;
-};
+import {
+  API_URL,
+  BACKEND_TIMEOUT_MS,
+  createPosting,
+  PostingRejected,
+  type JobPosting,
+} from "@/lib/api";
 
 export default function NewPostingPage() {
   const [organizationId, setOrganizationId] = useState("1");
@@ -25,7 +25,7 @@ export default function NewPostingPage() {
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [created, setCreated] = useState<CreatedPosting | null>(null);
+  const [created, setCreated] = useState<JobPosting | null>(null);
 
   const today = new Date().toLocaleDateString("en-CA");
 
@@ -36,34 +36,22 @@ export default function NewPostingPage() {
     setSaving(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/postings`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
-        body: JSON.stringify({
-          organizationId: Number(organizationId),
-          title: title.trim(),
-          description: description.trim(),
-          jobRequirements: jobRequirements.trim(),
-          location: location.trim(),
-          employmentType,
-          salaryRange: salaryRange.trim() || null,
-          numberOfOpenings: Number(numberOfOpenings),
-          applicationDeadline,
-        }),
+      const posting = await createPosting({
+        organizationId: Number(organizationId),
+        title: title.trim(),
+        description: description.trim(),
+        jobRequirements: jobRequirements.trim(),
+        location: location.trim(),
+        employmentType,
+        salaryRange: salaryRange.trim() || null,
+        numberOfOpenings: Number(numberOfOpenings),
+        applicationDeadline,
       });
 
-      if (!response.ok) {
-        throw new Error(
-          (await response.text()) || `Server returned ${response.status}`,
-        );
-      }
-
-      const posting = (await response.json()) as CreatedPosting;
       setCreated(posting);
     } catch (err) {
       setError(
-        err instanceof Error
+        err instanceof PostingRejected && err.message
           ? err.message
           : "Unable to save the posting. Please try again.",
       );
@@ -72,8 +60,11 @@ export default function NewPostingPage() {
     }
   }
 
+  // UC-12: Submit a saved draft for administrator review.
   async function submitForApproval() {
-    if (!created) return;
+    if (!created || created.postStatus !== "DRAFT") {
+      return;
+    }
 
     setError("");
     setSubmitting(true);
@@ -89,11 +80,12 @@ export default function NewPostingPage() {
 
       if (!response.ok) {
         throw new Error(
-          (await response.text()) || `Server returned ${response.status}`,
+          (await response.text()) ||
+            `Unable to submit posting. Server returned ${response.status}.`,
         );
       }
 
-      const updated = (await response.json()) as CreatedPosting;
+      const updated = (await response.json()) as JobPosting;
       setCreated(updated);
     } catch (err) {
       setError(
@@ -110,7 +102,7 @@ export default function NewPostingPage() {
     <div className="space-y-6">
       <div>
         <p className="mb-2 text-sm font-semibold text-primary">
-          RECRUITER WORKSPACE / UC-11 & UC-12
+          RECRUITER WORKSPACE / UC-11 &amp; UC-12
         </p>
 
         <h1 className="font-display text-3xl font-semibold">
@@ -132,7 +124,10 @@ export default function NewPostingPage() {
       </div>
 
       {created && (
-        <div role="status" className="space-y-4 rounded-2xl border border-base-300 bg-base-100 p-5 shadow-sm">
+        <div
+          role="status"
+          className="space-y-4 rounded-2xl border border-base-300 bg-base-100 p-5 shadow-sm"
+        >
           <div>
             <h2 className="text-lg font-semibold">
               {created.postStatus === "PENDING_APPROVAL"
@@ -141,7 +136,7 @@ export default function NewPostingPage() {
             </h2>
 
             <p className="mt-1">
-              {created.title} · Posting #{created.jobPostId}
+              {created.title} — Posting #{created.jobPostId} ({created.postStatus})
             </p>
 
             <p className="mt-1 text-sm text-muted">

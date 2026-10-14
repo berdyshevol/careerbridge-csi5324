@@ -28,7 +28,6 @@ public class JobPostingService {
         this.organizationRepository = organizationRepository;
     }
 
-    // UC-01: Browse published postings
     public List<JobPosting> searchPostings(String keyword) {
         List<JobPosting> openPostings = jobPostingRepository
                 .findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDesc(
@@ -47,7 +46,6 @@ public class JobPostingService {
                 .toList();
     }
 
-    // UC-01: View an already published posting
     public JobPosting viewPosting(Long postingId) {
         return jobPostingRepository.findById(postingId)
                 .filter(JobPosting::wasPublished)
@@ -57,44 +55,48 @@ public class JobPostingService {
     // UC-11: Create a posting as a draft
     public JobPosting createPosting(CreateJobPostingRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException("Posting details are required");
+            throw new InvalidPostingException("Posting details are required");
         }
 
         if (request.organizationId() == null) {
-            throw new IllegalArgumentException("Organization is required");
+            throw new InvalidPostingException("Organization is required");
         }
 
         Organization organization = organizationRepository
                 .findById(request.organizationId())
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Organization not found"));
+                        new InvalidPostingException("Organization not found"));
 
         if (request.title() == null || request.title().isBlank()) {
-            throw new IllegalArgumentException("Job title is required");
+            throw new InvalidPostingException("Job title is required");
         }
 
         if (request.title().trim().length() > 255) {
-            throw new IllegalArgumentException("Job title is too long");
+            throw new InvalidPostingException("Job title is too long");
         }
 
         if (request.description() != null
                 && request.description().length() > 10000) {
-            throw new IllegalArgumentException("Description is too long");
+            throw new InvalidPostingException("Description is too long");
         }
 
         if (request.jobRequirements() != null
                 && request.jobRequirements().length() > 2000) {
-            throw new IllegalArgumentException("Job requirements are too long");
+            throw new InvalidPostingException("Job requirements are too long");
         }
+
+        requireShortText(request.location(), "Location");
+        requireShortText(request.employmentType(), "Employment type");
+        requireShortText(request.salaryRange(), "Salary range");
 
         if (request.applicationDeadline() == null
                 || request.applicationDeadline().isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException(
+            throw new InvalidPostingException(
                     "Application deadline must be today or later");
         }
 
         if (request.numberOfOpenings() < 1) {
-            throw new IllegalArgumentException(
+            throw new InvalidPostingException(
                     "At least one opening is required");
         }
 
@@ -231,6 +233,13 @@ public class JobPostingService {
         if (comment == null || comment.isBlank()) {
             throw new IllegalArgumentException(
                     "A reason is required for returning or rejecting a posting");
+        }
+    }
+
+    // Preserve UC-11 database column-length validation
+    private static void requireShortText(String text, String fieldName) {
+        if (text != null && text.length() > 255) {
+            throw new InvalidPostingException(fieldName + " is too long");
         }
     }
 
