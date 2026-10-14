@@ -157,9 +157,11 @@ class JobPostingServiceTest {
                 today.plusDays(30)
         );
 
-        assertThrows(
-                IllegalArgumentException.class,
+        InvalidPostingException rejected = assertThrows(
+                InvalidPostingException.class,
                 () -> jobPostingService.createPosting(request));
+
+        assertEquals("Job title is required", rejected.getMessage());
     }
 
     @Test
@@ -176,9 +178,11 @@ class JobPostingServiceTest {
                 today.minusDays(1)
         );
 
-        assertThrows(
-                IllegalArgumentException.class,
+        InvalidPostingException rejected = assertThrows(
+                InvalidPostingException.class,
                 () -> jobPostingService.createPosting(request));
+
+        assertEquals("Application deadline must be today or later", rejected.getMessage());
     }
 
     @Test
@@ -195,11 +199,34 @@ class JobPostingServiceTest {
                 today.plusDays(30)
         );
 
-        assertThrows(
-                IllegalArgumentException.class,
+        InvalidPostingException rejected = assertThrows(
+                InvalidPostingException.class,
                 () -> jobPostingService.createPosting(request));
 
+        assertEquals("Organization not found", rejected.getMessage());
+
         assertTrue(jobPostingRepository.findAll().isEmpty());
+    }
+
+    @Test
+    void createPostingRejectsTextTooLongForItsColumn() {
+        CreateJobPostingRequest request = new CreateJobPostingRequest(
+                organization.getOrganizationId(),
+                "Cybersecurity Analyst",
+                "Monitor security alerts",
+                "Cybersecurity knowledge",
+                "W".repeat(256),
+                "Full-time",
+                "$65,000 - $80,000",
+                2,
+                today.plusDays(30)
+        );
+
+        InvalidPostingException rejected = assertThrows(
+                InvalidPostingException.class,
+                () -> jobPostingService.createPosting(request));
+
+        assertEquals("Location is too long", rejected.getMessage());
     }
 
     private CreateJobPostingRequest validRequest() {
