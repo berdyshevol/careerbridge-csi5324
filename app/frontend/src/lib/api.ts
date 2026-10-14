@@ -24,10 +24,22 @@ export type JobPosting = {
   organization: Organization;
 };
 
-function backendFetch(path: string): Promise<Response> {
+export type ApplicationResponse = {
+  applicationId: number;
+  jobPostId: number;
+  jobTitle: string;
+  organizationName: string;
+  dateApplied: string;
+  applicationStatus: string;
+  resumeFileName?: string | null;
+  activeApplicationCount: number;
+};
+
+function backendFetch(path: string, options?: RequestInit): Promise<Response> {
   return fetch(`${API_URL}${path}`, {
     cache: "no-store",
     signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
+    ...options,
   });
 }
 
@@ -45,6 +57,48 @@ export async function viewPosting(postingId: string): Promise<JobPosting | null>
   if (response.status === 404 || response.status === 400) {
     return null;
   }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function submitApplicationApi(
+  postingId: number | string,
+  resumeFileName?: string,
+  applicantId?: number
+): Promise<ApplicationResponse> {
+  const response = await backendFetch(`/api/postings/${encodeURIComponent(postingId)}/apply`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      applicantId: applicantId,
+      resumeFileName: resumeFileName ?? "resume.pdf",
+      resumeFileType: "application/pdf",
+      resumeFileSize: 1024,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Application failed with status ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function getActiveCountApi(applicantId?: number): Promise<{ activeCount: number; limit: number }> {
+  const query = applicantId ? `?applicantId=${encodeURIComponent(applicantId)}` : "";
+  const response = await backendFetch(`/api/applications/active-count${query}`);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function checkAppliedApi(
+  postingId: number | string,
+  applicantId?: number
+): Promise<{ applied: boolean }> {
+  const query = applicantId ? `?applicantId=${encodeURIComponent(applicantId)}` : "";
+  const response = await backendFetch(`/api/postings/${encodeURIComponent(postingId)}/applied${query}`);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }

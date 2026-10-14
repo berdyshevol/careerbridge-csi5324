@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { formatDate, type JobPosting } from "@/lib/api";
+import { formatDate, submitApplicationApi, type JobPosting } from "@/lib/api";
 import { checkApplication, submitApplication, type Desk } from "@/lib/apply";
 import { APPLICATION_LIMIT, applicant } from "@/lib/sampleDesk";
 import PageTitle from "./PageTitle";
@@ -21,6 +21,9 @@ export default function ApplyForm({ posting, initialDesk }: { posting: JobPostin
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    submitApplicationApi(posting.jobPostId, desk.resume?.fileName).catch(() => {
+      // Offline fallback: when running frontend standalone with sample desk data
+    });
     const result = submitApplication(posting, desk);
     if (result.ok) {
       setDesk(result.desk);

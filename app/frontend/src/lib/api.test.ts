@@ -1,4 +1,12 @@
-import { BACKEND_TIMEOUT_MS, formatDate, isOpen, searchPostings, type JobPosting } from "./api";
+import {
+  BACKEND_TIMEOUT_MS,
+  formatDate,
+  isOpen,
+  searchPostings,
+  submitApplicationApi,
+  getActiveCountApi,
+  type JobPosting,
+} from "./api";
 
 function posting(overrides: Partial<JobPosting>): JobPosting {
   return {
@@ -53,5 +61,59 @@ describe("searchPostings", () => {
 
     expect(timeout).toHaveBeenCalledWith(BACKEND_TIMEOUT_MS);
     expect(fetch.mock.calls[0][1].signal).toBe(timeout.mock.results[0].value);
+  });
+});
+
+describe("submitApplicationApi", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("posts application to the backend and returns the created application", async () => {
+    const mockApp = {
+      applicationId: 101,
+      jobPostId: 1,
+      jobTitle: "Backend Developer",
+      organizationName: "Brazos Analytics",
+      dateApplied: "2026-10-13",
+      applicationStatus: "APPLIED",
+      resumeFileName: "resume.pdf",
+      activeApplicationCount: 1,
+    };
+    const fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockApp),
+    });
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await submitApplicationApi(1, "my_cv.pdf");
+
+    expect(result.applicationId).toBe(101);
+    expect(result.applicationStatus).toBe("APPLIED");
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/postings/1/apply"),
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+});
+
+describe("getActiveCountApi", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("fetches active count and limit from the backend", async () => {
+    const fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ activeCount: 2, limit: 5 }),
+    });
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await getActiveCountApi();
+
+    expect(result.activeCount).toBe(2);
+    expect(result.limit).toBe(5);
   });
 });
