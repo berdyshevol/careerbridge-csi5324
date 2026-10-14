@@ -30,6 +30,8 @@ class JobPostingControllerTest {
 
         mockMvc.perform(aPosting())
                 .andExpect(status().isBadRequest())
+                // The form tells a reason for the recruiter from an error report by this type
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
                 .andExpect(content().string("Job title is required"));
     }
 
