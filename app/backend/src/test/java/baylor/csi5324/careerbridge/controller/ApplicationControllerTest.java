@@ -64,6 +64,19 @@ class ApplicationControllerTest {
     }
 
     @Test
+    void anEmptyResumeCountsAsNoResume() throws Exception {
+        when(applicationService.submitApplication(eq(2L), isNull()))
+                .thenThrow(new ApplicationRefusedException("A resume is required to apply."));
+        String empty = """
+                {"resumeFileName": " ", "resumeFileType": "application/pdf", "resumeFileSize": 0}
+                """;
+
+        mockMvc.perform(post("/api/postings/2/apply").contentType(MediaType.APPLICATION_JSON).content(empty))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("A resume is required to apply."));
+    }
+
+    @Test
     void aRefusalIsPlainTextForTheApplicant() throws Exception {
         when(applicationService.submitApplication(eq(2L), any(ResumeSnapshot.class)))
                 .thenThrow(new ApplicationRefusedException("This posting no longer accepts applications."));

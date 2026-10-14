@@ -6,7 +6,8 @@ public record SubmitApplicationRequest(String resumeFileName, String resumeFileT
 
     // Null when the applicant has no resume on file, which the service refuses
     public ResumeSnapshot toResumeSnapshot() {
-        if (resumeFileName == null || resumeFileType == null || resumeFileSize == null) {
+        if (resumeFileName == null || resumeFileName.isBlank() || resumeFileType == null
+                || resumeFileType.isBlank() || resumeFileSize == null || resumeFileSize <= 0) {
             return null;
         }
         return new ResumeSnapshot(resumeFileName, resumeFileType, resumeFileSize);

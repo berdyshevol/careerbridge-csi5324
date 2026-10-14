@@ -60,7 +60,12 @@ public class SampleDataLoader implements CommandLineRunner {
 
         Applicant applicant = applicantRepository.save(sampleApplicant());
         for (Map<String, String> record : CsvReader.parse(read(APPLICATIONS_FILE))) {
-            Application application = new Application(applicant, postingsByTitle.get(record.get("jobTitle")),
+            JobPosting posting = postingsByTitle.get(record.get("jobTitle"));
+            if (posting == null) {
+                throw new IllegalStateException(APPLICATIONS_FILE + " names a posting that is not in "
+                        + JOBS_FILE + ": " + record.get("jobTitle"));
+            }
+            Application application = new Application(applicant, posting,
                     SAMPLE_RESUME, LocalDate.parse(record.get("dateApplied")));
             application.setApplicationStatus(ApplicationStatus.valueOf(record.get("applicationStatus")));
             applicationRepository.save(application);

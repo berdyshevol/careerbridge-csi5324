@@ -7,6 +7,7 @@ import baylor.csi5324.careerbridge.model.ResumeSnapshot;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,9 @@ public class ApplicationService {
     // STAND-IN: nobody can log in yet, so every application comes from the sample
     // applicant whose desk the frontend shows (src/lib/sampleDesk.ts). Log In replaces it.
     public static final String SAMPLE_APPLICANT_EMAIL = "jordan.lee@example.com";
+
+    private static final String ALREADY_APPLIED =
+            "You already applied to this posting. A posting can be applied to once.";
 
     private final ApplicationRepository applicationRepository;
     private final ApplicantRepository applicantRepository;
@@ -50,8 +54,7 @@ public class ApplicationService {
         Applicant applicant = applicantRepository.findByEmail(SAMPLE_APPLICANT_EMAIL)
                 .orElseThrow(() -> new IllegalStateException("The sample applicant was not loaded"));
         if (applicationRepository.existsByApplicantAndJobPosting(applicant, posting)) {
-            throw new ApplicationRefusedException(
-                    "You already applied to this posting. A posting can be applied to once.");
+            throw new ApplicationRefusedException(ALREADY_APPLIED);
         }
         long active = applicationRepository.countActiveByApplicant(applicant);
         if (active >= APPLICATION_LIMIT) {
@@ -60,8 +63,13 @@ public class ApplicationService {
                     + "withdraw one or it reaches Hired, Rejected or Offer Declined.");
         }
 
-        Application application = applicationRepository.save(
-                new Application(applicant, posting, resume, today));
-        return new SubmittedApplication(application, active + 1);
+        try {
+            Application application = applicationRepository.saveAndFlush(
+                    new Application(applicant, posting, resume, today));
+            return new SubmittedApplication(application, active + 1);
+        } catch (DataIntegrityViolationException sameMomentDuplicate) {
+            // A double click: the other request passed the check above first
+            throw new ApplicationRefusedException(ALREADY_APPLIED);
+        }
     }
 }
