@@ -71,7 +71,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             Approve postings
           </Link>
           <Link href="/about" className="link-hover link">
-            About Career Bridge
+            About CareerBridge
           </Link>
         </footer>
       </body>

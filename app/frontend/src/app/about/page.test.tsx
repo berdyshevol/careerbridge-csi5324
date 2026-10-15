@@ -1,11 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import AboutPage from "./page";
 
 describe("AboutPage", () => {
-  it("names the group and links the repository and Jira board", () => {
+  it("names the group and links the application, the repository and the Jira board", () => {
     render(<AboutPage />);
 
-    expect(screen.getByRole("heading", { level: 1, name: "Career Bridge" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "CareerBridge" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Application" })).toHaveAttribute(
+      "href",
+      "https://careerbridge-csi5324.vercel.app",
+    );
     expect(screen.getByRole("link", { name: "Group repository" })).toHaveAttribute(
       "href",
       "https://github.com/berdyshevol/careerbridge-csi5324",
@@ -16,10 +20,12 @@ describe("AboutPage", () => {
     );
   });
 
-  it("lists every member with a role and use cases", () => {
+  it("lists every member with a role and all 15 use cases", () => {
     render(<AboutPage />);
 
-    expect(screen.getAllByRole("listitem").filter((li) => li.querySelector("p.font-semibold"))).toHaveLength(5);
+    const team = screen.getByRole("region", { name: "Team" });
+    expect(within(team).getAllByRole("listitem")).toHaveLength(5);
+    expect(team.textContent?.match(/UC-\d\d/g)).toHaveLength(15);
     expect(screen.getByText("Reagan Rubio")).toBeInTheDocument();
     expect(screen.getByText("Quality Assurance Engineer")).toBeInTheDocument();
   });
