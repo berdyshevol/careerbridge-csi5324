@@ -29,8 +29,9 @@ semester project of team CareerBridge for CSI 5324 Software Engineering (Baylor,
   phone, tablet and laptop width. After changing anything under `app/frontend/src/app/` or
   `src/components/`, and before opening its pull request, run the `screen-review` skill and put its
   verdict in the pull request under `## Screens`.
-- **To implement a ticket or a task, use the `implement-task` skill:** fresh `main`, one branch,
-  simplify and code review offered before the pull request.
+- **To build anything — a task, a slice of a use case or a whole use case — use the
+  `implement-task` skill:** it slices a use case into tickets the owner approves, and takes each
+  ticket through plan, tests, simplify and review to one pull request.
 - **Comments say why, not what.** Write a comment only for what the code cannot show: the reason
   for a choice, or a trap for the next person. Do not restate the code or the specification.
 - A decision that shapes the code gets a record in [spec/adr/](spec/adr/README.md).
