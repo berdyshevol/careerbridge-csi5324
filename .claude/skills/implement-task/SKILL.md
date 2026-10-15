@@ -89,7 +89,7 @@ then run the tests again.
 **f. Review.** Start a fresh subagent on the diff and the ticket that reports only defects in
 correctness or in what the ticket and `spec/` require — not style, not cases that cannot happen.
 Fix each real defect, run the tests, and review again. At most three rounds; a round that changed
-nothing ends the loop. Findings you leave go into the pull request. If the last round changed more
+nothing, or a review that finds no defect, ends the loop. Findings you leave go into the pull request. If the last round changed more
 than a few lines, run step e once more on those lines only.
 
 **g. Screens.** If anything under `app/frontend/src/app/` or `app/frontend/src/components/`
@@ -125,6 +125,7 @@ person.
 
 - Do not use `--no-verify`, and do not merge the pull request.
 - Do not change a ticket's status; assign it only as step 3 says.
-- Do not open the pull request before steps d to g are done; a later fix goes on the same branch.
+- Do not open the pull request before steps d to g are done, except the draft in "When it stays
+  red"; a later fix goes on the same branch.
 - Do not add Claude or AI attribution to commits or the pull request.
 - When only documents changed, skip steps d to f and say so in the pull request.
