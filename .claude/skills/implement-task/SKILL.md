@@ -16,8 +16,15 @@ opened.
    - A Jira key or link: read the ticket with the Jira tools (the `atlassian` server in
      `.mcp.json`). If it is assigned to someone other than the person you are working for, say so
      and stop until they confirm.
-   - A description: restate it in one sentence. If it is too vague to test, ask.
+   - A description without a ticket: restate it in one sentence; if it is too vague to test, ask.
+     Then offer to create the ticket: a Story in the active sprint, assigned to the person, its
+     parent the epic of its use case (`UC-NN <name>`; none for work outside a use case), summary
+     `UC-NN · <Layer>: <what>`. Create it only on a yes. Without a ticket the pull request check
+     fails and the board never shows the work.
    - Read what the task points to in `spec/` before any code.
+   - Find the FRs in `spec/requirements.md` that the task implements. If the ticket has no
+     `Covers:` line, offer to add one to its description (`Covers: FR-UC04.1, FR-UC04.3`), so a
+     search for an FR finds the tickets that built it.
 2. **Start from a fresh `main`.** The working tree must be clean; if it is not, stop and ask.
 
    ```bash
@@ -27,7 +34,7 @@ opened.
    ```
 
    `<name>` is the person's prefix on their other branches (`git branch -a`). Keep the Jira key in
-   capitals so Jira links the branch; leave it out when there is no ticket.
+   capitals so Jira links the branch.
 3. **Implement.** Only what the task asks for. Write the tests the rules require and run them
    until they pass.
 4. **Ask: simplify?** "Run simplify on this change now?" Yes: run the `simplify` skill on the diff
@@ -37,8 +44,9 @@ opened.
    were left. No: go on. Run the tests again after any fix from step 4 or 5.
 6. **Ask: pull request?** "Open the pull request now?" No: stop here and report the branch name and
    what is left.
-7. **Commit, push and open the pull request.** Title `SCRUM-NN <what changed>`. The push runs the
-   tests (the pre-push hook); if it fails, fix the cause — do not use `--no-verify`.
+7. **Commit, push and open the pull request.** Title `SCRUM-NN <what changed>`; the `Ticket` check
+   fails a title without the key. The push runs the tests (the pre-push hook); if it fails, fix the
+   cause — do not use `--no-verify`.
 
    ```bash
    gh pr create --base main --title "SCRUM-NN <what changed>" --body "<description>"
@@ -68,7 +76,8 @@ only documents changed, skip the questions of steps 4 and 5; there is no code to
 
 ## Do not
 
-- Do not merge the pull request or change the ticket's status or assignee unless asked.
+- Do not merge the pull request or change the ticket's status or assignee unless asked. Jira moves
+  the ticket itself when the pull request that names it opens and merges.
 - Do not open the pull request before the questions of steps 4 and 5 are answered; a fix found
   later goes on the same branch, not into a second pull request.
 - Do not add Claude or AI attribution to commits or the pull request.
