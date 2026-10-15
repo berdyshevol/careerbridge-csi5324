@@ -1,0 +1,49 @@
+name: Jira
+
+# Moves the ticket named in the pull request title, so the board follows the code without
+# anyone changing statuses by hand. Done here rather than by a Jira automation rule, which the
+# free plan limits per month.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, closed]
+
+permissions: {}
+
+jobs:
+  move:
+    name: Move the ticket
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          TITLE: ${{ github.event.pull_request.title }}
+          ACTION: ${{ github.event.action }}
+          MERGED: ${{ github.event.pull_request.merged }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        run: |
+          if [[ -z "$JIRA_API_TOKEN" ]]; then
+            echo "No JIRA_API_TOKEN secret; the ticket stays where it is."
+            exit 0
+          fi
+          [[ "$TITLE" =~ SCRUM-[0-9]+ ]] || { echo "No ticket in the title."; exit 0; }
+          key="${BASH_REMATCH[0]}"
+
+          # Transition ids of the SCRUM workflow, where any status can go to any other
+          if [[ "$ACTION" == "closed" ]]; then
+            [[ "$MERGED" == "true" ]] || { echo "Closed without merging; $key stays."; exit 0; }
+            transition=41 status="Done"
+          else
+            transition=31 status="In Review"
+          fi
+
+          code=$(curl -sS -o response.txt -w '%{http_code}' -X POST \
+            -u "$JIRA_EMAIL:$JIRA_API_TOKEN" -H 'Content-Type: application/json' \
+            -d "{\"transition\":{\"id\":\"$transition\"}}" \
+            "https://careerbridge-csi5324.atlassian.net/rest/api/3/issue/$key/transitions")
+          if [[ "$code" == "204" ]]; then
+            echo "$key → $status"
+          else
+            # A warning, not a failure: the merge has already happened and must not look broken
+            echo "::warning::Jira did not move $key to $status (HTTP $code): $(cat response.txt)"
+          fi
