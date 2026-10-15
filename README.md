@@ -17,8 +17,10 @@ Software Engineering (Baylor University, Fall 2026).
 
 ## Contributing
 
-Work in your own branch and open a pull request into `main`. The tests run on the pull request and
-must pass before it can be merged.
+Work in your own branch and open a pull request into `main`. Its title starts with the Jira key,
+`SCRUM-NN …`: no ticket, no pull request. The tests run on the pull request and must pass before
+it can be merged; the ticket moves to In Review and Done by itself, and Claude leaves an advisory
+review ([ADR-0008](spec/adr/0008-pull-requests-name-their-ticket.md)).
 
 ## Jira from Claude Code
 
@@ -26,6 +28,6 @@ The repository carries the address of the Jira server for Claude Code (`.mcp.jso
 
 1. Open Claude Code in the repository folder. The first time it asks whether to use the `atlassian` server: say yes.
 2. Type `/mcp`, choose `atlassian` and sign in with your Atlassian account in the browser. Once per computer.
-3. Then ask in plain words: "show my cards in the current sprint", "implement SCRUM-69", "move SCRUM-69 to Done".
+3. Then ask in plain words: "show my cards in the current sprint", "implement SCRUM-69", "create a ticket for UC-04".
 
 Claude acts in Jira as you, with your permissions. Nothing secret is stored in the repository.

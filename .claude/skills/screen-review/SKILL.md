@@ -1,6 +1,6 @@
 ---
 name: screen-review
-description: Review a frontend pull request or branch of CareerBridge for the one-look rules of ADR-0004 — shared layout, blocks from /styleguide, theme colors only, one main action, tests at three widths — and report what to fix. Use when asked to "review the screen", "check PR N against the design", or before merging a pull request that adds or changes a page under app/frontend/src/app/.
+description: Check a CareerBridge screen against ADR-0004 (shared layout, blocks from /styleguide, theme colors only, one btn-primary, tests) and take screenshots at 390, 820 and 1440 px, then report what to fix. Use whenever a change adds or edits files under app/frontend/src/app/ or app/frontend/src/components/ — after implementing a page, before committing or pushing a frontend change, before `gh pr create` for a branch that touches a page, at the end of implement-task for a frontend ticket — and when asked to "review the screen", "check the page/design", "check PR N against the design", "does this look right", or "screenshot the page".
 ---
 
 # Screen review
@@ -13,8 +13,9 @@ do not edit unless asked.
 ## Steps
 
 1. **Find the change.** For a PR number: `gh pr diff <n> --name-only` and `gh pr diff <n>`; for a
-   branch: `git diff main...<branch>`. Keep only files under `app/frontend/src/`. If none, say so
-   and stop.
+   branch: `git diff main...<branch>`. Keep only files under `app/frontend/src/`; a changed component
+   in `src/components/` counts as a change to every page that imports it
+   (`grep -rl <Component> app/frontend/src/app`). If none, say so and stop.
 2. **Read the screen files in full**, not just the diff, plus the components they import.
 3. **Check each rule.** For every finding give the file, the line and the fix.
 
@@ -29,11 +30,21 @@ do not edit unless asked.
    | Tests | A Vitest file for the component and a Playwright test for the main flow (`app/frontend/e2e/`). |
    | Sample data marked | Anything not from the backend comes from `src/lib/sampleDesk.ts` or a file marked `STAND-IN`, and the screen says so. |
 
-4. **Look at it.** Start the backend and frontend (`app/README.md`), then take screenshots of each
-   changed page at 390, 820 and 1440 px with Playwright (`chromium.launch()` from
-   `@playwright/test`, run the script from `app/frontend` so the package resolves). Compare with
-   `/jobs/[id]` and `/jobs/[id]/apply`, the reference screens: same ground, same cards, same type
-   sizes, same spacing. Note anything that overflows, overlaps or is cut off at phone width.
+4. **Look at it.** Run your own copies on free ports, so another app on 3000 or 8080 is never
+   what you photograph (the backend allows the port through `FRONTEND_ORIGINS`):
+
+   ```bash
+   cd app/backend && PORT=8180 FRONTEND_ORIGINS=http://localhost:3100 ./mvnw -q spring-boot:run
+   cd app/frontend && NEXT_PUBLIC_API_URL=http://localhost:8180 npx next dev -p 3100
+   ```
+
+   If `lsof -i :3100 -i :8180` shows something already listening, pick other ports for both. Wait
+   until `curl -sf http://localhost:8180/api/postings` and `curl -sf http://localhost:3100` answer,
+   then take screenshots of each changed page at 390, 820 and 1440 px with Playwright
+   (`chromium.launch()` from `@playwright/test`, run from `app/frontend` so the package resolves).
+   Save them outside the repository. Compare with `/jobs/[id]` and `/jobs/[id]/apply`, the
+   reference screens: same ground, same cards, same type sizes, same spacing. Note anything that
+   overflows, overlaps or is cut off at phone width. Stop both servers when done.
 5. **Report** in this order: must fix (breaks a rule), should fix (looks different), fine. End with
    one line: ready to merge, or not, and why. Attach the screenshots or say where they are.
 
@@ -42,3 +53,4 @@ do not edit unless asked.
 - Do not rewrite the screen to your taste; the rules above are the whole checklist.
 - Do not approve on the diff alone; the screenshots are part of the review.
 - Do not skip `npm run lint` and `npm test`; quote failures verbatim.
+- Do not commit the screenshots or the screenshot script.

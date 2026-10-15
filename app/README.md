@@ -31,3 +31,13 @@ The frontend finds the backend through `NEXT_PUBLIC_API_URL`; the backend allows
 **Looking at a branch before it is merged:** Actions → Preview → Run workflow, leave "Use workflow from" on `main`, type your branch name. Oleg approves the run, and in a couple of minutes the link to a temporary copy of the frontend appears on your pull request.
 
 The workflows (`.github/workflows/deploy.yml`, `preview.yml`) read two secrets, `VERCEL_TOKEN` and `RENDER_DEPLOY_HOOK_URL`, from the GitHub environments `deploy` and `preview`, which only runs from `main` can use. The Vercel ids are repository variables.
+
+## Pull request checks
+
+Besides the tests, every pull request to `main` runs three workflows:
+
+- **Ticket** (`pr-ticket.yml`) fails a title without `SCRUM-NN`.
+- **Jira** (`jira-sync.yml`) moves that ticket to In Review when the pull request opens and to Done when it merges.
+- **Claude review** (`claude-review.yml`) posts one advisory comment per run: bugs, the ticket, the specification and ADRs, and the screen rules read from the code. It runs when the pull request opens; re-run it from the Actions tab after larger changes. It is no screen review: for a page, `screen-review` with its screenshots is still needed.
+
+They read three repository secrets: `JIRA_EMAIL` and `JIRA_API_TOKEN` (an Atlassian API token; status changes appear under that account) and `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`, Oleg's Claude subscription). Unlike the deploy secrets, these are readable by the workflow copy on any collaborator's branch, which is accepted while the collaborators are the team ([ADR-0008](../spec/adr/0008-pull-requests-name-their-ticket.md)).

@@ -6,7 +6,8 @@ name: Jira
 on:
   pull_request:
     branches: [main]
-    types: [opened, reopened, closed]
+    # edited: a title fixed after the Ticket check failed still moves the ticket
+    types: [opened, reopened, edited, closed]
 
 permissions: {}
 
@@ -19,6 +20,7 @@ jobs:
           TITLE: ${{ github.event.pull_request.title }}
           ACTION: ${{ github.event.action }}
           MERGED: ${{ github.event.pull_request.merged }}
+          STATE: ${{ github.event.pull_request.state }}
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         run: |
@@ -29,6 +31,10 @@ jobs:
           [[ "$TITLE" =~ SCRUM-[0-9]+ ]] || { echo "No ticket in the title."; exit 0; }
           key="${BASH_REMATCH[0]}"
 
+          # An edit to a closed pull request must not pull a Done ticket back to In Review
+          if [[ "$ACTION" == "edited" && "$STATE" == "closed" ]]; then
+            echo "Closed pull request edited; the ticket stays."; exit 0
+          fi
           # Transition ids of the SCRUM workflow, where any status can go to any other
           if [[ "$ACTION" == "closed" ]]; then
             [[ "$MERGED" == "true" ]] || { echo "Closed without merging; $key stays."; exit 0; }
