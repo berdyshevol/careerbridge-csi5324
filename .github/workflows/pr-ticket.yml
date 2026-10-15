@@ -1,0 +1,26 @@
+name: Ticket
+
+# Jira moves a ticket only when the pull request names it, so a pull request without a key
+# leaves the board behind the code.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, edited, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  ticket:
+    name: Pull request names its ticket
+    runs-on: ubuntu-latest
+    steps:
+      # The title goes through env, not into the script, so a crafted title cannot run as code
+      - env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if [[ "$TITLE" =~ SCRUM-[0-9]+ ]]; then
+            echo "Ticket: ${BASH_REMATCH[0]}"
+          else
+            echo "::error::The title has no Jira key. Start it with SCRUM-NN, for example: SCRUM-76 Add the startApplication endpoint"
+            exit 1
+          fi
