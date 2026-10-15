@@ -33,7 +33,7 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         run: |
           if [[ "$TITLE" =~ SCRUM-[0-9]+ ]] && [[ -n "$JIRA_API_TOKEN" ]]; then
-            curl -sS -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+            curl -sS --fail -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
               "https://careerbridge-csi5324.atlassian.net/rest/api/3/issue/${BASH_REMATCH[0]}?fields=summary,description,status,assignee,parent,labels" \
               > "$RUNNER_TEMP/ticket.json" || echo '{}' > "$RUNNER_TEMP/ticket.json"
           else
