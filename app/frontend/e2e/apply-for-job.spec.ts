@@ -41,3 +41,19 @@ test("a posting already applied to cannot be applied to again", async ({ page })
   await expect(page.getByRole("status")).toContainText("You already applied to this posting");
   await expect(page.getByRole("button", { name: "Submit application" })).toHaveCount(0);
 });
+
+test("the desk counts the same applications as the backend", async ({ page, request }) => {
+  // Retried: the other device may submit an application between the two reads
+  await expect(async () => {
+    const applications: { applicationStatus: string }[] = await (
+      await request.get("http://localhost:8080/api/applicant/applications")
+    ).json();
+    const active = applications.filter((a) =>
+      ["APPLIED", "SCREENING", "INTERVIEW", "OFFER"].includes(a.applicationStatus),
+    ).length;
+
+    await page.goto("/");
+
+    await expect(page.getByText(`${active} of 5 active`, { exact: true })).toBeVisible({ timeout: 2000 });
+  }).toPass();
+});

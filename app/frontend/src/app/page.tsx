@@ -5,8 +5,8 @@ import OfferPanel from "@/components/OfferPanel";
 import PageTitle from "@/components/PageTitle";
 import PostingCard from "@/components/PostingCard";
 import SlotMeter from "@/components/SlotMeter";
-import { formatDate, searchPostings, type JobPosting } from "@/lib/api";
-import { APPLICATION_LIMIT, applicant, applications, offer, resume } from "@/lib/sampleDesk";
+import { formatDate, searchPostings, viewApplications } from "@/lib/api";
+import { APPLICATION_LIMIT, applicant, offer, resume } from "@/lib/sampleDesk";
 
 function longDate(isoDate: string): string {
   return new Date(`${isoDate}T00:00:00`).toLocaleDateString("en-US", {
@@ -16,14 +16,11 @@ function longDate(isoDate: string): string {
   });
 }
 
-// The applications, the offer and the resume are sample data (see src/lib/sampleDesk.ts).
+// The offer and the resume are sample data (see src/lib/sampleDesk.ts).
 export default async function DeskPage() {
-  let postings: JobPosting[] | null = null;
-  try {
-    postings = await searchPostings();
-  } catch {
-    postings = null;
-  }
+  const [found, answered] = await Promise.allSettled([searchPostings(), viewApplications()]);
+  const postings = found.status === "fulfilled" ? found.value : null;
+  const applications = answered.status === "fulfilled" ? answered.value.active : null;
 
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-6">
@@ -39,15 +36,21 @@ export default async function DeskPage() {
         <section className="order-3 flex flex-col gap-3">
           <div className="flex items-baseline justify-between">
             <h2 className="text-lg font-semibold">Your applications</h2>
-            <span className="text-muted">
-              {applications.length} of {APPLICATION_LIMIT} active
-            </span>
+            {applications && (
+              <span className="text-muted">
+                {applications.length} of {APPLICATION_LIMIT} active
+              </span>
+            )}
           </div>
-          <ul className="flex flex-col gap-3">
-            {applications.map((application) => (
-              <ApplicationRow key={application.applicationId} application={application} />
-            ))}
-          </ul>
+          {applications === null ? (
+            <BackendDown />
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {applications.map((application) => (
+                <ApplicationRow key={application.applicationId} application={application} />
+              ))}
+            </ul>
+          )}
         </section>
 
         <section className="order-4 flex flex-col gap-3">
@@ -69,8 +72,7 @@ export default async function DeskPage() {
         </section>
 
         <p className="order-5 text-sm text-muted">
-          Applications, the offer and the resume are sample data until UC-05, UC-07 and UC-03 are
-          implemented.
+          The offer and the resume are sample data until UC-07 and UC-03 are implemented.
         </p>
       </div>
 
@@ -82,11 +84,13 @@ export default async function DeskPage() {
         />
 
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-1 lg:gap-4">
-          <SlotMeter
-            used={applications.length}
-            total={APPLICATION_LIMIT}
-            caption="A slot frees up when you withdraw an application or it reaches a final stage."
-          />
+          {applications && (
+            <SlotMeter
+              used={applications.length}
+              total={APPLICATION_LIMIT}
+              caption="A slot frees up when you withdraw an application or it reaches a final stage."
+            />
+          )}
 
           <section className="flex flex-col gap-1 rounded-2xl border border-base-300 bg-base-100 p-5">
             <h2 className="font-semibold">Resume on file</h2>

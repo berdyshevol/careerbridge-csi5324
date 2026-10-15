@@ -1,7 +1,8 @@
 // SAMPLE DATA for the applicant desk. The backend cannot answer these yet:
-// applications come with UC-05, the offer with UC-07, the resume with UC-03
-// and the logged-in applicant with Log In. Replace each piece with an API
-// call in src/lib/api.ts when its use case is implemented.
+// the offer comes with UC-07, the resume with UC-03 and the logged-in
+// applicant with Log In. Replace each piece with an API call in src/lib/api.ts
+// when its use case is implemented. The screens read the applications from
+// viewApplications; `applications` below only fills /styleguide.
 
 import type { ResumeOnFile } from "./api";
 
@@ -65,8 +66,7 @@ export const offer = {
 
 export type DeskResume = ResumeOnFile & { uploadDate: string };
 
-// The backend loads the same resume and applications for the same applicant
-// (data/applications.csv), so its counts agree with this desk.
+// The backend's sample applications (data/applications.csv) belong to this same applicant.
 export const resume: DeskResume | null = {
   fileName: "Jordan_Lee_Resume.pdf",
   fileType: "application/pdf",
