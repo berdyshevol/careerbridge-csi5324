@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @Transactional
@@ -20,7 +21,7 @@ public class ApplicationService {
     public static final int APPLICATION_LIMIT = 5;
 
     // STAND-IN: nobody can log in yet, so every application comes from the sample
-    // applicant whose desk the frontend shows (src/lib/sampleDesk.ts). Log In replaces it.
+    // applicant (Jordan Lee in src/lib/sampleDesk.ts). Log In replaces it.
     public static final String SAMPLE_APPLICANT_EMAIL = "jordan.lee@example.com";
 
     private static final String ALREADY_APPLIED =
@@ -51,8 +52,7 @@ public class ApplicationService {
                     + "Upload one in Profile & resume, then come back to this posting.");
         }
 
-        Applicant applicant = applicantRepository.findByEmail(SAMPLE_APPLICANT_EMAIL)
-                .orElseThrow(() -> new IllegalStateException("The sample applicant was not loaded"));
+        Applicant applicant = sampleApplicant();
         if (applicationRepository.existsByApplicantAndJobPosting(applicant, posting)) {
             throw new ApplicationRefusedException(ALREADY_APPLIED);
         }
@@ -71,5 +71,16 @@ public class ApplicationService {
             // A double click: the other request passed the check above first
             throw new ApplicationRefusedException(ALREADY_APPLIED);
         }
+    }
+
+    // Ended applications too: the apply screen needs them, since a posting can be applied to once (A5)
+    @Transactional(readOnly = true)
+    public List<Application> viewApplications() {
+        return applicationRepository.findByApplicant(sampleApplicant());
+    }
+
+    private Applicant sampleApplicant() {
+        return applicantRepository.findByEmail(SAMPLE_APPLICANT_EMAIL)
+                .orElseThrow(() -> new IllegalStateException("The sample applicant was not loaded"));
     }
 }

@@ -34,6 +34,7 @@ function application(postingId: number): DeskApplication {
 
 const desk: Desk = {
   applications: [application(1), application(3), application(4)],
+  appliedPostingIds: [1, 3, 4, 7], // 7 was withdrawn
   resume: { fileName: "Jordan_Lee_Resume.pdf", fileType: "application/pdf", fileSize: 184_320, uploadDate: "2026-09-30" },
 };
 
@@ -54,8 +55,12 @@ describe("checkApplication (FR-UC04.3, FR-UC04.6, FR-UC04.7)", () => {
     const check = checkApplication(posting({ jobPostId: 3 }), desk);
     expect(check.kind).toBe("already-applied");
     if (check.kind === "already-applied") {
-      expect(check.application.postingId).toBe(3);
+      expect(check.application?.postingId).toBe(3);
     }
+  });
+
+  it("refuses a posting whose earlier application has ended, such as a withdrawn one (A5)", () => {
+    expect(checkApplication(posting({ jobPostId: 7 }), desk)).toEqual({ kind: "already-applied" });
   });
 
   it("refuses a sixth active application and lists the five (extension 4b)", () => {

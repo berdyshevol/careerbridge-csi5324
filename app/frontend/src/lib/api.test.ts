@@ -6,6 +6,7 @@ import {
   PostingRejected,
   searchPostings,
   submitApplication,
+  viewApplications,
   ApplicationRefused,
   type JobPosting,
   type NewPosting,
@@ -168,5 +169,52 @@ describe("submitApplication", () => {
     const refused = await submitApplication(2, resume).catch((error) => error);
     expect(refused).toBeInstanceOf(ApplicationRefused);
     expect(refused.message).toBe("You already applied to this posting.");
+  });
+});
+
+describe("viewApplications", () => {
+  const answer = {
+    applicationId: 3,
+    postingId: 1,
+    title: "Junior Software Engineer",
+    organizationName: "Brazos Analytics",
+    location: "Hybrid",
+    employmentType: "Full-time",
+    applicationStatus: "APPLIED",
+  };
+
+  it("returns the active applications with their stage named as on the screen", async () => {
+    const fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve([answer, { ...answer, applicationId: 2, postingId: 3, applicationStatus: "INTERVIEW" }]),
+    });
+    vi.stubGlobal("fetch", fetch);
+
+    const applications = await viewApplications();
+
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/applicant/applications"), expect.anything());
+    expect(applications.active.map((a) => a.applicationStatus)).toEqual(["Applied", "Interview"]);
+    expect(applications.active[0]).toMatchObject({ applicationId: 3, postingId: 1, title: "Junior Software Engineer" });
+  });
+
+  it("keeps an ended application out of the active ones but remembers its posting (A5)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([answer, { ...answer, applicationId: 4, postingId: 7, applicationStatus: "WITHDRAWN" }]),
+      }),
+    );
+
+    const applications = await viewApplications();
+
+    expect(applications.active.map((a) => a.postingId)).toEqual([1]);
+    expect(applications.appliedPostingIds).toEqual([1, 7]);
+  });
+
+  it("fails when the backend does not answer well", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
+
+    await expect(viewApplications()).rejects.toThrow("500");
   });
 });

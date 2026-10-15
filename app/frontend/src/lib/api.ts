@@ -1,3 +1,5 @@
+import { STAGES, type DeskApplication } from "./sampleDesk";
+
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 // Render's free plan takes minutes to wake a sleeping backend. Without a limit
@@ -119,6 +121,27 @@ export async function submitApplication(
     throw new Error(`Backend answered ${response.status}`);
   }
   return response.json();
+}
+
+// CO-05.1. An ended application still blocks its posting (A5), so the ids of
+// every posting applied to come back next to the active applications.
+export type Applications = { active: DeskApplication[]; appliedPostingIds: number[] };
+
+export async function viewApplications(): Promise<Applications> {
+  const response = await backendFetch("/api/applicant/applications");
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  const applications: (Omit<DeskApplication, "applicationStatus"> & { applicationStatus: string })[] =
+    await response.json();
+  const active: DeskApplication[] = [];
+  for (const application of applications) {
+    const stage = STAGES.find((name) => name.toUpperCase() === application.applicationStatus);
+    if (stage) {
+      active.push({ ...application, applicationStatus: stage });
+    }
+  }
+  return { active, appliedPostingIds: applications.map((application) => application.postingId) };
 }
 
 // Only a refusal in plain text is a reason for the user; any other body is the
