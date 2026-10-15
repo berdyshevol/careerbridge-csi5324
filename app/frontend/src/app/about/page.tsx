@@ -9,7 +9,6 @@ const links = [
   },
 ];
 
-// The split of use cases is Table 21 of Deliverable 2
 const members = [
   {
     name: "Zeba Tusnia Towshi",
