@@ -21,9 +21,14 @@ semester project of team CareerBridge for CSI 5324 Software Engineering (Baylor,
   frontend, and a headless Playwright test for the main flow.
 - **Changes reach `main` through pull requests** with merge commits; the tests must pass
   ([ADR-0003](spec/adr/0003-pull-requests-and-manual-deploy.md)).
+- **Every pull request names its ticket:** title `SCRUM-NN …`, branch `<name>/SCRUM-NN-<slug>`. Jira
+  moves the ticket itself; nobody moves statuses by hand
+  ([ADR-0008](spec/adr/0008-pull-requests-name-their-ticket.md)).
 - **Screens follow [ADR-0004](spec/adr/0004-frontend.md):** built from the blocks on `/styleguide`
   (`app/frontend/src/app/styleguide/page.tsx`) and `src/components/`, theme colors only, checked at
-  phone, tablet and laptop width. Before merging a screen, run the `screen-review` skill.
+  phone, tablet and laptop width. After changing anything under `app/frontend/src/app/` or
+  `src/components/`, and before opening its pull request, run the `screen-review` skill and put its
+  verdict in the pull request under `## Screens`.
 - **To implement a ticket or a task, use the `implement-task` skill:** fresh `main`, one branch,
   simplify and code review offered before the pull request.
 - **Comments say why, not what.** Write a comment only for what the code cannot show: the reason

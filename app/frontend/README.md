@@ -34,7 +34,7 @@ Add both kinds for your use case. Every pull request into `main` runs them.
 
 ## Design
 
-The rules for how a screen looks are in one place, [ADR-0004](../../spec/adr/0004-frontend.md). In short: build from the blocks on `/styleguide` and the components in `src/components/`, theme colors only, check at phone, tablet and laptop width. `npm run lint` refuses hard-coded colors, inline styles and other component libraries; before merging, run the `screen-review` skill.
+The rules for how a screen looks are in one place, [ADR-0004](../../spec/adr/0004-frontend.md). In short: build from the blocks on `/styleguide` and the components in `src/components/`, theme colors only, check at phone, tablet and laptop width. `npm run lint` refuses hard-coded colors, inline styles and other component libraries; before opening the pull request, run the `screen-review` skill.
 
 ## Sample data
 
