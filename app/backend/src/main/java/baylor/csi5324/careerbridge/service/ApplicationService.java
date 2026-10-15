@@ -2,7 +2,6 @@ package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
-import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
@@ -22,7 +21,7 @@ public class ApplicationService {
     public static final int APPLICATION_LIMIT = 5;
 
     // STAND-IN: nobody can log in yet, so every application comes from the sample
-    // applicant whose desk the frontend shows (src/lib/sampleDesk.ts). Log In replaces it.
+    // applicant (Jordan Lee in src/lib/sampleDesk.ts). Log In replaces it.
     public static final String SAMPLE_APPLICANT_EMAIL = "jordan.lee@example.com";
 
     private static final String ALREADY_APPLIED =
@@ -74,9 +73,10 @@ public class ApplicationService {
         }
     }
 
+    // Ended applications too: the apply screen needs them, since a posting can be applied to once (A5)
     @Transactional(readOnly = true)
-    public List<Application> activeApplications() {
-        return applicationRepository.findByApplicantAndApplicationStatusIn(sampleApplicant(), ApplicationStatus.ACTIVE);
+    public List<Application> viewApplications() {
+        return applicationRepository.findByApplicant(sampleApplicant());
     }
 
     private Applicant sampleApplicant() {

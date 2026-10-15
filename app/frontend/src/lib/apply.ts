@@ -7,6 +7,7 @@ import { APPLICATION_LIMIT, type DeskApplication, type DeskResume } from "./samp
 
 export type Desk = {
   applications: DeskApplication[]; // the active applications
+  appliedPostingIds: number[]; // every posting applied to, ended applications too
   resume: DeskResume | null;
 };
 
@@ -15,7 +16,7 @@ export type ApplicationCheck =
   | { kind: "closed" }
   | { kind: "no-resume" }
   | { kind: "limit"; active: DeskApplication[] }
-  | { kind: "already-applied"; application: DeskApplication };
+  | { kind: "already-applied"; application?: DeskApplication }; // none when it has ended
 
 export function checkApplication(posting: JobPosting, desk: Desk): ApplicationCheck {
   if (!isOpen(posting)) {
@@ -25,7 +26,7 @@ export function checkApplication(posting: JobPosting, desk: Desk): ApplicationCh
     return { kind: "no-resume" };
   }
   const existing = desk.applications.find((a) => a.postingId === posting.jobPostId);
-  if (existing) {
+  if (existing || desk.appliedPostingIds.includes(posting.jobPostId)) {
     return { kind: "already-applied", application: existing };
   }
   if (desk.applications.length >= APPLICATION_LIMIT) {

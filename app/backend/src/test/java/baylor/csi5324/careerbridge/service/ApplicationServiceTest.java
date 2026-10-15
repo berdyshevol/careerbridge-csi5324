@@ -136,7 +136,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void listsOnlyTheActiveApplicationsOfTheApplicant() {
+    void listsEndedApplicationsTooSinceTheyStillBlockTheirPosting() {
         JobPosting kept = save("Kept", PostStatus.PUBLISHED, today.plusDays(10));
         JobPosting ended = save("Ended", PostStatus.PUBLISHED, today.plusDays(10));
         applicationService.submitApplication(kept.getJobPostId(), RESUME);
@@ -145,15 +145,15 @@ class ApplicationServiceTest {
                 .filter(a -> a.getJobPosting().getJobPostId().equals(ended.getJobPostId()))
                 .findFirst().orElseThrow().setApplicationStatus(ApplicationStatus.WITHDRAWN);
 
-        var active = applicationService.activeApplications();
+        var applications = applicationService.viewApplications();
 
-        assertEquals(1, active.size());
-        assertEquals(kept.getJobPostId(), active.get(0).getJobPosting().getJobPostId());
+        assertEquals(2, applications.size());
+        assertTrue(applications.stream().anyMatch(a -> a.getApplicationStatus() == ApplicationStatus.WITHDRAWN));
     }
 
     @Test
     void listsNothingWhenTheApplicantHasNotApplied() {
-        assertTrue(applicationService.activeApplications().isEmpty());
+        assertTrue(applicationService.viewApplications().isEmpty());
     }
 
     private JobPosting save(String title, PostStatus status, LocalDate deadline) {

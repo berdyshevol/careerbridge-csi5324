@@ -31,6 +31,7 @@ const desk: Desk = {
       applicationStatus: "Interview",
     },
   ],
+  appliedPostingIds: [3, 7], // 7 was withdrawn
   resume: { fileName: "Jordan_Lee_Resume.pdf", fileType: "application/pdf", fileSize: 184_320, uploadDate: "2026-09-30" },
 };
 
@@ -108,6 +109,13 @@ describe("ApplyForm", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Saving is switched off");
     expect(screen.queryByRole("heading", { name: "Application submitted" })).not.toBeInTheDocument();
+  });
+
+  it("refuses a posting whose earlier application has ended, since a posting is applied to once (A5)", () => {
+    render(<ApplyForm posting={{ ...posting, jobPostId: 7 }} desk={desk} />);
+
+    expect(screen.getByRole("status")).toHaveTextContent("You already applied to this posting; that application has ended.");
+    expect(screen.queryByRole("button", { name: "Submit application" })).not.toBeInTheDocument();
   });
 
   it("explains an earlier application to the same posting and offers no submit (extension 4c)", () => {

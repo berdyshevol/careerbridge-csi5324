@@ -173,9 +173,15 @@ function Blocked({ check }: { check: Exclude<ReturnType<typeof checkApplication>
       return (
         <div role="status" className="alert alert-warning">
           <span>
-            You already applied to this posting; the application is at the{" "}
-            <strong>{check.application.applicationStatus}</strong> stage. A posting can be applied to
-            once.{" "}
+            You already applied to this posting;{" "}
+            {check.application ? (
+              <>
+                the application is at the <strong>{check.application.applicationStatus}</strong> stage.
+              </>
+            ) : (
+              "that application has ended."
+            )}{" "}
+            A posting can be applied to once.{" "}
             <Link href="/applications" className="link">
               Track its status
             </Link>

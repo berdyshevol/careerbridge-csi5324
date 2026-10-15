@@ -26,17 +26,19 @@ class ApplicantApplicationsControllerTest {
             .standaloneSetup(new ApplicantApplicationsController(applicationService)).build();
 
     @Test
-    void listsTheActiveApplicationsWithTheirPostings() throws Exception {
+    void listsTheApplicationsWithTheirPostings() throws Exception {
         JobPosting posting = new JobPosting();
+        posting.setJobPostId(7L);
         posting.setTitle("Backend Developer");
         posting.setLocation("Remote");
         posting.setEmploymentType("Full-time");
         posting.setOrganization(new Organization("Brazos Analytics"));
-        when(applicationService.activeApplications()).thenReturn(List.of(new Application(
+        when(applicationService.viewApplications()).thenReturn(List.of(new Application(
                 new Applicant(), posting, new ResumeSnapshot("cv.pdf", "application/pdf", 2048L), LocalDate.now())));
 
         mockMvc.perform(get("/api/applicant/applications"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].postingId").value(7))
                 .andExpect(jsonPath("$[0].title").value("Backend Developer"))
                 .andExpect(jsonPath("$[0].organizationName").value("Brazos Analytics"))
                 .andExpect(jsonPath("$[0].location").value("Remote"))
