@@ -1,3 +1,4 @@
+
 package baylor.csi5324.careerbridge.repository;
 
 import baylor.csi5324.careerbridge.model.Applicant;
@@ -18,13 +19,27 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization"})
     List<Application> findByApplicant(Applicant applicant);
 
-    long countByApplicantAndApplicationStatusIn(Applicant applicant,
-                                                Collection<ApplicationStatus> statuses);
+    long countByApplicantAndApplicationStatusIn(
+            Applicant applicant,
+            Collection<ApplicationStatus> statuses);
 
     default long countActiveByApplicant(Applicant applicant) {
-        return countByApplicantAndApplicationStatusIn(applicant, ApplicationStatus.ACTIVE);
+        return countByApplicantAndApplicationStatusIn(
+                applicant, ApplicationStatus.ACTIVE);
+    }
+
+    // UC-13: Count applications still active when a job posting expires.
+    long countByJobPostingAndApplicationStatusIn(
+            JobPosting jobPosting,
+            Collection<ApplicationStatus> statuses);
+
+    default long countActiveByJobPosting(JobPosting jobPosting) {
+        return countByJobPostingAndApplicationStatusIn(
+                jobPosting, ApplicationStatus.ACTIVE);
     }
 
     // Any status counts, so a withdrawn application still blocks applying again (A5)
-    boolean existsByApplicantAndJobPosting(Applicant applicant, JobPosting jobPosting);
+    boolean existsByApplicantAndJobPosting(
+            Applicant applicant,
+            JobPosting jobPosting);
 }

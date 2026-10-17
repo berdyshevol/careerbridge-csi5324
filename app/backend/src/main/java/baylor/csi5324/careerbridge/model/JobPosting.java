@@ -1,3 +1,4 @@
+
 package baylor.csi5324.careerbridge.model;
 
 import jakarta.persistence.Column;
@@ -11,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -49,11 +51,16 @@ public class JobPosting {
 
     // They record whoever decided, also for a return or a rejection
     private String approvedBy;
-
     private LocalDateTime approvedAt;
 
     @Column(length = 2000)
     private String reviewComment;
+
+    // UC-13: a published posting closes with a reason and an actual UTC closing time.
+    @Column(length = 50)
+    private String closingReason;
+
+    private Instant closedAt;
 
     public JobPosting() {
     }
@@ -186,5 +193,21 @@ public class JobPosting {
 
     public void setReviewComment(String reviewComment) {
         this.reviewComment = reviewComment;
+    }
+
+    public String getClosingReason() {
+        return closingReason;
+    }
+
+    public void setClosingReason(String closingReason) {
+        this.closingReason = closingReason;
+    }
+
+    public Instant getClosedAt() {
+        return closedAt;
+    }
+
+    public void setClosedAt(Instant closedAt) {
+        this.closedAt = closedAt;
     }
 }

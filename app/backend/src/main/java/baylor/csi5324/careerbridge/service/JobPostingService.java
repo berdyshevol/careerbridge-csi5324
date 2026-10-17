@@ -10,8 +10,10 @@ import baylor.csi5324.careerbridge.repository.OrganizationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -39,20 +41,30 @@ public class JobPostingService {
     }
 
     public List<JobPosting> searchPostings(String keyword) {
-        List<JobPosting> openPostings = jobPostingRepository
-                .findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDesc(
-                        PostStatus.PUBLISHED, LocalDate.now());
+        Instant now = Instant.now();
 
-        if (keyword == null || keyword.isBlank()) {
-            return openPostings;
-        }
+        // Get published postings first, then evaluate each organization's local deadline.
+        List<JobPosting> publishedPostings = jobPostingRepository
+                .findByPostStatusOrderByDatePostedAscJobPostIdAsc(PostStatus.PUBLISHED);
 
-        String needle = keyword.trim().toLowerCase(Locale.ROOT);
+        String needle = keyword == null ? "" : keyword.trim().toLowerCase(Locale.ROOT);
 
-        return openPostings.stream()
-                .filter(posting -> contains(posting.getTitle(), needle)
+        return publishedPostings.stream()
+                .filter(posting -> posting.getApplicationDeadline() != null)
+                .filter(posting -> posting.getOrganization() != null)
+                .filter(posting -> now.isBefore(
+                        posting.getApplicationDeadline().plusDays(1)
+                                .atStartOfDay(posting.getOrganization().getZoneId())
+                                .toInstant()))
+                .filter(posting -> needle.isEmpty()
+                        || contains(posting.getTitle(), needle)
                         || contains(posting.getOrganization().getName(), needle)
                         || contains(posting.getLocation(), needle))
+                .sorted(Comparator
+                        .comparing(JobPosting::getDatePosted,
+                                Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(JobPosting::getJobPostId,
+                                Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
     }
 
@@ -137,6 +149,7 @@ public class JobPostingService {
 
         LocalDate deadline = posting.getApplicationDeadline();
         LocalDate today = LocalDate.now();
+
         if (deadline == null
                 || deadline.isBefore(today.plusDays(MIN_DAYS_TO_DEADLINE))
                 || deadline.isAfter(today.plusDays(MAX_DAYS_TO_DEADLINE))) {
@@ -167,6 +180,7 @@ public class JobPostingService {
             recordDecision(posting, PostStatus.PUBLISHED, administrator, comment);
             posting.setDatePosted(LocalDate.now());
         }
+
         return jobPostingRepository.save(posting);
     }
 
@@ -191,10 +205,12 @@ public class JobPostingService {
 
     private JobPosting findPendingPosting(Long postingId) {
         JobPosting posting = findPosting(postingId);
+
         if (posting.getPostStatus() != PostStatus.PENDING_APPROVAL) {
             throw new PostingStateConflictException(
                     "This posting was already decided: it is " + posting.getPostStatus().getLabel());
         }
+
         return posting;
     }
 
@@ -203,6 +219,7 @@ public class JobPostingService {
         if (comment != null && comment.length() > MAX_COMMENT_LENGTH) {
             throw new InvalidPostingException("The comment is too long");
         }
+
         posting.setPostStatus(decision);
         posting.setApprovedBy(administrator);
         posting.setApprovedAt(LocalDateTime.now());
@@ -214,6 +231,7 @@ public class JobPostingService {
             throw new InvalidPostingException(
                     "A reason is required to return or reject a posting");
         }
+
         return comment;
     }
 
