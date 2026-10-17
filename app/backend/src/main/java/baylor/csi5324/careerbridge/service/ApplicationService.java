@@ -1,3 +1,4 @@
+
 package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.model.Applicant;
@@ -11,6 +12,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -43,10 +45,22 @@ public class ApplicationService {
     public SubmittedApplication submitApplication(Long postingId, ResumeSnapshot resume) {
         JobPosting posting = jobPostingRepository.findById(postingId)
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
-        LocalDate today = LocalDate.now();
-        if (!posting.isOpen(today)) {
+
+        Instant now = Instant.now();
+
+        // Accept applications throughout the deadline date in the organization's time zone.
+        boolean acceptsApplications = posting.getPostStatus()
+                == baylor.csi5324.careerbridge.model.PostStatus.PUBLISHED
+                && posting.getApplicationDeadline() != null
+                && posting.getOrganization() != null
+                && now.isBefore(posting.getApplicationDeadline().plusDays(1)
+                .atStartOfDay(posting.getOrganization().getZoneId())
+                .toInstant());
+
+        if (!acceptsApplications) {
             throw new ApplicationRefusedException("This posting no longer accepts applications.");
         }
+
         if (resume == null) {
             throw new ApplicationRefusedException("A resume is required to apply. "
                     + "Upload one in Profile & resume, then come back to this posting.");
@@ -56,6 +70,7 @@ public class ApplicationService {
         if (applicationRepository.existsByApplicantAndJobPosting(applicant, posting)) {
             throw new ApplicationRefusedException(ALREADY_APPLIED);
         }
+
         long active = applicationRepository.countActiveByApplicant(applicant);
         if (active >= APPLICATION_LIMIT) {
             throw new ApplicationRefusedException("You have " + APPLICATION_LIMIT
@@ -65,7 +80,8 @@ public class ApplicationService {
 
         try {
             Application application = applicationRepository.saveAndFlush(
-                    new Application(applicant, posting, resume, today));
+                    new Application(applicant, posting, resume,
+                            LocalDate.now(posting.getOrganization().getZoneId())));
             return new SubmittedApplication(application, active + 1);
         } catch (DataIntegrityViolationException sameMomentDuplicate) {
             // A double click: the other request passed the check above first
