@@ -50,7 +50,7 @@ export default async function PostingPage({
 
         {!open && (
           <div role="status" className="alert alert-warning">
-            This posting no longer accepts applications.
+            This posting is no longer accepting applications.
           </div>
         )}
 

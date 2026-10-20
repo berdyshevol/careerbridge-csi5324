@@ -42,6 +42,7 @@ public class JobPostingService {
     public List<JobPosting> searchPostings(PostingSearchCriteria criteria) {
         String keyword = normalized(criteria.keyword());
         String location = normalized(criteria.location());
+        String organization = normalized(criteria.organization());
         String employmentType = normalized(criteria.employmentType());
 
         return jobPostingRepository
@@ -54,6 +55,9 @@ public class JobPostingService {
                         || contains(posting.getJobRequirements(), keyword))
                 .filter(posting -> location == null
                         || location.equals(normalized(posting.getLocation())))
+                // Organizations are not a fixed list like locations, so a visitor types part of the name
+                .filter(posting -> organization == null
+                        || contains(posting.getOrganization().getName(), organization))
                 .filter(posting -> employmentType == null
                         || employmentType.equals(normalized(posting.getEmploymentType())))
                 .toList();

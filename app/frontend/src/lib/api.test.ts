@@ -84,10 +84,10 @@ describe("searchPostings", () => {
     const fetch = vi.fn().mockResolvedValue(new Response("[]", { status: 200 }));
     vi.stubGlobal("fetch", fetch);
 
-    await searchPostings({ keyword: "data", location: "On-site", employmentType: "Full-time" });
+    await searchPostings({ keyword: "data", location: "On-site", organization: "Waco Health", employmentType: "Full-time" });
 
     expect(fetch.mock.calls[0][0]).toBe(
-      "http://localhost:8080/api/postings?keyword=data&location=On-site&employmentType=Full-time",
+      "http://localhost:8080/api/postings?keyword=data&location=On-site&organization=Waco+Health&employmentType=Full-time",
     );
   });
 

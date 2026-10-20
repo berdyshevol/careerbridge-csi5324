@@ -46,6 +46,28 @@ test("the keyword finds postings by title", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Backend Developer" })).toHaveCount(0);
 });
 
+test("the organization filter finds postings by part of its name", async ({ page }) => {
+  await page.goto("/jobs");
+
+  await page.getByRole("main").getByRole("searchbox", { name: "Organization" }).fill("waco");
+  await page.getByRole("button", { name: "Search" }).click();
+
+  await expect(page).toHaveURL(/\/jobs\?organization=waco$/);
+  await expect(page.getByRole("link", { name: "Data Analyst Intern" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "IT Support Specialist" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Backend Developer" })).toHaveCount(0);
+});
+
+test("criteria that match nothing say so and offer to clear the filters", async ({ page }) => {
+  await page.goto("/jobs?organization=nobody");
+
+  await expect(page.getByText("No matching postings.")).toBeVisible();
+  await page.getByRole("link", { name: "Clear the filters" }).click();
+
+  await expect(page).toHaveURL(/\/jobs$/);
+  await expect(page.getByRole("link", { name: "Backend Developer" })).toBeVisible();
+});
+
 test("a posting opens with its details and a way to apply", async ({ page }) => {
   await page.goto("/jobs");
   await page.getByRole("link", { name: "Backend Developer" }).click();

@@ -65,11 +65,10 @@ function backendFetch(path: string, init?: Omit<RequestInit, "signal">): Promise
   });
 }
 
-export type PostingSearchCriteria = {
-  keyword?: string;
-  location?: string;
-  employmentType?: string;
-};
+// In the order the form shows them, which is also the order of the clean address
+const SEARCH_CRITERIA = ["keyword", "location", "organization", "employmentType"] as const;
+
+export type PostingSearchCriteria = Partial<Record<(typeof SEARCH_CRITERIA)[number], string>>;
 
 export type PageQuery = Record<string, string | string[] | undefined>;
 
@@ -77,18 +76,14 @@ export type PageQuery = Record<string, string | string[] | undefined>;
 // the search knows one value per criterion, so it takes the first.
 export function searchCriteria(query: PageQuery): PostingSearchCriteria {
   const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
-  return {
-    keyword: first(query.keyword),
-    location: first(query.location),
-    employmentType: first(query.employmentType),
-  };
+  return Object.fromEntries(SEARCH_CRITERIA.map((name) => [name, first(query[name])]));
 }
 
 // The same query string serves the backend call and the job board's own links,
 // so a visitor who opens a posting comes back to the list they searched.
 export function searchQuery(criteria: PostingSearchCriteria): string {
   const query = new URLSearchParams();
-  for (const name of ["keyword", "location", "employmentType"] as const) {
+  for (const name of SEARCH_CRITERIA) {
     const value = criteria[name]?.trim();
     if (value) {
       query.set(name, value);
