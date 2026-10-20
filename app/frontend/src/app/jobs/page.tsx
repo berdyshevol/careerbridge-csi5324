@@ -4,14 +4,27 @@ import PageTitle from "@/components/PageTitle";
 import PostingCard from "@/components/PostingCard";
 import { searchCriteria, searchPostings, searchQuery, type JobPosting, type PageQuery } from "@/lib/api";
 import { EMPLOYMENT_TYPES, LOCATIONS } from "@/lib/postingOptions";
+import { redirect } from "next/navigation";
 
 export default async function JobsPage({
   searchParams,
 }: {
   searchParams: Promise<PageQuery>;
 }) {
-  const criteria = searchCriteria(await searchParams);
+  const query = await searchParams;
+  const criteria = searchCriteria(query);
   const search = searchQuery(criteria);
+
+  // The form also sends the fields left empty; the address a visitor shares should hold only the search
+  const asked = new URLSearchParams();
+  for (const [name, values] of Object.entries(query)) {
+    for (const value of [values ?? []].flat()) {
+      asked.append(name, value);
+    }
+  }
+  if ((asked.size ? `?${asked}` : "") !== search) {
+    redirect(`/jobs${search}`);
+  }
 
   let postings: JobPosting[] | null = null;
   try {

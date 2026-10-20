@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { redirect } from "next/navigation";
 import { searchPostings, type JobPosting, type PageQuery } from "@/lib/api";
 import JobsPage from "./page";
 
@@ -6,7 +7,12 @@ vi.mock("@/lib/api", async (importActual) => ({
   ...(await importActual<typeof import("@/lib/api")>()),
   searchPostings: vi.fn(),
 }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+  redirect: vi.fn(() => {
+    throw new Error("NEXT_REDIRECT");
+  }),
+}));
 
 const internship: JobPosting = {
   jobPostId: 3,
@@ -30,6 +36,23 @@ async function openJobBoard(criteria: PageQuery) {
 describe("JobsPage", () => {
   afterEach(() => {
     vi.mocked(searchPostings).mockReset();
+    vi.mocked(redirect).mockClear();
+  });
+
+  it("drops the fields the form sent empty from the address", async () => {
+    await expect(openJobBoard({ keyword: "", location: "On-site", employmentType: "" })).rejects.toThrow(
+      "NEXT_REDIRECT",
+    );
+
+    expect(redirect).toHaveBeenCalledWith("/jobs?location=On-site");
+  });
+
+  it("leaves a clean address as it is", async () => {
+    vi.mocked(searchPostings).mockResolvedValue([internship]);
+
+    await openJobBoard({ location: "On-site" });
+
+    expect(redirect).not.toHaveBeenCalled();
   });
 
   it("searches with the criteria from the address and shows them in the form", async () => {
@@ -68,13 +91,10 @@ describe("JobsPage", () => {
     );
   });
 
-  it("searches with the first value when the link repeats a criterion", async () => {
-    vi.mocked(searchPostings).mockResolvedValue([internship]);
+  it("sends a link that repeats a criterion to its first value", async () => {
+    await expect(openJobBoard({ location: ["On-site", "Remote"] })).rejects.toThrow("NEXT_REDIRECT");
 
-    await openJobBoard({ location: ["On-site", "Remote"] });
-
-    expect(searchPostings).toHaveBeenCalledWith({ location: "On-site" });
-    expect(screen.getByRole("combobox", { name: "Location" })).toHaveValue("On-site");
+    expect(redirect).toHaveBeenCalledWith("/jobs?location=On-site");
   });
 
   it("keeps the visitor's criteria when the backend fails", async () => {
