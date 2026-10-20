@@ -77,6 +77,15 @@ test("a posting opens with its details and a way to apply", async ({ page }) => 
   await expect(page.getByRole("link", { name: "Apply" })).toBeVisible();
 });
 
+test("a closed posting still opens but no longer offers to apply", async ({ page }) => {
+  // QA Engineer, the fifth row of jobs.csv, is Closed: an old link still reaches it (5a).
+  await page.goto("/jobs/5");
+
+  await expect(page.getByRole("heading", { level: 1, name: "QA Engineer" })).toBeVisible();
+  await expect(page.getByRole("status")).toHaveText("This posting is no longer accepting applications.");
+  await expect(page.getByRole("link", { name: "Apply" })).toHaveCount(0);
+});
+
 test("the desk shows recently published postings from the backend", async ({ page }) => {
   await page.goto("/");
 
