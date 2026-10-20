@@ -47,6 +47,20 @@ describe("JobsPage", () => {
     expect(redirect).toHaveBeenCalledWith("/jobs?location=On-site");
   });
 
+  it("trims the spaces around a criterion in the address", async () => {
+    await expect(openJobBoard({ location: " On-site " })).rejects.toThrow("NEXT_REDIRECT");
+
+    expect(redirect).toHaveBeenCalledWith("/jobs?location=On-site");
+  });
+
+  it("puts the criteria of a hand-edited address in the form's order", async () => {
+    await expect(openJobBoard({ employmentType: "Internship", location: "On-site" })).rejects.toThrow(
+      "NEXT_REDIRECT",
+    );
+
+    expect(redirect).toHaveBeenCalledWith("/jobs?location=On-site&employmentType=Internship");
+  });
+
   it("leaves a clean address as it is", async () => {
     vi.mocked(searchPostings).mockResolvedValue([internship]);
 
