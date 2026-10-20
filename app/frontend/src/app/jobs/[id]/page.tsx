@@ -2,14 +2,22 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import BackendDown from "@/components/BackendDown";
 import PageTitle from "@/components/PageTitle";
-import { formatDate, isOpen, searchQuery, viewPosting, type JobPosting, type PostingSearchCriteria } from "@/lib/api";
+import {
+  formatDate,
+  isOpen,
+  searchCriteria,
+  searchQuery,
+  viewPosting,
+  type JobPosting,
+  type PageQuery,
+} from "@/lib/api";
 
 export default async function PostingPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<PostingSearchCriteria>;
+  searchParams: Promise<PageQuery>;
 }) {
   const { id } = await params;
 
@@ -28,7 +36,7 @@ export default async function PostingPage({
     <article className="card border border-base-300 bg-base-100">
       <div className="card-body gap-5">
         <Link
-          href={`/jobs${searchQuery(await searchParams)}`}
+          href={`/jobs${searchQuery(searchCriteria(await searchParams))}`}
           className="link link-primary font-semibold"
         >
           All jobs

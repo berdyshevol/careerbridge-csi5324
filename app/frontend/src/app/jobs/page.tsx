@@ -2,15 +2,15 @@ import BackendDown from "@/components/BackendDown";
 import EmptyState from "@/components/EmptyState";
 import PageTitle from "@/components/PageTitle";
 import PostingCard from "@/components/PostingCard";
-import { searchPostings, searchQuery, type JobPosting, type PostingSearchCriteria } from "@/lib/api";
+import { searchCriteria, searchPostings, searchQuery, type JobPosting, type PageQuery } from "@/lib/api";
 import { EMPLOYMENT_TYPES, LOCATIONS } from "@/lib/postingOptions";
 
 export default async function JobsPage({
   searchParams,
 }: {
-  searchParams: Promise<PostingSearchCriteria>;
+  searchParams: Promise<PageQuery>;
 }) {
-  const criteria = await searchParams;
+  const criteria = searchCriteria(await searchParams);
   const search = searchQuery(criteria);
 
   let postings: JobPosting[] | null = null;

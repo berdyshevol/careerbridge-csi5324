@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { searchPostings, type JobPosting, type PostingSearchCriteria } from "@/lib/api";
+import { searchPostings, type JobPosting, type PageQuery } from "@/lib/api";
 import JobsPage from "./page";
 
 vi.mock("@/lib/api", async (importActual) => ({
@@ -23,7 +23,7 @@ const internship: JobPosting = {
   organization: { organizationId: 2, name: "Waco Health Partners" },
 };
 
-async function openJobBoard(criteria: PostingSearchCriteria) {
+async function openJobBoard(criteria: PageQuery) {
   render(await JobsPage({ searchParams: Promise.resolve(criteria) }));
 }
 
@@ -66,6 +66,15 @@ describe("JobsPage", () => {
       "href",
       "/jobs/3?location=On-site",
     );
+  });
+
+  it("searches with the first value when the link repeats a criterion", async () => {
+    vi.mocked(searchPostings).mockResolvedValue([internship]);
+
+    await openJobBoard({ location: ["On-site", "Remote"] });
+
+    expect(searchPostings).toHaveBeenCalledWith({ location: "On-site" });
+    expect(screen.getByRole("combobox", { name: "Location" })).toHaveValue("On-site");
   });
 
   it("keeps the visitor's criteria when the backend fails", async () => {

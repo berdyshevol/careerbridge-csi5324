@@ -71,6 +71,19 @@ export type PostingSearchCriteria = {
   employmentType?: string;
 };
 
+export type PageQuery = Record<string, string | string[] | undefined>;
+
+// A hand-edited link can repeat a key, and Next.js then hands over an array;
+// the search knows one value per criterion, so it takes the first.
+export function searchCriteria(query: PageQuery): PostingSearchCriteria {
+  const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+  return {
+    keyword: first(query.keyword),
+    location: first(query.location),
+    employmentType: first(query.employmentType),
+  };
+}
+
 // The same query string serves the backend call and the job board's own links,
 // so a visitor who opens a posting comes back to the list they searched.
 export function searchQuery(criteria: PostingSearchCriteria): string {

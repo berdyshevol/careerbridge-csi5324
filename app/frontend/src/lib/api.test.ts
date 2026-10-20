@@ -5,6 +5,7 @@ import {
   isOpen,
   PostingRejected,
   searchPostings,
+  searchCriteria,
   searchQuery,
   submitApplication,
   viewApplications,
@@ -53,6 +54,16 @@ describe("isOpen", () => {
 describe("formatDate", () => {
   it("shows the calendar day that was stored, whatever the time zone", () => {
     expect(formatDate("2026-12-20")).toBe("Dec 20, 2026");
+  });
+});
+
+describe("searchCriteria", () => {
+  it("takes the first value of a key the link repeats", () => {
+    expect(searchCriteria({ location: ["Remote", "Hybrid"], keyword: "java", page: "2" })).toEqual({
+      keyword: "java",
+      location: "Remote",
+      employmentType: undefined,
+    });
   });
 });
 
