@@ -41,14 +41,14 @@ describe("PostingPage", () => {
   it("says a closed posting no longer accepts applications and does not offer to apply (5a)", async () => {
     await openPosting({ ...posting, postStatus: "CLOSED" });
 
-    expect(screen.getByRole("status")).toHaveTextContent("This posting no longer accepts applications.");
+    expect(screen.getByRole("status")).toHaveTextContent("This posting is no longer accepting applications.");
     expect(screen.queryByRole("link", { name: "Apply" })).not.toBeInTheDocument();
   });
 
   it("does not offer to apply once the deadline has passed (5a)", async () => {
     await openPosting({ ...posting, applicationDeadline: "2020-01-01" });
 
-    expect(screen.getByRole("status")).toHaveTextContent("This posting no longer accepts applications.");
+    expect(screen.getByRole("status")).toHaveTextContent("This posting is no longer accepting applications.");
     expect(screen.queryByRole("link", { name: "Apply" })).not.toBeInTheDocument();
   });
 
