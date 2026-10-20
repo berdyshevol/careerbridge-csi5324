@@ -37,7 +37,7 @@ export default async function JobsPage({
     <div className="flex flex-col gap-5">
       <PageTitle>Open job postings</PageTitle>
 
-      <form action="/jobs" className="flex flex-col gap-2 md:flex-row">
+      <form action="/jobs" className="grid gap-2 md:grid-cols-2 xl:grid-cols-[1fr_11rem_11rem_11rem_auto]">
         <label htmlFor="keyword" className="sr-only">
           Search job postings
         </label>
@@ -47,12 +47,12 @@ export default async function JobsPage({
           type="search"
           defaultValue={criteria.keyword ?? ""}
           placeholder="Title, description or requirements"
-          className="input w-full md:flex-1"
+          className="input w-full"
         />
         <label htmlFor="location" className="sr-only">
           Location
         </label>
-        <select id="location" name="location" defaultValue={criteria.location ?? ""} className="select w-full md:w-44">
+        <select id="location" name="location" defaultValue={criteria.location ?? ""} className="select w-full">
           <option value="">Any location</option>
           {LOCATIONS.map((value) => (
             <option key={value} value={value}>
@@ -60,6 +60,17 @@ export default async function JobsPage({
             </option>
           ))}
         </select>
+        <label htmlFor="organization" className="sr-only">
+          Organization
+        </label>
+        <input
+          id="organization"
+          name="organization"
+          type="search"
+          defaultValue={criteria.organization ?? ""}
+          placeholder="Organization"
+          className="input w-full"
+        />
         <label htmlFor="employmentType" className="sr-only">
           Employment type
         </label>
@@ -67,7 +78,7 @@ export default async function JobsPage({
           id="employmentType"
           name="employmentType"
           defaultValue={criteria.employmentType ?? ""}
-          className="select w-full md:w-44"
+          className="select w-full"
         >
           <option value="">Any type</option>
           {EMPLOYMENT_TYPES.map((value) => (
@@ -76,17 +87,17 @@ export default async function JobsPage({
             </option>
           ))}
         </select>
-        <button type="submit" className="btn btn-primary">
+        <button type="submit" className="btn btn-primary md:col-span-2 xl:col-span-1">
           Search
         </button>
       </form>
 
       {postings === null ? (
         <BackendDown />
+      ) : postings.length === 0 && search === "" ? (
+        <EmptyState>No open positions right now.</EmptyState>
       ) : postings.length === 0 ? (
-        <EmptyState action={{ href: "/jobs", label: "Clear the search" }}>
-          No open postings match your search.
-        </EmptyState>
+        <EmptyState action={{ href: "/jobs", label: "Clear the filters" }}>No matching postings.</EmptyState>
       ) : (
         <ul className="grid gap-3 md:grid-cols-2">
           {postings.map((posting) => (

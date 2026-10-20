@@ -72,16 +72,36 @@ describe("JobsPage", () => {
   it("searches with the criteria from the address and shows them in the form", async () => {
     vi.mocked(searchPostings).mockResolvedValue([internship]);
 
-    await openJobBoard({ keyword: "data", location: "On-site", employmentType: "Internship" });
+    await openJobBoard({ keyword: "data", location: "On-site", organization: "waco", employmentType: "Internship" });
 
     expect(searchPostings).toHaveBeenCalledWith({
       keyword: "data",
       location: "On-site",
+      organization: "waco",
       employmentType: "Internship",
     });
     expect(screen.getByRole("searchbox", { name: "Search job postings" })).toHaveValue("data");
     expect(screen.getByRole("combobox", { name: "Location" })).toHaveValue("On-site");
+    expect(screen.getByRole("searchbox", { name: "Organization" })).toHaveValue("waco");
     expect(screen.getByRole("combobox", { name: "Employment type" })).toHaveValue("Internship");
+  });
+
+  it("says there are no open positions when nothing is open and nothing was asked (2a)", async () => {
+    vi.mocked(searchPostings).mockResolvedValue([]);
+
+    await openJobBoard({});
+
+    expect(screen.getByText("No open positions right now.")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Clear the filters" })).not.toBeInTheDocument();
+  });
+
+  it("says nothing matches and offers to clear the filters (4a)", async () => {
+    vi.mocked(searchPostings).mockResolvedValue([]);
+
+    await openJobBoard({ organization: "nobody" });
+
+    expect(screen.getByText("No matching postings.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Clear the filters" })).toHaveAttribute("href", "/jobs");
   });
 
   it("offers any location and any type when nothing is chosen", async () => {

@@ -68,6 +68,7 @@ function backendFetch(path: string, init?: Omit<RequestInit, "signal">): Promise
 export type PostingSearchCriteria = {
   keyword?: string;
   location?: string;
+  organization?: string;
   employmentType?: string;
 };
 
@@ -80,6 +81,7 @@ export function searchCriteria(query: PageQuery): PostingSearchCriteria {
   return {
     keyword: first(query.keyword),
     location: first(query.location),
+    organization: first(query.organization),
     employmentType: first(query.employmentType),
   };
 }
@@ -88,7 +90,7 @@ export function searchCriteria(query: PageQuery): PostingSearchCriteria {
 // so a visitor who opens a posting comes back to the list they searched.
 export function searchQuery(criteria: PostingSearchCriteria): string {
   const query = new URLSearchParams();
-  for (const name of ["keyword", "location", "employmentType"] as const) {
+  for (const name of ["keyword", "location", "organization", "employmentType"] as const) {
     const value = criteria[name]?.trim();
     if (value) {
       query.set(name, value);

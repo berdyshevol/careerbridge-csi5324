@@ -31,11 +31,12 @@ class JobPostingControllerTest {
         mockMvc.perform(get("/api/postings")
                         .param("keyword", "java")
                         .param("location", "Remote")
+                        .param("organization", "Brazos")
                         .param("employmentType", "Internship"))
                 .andExpect(status().isOk());
 
         verify(jobPostingService).searchPostings(
-                new PostingSearchCriteria("java", "Remote", "Internship"));
+                new PostingSearchCriteria("java", "Remote", "Brazos", "Internship"));
     }
 
     @Test

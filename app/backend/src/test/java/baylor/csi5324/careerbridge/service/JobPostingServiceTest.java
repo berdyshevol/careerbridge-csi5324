@@ -129,10 +129,31 @@ class JobPostingServiceTest {
     }
 
     @Test
+    void searchPostingsFiltersByPartOfTheOrganizationNameIgnoringCase() {
+        save("Test job", PostStatus.PUBLISHED, today, today.plusDays(10));
+        JobPosting elsewhere = save("Other job", PostStatus.PUBLISHED, today, today.plusDays(10));
+        elsewhere.setOrganization(organizationRepository.save(new Organization("Bosque Robotics")));
+
+        assertEquals(List.of("Other job"), titlesFound(null, null, "  bosque ", null));
+    }
+
+    @Test
+    void searchPostingsCombinesTheOrganizationWithTheOtherCriteria() {
+        Organization bosque = organizationRepository.save(new Organization("Bosque Robotics"));
+        JobPosting match = save("Java Intern", PostStatus.PUBLISHED, today, today.plusDays(10));
+        match.setOrganization(bosque);
+        match.setEmploymentType("Internship");
+        save("Java Intern elsewhere", PostStatus.PUBLISHED, today, today.plusDays(10))
+                .setEmploymentType("Internship");
+
+        assertEquals(List.of("Java Intern"), titlesFound("java", "Remote", "Bosque", "Internship"));
+    }
+
+    @Test
     void searchPostingsTreatsBlankCriteriaAsAny() {
         save("Backend Developer", PostStatus.PUBLISHED, today, today.plusDays(10));
 
-        assertEquals(List.of("Backend Developer"), titlesFound(" ", "", "  "));
+        assertEquals(List.of("Backend Developer"), titlesFound(" ", "", " ", "  "));
     }
 
     @Test
@@ -311,8 +332,13 @@ class JobPostingServiceTest {
     }
 
     private List<String> titlesFound(String keyword, String location, String employmentType) {
+        return titlesFound(keyword, location, null, employmentType);
+    }
+
+    private List<String> titlesFound(
+            String keyword, String location, String organization, String employmentType) {
         return jobPostingService
-                .searchPostings(new PostingSearchCriteria(keyword, location, employmentType))
+                .searchPostings(new PostingSearchCriteria(keyword, location, organization, employmentType))
                 .stream()
                 .map(JobPosting::getTitle)
                 .toList();
