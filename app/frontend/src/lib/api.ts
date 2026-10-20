@@ -65,9 +65,28 @@ function backendFetch(path: string, init?: Omit<RequestInit, "signal">): Promise
   });
 }
 
-export async function searchPostings(keyword?: string): Promise<JobPosting[]> {
-  const query = keyword ? `?keyword=${encodeURIComponent(keyword)}` : "";
-  const response = await backendFetch(`/api/postings${query}`);
+export type PostingSearchCriteria = {
+  keyword?: string;
+  location?: string;
+  employmentType?: string;
+};
+
+// The same query string serves the backend call and the job board's own links,
+// so a visitor who opens a posting comes back to the list they searched.
+export function searchQuery(criteria: PostingSearchCriteria): string {
+  const query = new URLSearchParams();
+  for (const name of ["keyword", "location", "employmentType"] as const) {
+    const value = criteria[name]?.trim();
+    if (value) {
+      query.set(name, value);
+    }
+  }
+  const text = query.toString();
+  return text ? `?${text}` : "";
+}
+
+export async function searchPostings(criteria: PostingSearchCriteria = {}): Promise<JobPosting[]> {
+  const response = await backendFetch(`/api/postings${searchQuery(criteria)}`);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }

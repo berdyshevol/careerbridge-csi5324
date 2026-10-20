@@ -13,14 +13,36 @@ test("the job board lists only open postings", async ({ page }) => {
   await expect(page.getByText("Marketing Coordinator")).toHaveCount(0);
 });
 
-test("searching narrows the list", async ({ page }) => {
+test("filters narrow the list and survive a visit to a posting", async ({ page }) => {
   await page.goto("/jobs");
 
-  await page.getByRole("main").getByRole("searchbox", { name: "Search job postings" }).fill("waco");
+  const main = page.getByRole("main");
+  await main.getByRole("combobox", { name: "Location" }).selectOption("On-site");
+  await main.getByRole("combobox", { name: "Employment type" }).selectOption("Internship");
   await page.getByRole("button", { name: "Search" }).click();
 
-  await expect(page).toHaveURL(/keyword=waco/);
+  await expect(page).toHaveURL(/location=On-site/);
+  await expect(page).toHaveURL(/employmentType=Internship/);
   await expect(page.getByRole("link", { name: "Data Analyst Intern" })).toBeVisible();
+  // On-site but part-time, so the employment type alone hides it.
+  await expect(page.getByRole("link", { name: "IT Support Specialist" })).toHaveCount(0);
+
+  await page.getByRole("link", { name: "Data Analyst Intern" }).click();
+  await page.getByRole("link", { name: "All jobs" }).click();
+
+  await expect(main.getByRole("combobox", { name: "Location" })).toHaveValue("On-site");
+  await expect(page.getByRole("link", { name: "IT Support Specialist" })).toHaveCount(0);
+});
+
+test("the keyword finds postings by title", async ({ page }) => {
+  await page.goto("/jobs");
+
+  await page.getByRole("main").getByRole("searchbox", { name: "Search job postings" }).fill("analyst");
+  await page.getByRole("button", { name: "Search" }).click();
+
+  await expect(page).toHaveURL(/keyword=analyst/);
+  await expect(page.getByRole("link", { name: "Data Analyst Intern" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Logistics Analyst" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Backend Developer" })).toHaveCount(0);
 });
 

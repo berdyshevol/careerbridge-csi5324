@@ -32,6 +32,17 @@ describe("NewPostingPage", () => {
     vi.mocked(createPosting).mockReset();
   });
 
+  it("offers the locations the job board can filter by", () => {
+    render(<NewPostingPage />);
+
+    const location = screen.getByLabelText("Location");
+    expect([...location.querySelectorAll("option:not([disabled])")].map((option) => option.textContent)).toEqual([
+      "On-site",
+      "Hybrid",
+      "Remote",
+    ]);
+  });
+
   it("confirms the draft the backend saved", async () => {
     vi.mocked(createPosting).mockResolvedValue(saved);
 

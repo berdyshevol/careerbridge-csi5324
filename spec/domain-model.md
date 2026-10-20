@@ -36,6 +36,9 @@ Figure 25; classes and associations that are not in the figure are listed in sec
   (A6). The operation contracts call it the Application's _resumeSnapshot_.
 - **Status History Entry** is one stage an application reached, with the date. The operation
   contracts call the entries of an application its _statusHistory_.
+- A **Job Posting**'s _location_ is On-site, Hybrid or Remote (UC-11 step 3), and its
+  _employmentType_ is Full-time, Part-time, Internship, Contract or Temporary. The job board
+  filters by these same values (UC-01 step 3).
 
 ### 5.2 Generalization
 

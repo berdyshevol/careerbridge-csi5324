@@ -2,6 +2,7 @@
 package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
+import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
@@ -38,21 +39,23 @@ public class JobPostingService {
         this.organizationRepository = organizationRepository;
     }
 
-    public List<JobPosting> searchPostings(String keyword) {
-        List<JobPosting> openPostings = jobPostingRepository
-                .findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDesc(
-                        PostStatus.PUBLISHED, LocalDate.now());
+    public List<JobPosting> searchPostings(PostingSearchCriteria criteria) {
+        String keyword = normalized(criteria.keyword());
+        String location = normalized(criteria.location());
+        String employmentType = normalized(criteria.employmentType());
 
-        if (keyword == null || keyword.isBlank()) {
-            return openPostings;
-        }
-
-        String needle = keyword.trim().toLowerCase(Locale.ROOT);
-
-        return openPostings.stream()
-                .filter(posting -> contains(posting.getTitle(), needle)
-                        || contains(posting.getOrganization().getName(), needle)
-                        || contains(posting.getLocation(), needle))
+        return jobPostingRepository
+                .findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDescJobPostIdDesc(
+                        PostStatus.PUBLISHED, LocalDate.now())
+                .stream()
+                .filter(posting -> keyword == null
+                        || contains(posting.getTitle(), keyword)
+                        || contains(posting.getDescription(), keyword)
+                        || contains(posting.getJobRequirements(), keyword))
+                .filter(posting -> location == null
+                        || location.equals(normalized(posting.getLocation())))
+                .filter(posting -> employmentType == null
+                        || employmentType.equals(normalized(posting.getEmploymentType())))
                 .toList();
     }
 
@@ -226,5 +229,9 @@ public class JobPostingService {
 
     private static boolean contains(String text, String needle) {
         return text != null && text.toLowerCase(Locale.ROOT).contains(needle);
+    }
+
+    private static String normalized(String text) {
+        return text == null || text.isBlank() ? null : text.trim().toLowerCase(Locale.ROOT);
     }
 }

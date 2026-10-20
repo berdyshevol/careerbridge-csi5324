@@ -1,6 +1,7 @@
 
 package baylor.csi5324.careerbridge.service;
 
+import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
@@ -92,7 +93,7 @@ class JobPostingApprovalTest {
         jobPostingService.approveJobPosting(
                 pending.getJobPostId(), "Test Administrator", null);
 
-        assertTrue(jobPostingService.searchPostings(null).stream()
+        assertTrue(jobPostingService.searchPostings(PostingSearchCriteria.ANY).stream()
                 .anyMatch(posting ->
                         posting.getJobPostId().equals(pending.getJobPostId())));
     }
