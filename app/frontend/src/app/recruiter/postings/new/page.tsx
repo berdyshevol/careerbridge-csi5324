@@ -10,6 +10,7 @@ import {
   PostingRejected,
   type JobPosting,
 } from "@/lib/api";
+import { EMPLOYMENT_TYPES, LOCATIONS } from "@/lib/postingOptions";
 
 export default function NewPostingPage() {
   const [organizationId, setOrganizationId] = useState("1");
@@ -41,7 +42,7 @@ export default function NewPostingPage() {
         title: title.trim(),
         description: description.trim(),
         jobRequirements: jobRequirements.trim(),
-        location: location.trim(),
+        location,
         employmentType,
         salaryRange: salaryRange.trim() || null,
         numberOfOpenings: Number(numberOfOpenings),
@@ -240,14 +241,21 @@ export default function NewPostingPage() {
             <label htmlFor="location" className="fieldset-legend">
               Location
             </label>
-            <input
+            <select
               id="location"
-              className="input w-full"
-              placeholder="e.g. Waco, TX or Remote"
-              maxLength={255}
+              className="select w-full"
               value={location}
               onChange={(event) => setLocation(event.target.value)}
-            />
+            >
+              <option value="" disabled>
+                Choose a location
+              </option>
+              {LOCATIONS.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
           </fieldset>
 
           <fieldset className="fieldset">
@@ -260,11 +268,11 @@ export default function NewPostingPage() {
               value={employmentType}
               onChange={(event) => setEmploymentType(event.target.value)}
             >
-              <option value="Full-time">Full-time</option>
-              <option value="Part-time">Part-time</option>
-              <option value="Internship">Internship</option>
-              <option value="Contract">Contract</option>
-              <option value="Temporary">Temporary</option>
+              {EMPLOYMENT_TYPES.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
             </select>
           </fieldset>
 

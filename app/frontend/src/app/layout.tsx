@@ -35,7 +35,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 <input
                   type="search"
                   name="keyword"
-                  placeholder="Search by title, organization or location"
+                  placeholder="Search by title, description or requirements"
                 />
               </label>
             </form>

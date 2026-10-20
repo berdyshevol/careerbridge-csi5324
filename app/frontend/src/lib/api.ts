@@ -65,9 +65,41 @@ function backendFetch(path: string, init?: Omit<RequestInit, "signal">): Promise
   });
 }
 
-export async function searchPostings(keyword?: string): Promise<JobPosting[]> {
-  const query = keyword ? `?keyword=${encodeURIComponent(keyword)}` : "";
-  const response = await backendFetch(`/api/postings${query}`);
+export type PostingSearchCriteria = {
+  keyword?: string;
+  location?: string;
+  employmentType?: string;
+};
+
+export type PageQuery = Record<string, string | string[] | undefined>;
+
+// A hand-edited link can repeat a key, and Next.js then hands over an array;
+// the search knows one value per criterion, so it takes the first.
+export function searchCriteria(query: PageQuery): PostingSearchCriteria {
+  const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+  return {
+    keyword: first(query.keyword),
+    location: first(query.location),
+    employmentType: first(query.employmentType),
+  };
+}
+
+// The same query string serves the backend call and the job board's own links,
+// so a visitor who opens a posting comes back to the list they searched.
+export function searchQuery(criteria: PostingSearchCriteria): string {
+  const query = new URLSearchParams();
+  for (const name of ["keyword", "location", "employmentType"] as const) {
+    const value = criteria[name]?.trim();
+    if (value) {
+      query.set(name, value);
+    }
+  }
+  const text = query.toString();
+  return text ? `?${text}` : "";
+}
+
+export async function searchPostings(criteria: PostingSearchCriteria = {}): Promise<JobPosting[]> {
+  const response = await backendFetch(`/api/postings${searchQuery(criteria)}`);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }

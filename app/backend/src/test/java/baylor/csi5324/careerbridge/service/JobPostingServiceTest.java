@@ -2,6 +2,7 @@
 package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
+import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
@@ -59,7 +60,7 @@ class JobPostingServiceTest {
         save("Pending", PostStatus.PENDING_APPROVAL, today, today.plusDays(10));
         save("Closed", PostStatus.CLOSED, today.minusDays(40), today.plusDays(10));
 
-        List<String> titles = jobPostingService.searchPostings(null)
+        List<String> titles = jobPostingService.searchPostings(PostingSearchCriteria.ANY)
                 .stream()
                 .map(JobPosting::getTitle)
                 .toList();
@@ -72,11 +73,76 @@ class JobPostingServiceTest {
         save("Backend Developer", PostStatus.PUBLISHED, today, today.plusDays(10));
         save("Data Analyst", PostStatus.PUBLISHED, today, today.plusDays(10));
 
-        List<JobPosting> found =
-                jobPostingService.searchPostings("  DEVELOPER ");
+        assertEquals(List.of("Backend Developer"), titlesFound("  DEVELOPER ", null, null));
+    }
 
-        assertEquals(1, found.size());
-        assertEquals("Backend Developer", found.get(0).getTitle());
+    @Test
+    void searchPostingsMatchesKeywordInDescriptionAndRequirements() {
+        save("Backend Developer", PostStatus.PUBLISHED, today, today.plusDays(10))
+                .setDescription("Build our Spring Boot services");
+        save("Data Analyst", PostStatus.PUBLISHED, today, today.plusDays(10))
+                .setJobRequirements("SQL and spring cleaning");
+        save("Designer", PostStatus.PUBLISHED, today, today.plusDays(10));
+
+        assertEquals(
+                List.of("Data Analyst", "Backend Developer"),
+                titlesFound("spring", null, null));
+    }
+
+    @Test
+    void searchPostingsKeywordNoLongerMatchesOrganizationOrLocation() {
+        save("Backend Developer", PostStatus.PUBLISHED, today, today.plusDays(10));
+
+        assertEquals(List.of(), titlesFound("test organization", null, null));
+        assertEquals(List.of(), titlesFound("remote", null, null));
+    }
+
+    @Test
+    void searchPostingsFiltersByLocationIgnoringCase() {
+        save("Remote job", PostStatus.PUBLISHED, today, today.plusDays(10));
+        save("Office job", PostStatus.PUBLISHED, today, today.plusDays(10)).setLocation("On-site");
+
+        assertEquals(List.of("Office job"), titlesFound(null, "on-site", null));
+    }
+
+    @Test
+    void searchPostingsFiltersByEmploymentType() {
+        save("Full-time job", PostStatus.PUBLISHED, today, today.plusDays(10))
+                .setEmploymentType("Full-time");
+        save("Internship", PostStatus.PUBLISHED, today, today.plusDays(10))
+                .setEmploymentType("Internship");
+
+        assertEquals(List.of("Internship"), titlesFound(null, null, "Internship"));
+    }
+
+    @Test
+    void searchPostingsCombinesAllCriteria() {
+        JobPosting match = save("Java Intern", PostStatus.PUBLISHED, today, today.plusDays(10));
+        match.setEmploymentType("Internship");
+        save("Java Developer", PostStatus.PUBLISHED, today, today.plusDays(10))
+                .setEmploymentType("Full-time");
+        JobPosting onSite = save("Java Intern on site", PostStatus.PUBLISHED, today, today.plusDays(10));
+        onSite.setEmploymentType("Internship");
+        onSite.setLocation("On-site");
+
+        assertEquals(List.of("Java Intern"), titlesFound("java", "Remote", "Internship"));
+    }
+
+    @Test
+    void searchPostingsTreatsBlankCriteriaAsAny() {
+        save("Backend Developer", PostStatus.PUBLISHED, today, today.plusDays(10));
+
+        assertEquals(List.of("Backend Developer"), titlesFound(" ", "", "  "));
+    }
+
+    @Test
+    void searchPostingsKeepsAFixedOrderForPostingsOfTheSameDay() {
+        save("First approved", PostStatus.PUBLISHED, today, today.plusDays(10));
+        save("Second approved", PostStatus.PUBLISHED, today, today.plusDays(10));
+
+        assertEquals(
+                List.of("Second approved", "First approved"),
+                titlesFound(null, null, null));
     }
 
     @Test
@@ -134,7 +200,7 @@ class JobPostingServiceTest {
         JobPosting created =
                 jobPostingService.createPosting(validRequest());
 
-        assertFalse(jobPostingService.searchPostings(null)
+        assertFalse(jobPostingService.searchPostings(PostingSearchCriteria.ANY)
                 .stream()
                 .anyMatch(posting ->
                         posting.getJobPostId().equals(created.getJobPostId())));
@@ -242,6 +308,14 @@ class JobPostingServiceTest {
                 2,
                 today.plusDays(30)
         );
+    }
+
+    private List<String> titlesFound(String keyword, String location, String employmentType) {
+        return jobPostingService
+                .searchPostings(new PostingSearchCriteria(keyword, location, employmentType))
+                .stream()
+                .map(JobPosting::getTitle)
+                .toList();
     }
 
     private JobPosting save(

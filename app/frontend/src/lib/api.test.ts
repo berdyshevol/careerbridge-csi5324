@@ -5,6 +5,8 @@ import {
   isOpen,
   PostingRejected,
   searchPostings,
+  searchCriteria,
+  searchQuery,
   submitApplication,
   viewApplications,
   ApplicationRefused,
@@ -55,7 +57,40 @@ describe("formatDate", () => {
   });
 });
 
+describe("searchCriteria", () => {
+  it("takes the first value of a key the link repeats", () => {
+    expect(searchCriteria({ location: ["Remote", "Hybrid"], keyword: "java", page: "2" })).toEqual({
+      keyword: "java",
+      location: "Remote",
+      employmentType: undefined,
+    });
+  });
+});
+
+describe("searchQuery", () => {
+  it("keeps only the criteria the visitor filled in", () => {
+    expect(searchQuery({ keyword: " java ", location: "", employmentType: "Internship" })).toBe(
+      "?keyword=java&employmentType=Internship",
+    );
+  });
+
+  it("is empty when nothing was chosen", () => {
+    expect(searchQuery({})).toBe("");
+  });
+});
+
 describe("searchPostings", () => {
+  it("asks the backend with every chosen criterion", async () => {
+    const fetch = vi.fn().mockResolvedValue(new Response("[]", { status: 200 }));
+    vi.stubGlobal("fetch", fetch);
+
+    await searchPostings({ keyword: "data", location: "On-site", employmentType: "Full-time" });
+
+    expect(fetch.mock.calls[0][0]).toBe(
+      "http://localhost:8080/api/postings?keyword=data&location=On-site&employmentType=Full-time",
+    );
+  });
+
   it("gives the backend a limited time to answer", async () => {
     const timeout = vi.spyOn(AbortSignal, "timeout");
     const fetch = vi.fn().mockRejectedValue(new Error("timed out"));

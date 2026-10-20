@@ -233,6 +233,17 @@ export default function StyleguidePage() {
             <input id="sg-name" type="text" className="input w-full" placeholder="Legal name" />
           </div>
         </Block>
+        <Block title="Select" use='<select className="select w-full" /> with a label; a fixed list of values lives in src/lib/postingOptions.ts'>
+          <div className="flex flex-col gap-2 md:w-80">
+            <label htmlFor="sg-location" className="font-medium">
+              Location
+            </label>
+            <select id="sg-location" className="select w-full" defaultValue="">
+              <option value="">Any location</option>
+              <option value="Remote">Remote</option>
+            </select>
+          </div>
+        </Block>
         <Block title="Checkbox" use='<input type="checkbox" className="checkbox checkbox-primary" /> inside a label with the text'>
           <label className="flex cursor-pointer items-start gap-3">
             <input type="checkbox" className="checkbox checkbox-primary mt-0.5" />
