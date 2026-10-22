@@ -11,8 +11,11 @@ import baylor.csi5324.careerbridge.repository.OrganizationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Locale;
 
@@ -29,14 +32,19 @@ public class JobPostingService {
 
     private static final int MAX_COMMENT_LENGTH = 2000;
 
+    private static final ZoneOffset LATEST_ZONE = ZoneOffset.ofHours(-12);
+
     private final JobPostingRepository jobPostingRepository;
     private final OrganizationRepository organizationRepository;
+    private final Clock clock;
 
     public JobPostingService(
             JobPostingRepository jobPostingRepository,
-            OrganizationRepository organizationRepository) {
+            OrganizationRepository organizationRepository,
+            Clock clock) {
         this.jobPostingRepository = jobPostingRepository;
         this.organizationRepository = organizationRepository;
+        this.clock = clock;
     }
 
     public List<JobPosting> searchPostings(PostingSearchCriteria criteria) {
@@ -45,10 +53,15 @@ public class JobPostingService {
         String organization = normalized(criteria.organization());
         String employmentType = normalized(criteria.employmentType());
 
+        Instant now = clock.instant();
+
+        // UTC-12 is the last to leave each date, so an earlier deadline has passed everywhere;
+        // the rows left are checked against their organization's own 23:59
         return jobPostingRepository
                 .findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDescJobPostIdDesc(
-                        PostStatus.PUBLISHED, LocalDate.now())
+                        PostStatus.PUBLISHED, LocalDate.ofInstant(now, LATEST_ZONE))
                 .stream()
+                .filter(posting -> posting.isOpen(now))
                 .filter(posting -> keyword == null
                         || contains(posting.getTitle(), keyword)
                         || contains(posting.getDescription(), keyword)
@@ -167,8 +180,7 @@ public class JobPostingService {
     public JobPosting approveJobPosting(Long postingId, String administrator, String comment) {
         JobPosting posting = findPendingPosting(postingId);
 
-        if (posting.getApplicationDeadline() == null
-                || posting.getApplicationDeadline().isBefore(LocalDate.now())) {
+        if (posting.getApplicationDeadline() == null || posting.isPastDeadline(clock.instant())) {
             recordDecision(posting, PostStatus.RETURNED, administrator, DEADLINE_PASSED);
         } else {
             recordDecision(posting, PostStatus.PUBLISHED, administrator, comment);

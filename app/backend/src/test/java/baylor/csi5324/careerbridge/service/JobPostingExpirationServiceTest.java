@@ -1,4 +1,3 @@
-
 package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.model.JobPosting;
@@ -8,8 +7,10 @@ import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -22,19 +23,27 @@ import static org.mockito.Mockito.*;
 
 class JobPostingExpirationServiceTest {
 
+    // A deadline of 2026-10-17 closes at 23:59 local time: 04:59Z in Chicago (CDT), 06:59Z in Los Angeles (PDT)
+    private static final LocalDate DEADLINE = LocalDate.of(2026, 10, 17);
+    private static final Instant CHICAGO_CLOSE = Instant.parse("2026-10-18T04:59:00Z");
+    private static final Instant LOS_ANGELES_CLOSE = Instant.parse("2026-10-18T06:59:00Z");
+    private static final Instant TWO_DAYS_LATER = Instant.parse("2026-10-19T12:00:00Z");
+
     private JobPostingRepository repository;
+    private JobPostingExpirationProcessor processor;
     private JobPostingExpirationService service;
     private long nextPostingId;
 
     @BeforeEach
     void setUp() {
         repository = mock(JobPostingRepository.class);
-
-        JobPostingExpirationProcessor processor =
-                new JobPostingExpirationProcessor(repository);
-
-        service = new JobPostingExpirationService(repository, processor);
+        processor = new JobPostingExpirationProcessor(repository);
+        service = at(TWO_DAYS_LATER);
         nextPostingId = 1;
+    }
+
+    private JobPostingExpirationService at(Instant now) {
+        return new JobPostingExpirationService(repository, processor, Clock.fixed(now, ZoneOffset.UTC));
     }
 
     private JobPosting posting(PostStatus status, LocalDate deadline) {
@@ -58,8 +67,6 @@ class JobPostingExpirationServiceTest {
 
     private void prepare(JobPosting... postings) {
 
-        // Simulate the repository's filtered query.
-        // Only postings in the requested statuses and date range are returned.
         when(repository.findByPostStatusInAndApplicationDeadlineLessThanEqual(
                 anyCollection(), any(LocalDate.class)))
                 .thenAnswer(invocation -> {
@@ -80,14 +87,10 @@ class JobPostingExpirationServiceTest {
         }
     }
 
-    private LocalDate today(String timeZone) {
-        return LocalDate.now(ZoneId.of(timeZone));
-    }
-
     @Test
     void closesOverduePublishedPosting() {
         JobPosting posting = posting(
-                PostStatus.PUBLISHED, today("UTC").minusDays(2));
+                PostStatus.PUBLISHED, DEADLINE);
 
         prepare(posting);
 
@@ -102,7 +105,7 @@ class JobPostingExpirationServiceTest {
     @Test
     void expiresPendingApprovalPosting() {
         JobPosting posting = posting(
-                PostStatus.PENDING_APPROVAL, today("UTC").minusDays(2));
+                PostStatus.PENDING_APPROVAL, DEADLINE);
 
         prepare(posting);
 
@@ -115,7 +118,7 @@ class JobPostingExpirationServiceTest {
     @Test
     void expiresReturnedPosting() {
         JobPosting posting = posting(
-                PostStatus.RETURNED, today("UTC").minusDays(2));
+                PostStatus.RETURNED, DEADLINE);
 
         prepare(posting);
 
@@ -128,7 +131,7 @@ class JobPostingExpirationServiceTest {
     @Test
     void leavesAlreadyClosedPostingUnchanged() {
         JobPosting posting = posting(
-                PostStatus.CLOSED, today("UTC").minusDays(2));
+                PostStatus.CLOSED, DEADLINE);
 
         prepare(posting);
 
@@ -141,7 +144,7 @@ class JobPostingExpirationServiceTest {
     @Test
     void doesNotExpirePostingBeforeDeadline() {
         JobPosting posting = posting(
-                PostStatus.PUBLISHED, today("UTC").plusDays(2));
+                PostStatus.PUBLISHED, DEADLINE.plusDays(4));
 
         prepare(posting);
 
@@ -154,7 +157,7 @@ class JobPostingExpirationServiceTest {
     @Test
     void runningTwiceDoesNotCloseAgain() {
         JobPosting posting = posting(
-                PostStatus.PUBLISHED, today("UTC").minusDays(2));
+                PostStatus.PUBLISHED, DEADLINE);
 
         prepare(posting);
 
@@ -165,29 +168,37 @@ class JobPostingExpirationServiceTest {
     }
 
     @Test
-    void respectsChicagoTimeZone() {
-        JobPosting posting = posting(
-                PostStatus.PUBLISHED,
-                today("America/Chicago").minusDays(2),
-                "America/Chicago");
-
+    void keepsAChicagoPostingOpenUntil2359ThereAndClosesItAtThatMinute() {
+        JobPosting posting = posting(PostStatus.PUBLISHED, DEADLINE, "America/Chicago");
         prepare(posting);
 
-        assertEquals(1, service.runExpirationJob());
+        assertEquals(0, at(CHICAGO_CLOSE.minusSeconds(60)).runExpirationJob());
+        assertEquals(PostStatus.PUBLISHED, posting.getPostStatus());
+
+        assertEquals(1, at(CHICAGO_CLOSE).runExpirationJob());
+        assertEquals(PostStatus.CLOSED, posting.getPostStatus());
+        assertEquals(CHICAGO_CLOSE, posting.getClosedAt());
+    }
+
+    @Test
+    void keepsALosAngelesPostingOpenUntil2359ThereAndClosesItAtThatMinute() {
+        JobPosting posting = posting(PostStatus.PUBLISHED, DEADLINE, "America/Los_Angeles");
+        prepare(posting);
+
+        assertEquals(0, at(LOS_ANGELES_CLOSE.minusSeconds(60)).runExpirationJob());
+        assertEquals(PostStatus.PUBLISHED, posting.getPostStatus());
+
+        assertEquals(1, at(LOS_ANGELES_CLOSE).runExpirationJob());
         assertEquals(PostStatus.CLOSED, posting.getPostStatus());
     }
 
     @Test
-    void respectsLosAngelesTimeZone() {
-        JobPosting posting = posting(
-                PostStatus.PUBLISHED,
-                today("America/Los_Angeles").minusDays(2),
-                "America/Los_Angeles");
-
+    void reachesAPostingInTheEarliestTimeZoneInItsLastMinute() {
+        // 23:59 on the deadline in UTC+14 is 09:59Z the same day, before UTC+14's date moves on
+        JobPosting posting = posting(PostStatus.PUBLISHED, DEADLINE, "Pacific/Kiritimati");
         prepare(posting);
 
-        assertEquals(1, service.runExpirationJob());
-        assertEquals(PostStatus.CLOSED, posting.getPostStatus());
+        assertEquals(1, at(Instant.parse("2026-10-17T09:59:30Z")).runExpirationJob());
     }
 
     @Test
@@ -202,10 +213,10 @@ class JobPostingExpirationServiceTest {
     @Test
     void failureInOnePostingDoesNotStopRemainingPostings() {
         JobPosting failingPosting = posting(
-                PostStatus.PUBLISHED, today("UTC").minusDays(2));
+                PostStatus.PUBLISHED, DEADLINE);
 
         JobPosting successfulPosting = posting(
-                PostStatus.PUBLISHED, today("UTC").minusDays(2));
+                PostStatus.PUBLISHED, DEADLINE);
 
         prepare(failingPosting, successfulPosting);
 

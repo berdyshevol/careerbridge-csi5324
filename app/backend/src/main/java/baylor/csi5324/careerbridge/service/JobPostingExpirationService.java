@@ -1,4 +1,3 @@
-
 package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.model.JobPosting;
@@ -8,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -27,24 +27,26 @@ public class JobPostingExpirationService {
 
     private final JobPostingRepository jobPostingRepository;
     private final JobPostingExpirationProcessor processor;
+    private final Clock clock;
 
     public JobPostingExpirationService(
             JobPostingRepository jobPostingRepository,
-            JobPostingExpirationProcessor processor) {
+            JobPostingExpirationProcessor processor,
+            Clock clock) {
         this.jobPostingRepository = jobPostingRepository;
         this.processor = processor;
+        this.clock = clock;
     }
 
     public int runExpirationJob() {
-        Instant now = Instant.now();
+        Instant now = clock.instant();
         int closedCount = 0;
         int errorCount = 0;
 
-        // UTC+14 is the earliest timezone to enter a new calendar day.
-        // This date is a safe upper bound for potentially expired deadlines.
-        // The processor checks each organization's exact local midnight.
+        // UTC+14 reaches each date first, so no deadline after its today can have passed anywhere;
+        // the processor checks each survivor against its organization's own 23:59
         LocalDate latestExpiredDeadline =
-                LocalDate.ofInstant(now, ZoneOffset.ofHours(14)).minusDays(1);
+                LocalDate.ofInstant(now, ZoneOffset.ofHours(14));
 
         List<JobPosting> postings = jobPostingRepository
                 .findByPostStatusInAndApplicationDeadlineLessThanEqual(
@@ -56,6 +58,9 @@ public class JobPostingExpirationService {
                 now, postings.size());
 
         for (JobPosting posting : postings) {
+            if (!posting.isPastDeadline(now)) {
+                continue;
+            }
             try {
                 if (processor.expirePosting(posting.getJobPostId(), now)) {
                     closedCount++;

@@ -1,4 +1,3 @@
-
 package baylor.csi5324.careerbridge;
 
 import org.springframework.boot.SpringApplication;

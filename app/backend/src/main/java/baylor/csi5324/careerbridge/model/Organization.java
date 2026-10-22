@@ -1,4 +1,3 @@
-
 package baylor.csi5324.careerbridge.model;
 
 import jakarta.persistence.Column;
@@ -9,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "organizations")
@@ -25,7 +25,7 @@ public class Organization {
     private String website;
     private String description;
 
-    // Existing sample organizations use UTC until their real time zone is provided.
+    // An organization with no recorded zone counts its deadlines in UTC
     @Column(length = 100)
     private String timeZone = "UTC";
 
@@ -81,16 +81,10 @@ public class Organization {
     }
 
     public void setTimeZone(String timeZone) {
-        if (timeZone == null || timeZone.isBlank()) {
-            throw new IllegalArgumentException("Organization time zone is required");
-        }
-
-        String validatedTimeZone = timeZone.trim();
-        ZoneId.of(validatedTimeZone);
-        this.timeZone = validatedTimeZone;
+        this.timeZone = ZoneId.of(timeZone.trim()).getId();
     }
 
     public ZoneId getZoneId() {
-        return ZoneId.of(timeZone == null || timeZone.isBlank() ? "UTC" : timeZone);
+        return timeZone == null ? ZoneOffset.UTC : ZoneId.of(timeZone);
     }
 }

@@ -3,6 +3,7 @@ package baylor.csi5324.careerbridge.dto;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.PostStatus;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 // What the public job board may show (UC-01): who approved a posting and the administrator's
@@ -18,6 +19,8 @@ public record PublicPosting(
         int numberOfOpenings,
         LocalDate datePosted,
         LocalDate applicationDeadline,
+        // The moment applications stop (UC-13), so the screen need not know the organization's zone
+        Instant closesAt,
         PostStatus postStatus,
         PublicOrganization organization
 ) {
@@ -36,6 +39,7 @@ public record PublicPosting(
                 posting.getNumberOfOpenings(),
                 posting.getDatePosted(),
                 posting.getApplicationDeadline(),
+                posting.closesAt(),
                 posting.getPostStatus(),
                 new PublicOrganization(
                         posting.getOrganization().getOrganizationId(),

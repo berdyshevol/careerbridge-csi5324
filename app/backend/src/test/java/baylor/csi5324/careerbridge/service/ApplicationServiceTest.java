@@ -65,7 +65,8 @@ class ApplicationServiceTest {
                 submitted.application().getApplicationId()).orElseThrow();
         assertEquals(applicant.getUserId(), application.getApplicant().getUserId());
         assertEquals(ApplicationStatus.APPLIED, application.getApplicationStatus());
-        assertEquals(today, application.getDateApplied());
+        // The date the organization sees, not the server's, since the two can differ near midnight
+        assertEquals(LocalDate.now(organization.getZoneId()), application.getDateApplied());
         assertEquals("cv.pdf", application.getResumeSnapshot().getFileName());
         assertEquals(ApplicationStatus.APPLIED, application.getStatusHistory().get(0).getStatus());
         assertEquals(1, submitted.activeApplicationCount());
