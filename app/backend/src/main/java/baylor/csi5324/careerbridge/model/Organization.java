@@ -7,6 +7,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+
 @Entity
 @Table(name = "organizations")
 public class Organization {
@@ -21,6 +24,10 @@ public class Organization {
     private String organizationStatus;
     private String website;
     private String description;
+
+    // An organization with no recorded zone counts its deadlines in UTC
+    @Column(length = 100)
+    private String timeZone = "UTC";
 
     public Organization() {
     }
@@ -67,5 +74,17 @@ public class Organization {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    public void setTimeZone(String timeZone) {
+        this.timeZone = ZoneId.of(timeZone.trim()).getId();
+    }
+
+    public ZoneId getZoneId() {
+        return timeZone == null ? ZoneOffset.UTC : ZoneId.of(timeZone);
     }
 }

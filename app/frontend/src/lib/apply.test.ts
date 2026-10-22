@@ -14,6 +14,7 @@ function posting(overrides: Partial<JobPosting> = {}): JobPosting {
     numberOfOpenings: 1,
     datePosted: "2026-10-01",
     applicationDeadline: "2999-12-31",
+    closesAt: "3000-01-01T05:59:00Z",
     postStatus: "PUBLISHED",
     organization: { organizationId: 2, name: "Waco Health Partners" },
     ...overrides,

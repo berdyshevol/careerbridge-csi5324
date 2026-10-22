@@ -22,6 +22,8 @@ export type JobPosting = {
   numberOfOpenings: number;
   datePosted: string;
   applicationDeadline: string;
+  // The public board sends the moment applications stop: 23:59 on the deadline in the organization's zone
+  closesAt?: string | null;
   postStatus: string;
   organization: Organization;
   reviewComment?: string | null;
@@ -182,8 +184,7 @@ async function refusal(response: Response): Promise<string | null> {
 }
 
 export function isOpen(posting: JobPosting): boolean {
-  const today = new Date().toISOString().slice(0, 10);
-  return posting.postStatus === "PUBLISHED" && posting.applicationDeadline >= today;
+  return posting.postStatus === "PUBLISHED" && posting.closesAt != null && Date.now() < Date.parse(posting.closesAt);
 }
 
 export function formatDate(isoDate: string): string {

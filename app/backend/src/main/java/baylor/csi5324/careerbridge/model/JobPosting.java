@@ -11,13 +11,17 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 // Not mapped yet: the creating Recruiter, and approvalStatus, which repeats postStatus
 @Entity
 @Table(name = "job_postings")
 public class JobPosting {
+
+    private static final LocalTime DEADLINE_TIME = LocalTime.of(23, 59);
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -55,13 +59,29 @@ public class JobPosting {
     @Column(length = 2000)
     private String reviewComment;
 
+    @Column(length = 50)
+    private String closingReason;
+
+    private Instant closedAt;
+
     public JobPosting() {
     }
 
-    public boolean isOpen(LocalDate today) {
+    // UC-13 variation 2a: a deadline means 23:59 on that date in the organization's time zone
+    public Instant closesAt() {
+        return applicationDeadline == null
+                ? null
+                : applicationDeadline.atTime(DEADLINE_TIME).atZone(organization.getZoneId()).toInstant();
+    }
+
+    public boolean isPastDeadline(Instant now) {
+        return applicationDeadline != null && !now.isBefore(closesAt());
+    }
+
+    public boolean isOpen(Instant now) {
         return postStatus == PostStatus.PUBLISHED
                 && applicationDeadline != null
-                && !applicationDeadline.isBefore(today);
+                && now.isBefore(closesAt());
     }
 
     public boolean wasPublished() {
@@ -186,5 +206,21 @@ public class JobPosting {
 
     public void setReviewComment(String reviewComment) {
         this.reviewComment = reviewComment;
+    }
+
+    public String getClosingReason() {
+        return closingReason;
+    }
+
+    public void setClosingReason(String closingReason) {
+        this.closingReason = closingReason;
+    }
+
+    public Instant getClosedAt() {
+        return closedAt;
+    }
+
+    public void setClosedAt(Instant closedAt) {
+        this.closedAt = closedAt;
     }
 }

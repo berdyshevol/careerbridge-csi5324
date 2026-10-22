@@ -15,6 +15,7 @@ const posting: JobPosting = {
   numberOfOpenings: 1,
   datePosted: "2026-10-01",
   applicationDeadline: "2999-12-31",
+  closesAt: "3000-01-01T05:59:00Z",
   postStatus: "PUBLISHED",
   organization: { organizationId: 2, name: "Waco Health Partners" },
 };
@@ -108,6 +109,23 @@ describe("ApplyForm", () => {
     await user.click(screen.getByRole("button", { name: "Submit application" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Saving is switched off");
+    expect(screen.queryByRole("heading", { name: "Application submitted" })).not.toBeInTheDocument();
+  });
+
+  it("shows the refusal when the posting closes while the form is open (UC-13)", async () => {
+    backendAnswers({
+      ok: false,
+      status: 400,
+      headers: new Headers({ "Content-Type": "text/plain;charset=UTF-8" }),
+      text: () => Promise.resolve("This posting no longer accepts applications."),
+    });
+    const user = userEvent.setup();
+    render(<ApplyForm posting={posting} desk={desk} />);
+
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Submit application" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("This posting no longer accepts applications.");
     expect(screen.queryByRole("heading", { name: "Application submitted" })).not.toBeInTheDocument();
   });
 

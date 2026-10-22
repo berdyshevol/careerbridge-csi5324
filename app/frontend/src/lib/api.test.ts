@@ -31,6 +31,7 @@ function posting(overrides: Partial<JobPosting>): JobPosting {
     numberOfOpenings: 1,
     datePosted: "2026-10-05",
     applicationDeadline: "2999-12-31",
+    closesAt: "3000-01-01T05:59:00Z",
     postStatus: "PUBLISHED",
     organization: { organizationId: 1, name: "Brazos Analytics" },
     ...overrides,
@@ -43,11 +44,27 @@ describe("isOpen", () => {
   });
 
   it("is false once the deadline has passed", () => {
-    expect(isOpen(posting({ applicationDeadline: "2000-01-01" }))).toBe(false);
+    expect(isOpen(posting({ closesAt: "2000-01-02T05:59:00Z" }))).toBe(false);
   });
 
   it("is false for a closed posting", () => {
     expect(isOpen(posting({ postStatus: "CLOSED" }))).toBe(false);
+  });
+
+  // 23:59 on Oct 17 in Chicago is 04:59Z on Oct 18 (UC-13 variation 2a)
+  it("stays open until the closing minute the backend sends and closes at it (UC-13)", () => {
+    vi.useFakeTimers();
+    const job = posting({ closesAt: "2026-10-18T04:59:00Z" });
+
+    vi.setSystemTime(new Date("2026-10-18T04:58:59Z"));
+    expect(isOpen(job)).toBe(true);
+
+    vi.setSystemTime(new Date("2026-10-18T04:59:00Z"));
+    expect(isOpen(job)).toBe(false);
+  });
+
+  it("is false when the posting has no closing moment", () => {
+    expect(isOpen(posting({ closesAt: null }))).toBe(false);
   });
 });
 

@@ -11,6 +11,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -30,21 +32,24 @@ public class ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final ApplicantRepository applicantRepository;
     private final JobPostingRepository jobPostingRepository;
+    private final Clock clock;
 
     public ApplicationService(ApplicationRepository applicationRepository,
                               ApplicantRepository applicantRepository,
-                              JobPostingRepository jobPostingRepository) {
+                              JobPostingRepository jobPostingRepository,
+                              Clock clock) {
         this.applicationRepository = applicationRepository;
         this.applicantRepository = applicantRepository;
         this.jobPostingRepository = jobPostingRepository;
+        this.clock = clock;
     }
 
     // STAND-IN: the resume comes from the caller until UC-03 keeps it in the backend
     public SubmittedApplication submitApplication(Long postingId, ResumeSnapshot resume) {
         JobPosting posting = jobPostingRepository.findById(postingId)
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
-        LocalDate today = LocalDate.now();
-        if (!posting.isOpen(today)) {
+        Instant now = clock.instant();
+        if (!posting.isOpen(now)) {
             throw new ApplicationRefusedException("This posting no longer accepts applications.");
         }
         if (resume == null) {
@@ -65,7 +70,8 @@ public class ApplicationService {
 
         try {
             Application application = applicationRepository.saveAndFlush(
-                    new Application(applicant, posting, resume, today));
+                    new Application(applicant, posting, resume,
+                            LocalDate.ofInstant(now, posting.getOrganization().getZoneId())));
             return new SubmittedApplication(application, active + 1);
         } catch (DataIntegrityViolationException sameMomentDuplicate) {
             // A double click: the other request passed the check above first
