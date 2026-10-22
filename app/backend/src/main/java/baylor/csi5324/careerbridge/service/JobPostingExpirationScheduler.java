@@ -1,44 +1,27 @@
-
 package baylor.csi5324.careerbridge.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-@Component
-@ConditionalOnProperty(
-        name = "careerbridge.public-deployment",
-        havingValue = "false",
-        matchIfMissing = true
-)
-public class JobPostingExpirationScheduler {
+import java.util.concurrent.TimeUnit;
 
-    private static final Logger log =
-            LoggerFactory.getLogger(JobPostingExpirationScheduler.class);
+// Runs on the public site too: ADR-0006 stops visitors from saving without login, not the system's own timed job
+@Component
+public class JobPostingExpirationScheduler {
 
     private final JobPostingExpirationService expirationService;
 
-    public JobPostingExpirationScheduler(
-            JobPostingExpirationService expirationService) {
+    public JobPostingExpirationScheduler(JobPostingExpirationService expirationService) {
         this.expirationService = expirationService;
     }
 
-    @Scheduled(fixedRate = 900000)
+    // FR-UC13.1: at least every 15 minutes. The first run waits for the ready event, since a
+    // scheduled run at startup would come before the sample data is loaded and find nothing.
+    @EventListener(ApplicationReadyEvent.class)
+    @Scheduled(initialDelay = 15, fixedRate = 15, timeUnit = TimeUnit.MINUTES)
     public void runScheduledExpiration() {
-        long start = System.currentTimeMillis();
-
-        try {
-            int closed = expirationService.runExpirationJob();
-
-            log.info(
-                    "UC-13 expiration run completed: closed={}, durationMs={}",
-                    closed,
-                    System.currentTimeMillis() - start
-            );
-        } catch (Exception exception) {
-            log.error("UC-13 expiration run failed", exception);
-        }
+        expirationService.runExpirationJob();
     }
 }

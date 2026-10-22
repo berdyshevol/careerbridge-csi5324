@@ -26,8 +26,8 @@ Figure 25; classes and associations that are not in the figure are listed in sec
 | Resume Snapshot | file Name, file Type, file Size |
 | Status History Entry | status, date |
 | Organization Membership | status, membershipId, requested at, approved at |
-| Organization | organizationId, name, organization Status, website, description |
-| Job Posting | jobPostId, title, description, location, applicationDeadline, postStatus, date posted, numberOfOpenings, salaryRange, approvalStatus, approvedBy, approvedAt, reviewComment, employmentType, jobRequirements |
+| Organization | organizationId, name, organization Status, website, description, timeZone |
+| Job Posting | jobPostId, title, description, location, applicationDeadline, postStatus, date posted, numberOfOpenings, salaryRange, approvalStatus, approvedBy, approvedAt, reviewComment, employmentType, jobRequirements, closingReason, closedAt |
 | Offer | offerId, dateExtended, expirationDate, status, responseDate, salary |
 | Interview | interviewId, scheduledTime, outcome, notes |
 | Notification | notificationId, type, message, sentAt, status |
@@ -36,6 +36,14 @@ Figure 25; classes and associations that are not in the figure are listed in sec
   (A6). The operation contracts call it the Application's _resumeSnapshot_.
 - **Status History Entry** is one stage an application reached, with the date. The operation
   contracts call the entries of an application its _statusHistory_.
+- A **Job Posting**'s _location_ is On-site, Hybrid or Remote (UC-11 step 3), and its
+  _employmentType_ is Full-time, Part-time, Internship, Contract or Temporary. The job board
+  filters by these same values (UC-01 step 3).
+- An **Organization**'s _timeZone_ is where its deadlines are read: a **Job Posting** stops
+  accepting applications at 23:59 on its _applicationDeadline_ in that zone (UC-13 variation 2a,
+  NFR-UC13.5). An organization with no zone recorded uses UTC.
+- A **Job Posting** closed by the system or a recruiter keeps why in _closingReason_ (Expired, for
+  UC-13) and when in _closedAt_, a UTC instant.
 
 ### 5.2 Generalization
 
@@ -62,8 +70,9 @@ Multiplicities are read as "one A is linked to … B".
 
 ### 5.4 Differences from Figure 25
 
-The figure was drawn for Iteration 1 and has not been redrawn. The text above corrects it in six
-places: five needed for UC-04 Apply for Job and one for UC-12 Approve Job Posting:
+The figure was drawn for Iteration 1 and has not been redrawn. The text above corrects it in eight
+places: five needed for UC-04 Apply for Job, one for UC-12 Approve Job Posting and two for UC-13
+Expire Job Posting:
 
 | # | Figure 25 | Current model | Why |
 | --- | --- | --- | --- |
@@ -73,6 +82,8 @@ places: five needed for UC-04 Apply for Job and one for UC-12 Approve Job Postin
 | 4 | Application has the attribute resumeSnapshot | Class Resume Snapshot (file Name, file Type, file Size) | The copy has its own data ("available as a PDF or DOCX, in the format the applicant uploaded"), so it is a class, not a simple attribute. |
 | 5 | Application has the attribute statusHistory | Class Status History Entry (status, date) | The history has one entry per stage, each with its own date, so it is a class, not a simple attribute. |
 | 6 | Job Posting has no review comment; approvedBy and approvedAt suggest an approval only | Job Posting has reviewComment; approvedBy and approvedAt record the Administrator who made any decision (approve, return or reject) and when | UC-12 requires comments to return or reject a posting (extensions 5a, 5b), and logs every decision with who decided and when (Special Requirements). |
+| 7 | Organization has no time zone | Organization has timeZone | UC-13 variation 2a: a deadline means 23:59 on that date in the organization's time zone (A11, NFR-UC13.5). |
+| 8 | Job Posting does not record how or when it closed | Job Posting has closingReason and closedAt | UC-13 closes an overdue posting with the reason Expired and the time it closed (FR-UC13.3). |
 
 Two more things in the figure are not carried into the text:
 
@@ -90,9 +101,9 @@ are left for the iteration that implements the use cases named.
 | --- | --- | --- |
 | Applicant | No location, headline, skills, education, work experience | UC-03 step 2, FR-UC03.1 |
 | Recruiter | No job title | UC-08 step 3 |
-| Organization | No industry, headquarters location, size, time zone | UC-08 step 3; A11 |
+| Organization | No industry, headquarters location, size | UC-08 step 3 |
 | Organization Membership | No role, justification, denial reason, review flag; no link to the deciding Administrator | CO-09.1; UC-10; A17 |
-| Job Posting | approvedBy is an attribute, not an association to Administrator; approvalStatus repeats postStatus; no submission date, close reason, closing time | CO-12.1; UC-12; Close Job Posting |
+| Job Posting | approvedBy is an attribute, not an association to Administrator; approvalStatus repeats postStatus; no submission date | CO-12.1; UC-12; Close Job Posting |
 | Offer | No start date, other terms, offer letter | UC-15 postconditions; CO-07.1 |
 | Interview | No format, location, interviewers; the limit of two rounds (A13) is not in the multiplicity | FR-UC14.7; CO-14.4 |
 | Status History Entry | No note or reason, no link to the Recruiter who made the change | CO-14.2, CO-14.3, CO-06.2, CO-07.3 |

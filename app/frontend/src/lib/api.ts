@@ -1,4 +1,3 @@
-
 import { STAGES, type DeskApplication } from "./sampleDesk";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -10,7 +9,6 @@ export const BACKEND_TIMEOUT_MS = 8000;
 export type Organization = {
   organizationId: number;
   name: string;
-  timeZone?: string;
 };
 
 export type JobPosting = {
@@ -24,6 +22,8 @@ export type JobPosting = {
   numberOfOpenings: number;
   datePosted: string;
   applicationDeadline: string;
+  // The public board sends the moment applications stop: 23:59 on the deadline in the organization's zone
+  closesAt?: string | null;
   postStatus: string;
   organization: Organization;
   reviewComment?: string | null;
@@ -67,9 +67,36 @@ function backendFetch(path: string, init?: Omit<RequestInit, "signal">): Promise
   });
 }
 
-export async function searchPostings(keyword?: string): Promise<JobPosting[]> {
-  const query = keyword ? `?keyword=${encodeURIComponent(keyword)}` : "";
-  const response = await backendFetch(`/api/postings${query}`);
+// In the order the form shows them, which is also the order of the clean address
+const SEARCH_CRITERIA = ["keyword", "location", "organization", "employmentType"] as const;
+
+export type PostingSearchCriteria = Partial<Record<(typeof SEARCH_CRITERIA)[number], string>>;
+
+export type PageQuery = Record<string, string | string[] | undefined>;
+
+// A hand-edited link can repeat a key, and Next.js then hands over an array;
+// the search knows one value per criterion, so it takes the first.
+export function searchCriteria(query: PageQuery): PostingSearchCriteria {
+  const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+  return Object.fromEntries(SEARCH_CRITERIA.map((name) => [name, first(query[name])]));
+}
+
+// The same query string serves the backend call and the job board's own links,
+// so a visitor who opens a posting comes back to the list they searched.
+export function searchQuery(criteria: PostingSearchCriteria): string {
+  const query = new URLSearchParams();
+  for (const name of SEARCH_CRITERIA) {
+    const value = criteria[name]?.trim();
+    if (value) {
+      query.set(name, value);
+    }
+  }
+  const text = query.toString();
+  return text ? `?${text}` : "";
+}
+
+export async function searchPostings(criteria: PostingSearchCriteria = {}): Promise<JobPosting[]> {
+  const response = await backendFetch(`/api/postings${searchQuery(criteria)}`);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }
@@ -104,13 +131,12 @@ export async function createPosting(posting: NewPosting): Promise<JobPosting> {
 }
 
 export async function submitApplication(
-    postingId: number,
-    resume: ResumeOnFile | null,
+  postingId: number,
+  resume: ResumeOnFile | null,
 ): Promise<SubmittedApplication> {
   const body = resume
-      ? { resumeFileName: resume.fileName, resumeFileType: resume.fileType, resumeFileSize: resume.fileSize }
-      : {};
-
+    ? { resumeFileName: resume.fileName, resumeFileType: resume.fileType, resumeFileSize: resume.fileSize }
+    : {};
   const response = await backendFetch(`/api/postings/${postingId}/apply`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -136,8 +162,7 @@ export async function viewApplications(): Promise<Applications> {
     throw new Error(`Backend answered ${response.status}`);
   }
   const applications: (Omit<DeskApplication, "applicationStatus"> & { applicationStatus: string })[] =
-      await response.json();
-
+    await response.json();
   const active: DeskApplication[] = [];
   for (const application of applications) {
     const stage = STAGES.find((name) => name.toUpperCase() === application.applicationStatus);
@@ -159,32 +184,7 @@ async function refusal(response: Response): Promise<string | null> {
 }
 
 export function isOpen(posting: JobPosting): boolean {
-  if (posting.postStatus !== "PUBLISHED" || !posting.applicationDeadline) {
-    return false;
-  }
-
-  // UC-13: The deadline is inclusive in the organization's local calendar.
-  // UTC is the default for organizations created before time zones were added.
-  const timeZone = posting.organization?.timeZone ?? "UTC";
-
-  const dateParts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-
-  const year = dateParts.find((part) => part.type === "year")?.value;
-  const month = dateParts.find((part) => part.type === "month")?.value;
-  const day = dateParts.find((part) => part.type === "day")?.value;
-
-  if (!year || !month || !day) {
-    return false;
-  }
-
-  const organizationToday = `${year}-${month}-${day}`;
-
-  return posting.applicationDeadline >= organizationToday;
+  return posting.postStatus === "PUBLISHED" && posting.closesAt != null && Date.now() < Date.parse(posting.closesAt);
 }
 
 export function formatDate(isoDate: string): string {

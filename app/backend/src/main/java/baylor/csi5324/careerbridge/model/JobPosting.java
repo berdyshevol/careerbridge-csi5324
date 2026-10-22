@@ -1,4 +1,3 @@
-
 package baylor.csi5324.careerbridge.model;
 
 import jakarta.persistence.Column;
@@ -15,11 +14,14 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 // Not mapped yet: the creating Recruiter, and approvalStatus, which repeats postStatus
 @Entity
 @Table(name = "job_postings")
 public class JobPosting {
+
+    private static final LocalTime DEADLINE_TIME = LocalTime.of(23, 59);
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -51,12 +53,12 @@ public class JobPosting {
 
     // They record whoever decided, also for a return or a rejection
     private String approvedBy;
+
     private LocalDateTime approvedAt;
 
     @Column(length = 2000)
     private String reviewComment;
 
-    // UC-13: a published posting closes with a reason and an actual UTC closing time.
     @Column(length = 50)
     private String closingReason;
 
@@ -65,10 +67,21 @@ public class JobPosting {
     public JobPosting() {
     }
 
-    public boolean isOpen(LocalDate today) {
+    // UC-13 variation 2a: a deadline means 23:59 on that date in the organization's time zone
+    public Instant closesAt() {
+        return applicationDeadline == null
+                ? null
+                : applicationDeadline.atTime(DEADLINE_TIME).atZone(organization.getZoneId()).toInstant();
+    }
+
+    public boolean isPastDeadline(Instant now) {
+        return applicationDeadline != null && !now.isBefore(closesAt());
+    }
+
+    public boolean isOpen(Instant now) {
         return postStatus == PostStatus.PUBLISHED
                 && applicationDeadline != null
-                && !applicationDeadline.isBefore(today);
+                && now.isBefore(closesAt());
     }
 
     public boolean wasPublished() {

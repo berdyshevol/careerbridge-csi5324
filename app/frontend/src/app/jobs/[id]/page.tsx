@@ -2,9 +2,23 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import BackendDown from "@/components/BackendDown";
 import PageTitle from "@/components/PageTitle";
-import { formatDate, isOpen, viewPosting, type JobPosting } from "@/lib/api";
+import {
+  formatDate,
+  isOpen,
+  searchCriteria,
+  searchQuery,
+  viewPosting,
+  type JobPosting,
+  type PageQuery,
+} from "@/lib/api";
 
-export default async function PostingPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PostingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<PageQuery>;
+}) {
   const { id } = await params;
 
   let posting: JobPosting | null;
@@ -21,7 +35,10 @@ export default async function PostingPage({ params }: { params: Promise<{ id: st
   return (
     <article className="card border border-base-300 bg-base-100">
       <div className="card-body gap-5">
-        <Link href="/jobs" className="link link-primary font-semibold">
+        <Link
+          href={`/jobs${searchQuery(searchCriteria(await searchParams))}`}
+          className="link link-primary font-semibold"
+        >
           All jobs
         </Link>
 
@@ -33,7 +50,7 @@ export default async function PostingPage({ params }: { params: Promise<{ id: st
 
         {!open && (
           <div role="status" className="alert alert-warning">
-            This posting no longer accepts applications.
+            This posting is no longer accepting applications.
           </div>
         )}
 

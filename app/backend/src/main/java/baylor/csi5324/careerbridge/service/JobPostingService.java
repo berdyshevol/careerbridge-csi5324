@@ -2,6 +2,7 @@
 package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
+import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
@@ -10,10 +11,11 @@ import baylor.csi5324.careerbridge.repository.OrganizationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Comparator;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Locale;
 
@@ -30,41 +32,47 @@ public class JobPostingService {
 
     private static final int MAX_COMMENT_LENGTH = 2000;
 
+    private static final ZoneOffset LATEST_ZONE = ZoneOffset.ofHours(-12);
+
     private final JobPostingRepository jobPostingRepository;
     private final OrganizationRepository organizationRepository;
+    private final Clock clock;
 
     public JobPostingService(
             JobPostingRepository jobPostingRepository,
-            OrganizationRepository organizationRepository) {
+            OrganizationRepository organizationRepository,
+            Clock clock) {
         this.jobPostingRepository = jobPostingRepository;
         this.organizationRepository = organizationRepository;
+        this.clock = clock;
     }
 
-    public List<JobPosting> searchPostings(String keyword) {
-        Instant now = Instant.now();
+    public List<JobPosting> searchPostings(PostingSearchCriteria criteria) {
+        String keyword = normalized(criteria.keyword());
+        String location = normalized(criteria.location());
+        String organization = normalized(criteria.organization());
+        String employmentType = normalized(criteria.employmentType());
 
-        // Get published postings first, then evaluate each organization's local deadline.
-        List<JobPosting> publishedPostings = jobPostingRepository
-                .findByPostStatusOrderByDatePostedAscJobPostIdAsc(PostStatus.PUBLISHED);
+        Instant now = clock.instant();
 
-        String needle = keyword == null ? "" : keyword.trim().toLowerCase(Locale.ROOT);
-
-        return publishedPostings.stream()
-                .filter(posting -> posting.getApplicationDeadline() != null)
-                .filter(posting -> posting.getOrganization() != null)
-                .filter(posting -> now.isBefore(
-                        posting.getApplicationDeadline().plusDays(1)
-                                .atStartOfDay(posting.getOrganization().getZoneId())
-                                .toInstant()))
-                .filter(posting -> needle.isEmpty()
-                        || contains(posting.getTitle(), needle)
-                        || contains(posting.getOrganization().getName(), needle)
-                        || contains(posting.getLocation(), needle))
-                .sorted(Comparator
-                        .comparing(JobPosting::getDatePosted,
-                                Comparator.nullsLast(Comparator.reverseOrder()))
-                        .thenComparing(JobPosting::getJobPostId,
-                                Comparator.nullsLast(Comparator.reverseOrder())))
+        // UTC-12 is the last to leave each date, so an earlier deadline has passed everywhere;
+        // the rows left are checked against their organization's own 23:59
+        return jobPostingRepository
+                .findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDescJobPostIdDesc(
+                        PostStatus.PUBLISHED, LocalDate.ofInstant(now, LATEST_ZONE))
+                .stream()
+                .filter(posting -> posting.isOpen(now))
+                .filter(posting -> keyword == null
+                        || contains(posting.getTitle(), keyword)
+                        || contains(posting.getDescription(), keyword)
+                        || contains(posting.getJobRequirements(), keyword))
+                .filter(posting -> location == null
+                        || location.equals(normalized(posting.getLocation())))
+                // Organizations are not a fixed list like locations, so a visitor types part of the name
+                .filter(posting -> organization == null
+                        || contains(posting.getOrganization().getName(), organization))
+                .filter(posting -> employmentType == null
+                        || employmentType.equals(normalized(posting.getEmploymentType())))
                 .toList();
     }
 
@@ -149,7 +157,6 @@ public class JobPostingService {
 
         LocalDate deadline = posting.getApplicationDeadline();
         LocalDate today = LocalDate.now();
-
         if (deadline == null
                 || deadline.isBefore(today.plusDays(MIN_DAYS_TO_DEADLINE))
                 || deadline.isAfter(today.plusDays(MAX_DAYS_TO_DEADLINE))) {
@@ -173,14 +180,12 @@ public class JobPostingService {
     public JobPosting approveJobPosting(Long postingId, String administrator, String comment) {
         JobPosting posting = findPendingPosting(postingId);
 
-        if (posting.getApplicationDeadline() == null
-                || posting.getApplicationDeadline().isBefore(LocalDate.now())) {
+        if (posting.getApplicationDeadline() == null || posting.isPastDeadline(clock.instant())) {
             recordDecision(posting, PostStatus.RETURNED, administrator, DEADLINE_PASSED);
         } else {
             recordDecision(posting, PostStatus.PUBLISHED, administrator, comment);
             posting.setDatePosted(LocalDate.now());
         }
-
         return jobPostingRepository.save(posting);
     }
 
@@ -205,12 +210,10 @@ public class JobPostingService {
 
     private JobPosting findPendingPosting(Long postingId) {
         JobPosting posting = findPosting(postingId);
-
         if (posting.getPostStatus() != PostStatus.PENDING_APPROVAL) {
             throw new PostingStateConflictException(
                     "This posting was already decided: it is " + posting.getPostStatus().getLabel());
         }
-
         return posting;
     }
 
@@ -219,7 +222,6 @@ public class JobPostingService {
         if (comment != null && comment.length() > MAX_COMMENT_LENGTH) {
             throw new InvalidPostingException("The comment is too long");
         }
-
         posting.setPostStatus(decision);
         posting.setApprovedBy(administrator);
         posting.setApprovedAt(LocalDateTime.now());
@@ -231,7 +233,6 @@ public class JobPostingService {
             throw new InvalidPostingException(
                     "A reason is required to return or reject a posting");
         }
-
         return comment;
     }
 
@@ -244,5 +245,9 @@ public class JobPostingService {
 
     private static boolean contains(String text, String needle) {
         return text != null && text.toLowerCase(Locale.ROOT).contains(needle);
+    }
+
+    private static String normalized(String text) {
+        return text == null || text.isBlank() ? null : text.trim().toLowerCase(Locale.ROOT);
     }
 }
