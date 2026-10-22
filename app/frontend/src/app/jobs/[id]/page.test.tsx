@@ -35,6 +35,8 @@ describe("PostingPage", () => {
     expect(screen.getByText("Waco Health Partners · On-site · Internship")).toBeInTheDocument();
     expect(screen.getByText("Clean clinic data")).toBeInTheDocument();
     expect(screen.getByText("SQL")).toBeInTheDocument();
+    expect(screen.getByText("Apply by").nextSibling).toHaveTextContent("Dec 15, 2999");
+    expect(screen.getByText("Openings").nextSibling).toHaveTextContent("1");
     expect(screen.getByRole("link", { name: "Apply" })).toHaveAttribute("href", "/jobs/3/apply");
   });
 
