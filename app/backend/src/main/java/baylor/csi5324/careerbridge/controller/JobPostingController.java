@@ -1,6 +1,8 @@
 package baylor.csi5324.careerbridge.controller;
 
 import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
+import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
+import baylor.csi5324.careerbridge.dto.PublicPosting;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.service.InvalidPostingException;
 import baylor.csi5324.careerbridge.service.JobPostingService;
@@ -22,14 +24,13 @@ public class JobPostingController {
     }
 
     @GetMapping
-    public List<JobPosting> searchPostings(
-            @RequestParam(required = false) String keyword) {
-        return jobPostingService.searchPostings(keyword);
+    public List<PublicPosting> searchPostings(PostingSearchCriteria criteria) {
+        return jobPostingService.searchPostings(criteria).stream().map(PublicPosting::of).toList();
     }
 
     @GetMapping("/{postingId}")
-    public JobPosting viewPosting(@PathVariable Long postingId) {
-        return jobPostingService.viewPosting(postingId);
+    public PublicPosting viewPosting(@PathVariable Long postingId) {
+        return PublicPosting.of(jobPostingService.viewPosting(postingId));
     }
 
     @PostMapping

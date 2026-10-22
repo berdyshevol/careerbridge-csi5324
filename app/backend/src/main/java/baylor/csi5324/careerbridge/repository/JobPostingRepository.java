@@ -13,7 +13,8 @@ import java.util.List;
 @Repository
 public interface JobPostingRepository extends JpaRepository<JobPosting, Long> {
 
-    List<JobPosting> findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDesc(
+    // Approval stamps datePosted with today, so postings approved the same day need the id to keep a fixed order
+    List<JobPosting> findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDescJobPostIdDesc(
             PostStatus postStatus, LocalDate today);
 
     List<JobPosting> findByPostStatusOrderByDatePostedAscJobPostIdAsc(
