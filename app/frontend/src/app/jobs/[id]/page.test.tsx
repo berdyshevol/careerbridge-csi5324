@@ -18,6 +18,7 @@ const posting: JobPosting = {
   numberOfOpenings: 1,
   datePosted: "2026-10-03",
   applicationDeadline: "2999-12-15",
+  closesAt: "2999-12-16T05:59:00Z",
   postStatus: "PUBLISHED",
   organization: { organizationId: 2, name: "Waco Health Partners" },
 };
@@ -48,7 +49,7 @@ describe("PostingPage", () => {
   });
 
   it("does not offer to apply once the deadline has passed (5a)", async () => {
-    await openPosting({ ...posting, applicationDeadline: "2020-01-01" });
+    await openPosting({ ...posting, applicationDeadline: "2020-01-01", closesAt: "2020-01-02T05:59:00Z" });
 
     expect(screen.getByRole("status")).toHaveTextContent("This posting is no longer accepting applications.");
     expect(screen.queryByRole("link", { name: "Apply" })).not.toBeInTheDocument();

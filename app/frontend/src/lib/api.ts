@@ -1,4 +1,3 @@
-
 import { STAGES, type DeskApplication } from "./sampleDesk";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -10,7 +9,6 @@ export const BACKEND_TIMEOUT_MS = 8000;
 export type Organization = {
   organizationId: number;
   name: string;
-  timeZone?: string;
 };
 
 export type JobPosting = {
@@ -24,6 +22,8 @@ export type JobPosting = {
   numberOfOpenings: number;
   datePosted: string;
   applicationDeadline: string;
+  // The public board sends the moment applications stop: 23:59 on the deadline in the organization's zone
+  closesAt?: string | null;
   postStatus: string;
   organization: Organization;
   reviewComment?: string | null;
@@ -131,13 +131,12 @@ export async function createPosting(posting: NewPosting): Promise<JobPosting> {
 }
 
 export async function submitApplication(
-    postingId: number,
-    resume: ResumeOnFile | null,
+  postingId: number,
+  resume: ResumeOnFile | null,
 ): Promise<SubmittedApplication> {
   const body = resume
-      ? { resumeFileName: resume.fileName, resumeFileType: resume.fileType, resumeFileSize: resume.fileSize }
-      : {};
-
+    ? { resumeFileName: resume.fileName, resumeFileType: resume.fileType, resumeFileSize: resume.fileSize }
+    : {};
   const response = await backendFetch(`/api/postings/${postingId}/apply`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -163,8 +162,7 @@ export async function viewApplications(): Promise<Applications> {
     throw new Error(`Backend answered ${response.status}`);
   }
   const applications: (Omit<DeskApplication, "applicationStatus"> & { applicationStatus: string })[] =
-      await response.json();
-
+    await response.json();
   const active: DeskApplication[] = [];
   for (const application of applications) {
     const stage = STAGES.find((name) => name.toUpperCase() === application.applicationStatus);
@@ -186,32 +184,7 @@ async function refusal(response: Response): Promise<string | null> {
 }
 
 export function isOpen(posting: JobPosting): boolean {
-  if (posting.postStatus !== "PUBLISHED" || !posting.applicationDeadline) {
-    return false;
-  }
-
-  // UC-13: The deadline is inclusive in the organization's local calendar.
-  // UTC is the default for organizations created before time zones were added.
-  const timeZone = posting.organization?.timeZone ?? "UTC";
-
-  const dateParts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-
-  const year = dateParts.find((part) => part.type === "year")?.value;
-  const month = dateParts.find((part) => part.type === "month")?.value;
-  const day = dateParts.find((part) => part.type === "day")?.value;
-
-  if (!year || !month || !day) {
-    return false;
-  }
-
-  const organizationToday = `${year}-${month}-${day}`;
-
-  return posting.applicationDeadline >= organizationToday;
+  return posting.postStatus === "PUBLISHED" && posting.closesAt != null && Date.now() < Date.parse(posting.closesAt);
 }
 
 export function formatDate(isoDate: string): string {

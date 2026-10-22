@@ -1,4 +1,3 @@
-
 import {
   BACKEND_TIMEOUT_MS,
   createPosting,
@@ -16,7 +15,6 @@ import {
 } from "./api";
 
 afterEach(() => {
-  vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -33,6 +31,7 @@ function posting(overrides: Partial<JobPosting>): JobPosting {
     numberOfOpenings: 1,
     datePosted: "2026-10-05",
     applicationDeadline: "2999-12-31",
+    closesAt: "3000-01-01T05:59:00Z",
     postStatus: "PUBLISHED",
     organization: { organizationId: 1, name: "Brazos Analytics" },
     ...overrides,
@@ -45,82 +44,27 @@ describe("isOpen", () => {
   });
 
   it("is false once the deadline has passed", () => {
-    expect(isOpen(posting({ applicationDeadline: "2000-01-01" }))).toBe(false);
+    expect(isOpen(posting({ closesAt: "2000-01-02T05:59:00Z" }))).toBe(false);
   });
 
   it("is false for a closed posting", () => {
     expect(isOpen(posting({ postStatus: "CLOSED" }))).toBe(false);
   });
 
-  it("keeps a Chicago posting open until its local deadline ends", () => {
+  // 23:59 on Oct 17 in Chicago is 04:59Z on Oct 18 (UC-13 variation 2a)
+  it("stays open until the closing minute the backend sends and closes at it (UC-13)", () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-10-18T02:00:00Z"));
+    const job = posting({ closesAt: "2026-10-18T04:59:00Z" });
 
-    const job = posting({
-      applicationDeadline: "2026-10-17",
-      organization: {
-        organizationId: 1,
-        name: "Brazos Analytics",
-        timeZone: "America/Chicago",
-      },
-    });
-
+    vi.setSystemTime(new Date("2026-10-18T04:58:59Z"));
     expect(isOpen(job)).toBe(true);
-  });
 
-  it("closes a Chicago posting after local midnight", () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-10-18T04:59:00Z"));
-
-    const job = posting({
-      applicationDeadline: "2026-10-17",
-      organization: {
-        organizationId: 1,
-        name: "Brazos Analytics",
-        timeZone: "America/Chicago",
-      },
-    });
-
-    expect(isOpen(job)).toBe(true);
-
-    vi.setSystemTime(new Date("2026-10-18T06:01:00Z"));
-
     expect(isOpen(job)).toBe(false);
   });
 
-  it("respects the Los Angeles deadline", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-10-18T06:30:00Z"));
-
-    const job = posting({
-      applicationDeadline: "2026-10-17",
-      organization: {
-        organizationId: 1,
-        name: "Brazos Analytics",
-        timeZone: "America/Los_Angeles",
-      },
-    });
-
-    expect(isOpen(job)).toBe(true);
-
-    vi.setSystemTime(new Date("2026-10-18T07:01:00Z"));
-
-    expect(isOpen(job)).toBe(false);
-  });
-
-  it("uses UTC when an organization has no time zone yet", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-10-18T00:01:00Z"));
-
-    expect(isOpen(posting({
-      applicationDeadline: "2026-10-17",
-    }))).toBe(false);
-  });
-
-  it("never allows applications to an expired unpublished posting", () => {
-    expect(isOpen(posting({
-      postStatus: "EXPIRED",
-    }))).toBe(false);
+  it("is false when the posting has no closing moment", () => {
+    expect(isOpen(posting({ closesAt: null }))).toBe(false);
   });
 });
 
@@ -191,7 +135,7 @@ describe("createPosting", () => {
 
   function answer(status: number, body: string, contentType: string) {
     const fetch = vi.fn().mockResolvedValue(
-        new Response(body, { status, headers: { "Content-Type": contentType } }),
+      new Response(body, { status, headers: { "Content-Type": contentType } }),
     );
     vi.stubGlobal("fetch", fetch);
     return fetch;
@@ -250,8 +194,8 @@ describe("submitApplication", () => {
 
     await expect(submitApplication(2, resume)).resolves.toEqual(answer);
     expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/postings/2/apply"),
-        expect.objectContaining({ method: "POST" }),
+      expect.stringContaining("/api/postings/2/apply"),
+      expect.objectContaining({ method: "POST" }),
     );
   });
 
@@ -265,13 +209,13 @@ describe("submitApplication", () => {
 
   it("turns a plain-text refusal into ApplicationRefused with the backend's reason", async () => {
     vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue({
-          ok: false,
-          status: 400,
-          headers: new Headers({ "Content-Type": "text/plain" }),
-          text: () => Promise.resolve("You already applied to this posting."),
-        }),
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        headers: new Headers({ "Content-Type": "text/plain" }),
+        text: () => Promise.resolve("You already applied to this posting."),
+      }),
     );
 
     const refused = await submitApplication(2, resume).catch((error) => error);
@@ -307,11 +251,11 @@ describe("viewApplications", () => {
 
   it("keeps an ended application out of the active ones but remembers its posting (A5)", async () => {
     vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue({
-          ok: true,
-          json: () => Promise.resolve([answer, { ...answer, applicationId: 4, postingId: 7, applicationStatus: "WITHDRAWN" }]),
-        }),
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([answer, { ...answer, applicationId: 4, postingId: 7, applicationStatus: "WITHDRAWN" }]),
+      }),
     );
 
     const applications = await viewApplications();
