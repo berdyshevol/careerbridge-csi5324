@@ -48,8 +48,8 @@ Tailwind with daisyUI.
    a block that appears there is the only way to draw that thing. `npm run lint` refuses
    hard-coded colors, inline styles and other component libraries; the `screen-review` skill in
    `.claude/skills/` walks a reviewer through the rest.
-7. **Sample data is explicit.** What the backend cannot answer yet (the logged-in applicant, their
-   applications, resume and offer) comes from `src/lib/sampleDesk.ts`, and each screen that uses it
+7. **Sample data is explicit.** What the backend cannot answer yet (the applicant's resume and
+   offer) comes from `src/lib/sampleDesk.ts`, and each screen that uses it
    says so. A use case replaces its piece of sample data with an API call when it is implemented.
 
 ## Consequences

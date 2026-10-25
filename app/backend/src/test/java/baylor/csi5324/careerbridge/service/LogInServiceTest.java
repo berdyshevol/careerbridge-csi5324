@@ -1,5 +1,6 @@
 package baylor.csi5324.careerbridge.service;
 
+import baylor.csi5324.careerbridge.config.SampleDataLoader;
 import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Role;
@@ -96,7 +97,7 @@ class LogInServiceTest {
     @Test
     void theDemoUsersFromTheEnvironmentCanLogIn() {
         assertEquals(Role.APPLICANT, Role.of(logInService.logIn(
-                ApplicationService.SAMPLE_APPLICANT_EMAIL, "Applicant-test-1").user()));
+                SampleDataLoader.SAMPLE_APPLICANT_EMAIL, "Applicant-test-1").user()));
         assertEquals(Role.APPLICANT, Role.of(logInService.logIn("sam.rivera@example.com", "Applicant-test-2").user()));
         assertEquals(Role.RECRUITER, Role.of(logInService.logIn("riley.chen@example.com", "Recruiter-test-1").user()));
         assertEquals(Role.ADMINISTRATOR, Role.of(logInService.logIn(

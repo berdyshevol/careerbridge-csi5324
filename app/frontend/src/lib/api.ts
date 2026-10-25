@@ -188,12 +188,20 @@ export async function viewPosting(postingId: string): Promise<JobPosting | null>
   return response.json();
 }
 
-export async function createPosting(posting: NewPosting): Promise<JobPosting> {
+// The calls below need a logged-in user in the right role (ADR-0010)
+function endedSession(response: Response) {
+  if (response.status === 401 || response.status === 403) {
+    throw new SessionEnded();
+  }
+}
+
+export async function createPosting(token: string, posting: NewPosting): Promise<JobPosting> {
   const response = await backendFetch("/api/postings", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { ...bearer(token), "Content-Type": "application/json" },
     body: JSON.stringify(posting),
   });
+  endedSession(response);
   const reason = await refusal(response);
   if (reason !== null) {
     throw new PostingRejected(reason);
@@ -204,7 +212,25 @@ export async function createPosting(posting: NewPosting): Promise<JobPosting> {
   return response.json();
 }
 
+// UC-11: a saved draft goes to the administrators' queue
+export async function submitJobPosting(token: string, postingId: number): Promise<JobPosting> {
+  const response = await backendFetch(`/api/postings/${postingId}/submit`, {
+    method: "POST",
+    headers: bearer(token),
+  });
+  endedSession(response);
+  const reason = await refusal(response, [400, 409]);
+  if (reason !== null) {
+    throw new PostingRejected(reason);
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
 export async function submitApplication(
+  token: string,
   postingId: number,
   resume: ResumeOnFile | null,
 ): Promise<SubmittedApplication> {
@@ -213,9 +239,10 @@ export async function submitApplication(
     : {};
   const response = await backendFetch(`/api/postings/${postingId}/apply`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { ...bearer(token), "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+  endedSession(response);
   const reason = await refusal(response);
   if (reason !== null) {
     throw new ApplicationRefused(reason);
@@ -230,8 +257,9 @@ export async function submitApplication(
 // every posting applied to come back next to the active applications.
 export type Applications = { active: DeskApplication[]; appliedPostingIds: number[] };
 
-export async function viewApplications(): Promise<Applications> {
-  const response = await backendFetch("/api/applicant/applications");
+export async function viewApplications(token: string): Promise<Applications> {
+  const response = await backendFetch("/api/applicant/applications", { headers: bearer(token) });
+  endedSession(response);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }
@@ -250,9 +278,7 @@ export async function viewApplications(): Promise<Applications> {
 // UC-12: the queue of postings waiting for an administrator
 export async function openPostingApprovalQueue(token: string): Promise<JobPosting[]> {
   const response = await backendFetch("/api/admin/postings/pending", { headers: bearer(token) });
-  if (response.status === 401 || response.status === 403) {
-    throw new SessionEnded();
-  }
+  endedSession(response);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }
@@ -272,9 +298,7 @@ export async function reviewPosting(
     headers: { ...bearer(token), "Content-Type": "application/json" },
     body: JSON.stringify({ comment: comment || null }),
   });
-  if (response.status === 401 || response.status === 403) {
-    throw new SessionEnded();
-  }
+  endedSession(response);
   if (response.status === 409) {
     throw new PostingDecided(await response.text());
   }
@@ -290,7 +314,7 @@ export async function reviewPosting(
 
 // Only a refusal in plain text is a reason for the user; any other body is the
 // server's own error report and must not reach the screen.
-async function refusal(response: Response, statuses = [400, 403]): Promise<string | null> {
+async function refusal(response: Response, statuses = [400]): Promise<string | null> {
   const refused = statuses.includes(response.status);
   if (refused && response.headers.get("Content-Type")?.startsWith("text/plain")) {
     return response.text();

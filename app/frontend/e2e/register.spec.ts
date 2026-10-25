@@ -17,7 +17,7 @@ test("given a visitor, when they register, then they are logged in on their prof
   await expect(page.getByText("Add your resume here to apply for jobs")).toBeVisible();
 
   await page.getByRole("button", { name: "Log out" }).click();
-  await expect(page.getByRole("link", { name: "Log in" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Log in", exact: true })).toBeVisible();
   await logIn(page, { email: email.toUpperCase(), password: "Sunrise-2026x" });
   await expect(page.getByLabel("Pat Kim, Applicant")).toBeVisible();
 });

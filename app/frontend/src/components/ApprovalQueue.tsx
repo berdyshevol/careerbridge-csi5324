@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   formatDate,
   openPostingApprovalQueue,
@@ -13,12 +12,13 @@ import {
   type JobPosting,
   type ReviewAction,
 } from "@/lib/api";
-import { clearSession, ROLE_LABELS, type Session } from "@/lib/session";
+import { ROLE_LABELS, type Session } from "@/lib/session";
+import { useEndSession } from "@/lib/useEndSession";
 
 const SESSION_ENDED = "Your session has ended. Log in again as an administrator.";
 
 export default function ApprovalQueue({ session }: { session: Session | null }) {
-  const router = useRouter();
+  const endSession = useEndSession();
   const [ended, setEnded] = useState(false);
   const [postings, setPostings] = useState<JobPosting[]>([]);
   const [connected, setConnected] = useState(false);
@@ -41,10 +41,9 @@ export default function ApprovalQueue({ session }: { session: Session | null }) 
 
   // The token expired or the account lost the role: back to logging in, header included
   function sessionEnded() {
-    clearSession();
+    endSession();
     setEnded(true);
     setError(SESSION_ENDED);
-    router.refresh();
   }
 
   async function loadPending() {

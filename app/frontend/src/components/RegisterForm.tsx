@@ -4,14 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AlreadyRegistered, register, RegistrationRefused } from "@/lib/api";
-import { saveSession } from "@/lib/session";
+import { safeNext, saveSession } from "@/lib/session";
 import FormField from "./FormField";
 import PageTitle from "./PageTitle";
 
 type Field = "fullName" | "email" | "password";
 
 // UC-02 Register as Applicant
-export default function RegisterForm() {
+export default function RegisterForm({ next }: { next?: string }) {
   const router = useRouter();
   const [values, setValues] = useState<Record<Field, string>>({ fullName: "", email: "", password: "" });
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<Field, string>>>({});
@@ -36,8 +36,8 @@ export default function RegisterForm() {
     setSubmitting(true);
     try {
       saveSession(await register(values.fullName, values.email, values.password));
-      // Step 5: logged in and invited to add a resume (UC-03)
-      router.replace("/profile");
+      // Step 5: logged in and invited to add a resume (UC-03), unless they came to apply (UC-01 6a)
+      router.replace(next ? safeNext(next, "APPLICANT") : "/profile");
       router.refresh();
     } catch (err) {
       if (err instanceof RegistrationRefused) {
@@ -79,7 +79,7 @@ export default function RegisterForm() {
           <div role="alert" className="alert alert-warning">
             <span>
               {alreadyRegistered}{" "}
-              <Link href="/login" className="link link-primary">
+              <Link href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"} className="link link-primary">
                 Go to log in
               </Link>
             </span>

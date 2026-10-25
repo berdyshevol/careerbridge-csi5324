@@ -36,6 +36,11 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/admin/**").hasRole(Role.ADMINISTRATOR.name())
+                        .requestMatchers(HttpMethod.POST, "/api/postings/*/apply").hasRole(Role.APPLICANT.name())
+                        .requestMatchers("/api/applicant/**").hasRole(Role.APPLICANT.name())
+                        // UC-11: creating and submitting a posting
+                        .requestMatchers(HttpMethod.POST, "/api/postings", "/api/postings/*/submit")
+                        .hasRole(Role.RECRUITER.name())
                         .requestMatchers("/api/auth/me").authenticated()
                         .anyRequest().permitAll())
                 .oauth2ResourceServer(server -> server

@@ -44,10 +44,10 @@ class ApplicationControllerTest {
     void answersWithTheNewApplicationAndTheActiveCount() throws Exception {
         Application application = new Application(new Applicant(), new JobPosting(),
                 new ResumeSnapshot("cv.pdf", "application/pdf", 2048L), LocalDate.now());
-        when(applicationService.submitApplication(eq(2L), any(ResumeSnapshot.class)))
+        when(applicationService.submitApplication(eq(2L), any(ResumeSnapshot.class), eq("jordan.lee@example.com")))
                 .thenReturn(new SubmittedApplication(application, 4));
 
-        mockMvc.perform(post("/api/postings/2/apply").contentType(MediaType.APPLICATION_JSON).content(RESUME_JSON))
+        mockMvc.perform(post("/api/postings/2/apply").principal(() -> "jordan.lee@example.com").contentType(MediaType.APPLICATION_JSON).content(RESUME_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.applicationStatus").value("APPLIED"))
                 .andExpect(jsonPath("$.activeApplicationCount").value(4));
@@ -55,33 +55,33 @@ class ApplicationControllerTest {
 
     @Test
     void passesNoResumeWhenNoneIsSent() throws Exception {
-        when(applicationService.submitApplication(eq(2L), isNull()))
+        when(applicationService.submitApplication(eq(2L), isNull(), eq("jordan.lee@example.com")))
                 .thenThrow(new ApplicationRefusedException("A resume is required to apply."));
 
-        mockMvc.perform(post("/api/postings/2/apply").contentType(MediaType.APPLICATION_JSON).content("{}"))
+        mockMvc.perform(post("/api/postings/2/apply").principal(() -> "jordan.lee@example.com").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("A resume is required to apply."));
     }
 
     @Test
     void anEmptyResumeCountsAsNoResume() throws Exception {
-        when(applicationService.submitApplication(eq(2L), isNull()))
+        when(applicationService.submitApplication(eq(2L), isNull(), eq("jordan.lee@example.com")))
                 .thenThrow(new ApplicationRefusedException("A resume is required to apply."));
         String empty = """
                 {"resumeFileName": " ", "resumeFileType": "application/pdf", "resumeFileSize": 0}
                 """;
 
-        mockMvc.perform(post("/api/postings/2/apply").contentType(MediaType.APPLICATION_JSON).content(empty))
+        mockMvc.perform(post("/api/postings/2/apply").principal(() -> "jordan.lee@example.com").contentType(MediaType.APPLICATION_JSON).content(empty))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("A resume is required to apply."));
     }
 
     @Test
     void aRefusalIsPlainTextForTheApplicant() throws Exception {
-        when(applicationService.submitApplication(eq(2L), any(ResumeSnapshot.class)))
+        when(applicationService.submitApplication(eq(2L), any(ResumeSnapshot.class), eq("jordan.lee@example.com")))
                 .thenThrow(new ApplicationRefusedException("This posting no longer accepts applications."));
 
-        mockMvc.perform(post("/api/postings/2/apply").contentType(MediaType.APPLICATION_JSON).content(RESUME_JSON))
+        mockMvc.perform(post("/api/postings/2/apply").principal(() -> "jordan.lee@example.com").contentType(MediaType.APPLICATION_JSON).content(RESUME_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
                 .andExpect(content().string("This posting no longer accepts applications."));

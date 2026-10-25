@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.Principal;
 import java.util.List;
 
 // CO-05.1, ended applications included: the apply screen needs them to say up
@@ -21,8 +22,8 @@ public class ApplicantApplicationsController {
     }
 
     @GetMapping
-    public List<ApplicationSummaryResponse> viewApplications() {
-        return applicationService.viewApplications().stream()
+    public List<ApplicationSummaryResponse> viewApplications(Principal applicant) {
+        return applicationService.viewApplications(applicant.getName()).stream()
                 .map(ApplicationSummaryResponse::from)
                 .toList();
     }

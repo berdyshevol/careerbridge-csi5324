@@ -1,5 +1,6 @@
 package baylor.csi5324.careerbridge.service;
 
+import baylor.csi5324.careerbridge.config.SampleDataLoader;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
@@ -27,6 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Transactional
 class ApplicationServiceTest {
 
+    private static final String JORDAN = SampleDataLoader.SAMPLE_APPLICANT_EMAIL;
+
     private static final ResumeSnapshot RESUME = new ResumeSnapshot("cv.pdf", "application/pdf", 2048L);
 
     @Autowired
@@ -52,14 +55,34 @@ class ApplicationServiceTest {
     void startWithAnEmptyDesk() {
         applicationRepository.deleteAll();
         organization = organizationRepository.save(new Organization("Test Organization"));
-        applicant = applicantRepository.findByEmail(ApplicationService.SAMPLE_APPLICANT_EMAIL).orElseThrow();
+        applicant = applicantRepository.findByEmailIgnoreCase(JORDAN).orElseThrow();
+    }
+
+    @Test
+    void actsForTheApplicantWhoIsLoggedInAndNobodyElse() {
+        JobPosting posting = save("Platform Engineer", PostStatus.PUBLISHED, today.plusDays(14));
+        Applicant sam = applicantRepository.findByEmailIgnoreCase("sam.rivera@example.com").orElseThrow();
+        long jordansBefore = applicationService.viewApplications(JORDAN).size();
+
+        applicationService.submitApplication(posting.getJobPostId(), RESUME, "SAM.RIVERA@example.com");
+
+        assertEquals(jordansBefore, applicationService.viewApplications(JORDAN).size());
+        assertEquals(sam.getUserId(), applicationService.viewApplications("sam.rivera@example.com").get(0)
+                .getApplicant().getUserId());
+        // Jordan can still apply to it: the rule is one application per applicant and posting (A5)
+        applicationService.submitApplication(posting.getJobPostId(), RESUME, JORDAN);
+    }
+
+    @Test
+    void anAccountThatNoLongerExistsEndsTheSession() {
+        assertThrows(AccountGoneException.class, () -> applicationService.viewApplications("gone@example.com"));
     }
 
     @Test
     void createsTheApplicationAtAppliedWithACopyOfTheResume() {
         JobPosting posting = save("Software Engineer", PostStatus.PUBLISHED, today.plusDays(14));
 
-        SubmittedApplication submitted = applicationService.submitApplication(posting.getJobPostId(), RESUME);
+        SubmittedApplication submitted = applicationService.submitApplication(posting.getJobPostId(), RESUME, JORDAN);
 
         Application application = applicationRepository.findById(
                 submitted.application().getApplicationId()).orElseThrow();
@@ -81,7 +104,7 @@ class ApplicationServiceTest {
 
         for (JobPosting posting : new JobPosting[] {closed, expired, draft, noDeadline}) {
             ApplicationRefusedException refused = assertThrows(ApplicationRefusedException.class,
-                    () -> applicationService.submitApplication(posting.getJobPostId(), RESUME));
+                    () -> applicationService.submitApplication(posting.getJobPostId(), RESUME, JORDAN));
             assertEquals("This posting no longer accepts applications.", refused.getMessage());
         }
         assertEquals(0, applicationRepository.count());
@@ -92,7 +115,7 @@ class ApplicationServiceTest {
         JobPosting posting = save("Software Engineer", PostStatus.PUBLISHED, today.plusDays(14));
 
         ApplicationRefusedException refused = assertThrows(ApplicationRefusedException.class,
-                () -> applicationService.submitApplication(posting.getJobPostId(), null));
+                () -> applicationService.submitApplication(posting.getJobPostId(), null, JORDAN));
 
         assertTrue(refused.getMessage().startsWith("A resume is required"));
         assertEquals(0, applicationRepository.count());
@@ -101,10 +124,10 @@ class ApplicationServiceTest {
     @Test
     void refusesASecondApplicationToTheSamePosting() {
         JobPosting posting = save("DevOps Specialist", PostStatus.PUBLISHED, today.plusDays(14));
-        applicationService.submitApplication(posting.getJobPostId(), RESUME);
+        applicationService.submitApplication(posting.getJobPostId(), RESUME, JORDAN);
 
         assertThrows(ApplicationRefusedException.class,
-                () -> applicationService.submitApplication(posting.getJobPostId(), RESUME));
+                () -> applicationService.submitApplication(posting.getJobPostId(), RESUME, JORDAN));
         assertEquals(1, applicationRepository.count());
     }
 
@@ -112,12 +135,12 @@ class ApplicationServiceTest {
     void refusesASixthActiveApplication() {
         for (int i = 1; i <= ApplicationService.APPLICATION_LIMIT; i++) {
             JobPosting posting = save("Position " + i, PostStatus.PUBLISHED, today.plusDays(10));
-            applicationService.submitApplication(posting.getJobPostId(), RESUME);
+            applicationService.submitApplication(posting.getJobPostId(), RESUME, JORDAN);
         }
         JobPosting sixth = save("Position 6", PostStatus.PUBLISHED, today.plusDays(10));
 
         assertThrows(ApplicationRefusedException.class,
-                () -> applicationService.submitApplication(sixth.getJobPostId(), RESUME));
+                () -> applicationService.submitApplication(sixth.getJobPostId(), RESUME, JORDAN));
         assertEquals(ApplicationService.APPLICATION_LIMIT, applicationRepository.count());
     }
 
@@ -125,13 +148,13 @@ class ApplicationServiceTest {
     void anEndedApplicationFreesItsSlot() {
         for (int i = 1; i <= ApplicationService.APPLICATION_LIMIT; i++) {
             JobPosting posting = save("Position " + i, PostStatus.PUBLISHED, today.plusDays(10));
-            applicationService.submitApplication(posting.getJobPostId(), RESUME);
+            applicationService.submitApplication(posting.getJobPostId(), RESUME, JORDAN);
         }
         Application ended = applicationRepository.findAll().get(0);
         ended.setApplicationStatus(ApplicationStatus.REJECTED);
         JobPosting sixth = save("Position 6", PostStatus.PUBLISHED, today.plusDays(10));
 
-        SubmittedApplication submitted = applicationService.submitApplication(sixth.getJobPostId(), RESUME);
+        SubmittedApplication submitted = applicationService.submitApplication(sixth.getJobPostId(), RESUME, JORDAN);
 
         assertEquals(ApplicationService.APPLICATION_LIMIT, submitted.activeApplicationCount());
     }
@@ -140,13 +163,13 @@ class ApplicationServiceTest {
     void listsEndedApplicationsTooSinceTheyStillBlockTheirPosting() {
         JobPosting kept = save("Kept", PostStatus.PUBLISHED, today.plusDays(10));
         JobPosting ended = save("Ended", PostStatus.PUBLISHED, today.plusDays(10));
-        applicationService.submitApplication(kept.getJobPostId(), RESUME);
-        applicationService.submitApplication(ended.getJobPostId(), RESUME);
+        applicationService.submitApplication(kept.getJobPostId(), RESUME, JORDAN);
+        applicationService.submitApplication(ended.getJobPostId(), RESUME, JORDAN);
         applicationRepository.findAll().stream()
                 .filter(a -> a.getJobPosting().getJobPostId().equals(ended.getJobPostId()))
                 .findFirst().orElseThrow().setApplicationStatus(ApplicationStatus.WITHDRAWN);
 
-        var applications = applicationService.viewApplications();
+        var applications = applicationService.viewApplications(JORDAN);
 
         assertEquals(2, applications.size());
         assertTrue(applications.stream().anyMatch(a -> a.getApplicationStatus() == ApplicationStatus.WITHDRAWN));
@@ -154,7 +177,7 @@ class ApplicationServiceTest {
 
     @Test
     void listsNothingWhenTheApplicantHasNotApplied() {
-        assertTrue(applicationService.viewApplications().isEmpty());
+        assertTrue(applicationService.viewApplications(JORDAN).isEmpty());
     }
 
     private JobPosting save(String title, PostStatus status, LocalDate deadline) {

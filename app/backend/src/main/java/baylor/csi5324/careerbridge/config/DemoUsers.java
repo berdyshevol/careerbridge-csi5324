@@ -7,7 +7,6 @@ import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.model.Role;
 import baylor.csi5324.careerbridge.model.User;
 import baylor.csi5324.careerbridge.repository.UserRepository;
-import baylor.csi5324.careerbridge.service.ApplicationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,7 +52,7 @@ public class DemoUsers implements CommandLineRunner {
         // The Docker image switches this off: an image that lost DATABASE_URL must not get known passwords
         boolean inMemory = localPasswordsAllowed && databaseUrl.startsWith("jdbc:h2:mem:");
         this.demoUsers = List.of(
-                new DemoUser("Jordan", "Lee", ApplicationService.SAMPLE_APPLICANT_EMAIL,
+                new DemoUser("Jordan", "Lee", SampleDataLoader.SAMPLE_APPLICANT_EMAIL,
                         Applicant::new, orLocal(applicantPassword, "Applicant-local-1", inMemory)),
                 new DemoUser("Sam", "Rivera", "sam.rivera@example.com", Applicant::new,
                         orLocal(secondApplicantPassword, "Applicant-local-2", inMemory)),

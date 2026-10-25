@@ -1,7 +1,6 @@
 // SAMPLE DATA for the applicant desk. The backend cannot answer these yet:
-// the offer comes with UC-07, the resume with UC-03 and the logged-in
-// applicant with Log In. Replace each piece with an API call in src/lib/api.ts
-// when its use case is implemented. The screens read the applications from
+// the offer comes with UC-07 and the resume with UC-03. Replace each piece with
+// an API call in src/lib/api.ts when its use case is implemented. The screens read the applications from
 // viewApplications; `applications` below only fills /styleguide.
 
 import type { ResumeOnFile } from "./api";
@@ -10,13 +9,6 @@ export const STAGES = ["Applied", "Screening", "Interview", "Offer"] as const;
 export type Stage = (typeof STAGES)[number];
 
 export const APPLICATION_LIMIT = 5;
-
-export const applicant = {
-  firstName: "Jordan",
-  lastName: "Lee",
-  email: "jordan.lee@example.com",
-  phone: "(254) 555-0142",
-};
 
 export type DeskApplication = {
   applicationId: number;
