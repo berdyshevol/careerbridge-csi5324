@@ -96,7 +96,7 @@ class ApplicationServiceTest {
 
         ApplicationStart start = applicationService.startApplication(posting.getJobPostId(), null);
 
-        assertEquals(ApplicationStart.Refusal.NO_RESUME, start.refusal());
+        assertEquals(ApplicationRefusal.NO_RESUME, start.refusal());
         assertNull(start.resume());
         assertEquals("Software Engineer", start.posting().getTitle());
     }
@@ -111,7 +111,7 @@ class ApplicationServiceTest {
 
         ApplicationStart start = applicationService.startApplication(sixth.getJobPostId(), RESUME);
 
-        assertEquals(ApplicationStart.Refusal.LIMIT_REACHED, start.refusal());
+        assertEquals(ApplicationRefusal.LIMIT_REACHED, start.refusal());
         assertEquals(ApplicationService.APPLICATION_LIMIT, start.activeApplicationCount());
         assertEquals(ApplicationService.APPLICATION_LIMIT, start.activeApplications().size());
     }
@@ -148,6 +148,7 @@ class ApplicationServiceTest {
             ApplicationRefusedException refused = assertThrows(ApplicationRefusedException.class,
                     () -> applicationService.submitApplication(posting.getJobPostId(), RESUME));
             assertEquals("This posting no longer accepts applications.", refused.getMessage());
+            assertEquals(ApplicationRefusal.POSTING_CLOSED, refused.getReason());
         }
         assertEquals(0, applicationRepository.count());
     }
@@ -160,6 +161,7 @@ class ApplicationServiceTest {
                 () -> applicationService.submitApplication(posting.getJobPostId(), null));
 
         assertTrue(refused.getMessage().startsWith("A resume is required"));
+        assertEquals(ApplicationRefusal.NO_RESUME, refused.getReason());
         assertEquals(0, applicationRepository.count());
     }
 
@@ -168,8 +170,9 @@ class ApplicationServiceTest {
         JobPosting posting = save("DevOps Specialist", PostStatus.PUBLISHED, today.plusDays(14));
         applicationService.submitApplication(posting.getJobPostId(), RESUME);
 
-        assertThrows(ApplicationRefusedException.class,
+        ApplicationRefusedException refused = assertThrows(ApplicationRefusedException.class,
                 () -> applicationService.submitApplication(posting.getJobPostId(), RESUME));
+        assertEquals(ApplicationRefusal.ALREADY_APPLIED, refused.getReason());
         assertEquals(1, applicationRepository.count());
     }
 
@@ -181,8 +184,9 @@ class ApplicationServiceTest {
         }
         JobPosting sixth = save("Position 6", PostStatus.PUBLISHED, today.plusDays(10));
 
-        assertThrows(ApplicationRefusedException.class,
+        ApplicationRefusedException refused = assertThrows(ApplicationRefusedException.class,
                 () -> applicationService.submitApplication(sixth.getJobPostId(), RESUME));
+        assertEquals(ApplicationRefusal.LIMIT_REACHED, refused.getReason());
         assertEquals(ApplicationService.APPLICATION_LIMIT, applicationRepository.count());
     }
 
