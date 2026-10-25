@@ -17,14 +17,14 @@ npm install
 npm run dev                   # frontend on http://localhost:3000
 ```
 
-Open <http://localhost:3000>. `./mvnw test` in `app/backend` runs the backend tests. The H2 console is at <http://localhost:8080/h2-console> (JDBC URL `jdbc:h2:mem:careerbridge`, user `sa`, no password). Posting approvals are at <http://localhost:3000/admin/postings>; the local administrator is `admin` / `admin` ([ADR-0007](../spec/adr/0007-administrator-signs-in-with-http-basic.md)).
+Open <http://localhost:3000>. The backend works on the shared Neon `dev` database when `app/backend/.env` exists (copy `.env.example` and ask Oleg for the values), and on an in-memory H2 database when it does not ([ADR-0009](../spec/adr/0009-postgresql-on-neon.md)); the H2 console is then at <http://localhost:8080/h2-console> (JDBC URL `jdbc:h2:mem:careerbridge`, user `sa`, no password). `./mvnw test` in `app/backend` runs the backend tests on PostgreSQL in Docker, so Docker must be running. Posting approvals are at <http://localhost:3000/admin/postings>; the local administrator is `admin` / `admin` ([ADR-0007](../spec/adr/0007-administrator-signs-in-with-http-basic.md)).
 
 ## Deployment
 
 Deploying is a button: on GitHub open **Actions → Deploy → Run workflow** (branch `main`). A failed Render build turns the run red. Why a deploy is started by hand: [ADR-0003](../spec/adr/0003-pull-requests-and-manual-deploy.md).
 
 - **Frontend:** <https://careerbridge-csi5324.vercel.app> (Vercel, project `careerbridge-csi5324`, root `app/frontend`).
-- **Backend:** <https://careerbridge-api-et18.onrender.com/api/postings> (Render, service `careerbridge-api`, root `app/backend`, built from the `Dockerfile` there).
+- **Backend:** <https://careerbridge-api-et18.onrender.com/api/postings> (Render, service `careerbridge-api`, root `app/backend`, built from the `Dockerfile` there). Its database is the Neon branch `main`, set in Render's environment as `DATABASE_URL`, `DATABASE_USERNAME` and `DATABASE_PASSWORD`.
 
 The frontend finds the backend through `NEXT_PUBLIC_API_URL`; the backend allows the frontend addresses listed in `careerbridge.frontend-origins` (`application.properties`). Render's free plan sleeps when idle; the `Keep backend awake` workflow pings the backend every 10 minutes so visitors do not wait for it to wake up.
 
