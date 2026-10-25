@@ -33,6 +33,7 @@ const desk: Desk = {
     },
   ],
   appliedPostingIds: [3, 7], // 7 was withdrawn
+  refusal: null,
   resume: { fileName: "Jordan_Lee_Resume.pdf", fileType: "application/pdf", fileSize: 184_320, uploadDate: "2026-09-30" },
 };
 
@@ -82,7 +83,7 @@ describe("ApplyForm", () => {
     await user.click(screen.getByRole("button", { name: "Submit application" }));
 
     expect(await screen.findByRole("heading", { level: 1, name: "Application submitted" })).toBeInTheDocument();
-    expect(fetch.mock.calls[0][0]).toContain("/api/postings/2/apply");
+    expect(fetch.mock.calls[0][0]).toContain("/api/postings/2/application");
     expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
       resumeFileName: "Jordan_Lee_Resume.pdf",
       resumeFileType: "application/pdf",
@@ -110,6 +111,22 @@ describe("ApplyForm", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Saving is switched off");
     expect(screen.queryByRole("heading", { name: "Application submitted" })).not.toBeInTheDocument();
+  });
+
+  it("shows the reason the backend names when the submit is refused (extension 4b)", async () => {
+    backendAnswers({
+      ok: false,
+      status: 409,
+      headers: new Headers({ "Content-Type": "application/json" }),
+      json: () => Promise.resolve({ reason: "LIMIT_REACHED", message: "You have 5 active applications." }),
+    });
+    const user = userEvent.setup();
+    render(<ApplyForm posting={posting} desk={desk} />);
+
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Submit application" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("You have 5 active applications.");
   });
 
   it("shows the refusal when the posting closes while the form is open (UC-13)", async () => {
@@ -145,7 +162,7 @@ describe("ApplyForm", () => {
   });
 
   it("asks for a resume first when none is on file (FR-UC04.6)", () => {
-    render(<ApplyForm posting={posting} desk={{ ...desk, resume: null }} />);
+    render(<ApplyForm posting={posting} desk={{ ...desk, resume: null, refusal: "NO_RESUME" }} />);
 
     expect(screen.getByRole("status")).toHaveTextContent("A resume is required");
     expect(screen.getByRole("link", { name: "Upload a resume" })).toHaveAttribute("href", "/profile");
@@ -160,6 +177,7 @@ describe("ApplyForm", () => {
         postingId,
         title: `Posting ${postingId}`,
       })),
+      refusal: "LIMIT_REACHED",
     };
     render(<ApplyForm posting={posting} desk={full} />);
 
