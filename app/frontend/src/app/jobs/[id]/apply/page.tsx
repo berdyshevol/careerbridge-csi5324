@@ -11,12 +11,8 @@ export default async function ApplyPage({ params }: { params: Promise<{ id: stri
 
   let posting: JobPosting | null;
   let applications: Applications;
-  let start: ApplicationStart;
   try {
     [posting, applications] = await Promise.all([viewPosting(id), viewApplications()]);
-    if (posting) {
-      start = await startApplication(posting.jobPostId, resume);
-    }
   } catch {
     return <BackendDown />;
   }
@@ -24,5 +20,12 @@ export default async function ApplyPage({ params }: { params: Promise<{ id: stri
     notFound();
   }
 
-  return <ApplyForm posting={posting} desk={{ applications: applications.active, appliedPostingIds: applications.appliedPostingIds, resume, refusal: start!.refusal?.reason ?? null }} />;
+  let start: ApplicationStart;
+  try {
+    start = await startApplication(posting.jobPostId, resume);
+  } catch {
+    return <BackendDown />;
+  }
+
+  return <ApplyForm posting={posting} desk={{ applications: applications.active, appliedPostingIds: applications.appliedPostingIds, resume, refusal: start.refusal?.reason ?? null }} />;
 }

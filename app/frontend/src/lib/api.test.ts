@@ -263,7 +263,8 @@ describe("submitApplication", () => {
     expect(refused).toBeInstanceOf(ApplicationRefused);
     expect(refused.message).toBe("You already applied to this posting.");
   });
-  it("turns a 409 with a reason into ApplicationRefused that carries the reason", async () => {
+
+  it("turns a 409 into ApplicationRefused with the backend's reason", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -277,7 +278,6 @@ describe("submitApplication", () => {
     const refused = await submitApplication(2, resume).catch((error) => error);
     expect(refused).toBeInstanceOf(ApplicationRefused);
     expect(refused.message).toBe("You have 5 active applications.");
-    expect(refused.reason).toBe("LIMIT_REACHED");
   });
 });
 

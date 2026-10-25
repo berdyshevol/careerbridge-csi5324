@@ -57,11 +57,7 @@ export type SubmittedApplication = {
 export class PostingRejected extends Error {}
 
 // Its message is the backend's reason, written for the applicant
-export class ApplicationRefused extends Error {
-  constructor(message: string, readonly reason?: string) {
-    super(message);
-  }
-}
+export class ApplicationRefused extends Error {}
 
 export type StartRefusalReason = "NO_RESUME" | "LIMIT_REACHED";
 
@@ -171,8 +167,7 @@ export async function submitApplication(
     body: JSON.stringify(resumeParams(resume)),
   });
   if (response.status === 409) {
-    const { reason, message } = await response.json();
-    throw new ApplicationRefused(message, reason);
+    throw new ApplicationRefused((await response.json()).message);
   }
   const text = await refusal(response);
   if (text !== null) {
