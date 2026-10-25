@@ -142,7 +142,11 @@ Figure 8 shows SSD-04, the system sequence diagram for the main success scenario
 
 **Figure 8: SSD-04: UC-04 Apply for Job**
 
-startApplication(postingId) only presents the application summary and changes nothing, so it has no contract.
+startApplication(postingId, resume) only presents the application summary and changes nothing, so it has no contract. The _resume_ parameter is a STAND-IN until UC-03 keeps the Applicant's Resume in the backend; then the system reads it itself and the parameter goes away.
+
+startApplication returns an application start: the posting, the Applicant, the Resume, the Applicant's active Applications, and an optional refusal. A refusal is returned as data, not thrown, so the screen can show it beside the summary and the active list. There are two refusals: no Resume (extension 2a) and the limit of 5 active Applications (extension 2b).
+
+startApplication does not check that the posting is open or that the Applicant has not already applied to it. Those checks happen only at submitApplication (extensions 4a and 4c).
 
 #### CO-04.1: submitApplication
 
