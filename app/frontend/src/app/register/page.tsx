@@ -1,5 +1,5 @@
-import Placeholder from "@/components/Placeholder";
+import RegisterForm from "@/components/RegisterForm";
 
 export default function RegisterPage() {
-  return <Placeholder useCase="UC-02 Register as Applicant" owner="Oleg" />;
+  return <RegisterForm />;
 }

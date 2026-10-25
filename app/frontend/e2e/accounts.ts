@@ -8,7 +8,7 @@ export const ACCOUNTS = {
   administrator: { email: "admin@careerbridge.example", password: "Administrator-test-1", name: "Avery Morgan" },
 };
 
-export async function logIn(page: Page, account: (typeof ACCOUNTS)[keyof typeof ACCOUNTS], next?: string) {
+export async function logIn(page: Page, account: { email: string; password: string }, next?: string) {
   await page.goto(next ? `/login?next=${encodeURIComponent(next)}` : "/login");
   await page.getByLabel("Email").fill(account.email);
   await page.getByLabel("Password").fill(account.password);

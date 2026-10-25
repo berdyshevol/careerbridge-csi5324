@@ -71,8 +71,8 @@ export default function ProfilePage() {
       </div>
 
       <div className="alert border border-base-300 bg-secondary text-secondary-content">
-        This page is a frontend preview using sample applicant data.
-        Changes are not saved to the server yet.
+        Add your resume here to apply for jobs (UC-02 step 5). This page is still a preview of
+        UC-03: it shows sample applicant data, and changes are not saved to the server yet.
       </div>
 
       <section className="rounded-2xl border border-base-300 bg-base-100 p-6">

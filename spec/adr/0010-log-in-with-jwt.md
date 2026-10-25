@@ -37,3 +37,4 @@ browsers increasingly block. The feedback also asks for no external services.
   needs the variable set.
 - A token is readable by the page's scripts, so the frontend must not render untrusted HTML.
 - Register (UC-02) and the other use cases that create accounts reuse the same hash and token.
+- Anyone can create applicant accounts, on the public site too: there is no rate limit or CAPTCHA.

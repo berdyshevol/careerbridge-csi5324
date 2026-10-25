@@ -129,6 +129,46 @@ export async function logIn(email: string, password: string): Promise<Session> {
   return response.json();
 }
 
+// UC-02 extension 4a: the backend's reason for each field it refused, keyed by field
+export class RegistrationRefused extends Error {
+  constructor(readonly fieldErrors: Partial<Record<"fullName" | "email" | "password", string>>) {
+    super("The registration was refused");
+  }
+}
+
+// UC-02 extension 4b; its message suggests logging in instead
+export class AlreadyRegistered extends Error {}
+
+// UC-02, CO-02.1: the new Applicant is logged in at once, so the answer is a session
+export async function register(fullName: string, email: string, password: string): Promise<Session> {
+  const response = await backendFetch("/api/applicants", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fullName, email, password }),
+  });
+  if (response.status === 400 && response.headers.get("Content-Type")?.startsWith("application/json")) {
+    // Spring's own 400 is JSON too: only the form's fields are reasons for the visitor
+    const body: Record<string, unknown> = await response.json();
+    const fieldErrors = Object.fromEntries(
+      (["fullName", "email", "password"] as const).flatMap((name) =>
+        typeof body[name] === "string" ? [[name, body[name] as string]] : [],
+      ),
+    );
+    if (Object.keys(fieldErrors).length > 0) {
+      throw new RegistrationRefused(fieldErrors);
+    }
+    throw new Error("Backend answered 400");
+  }
+  const reason = await refusal(response, [409]);
+  if (reason !== null) {
+    throw new AlreadyRegistered(reason);
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
 export async function searchPostings(criteria: PostingSearchCriteria = {}): Promise<JobPosting[]> {
   const response = await backendFetch(`/api/postings${searchQuery(criteria)}`);
   if (!response.ok) {
