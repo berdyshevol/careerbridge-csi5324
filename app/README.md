@@ -17,7 +17,18 @@ npm install
 npm run dev                   # frontend on http://localhost:3000
 ```
 
-Open <http://localhost:3000>. The backend works on the shared Neon `dev` database when `app/backend/.env` exists (copy `.env.example` and ask Oleg for the values), and on an in-memory H2 database when it does not ([ADR-0009](../spec/adr/0009-postgresql-on-neon.md)); the H2 console is then at <http://localhost:8080/h2-console> (JDBC URL `jdbc:h2:mem:careerbridge`, user `sa`, no password). `./mvnw test` in `app/backend` runs the backend tests on PostgreSQL in Docker, so Docker must be running. Posting approvals are at <http://localhost:3000/admin/postings>; the local administrator is `admin` / `admin` ([ADR-0007](../spec/adr/0007-administrator-signs-in-with-http-basic.md)).
+Open <http://localhost:3000>. The backend works on the shared Neon `dev` database when `app/backend/.env` exists (copy `.env.example` and ask Oleg for the values), and on an in-memory H2 database when it does not ([ADR-0009](../spec/adr/0009-postgresql-on-neon.md)); the H2 console is then at <http://localhost:8080/h2-console> (JDBC URL `jdbc:h2:mem:careerbridge`, user `sa`, no password). `./mvnw test` in `app/backend` runs the backend tests on PostgreSQL in Docker, so Docker must be running.
+
+Every database has one demo account per role ([ADR-0010](../spec/adr/0010-log-in-with-jwt.md)). On the in-memory H2 database their passwords are the ones below; on Neon they come from `DEMO_*_PASSWORD` in `.env` (Oleg hands them out).
+
+| Role | Email | Password on H2 |
+| --- | --- | --- |
+| Applicant with three applications | `jordan.lee@example.com` | `Applicant-local-1` |
+| Applicant with none | `sam.rivera@example.com` | `Applicant-local-2` |
+| Recruiter | `riley.chen@example.com` | `Recruiter-local-1` |
+| Administrator | `admin@careerbridge.example` | `Administrator-local-1` |
+
+Posting approvals are at <http://localhost:3000/admin/postings>; the local administrator is `admin` / `admin` ([ADR-0007](../spec/adr/0007-administrator-signs-in-with-http-basic.md)).
 
 ## Deployment
 

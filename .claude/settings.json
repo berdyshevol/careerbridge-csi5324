@@ -1,3 +1,10 @@
 {
-  "enabledMcpjsonServers": ["atlassian"]
+  "enabledMcpjsonServers": [
+    "atlassian"
+  ],
+  "permissions": {
+    "allow": [
+      "ClaudeInChromeDomain(dashboard.render.com)"
+    ]
+  }
 }
