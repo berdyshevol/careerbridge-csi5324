@@ -59,6 +59,17 @@ export class PostingRejected extends Error {}
 // Its message is the backend's reason, written for the applicant
 export class ApplicationRefused extends Error {}
 
+export type StartRefusalReason = "NO_RESUME" | "LIMIT_REACHED";
+
+// GET /application: the summary the screen opens with. Closed and already-applied
+// postings are not flagged here; the backend decides those on submit (UC-04 4a, 4c).
+export type ApplicationStart = {
+  posting: { postingId: number; title: string; organizationName: string };
+  activeApplicationCount: number;
+  applicationLimit: number;
+  refusal: { reason: StartRefusalReason; message: string } | null;
+};
+
 function backendFetch(path: string, init?: Omit<RequestInit, "signal">): Promise<Response> {
   return fetch(`${API_URL}${path}`, {
     cache: "no-store",
@@ -130,21 +141,37 @@ export async function createPosting(posting: NewPosting): Promise<JobPosting> {
   return response.json();
 }
 
+// STAND-IN: the resume rides in the query until UC-03 keeps it in the backend
+function resumeParams(resume: ResumeOnFile | null): Record<string, string | number> {
+  return resume
+    ? { resumeFileName: resume.fileName, resumeFileType: resume.fileType, resumeFileSize: resume.fileSize }
+    : {};
+}
+
+export async function startApplication(postingId: number, resume: ResumeOnFile | null): Promise<ApplicationStart> {
+  const query = new URLSearchParams(Object.entries(resumeParams(resume)).map(([key, value]) => [key, String(value)])).toString();
+  const response = await backendFetch(`/api/postings/${postingId}/application${query ? `?${query}` : ""}`);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
 export async function submitApplication(
   postingId: number,
   resume: ResumeOnFile | null,
 ): Promise<SubmittedApplication> {
-  const body = resume
-    ? { resumeFileName: resume.fileName, resumeFileType: resume.fileType, resumeFileSize: resume.fileSize }
-    : {};
-  const response = await backendFetch(`/api/postings/${postingId}/apply`, {
+  const response = await backendFetch(`/api/postings/${postingId}/application`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(resumeParams(resume)),
   });
-  const reason = await refusal(response);
-  if (reason !== null) {
-    throw new ApplicationRefused(reason);
+  if (response.status === 409) {
+    throw new ApplicationRefused((await response.json()).message);
+  }
+  const text = await refusal(response);
+  if (text !== null) {
+    throw new ApplicationRefused(text);
   }
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);

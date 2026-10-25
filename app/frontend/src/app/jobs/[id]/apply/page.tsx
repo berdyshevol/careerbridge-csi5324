@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import ApplyForm from "@/components/ApplyForm";
 import BackendDown from "@/components/BackendDown";
-import { viewApplications, viewPosting, type Applications, type JobPosting } from "@/lib/api";
+import { startApplication, viewApplications, viewPosting, type ApplicationStart, type Applications, type JobPosting } from "@/lib/api";
 import { resume } from "@/lib/sampleDesk";
 
 // The applications come from the backend; the resume stays sample data
@@ -20,5 +20,12 @@ export default async function ApplyPage({ params }: { params: Promise<{ id: stri
     notFound();
   }
 
-  return <ApplyForm posting={posting} desk={{ applications: applications.active, appliedPostingIds: applications.appliedPostingIds, resume }} />;
+  let start: ApplicationStart;
+  try {
+    start = await startApplication(posting.jobPostId, resume);
+  } catch {
+    return <BackendDown />;
+  }
+
+  return <ApplyForm posting={posting} desk={{ applications: applications.active, appliedPostingIds: applications.appliedPostingIds, resume, refusal: start.refusal?.reason ?? null }} />;
 }

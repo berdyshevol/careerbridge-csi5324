@@ -36,6 +36,7 @@ function application(postingId: number): DeskApplication {
 const desk: Desk = {
   applications: [application(1), application(3), application(4)],
   appliedPostingIds: [1, 3, 4, 7], // 7 was withdrawn
+  refusal: null,
   resume: { fileName: "Jordan_Lee_Resume.pdf", fileType: "application/pdf", fileSize: 184_320, uploadDate: "2026-09-30" },
 };
 
@@ -49,7 +50,7 @@ describe("checkApplication (FR-UC04.3, FR-UC04.6, FR-UC04.7)", () => {
   });
 
   it("requires a resume on file (extension 2a)", () => {
-    expect(checkApplication(posting(), { ...desk, resume: null }).kind).toBe("no-resume");
+    expect(checkApplication(posting(), { ...desk, refusal: "NO_RESUME" }).kind).toBe("no-resume");
   });
 
   it("refuses a second application to the same posting, whatever its stage (extension 4c)", () => {
@@ -65,7 +66,7 @@ describe("checkApplication (FR-UC04.3, FR-UC04.6, FR-UC04.7)", () => {
   });
 
   it("refuses a sixth active application and lists the five (extension 4b)", () => {
-    const full: Desk = { ...desk, applications: [1, 3, 4, 5, 6].map(application) };
+    const full: Desk = { ...desk, applications: [1, 3, 4, 5, 6].map(application), refusal: "LIMIT_REACHED" };
     const check = checkApplication(posting(), full);
     expect(check.kind).toBe("limit");
     if (check.kind === "limit") {

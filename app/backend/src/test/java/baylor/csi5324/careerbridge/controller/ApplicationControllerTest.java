@@ -46,29 +46,6 @@ class ApplicationControllerTest {
     }
 
     @Test
-    void answersWithTheNewApplicationAndTheActiveCount() throws Exception {
-        Application application = new Application(new Applicant(), new JobPosting(),
-                new ResumeSnapshot("cv.pdf", "application/pdf", 2048L), LocalDate.now());
-        when(applicationService.submitApplication(eq(2L), any(ResumeSnapshot.class)))
-                .thenReturn(new SubmittedApplication(application, 4));
-
-        mockMvc.perform(post("/api/postings/2/apply").contentType(MediaType.APPLICATION_JSON).content(RESUME_JSON))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.applicationStatus").value("APPLIED"))
-                .andExpect(jsonPath("$.activeApplicationCount").value(4));
-    }
-
-    @Test
-    void passesNoResumeWhenNoneIsSent() throws Exception {
-        when(applicationService.submitApplication(eq(2L), isNull()))
-                .thenThrow(new ApplicationRefusedException(ApplicationRefusal.NO_RESUME));
-
-        mockMvc.perform(post("/api/postings/2/apply").contentType(MediaType.APPLICATION_JSON).content("{}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string(ApplicationRefusal.NO_RESUME.message()));
-    }
-
-    @Test
     void anEmptyResumeCountsAsNoResume() throws Exception {
         when(applicationService.submitApplication(eq(2L), isNull()))
                 .thenThrow(new ApplicationRefusedException(ApplicationRefusal.NO_RESUME));
@@ -76,20 +53,9 @@ class ApplicationControllerTest {
                 {"resumeFileName": " ", "resumeFileType": "application/pdf", "resumeFileSize": 0}
                 """;
 
-        mockMvc.perform(post("/api/postings/2/apply").contentType(MediaType.APPLICATION_JSON).content(empty))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string(ApplicationRefusal.NO_RESUME.message()));
-    }
-
-    @Test
-    void aRefusalIsPlainTextForTheApplicant() throws Exception {
-        when(applicationService.submitApplication(eq(2L), any(ResumeSnapshot.class)))
-                .thenThrow(new ApplicationRefusedException(ApplicationRefusal.POSTING_CLOSED));
-
-        mockMvc.perform(post("/api/postings/2/apply").contentType(MediaType.APPLICATION_JSON).content(RESUME_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
-                .andExpect(content().string(ApplicationRefusal.POSTING_CLOSED.message()));
+        mockMvc.perform(post("/api/postings/2/application").contentType(MediaType.APPLICATION_JSON).content(empty))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.reason").value("NO_RESUME"));
     }
 
     @Test

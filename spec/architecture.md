@@ -53,7 +53,7 @@ An in-memory H2 database. At startup the backend loads sample job postings from 
 | Use case | A controller, a service, a page under `app/frontend/src/app/` |
 
 UC-04 Apply for Job is implemented end to end: `ApplyForm` → `lib/api.ts` → `ApplicationController`
-(`POST /api/postings/{postingId}/apply`) → `ApplicationService` (`submitApplication`). Until Log In
+(`GET` and `POST /api/postings/{postingId}/application`) → `ApplicationService` (`startApplication`, `submitApplication`). Until Log In
 and UC-03 exist, the applicant is the sample applicant and the resume comes with the request; the
 confirmation Notification of CO-04.1 comes with the Notification Service.
 

@@ -7,6 +7,7 @@ import {
   searchPostings,
   searchCriteria,
   searchQuery,
+  startApplication,
   submitApplication,
   viewApplications,
   ApplicationRefused,
@@ -180,6 +181,46 @@ describe("createPosting", () => {
   });
 });
 
+describe("startApplication", () => {
+  const resume = { fileName: "cv.pdf", fileType: "application/pdf", fileSize: 2048 };
+  const summary = {
+    posting: { postingId: 2, title: "Data Analyst Intern", organizationName: "Waco Health Partners" },
+    activeApplicationCount: 3,
+    applicationLimit: 5,
+    refusal: null,
+  };
+
+  it("reads the summary with the resume on file in the query (STAND-IN until UC-03)", async () => {
+    const fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(summary) });
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(startApplication(2, resume)).resolves.toEqual(summary);
+    const url = new URL(fetch.mock.calls[0][0]);
+    expect(url.pathname).toBe("/api/postings/2/application");
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      resumeFileName: "cv.pdf",
+      resumeFileType: "application/pdf",
+      resumeFileSize: "2048",
+    });
+  });
+
+  it("sends no resume when none is on file, so the backend names the refusal", async () => {
+    const refused = { ...summary, refusal: { reason: "NO_RESUME", message: "A resume is required to apply." } };
+    const fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(refused) });
+    vi.stubGlobal("fetch", fetch);
+
+    const start = await startApplication(2, null);
+    expect(new URL(fetch.mock.calls[0][0]).search).toBe("");
+    expect(start.refusal?.reason).toBe("NO_RESUME");
+  });
+
+  it("fails when the backend does not answer", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
+
+    await expect(startApplication(2, resume)).rejects.toThrow("Backend answered 500");
+  });
+});
+
 describe("submitApplication", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -194,7 +235,7 @@ describe("submitApplication", () => {
 
     await expect(submitApplication(2, resume)).resolves.toEqual(answer);
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining("/api/postings/2/apply"),
+      expect.stringContaining("/api/postings/2/application"),
       expect.objectContaining({ method: "POST" }),
     );
   });
@@ -221,6 +262,22 @@ describe("submitApplication", () => {
     const refused = await submitApplication(2, resume).catch((error) => error);
     expect(refused).toBeInstanceOf(ApplicationRefused);
     expect(refused.message).toBe("You already applied to this posting.");
+  });
+
+  it("turns a 409 into ApplicationRefused with the backend's reason", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 409,
+        headers: new Headers({ "Content-Type": "application/json" }),
+        json: () => Promise.resolve({ reason: "LIMIT_REACHED", message: "You have 5 active applications." }),
+      }),
+    );
+
+    const refused = await submitApplication(2, resume).catch((error) => error);
+    expect(refused).toBeInstanceOf(ApplicationRefused);
+    expect(refused.message).toBe("You have 5 active applications.");
   });
 });
 
