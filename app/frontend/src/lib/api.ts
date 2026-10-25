@@ -1,4 +1,5 @@
 import { STAGES, type DeskApplication } from "./sampleDesk";
+import type { Session } from "./session";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
@@ -59,6 +60,19 @@ export class PostingRejected extends Error {}
 // Its message is the backend's reason, written for the applicant
 export class ApplicationRefused extends Error {}
 
+// Its message is the backend's reason, written for the person logging in
+export class LogInRefused extends Error {}
+
+// The token expired, or the account lacks the role the call needs: the user logs in again
+export class SessionEnded extends Error {}
+
+// UC-12, extension 6c: another administrator decided the posting first; the message says how
+export class PostingDecided extends Error {}
+
+function bearer(token: string): Record<string, string> {
+  return { Authorization: `Bearer ${token}` };
+}
+
 function backendFetch(path: string, init?: Omit<RequestInit, "signal">): Promise<Response> {
   return fetch(`${API_URL}${path}`, {
     cache: "no-store",
@@ -76,9 +90,12 @@ export type PageQuery = Record<string, string | string[] | undefined>;
 
 // A hand-edited link can repeat a key, and Next.js then hands over an array;
 // the search knows one value per criterion, so it takes the first.
+export function queryValue(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 export function searchCriteria(query: PageQuery): PostingSearchCriteria {
-  const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
-  return Object.fromEntries(SEARCH_CRITERIA.map((name) => [name, first(query[name])]));
+  return Object.fromEntries(SEARCH_CRITERIA.map((name) => [name, queryValue(query[name])]));
 }
 
 // The same query string serves the backend call and the job board's own links,
@@ -93,6 +110,23 @@ export function searchQuery(criteria: PostingSearchCriteria): string {
   }
   const text = query.toString();
   return text ? `?${text}` : "";
+}
+
+// Log In (ADR-0010): the backend answers with the token and who it belongs to
+export async function logIn(email: string, password: string): Promise<Session> {
+  const response = await backendFetch("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  const reason = await refusal(response, [401]);
+  if (reason !== null) {
+    throw new LogInRefused(reason);
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
 }
 
 export async function searchPostings(criteria: PostingSearchCriteria = {}): Promise<JobPosting[]> {
@@ -173,10 +207,51 @@ export async function viewApplications(): Promise<Applications> {
   return { active, appliedPostingIds: applications.map((application) => application.postingId) };
 }
 
+// UC-12: the queue of postings waiting for an administrator
+export async function openPostingApprovalQueue(token: string): Promise<JobPosting[]> {
+  const response = await backendFetch("/api/admin/postings/pending", { headers: bearer(token) });
+  if (response.status === 401 || response.status === 403) {
+    throw new SessionEnded();
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+export type ReviewAction = "approve" | "return" | "reject";
+
+export async function reviewPosting(
+  token: string,
+  postingId: number,
+  action: ReviewAction,
+  comment: string,
+): Promise<JobPosting> {
+  const response = await backendFetch(`/api/admin/postings/${postingId}/${action}`, {
+    method: "POST",
+    headers: { ...bearer(token), "Content-Type": "application/json" },
+    body: JSON.stringify({ comment: comment || null }),
+  });
+  if (response.status === 401 || response.status === 403) {
+    throw new SessionEnded();
+  }
+  if (response.status === 409) {
+    throw new PostingDecided(await response.text());
+  }
+  const reason = await refusal(response);
+  if (reason !== null) {
+    throw new Error(reason);
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
 // Only a refusal in plain text is a reason for the user; any other body is the
 // server's own error report and must not reach the screen.
-async function refusal(response: Response): Promise<string | null> {
-  const refused = response.status === 400 || response.status === 403;
+async function refusal(response: Response, statuses = [400, 403]): Promise<string | null> {
+  const refused = statuses.includes(response.status);
   if (refused && response.headers.get("Content-Type")?.startsWith("text/plain")) {
     return response.text();
   }

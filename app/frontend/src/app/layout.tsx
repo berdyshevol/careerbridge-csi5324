@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import Link from "next/link";
+import AccountMenu from "@/components/AccountMenu";
 import DeskNav from "@/components/DeskNav";
 import { SearchIcon } from "@/components/Icons";
+import { serverSession } from "@/lib/serverSession";
 import "./globals.css";
 
 const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"] });
@@ -13,7 +15,9 @@ export const metadata: Metadata = {
   description: "Recruiting and Application Management System",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // Reading the cookie renders every page per request; the header has to show who is logged in
+  const session = await serverSession();
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -44,13 +48,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <Link href="/jobs" aria-label="Search job postings" className="btn btn-square btn-ghost lg:hidden">
               <SearchIcon />
             </Link>
-            <Link
-              href="/profile"
-              aria-label="Profile and resume"
-              className="btn btn-circle btn-primary font-semibold"
-            >
-              JL
-            </Link>
+            <AccountMenu user={session?.user ?? null} />
           </div>
         </header>
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row lg:px-8">

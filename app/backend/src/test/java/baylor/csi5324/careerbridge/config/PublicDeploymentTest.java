@@ -9,16 +9,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = {
-        "careerbridge.public-deployment=true",
-        "careerbridge.admin.password="})
+@SpringBootTest(properties = "careerbridge.public-deployment=true")
 class PublicDeploymentTest {
 
     @Autowired
@@ -40,11 +37,6 @@ class PublicDeploymentTest {
                 .andExpect(content().string(ReadOnlyWithoutLogin.REASON));
     }
 
-    @Test
-    void hasNoAdministrator() throws Exception {
-        mockMvc.perform(get("/api/admin/postings/pending").with(httpBasic("admin", "admin")))
-                .andExpect(status().isUnauthorized());
-    }
 
     @Test
     void stillLetsUsersLogIn() throws Exception {
