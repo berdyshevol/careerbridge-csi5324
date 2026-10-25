@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
 // The demo accounts of the throw-away test database (app/backend/src/test/resources/config/application.properties)
 export const ACCOUNTS = {
@@ -14,4 +14,13 @@ export async function logIn(page: Page, account: { email: string; password: stri
   await page.getByLabel("Password").fill(account.password);
   await page.getByRole("button", { name: "Log in" }).click();
   await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
+}
+
+// For tests that call the backend directly, as the frontend does after logging in
+export async function tokenOf(request: APIRequestContext, account: { email: string; password: string }) {
+  const answer = await request.post("http://localhost:8080/api/auth/login", {
+    data: { email: account.email, password: account.password },
+  });
+  expect(answer.ok()).toBeTruthy();
+  return { Authorization: `Bearer ${(await answer.json()).token}` };
 }

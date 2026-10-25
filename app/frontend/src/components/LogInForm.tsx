@@ -63,7 +63,7 @@ export default function LogInForm({ next }: { next?: string }) {
         />
 
         <div className="flex flex-col-reverse gap-3 border-t border-base-300 pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <Link href="/register" className="link link-primary">
+          <Link href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"} className="link link-primary">
             New here? Register as an applicant
           </Link>
           <button type="submit" className="btn btn-primary" disabled={submitting}>

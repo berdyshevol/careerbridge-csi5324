@@ -21,12 +21,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
-// ADR-0006 lets every read through on the public site, so a read that writes
-// would change data there. Found by asking Spring for the endpoints, so a new
+// Reads need no role (BR-3, ADR-0010), so a read that writes would let anyone
+// change data. Found by asking Spring for the endpoints, so a new
 // one is checked without anyone remembering to add it here.
 @SpringBootTest
-// A demo account, so that /api/auth/me finds its user
-@WithMockUser(username = "admin@careerbridge.example", roles = "ADMINISTRATOR")
+// A demo account, so that /api/auth/me and the applicant's reads find their user; every role,
+// so that no read is refused before it reaches the code that could write
+@WithMockUser(username = "jordan.lee@example.com", roles = {"APPLICANT", "RECRUITER", "ADMINISTRATOR"})
 class ReadsChangeNothingTest {
 
     @Autowired

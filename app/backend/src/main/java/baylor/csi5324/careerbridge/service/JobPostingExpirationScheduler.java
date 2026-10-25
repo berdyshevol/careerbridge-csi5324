@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 
-// Runs on the public site too: ADR-0006 stops visitors from saving without login, not the system's own timed job
+// Runs on the public site too: the role checks of ADR-0010 guard requests, not the system's own timed job
 @Component
 public class JobPostingExpirationScheduler {
 

@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { createPosting, PostingRejected, type JobPosting } from "@/lib/api";
-import NewPostingPage from "./page";
+import PostingForm from "./PostingForm";
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 vi.mock("@/lib/api", async (importActual) => ({
   ...(await importActual<typeof import("@/lib/api")>()),
@@ -23,17 +25,18 @@ const saved: JobPosting = {
 };
 
 function submitTheForm() {
-  const { container } = render(<NewPostingPage />);
+  const { container } = render(<PostingForm token="recruiter-token" />);
   fireEvent.submit(container.querySelector("form")!);
 }
 
-describe("NewPostingPage", () => {
+describe("PostingForm", () => {
   afterEach(() => {
     vi.mocked(createPosting).mockReset();
+    vi.unstubAllGlobals();
   });
 
   it("offers the locations the job board can filter by", () => {
-    render(<NewPostingPage />);
+    render(<PostingForm token="recruiter-token" />);
 
     const location = screen.getByLabelText("Location");
     expect([...location.querySelectorAll("option:not([disabled])")].map((option) => option.textContent)).toEqual([
@@ -49,6 +52,7 @@ describe("NewPostingPage", () => {
     submitTheForm();
 
     expect(await screen.findByRole("status")).toHaveTextContent("Backend Developer — Posting #7 (DRAFT)");
+    expect(vi.mocked(createPosting).mock.calls[0][0]).toBe("recruiter-token");
   });
 
   it("shows the backend's reason when it refuses the posting", async () => {
@@ -82,6 +86,6 @@ describe("NewPostingPage", () => {
 
     expect(await screen.findByText("Submitted for administrator review!")).toBeInTheDocument();
     expect(fetchMock.mock.calls[0][0]).toBe("http://localhost:8080/api/postings/7/submit");
-    vi.unstubAllGlobals();
+    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe("Bearer recruiter-token");
   });
 });

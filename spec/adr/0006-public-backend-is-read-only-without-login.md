@@ -1,6 +1,6 @@
 # ADR-0006: The public backend changes no data until users can log in
 
-- **Status:** Accepted
+- **Status:** Replaced by [ADR-0010](0010-log-in-with-jwt.md)
 - **Date:** 2026-10-13
 
 ## Context

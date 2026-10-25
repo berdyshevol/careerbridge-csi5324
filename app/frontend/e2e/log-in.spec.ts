@@ -5,7 +5,7 @@ import { ACCOUNTS, logIn } from "./accounts";
 
 test("given a demo applicant, when they log in from the header, then the header shows them and they are back on the page", async ({ page }) => {
   await page.goto("/jobs");
-  await page.getByRole("link", { name: "Log in" }).click();
+  await page.getByRole("link", { name: "Log in", exact: true }).click();
   await expect(page).toHaveURL(/\/login\?next=%2Fjobs/);
 
   await page.getByLabel("Email").fill(ACCOUNTS.applicant.email);
@@ -23,7 +23,7 @@ test("given a wrong password, when someone logs in, then the backend's reason is
   await page.getByRole("button", { name: "Log in" }).click();
 
   await expect(page.getByRole("main").getByRole("alert")).toHaveText("The email or password is incorrect.");
-  await expect(page.getByRole("link", { name: "Log in" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Log in", exact: true })).toBeVisible();
 });
 
 test("given a logged-in recruiter, when they log out, then the header offers to log in again", async ({ page }) => {
@@ -32,9 +32,9 @@ test("given a logged-in recruiter, when they log out, then the header offers to 
 
   await page.getByRole("button", { name: "Log out" }).click();
 
-  await expect(page.getByRole("link", { name: "Log in" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Log in", exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole("link", { name: "Log in" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Log in", exact: true })).toBeVisible();
 });
 
 test("given a visitor on the approval page, when they log in as the administrator, then they come back to the queue", async ({ page }) => {

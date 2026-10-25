@@ -33,10 +33,10 @@ class ApplicantApplicationsControllerTest {
         posting.setLocation("Remote");
         posting.setEmploymentType("Full-time");
         posting.setOrganization(new Organization("Brazos Analytics"));
-        when(applicationService.viewApplications()).thenReturn(List.of(new Application(
+        when(applicationService.viewApplications("jordan.lee@example.com")).thenReturn(List.of(new Application(
                 new Applicant(), posting, new ResumeSnapshot("cv.pdf", "application/pdf", 2048L), LocalDate.now())));
 
-        mockMvc.perform(get("/api/applicant/applications"))
+        mockMvc.perform(get("/api/applicant/applications").principal(() -> "jordan.lee@example.com"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].postingId").value(7))
                 .andExpect(jsonPath("$[0].title").value("Backend Developer"))

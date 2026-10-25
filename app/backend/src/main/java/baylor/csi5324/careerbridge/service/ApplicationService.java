@@ -22,10 +22,6 @@ public class ApplicationService {
 
     public static final int APPLICATION_LIMIT = 5;
 
-    // STAND-IN: nobody can log in yet, so every application comes from the sample
-    // applicant (Jordan Lee in src/lib/sampleDesk.ts). Log In replaces it.
-    public static final String SAMPLE_APPLICANT_EMAIL = "jordan.lee@example.com";
-
     private static final String ALREADY_APPLIED =
             "You already applied to this posting. A posting can be applied to once.";
 
@@ -45,7 +41,7 @@ public class ApplicationService {
     }
 
     // STAND-IN: the resume comes from the caller until UC-03 keeps it in the backend
-    public SubmittedApplication submitApplication(Long postingId, ResumeSnapshot resume) {
+    public SubmittedApplication submitApplication(Long postingId, ResumeSnapshot resume, String applicantEmail) {
         JobPosting posting = jobPostingRepository.findById(postingId)
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
         Instant now = clock.instant();
@@ -57,7 +53,7 @@ public class ApplicationService {
                     + "Upload one in Profile & resume, then come back to this posting.");
         }
 
-        Applicant applicant = sampleApplicant();
+        Applicant applicant = applicant(applicantEmail);
         if (applicationRepository.existsByApplicantAndJobPosting(applicant, posting)) {
             throw new ApplicationRefusedException(ALREADY_APPLIED);
         }
@@ -81,12 +77,13 @@ public class ApplicationService {
 
     // Ended applications too: the apply screen needs them, since a posting can be applied to once (A5)
     @Transactional(readOnly = true)
-    public List<Application> viewApplications() {
-        return applicationRepository.findByApplicant(sampleApplicant());
+    public List<Application> viewApplications(String applicantEmail) {
+        return applicationRepository.findByApplicant(applicant(applicantEmail));
     }
 
-    private Applicant sampleApplicant() {
-        return applicantRepository.findByEmail(SAMPLE_APPLICANT_EMAIL)
-                .orElseThrow(() -> new IllegalStateException("The sample applicant was not loaded"));
+    // The logged-in Applicant (ADR-0010); SecurityConfig lets only that role reach these operations
+    private Applicant applicant(String email) {
+        return applicantRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new AccountGoneException(email));
     }
 }

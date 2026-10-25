@@ -30,6 +30,15 @@ describe("session", () => {
     expect(parseSession(JSON.stringify({ token: "x", user: { role: "APPLICANT" } }))).toBeNull();
   });
 
+  it("treats a session whose token has expired as no session", () => {
+    const payload = (exp: number) => btoa(JSON.stringify({ sub: "x", exp })).replace(/=+$/, "");
+    const expiredToken = `h.${payload(Math.floor(Date.now() / 1000) - 60)}.s`;
+    const liveToken = `h.${payload(Math.floor(Date.now() / 1000) + 3600)}.s`;
+
+    expect(parseSession(JSON.stringify({ ...session, token: expiredToken }))).toBeNull();
+    expect(parseSession(JSON.stringify({ ...session, token: liveToken }))?.token).toBe(liveToken);
+  });
+
   it("goes back only to a page of this site, otherwise to the role's own page", () => {
     expect(safeNext("/jobs/3/apply", "APPLICANT")).toBe("/jobs/3/apply");
     expect(safeNext("//evil.example", "APPLICANT")).toBe("/");
