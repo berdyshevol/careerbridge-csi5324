@@ -1,9 +1,15 @@
 package baylor.csi5324.careerbridge.service;
 
-// Its message is shown to the applicant, so it must never carry internal details
 public class ApplicationRefusedException extends RuntimeException {
 
-    public ApplicationRefusedException(String message) {
-        super(message);
+    private final ApplicationRefusal reason;
+
+    public ApplicationRefusedException(ApplicationRefusal reason) {
+        super(reason.message());
+        this.reason = reason;
+    }
+
+    public ApplicationRefusal getReason() {
+        return reason;
     }
 }

@@ -27,9 +27,6 @@ public class ApplicationService {
     // applicant (Jordan Lee in src/lib/sampleDesk.ts). Log In replaces it.
     public static final String SAMPLE_APPLICANT_EMAIL = "jordan.lee@example.com";
 
-    private static final String ALREADY_APPLIED =
-            "You already applied to this posting. A posting can be applied to once.";
-
     private final ApplicationRepository applicationRepository;
     private final ApplicantRepository applicantRepository;
     private final JobPostingRepository jobPostingRepository;
@@ -54,11 +51,11 @@ public class ApplicationService {
         List<Application> active = applicationRepository
                 .findByApplicantAndApplicationStatusIn(applicant, ApplicationStatus.ACTIVE);
 
-        ApplicationStart.Refusal refusal = null;
+        ApplicationRefusal refusal = null;
         if (resume == null) {
-            refusal = ApplicationStart.Refusal.NO_RESUME;
+            refusal = ApplicationRefusal.NO_RESUME;
         } else if (active.size() >= APPLICATION_LIMIT) {
-            refusal = ApplicationStart.Refusal.LIMIT_REACHED;
+            refusal = ApplicationRefusal.LIMIT_REACHED;
         }
         return new ApplicationStart(posting, applicant, resume, active, refusal);
     }
@@ -69,22 +66,19 @@ public class ApplicationService {
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
         Instant now = clock.instant();
         if (!posting.isOpen(now)) {
-            throw new ApplicationRefusedException("This posting no longer accepts applications.");
+            throw new ApplicationRefusedException(ApplicationRefusal.POSTING_CLOSED);
         }
         if (resume == null) {
-            throw new ApplicationRefusedException("A resume is required to apply. "
-                    + "Upload one in Profile & resume, then come back to this posting.");
+            throw new ApplicationRefusedException(ApplicationRefusal.NO_RESUME);
         }
 
         Applicant applicant = sampleApplicant();
         if (applicationRepository.existsByApplicantAndJobPosting(applicant, posting)) {
-            throw new ApplicationRefusedException(ALREADY_APPLIED);
+            throw new ApplicationRefusedException(ApplicationRefusal.ALREADY_APPLIED);
         }
         long active = applicationRepository.countActiveByApplicant(applicant);
         if (active >= APPLICATION_LIMIT) {
-            throw new ApplicationRefusedException("You have " + APPLICATION_LIMIT
-                    + " active applications, the most allowed at once. A slot frees up when you "
-                    + "withdraw one or it reaches Hired, Rejected or Offer Declined.");
+            throw new ApplicationRefusedException(ApplicationRefusal.LIMIT_REACHED);
         }
 
         try {
@@ -94,7 +88,7 @@ public class ApplicationService {
             return new SubmittedApplication(application, active + 1);
         } catch (DataIntegrityViolationException sameMomentDuplicate) {
             // A double click: the other request passed the check above first
-            throw new ApplicationRefusedException(ALREADY_APPLIED);
+            throw new ApplicationRefusedException(ApplicationRefusal.ALREADY_APPLIED);
         }
     }
 
