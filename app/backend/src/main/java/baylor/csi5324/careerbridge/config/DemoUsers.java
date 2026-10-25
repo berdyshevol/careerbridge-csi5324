@@ -46,10 +46,12 @@ public class DemoUsers implements CommandLineRunner {
                      @Value("${careerbridge.demo.second-applicant-password}") String secondApplicantPassword,
                      @Value("${careerbridge.demo.recruiter-password}") String recruiterPassword,
                      @Value("${careerbridge.demo.administrator-password}") String administratorPassword,
-                     @Value("${spring.datasource.url}") String databaseUrl) {
+                     @Value("${spring.datasource.url}") String databaseUrl,
+                     @Value("${careerbridge.demo.local-passwords}") boolean localPasswordsAllowed) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        boolean inMemory = databaseUrl.startsWith("jdbc:h2:mem:");
+        // The Docker image switches this off: an image that lost DATABASE_URL must not get known passwords
+        boolean inMemory = localPasswordsAllowed && databaseUrl.startsWith("jdbc:h2:mem:");
         this.demoUsers = List.of(
                 new DemoUser("Jordan", "Lee", ApplicationService.SAMPLE_APPLICANT_EMAIL,
                         Applicant::new, orLocal(applicantPassword, "Applicant-local-1", inMemory)),

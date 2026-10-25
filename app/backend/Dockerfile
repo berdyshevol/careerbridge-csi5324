@@ -15,5 +15,7 @@ ENV PUBLIC_DEPLOYMENT=true
 ENV ADMIN_PASSWORD=""
 # The H2 console is for the local fallback database only (ADR-0009)
 ENV SPRING_H2_CONSOLE_ENABLED=false
+# Never the well-known demo passwords of app/README.md, even if DATABASE_URL goes missing (ADR-0010)
+ENV DEMO_LOCAL_PASSWORDS=false
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
