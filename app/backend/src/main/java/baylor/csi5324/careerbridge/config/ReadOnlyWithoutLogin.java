@@ -8,11 +8,11 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.io.IOException;
 
-// ADR-0006: nobody can log in yet, so the public deployment changes no data for anyone
+// ADR-0006: until every write checks who is logged in (ADR-0010), the public deployment changes no data
 public class ReadOnlyWithoutLogin implements HandlerInterceptor {
 
     public static final String REASON =
-            "Saving is switched off on the public site until users can log in.";
+            "Saving is switched off on the public site until every action checks who is logged in.";
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)

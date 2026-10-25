@@ -25,7 +25,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 // would change data there. Found by asking Spring for the endpoints, so a new
 // one is checked without anyone remembering to add it here.
 @SpringBootTest
-@WithMockUser(roles = "ADMIN")
+// A demo account, so that /api/auth/me finds its user
+@WithMockUser(username = "admin@careerbridge.example", roles = "ADMIN")
 class ReadsChangeNothingTest {
 
     @Autowired
@@ -66,10 +67,12 @@ class ReadsChangeNothingTest {
 
     private Map<String, List<Map<String, Object>>> everyTable() {
         Map<String, List<Map<String, Object>>> tables = new HashMap<>();
-        for (String table : jdbc.queryForList(
-                "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'PUBLIC'", String.class)) {
+        // PostgreSQL names the schema in lower case, H2 in upper case
+        for (String table : jdbc.queryForList("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES "
+                + "WHERE LOWER(TABLE_SCHEMA) = 'public' AND TABLE_TYPE = 'BASE TABLE'", String.class)) {
             tables.put(table, jdbc.queryForList("SELECT * FROM \"" + table + "\" ORDER BY 1"));
         }
+        assertFalse(tables.isEmpty(), "found no tables to compare");
         return tables;
     }
 }

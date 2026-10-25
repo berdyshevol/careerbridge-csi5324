@@ -17,7 +17,7 @@ Figure 25; classes and associations that are not in the figure are listed in sec
 
 | Class | Attributes |
 | --- | --- |
-| User | userId, First Name, Last Name, email, phone #, account Status |
+| User | userId, First Name, Last Name, email, phone #, account Status, password (kept only as a salted hash, NFR-UC02.1), failed log-ins, locked until (A15) |
 | Applicant | none of its own (a kind of User) |
 | Recruiter | none of its own (a kind of User) |
 | Administrator | none of its own (a kind of User) |

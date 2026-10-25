@@ -47,6 +47,13 @@ class PublicDeploymentTest {
     }
 
     @Test
+    void stillLetsUsersLogIn() throws Exception {
+        mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\": \"riley.chen@example.com\", \"password\": \"Recruiter-test-1\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void stillShowsPostings() throws Exception {
         mockMvc.perform(get("/api/postings")).andExpect(status().isOk());
     }

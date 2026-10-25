@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+# Demo account passwords and deployment secrets, handed to the team outside git
+.secrets.txt
 
 # Personal Claude Code overrides for this project
 .claude/settings.local.json

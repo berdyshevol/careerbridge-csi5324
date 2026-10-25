@@ -15,6 +15,7 @@ import baylor.csi5324.careerbridge.repository.OrganizationRepository;
 import baylor.csi5324.careerbridge.service.ApplicationService;
 import baylor.csi5324.careerbridge.util.CsvReader;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
+@Order(1)
 public class SampleDataLoader implements CommandLineRunner {
 
     private static final String JOBS_FILE = "data/jobs.csv";
