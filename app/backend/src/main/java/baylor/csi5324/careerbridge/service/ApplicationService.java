@@ -2,6 +2,7 @@ package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
+import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
@@ -42,6 +43,25 @@ public class ApplicationService {
         this.applicantRepository = applicantRepository;
         this.jobPostingRepository = jobPostingRepository;
         this.clock = clock;
+    }
+
+    // STAND-IN: the resume comes from the caller until UC-03 keeps it in the backend
+    @Transactional(readOnly = true)
+    public ApplicationStart startApplication(Long postingId, ResumeSnapshot resume) {
+        JobPosting posting = jobPostingRepository.findById(postingId)
+                .orElseThrow(() -> new PostingNotFoundException(postingId));
+        Applicant applicant = sampleApplicant();
+        List<Application> active = applicationRepository.findByApplicant(applicant).stream()
+                .filter(application -> ApplicationStatus.ACTIVE.contains(application.getApplicationStatus()))
+                .toList();
+
+        ApplicationStart.Refusal refusal = null;
+        if (resume == null) {
+            refusal = ApplicationStart.Refusal.NO_RESUME;
+        } else if (active.size() >= APPLICATION_LIMIT) {
+            refusal = ApplicationStart.Refusal.LIMIT_REACHED;
+        }
+        return new ApplicationStart(posting, applicant, resume, active, refusal);
     }
 
     // STAND-IN: the resume comes from the caller until UC-03 keeps it in the backend
