@@ -9,12 +9,10 @@ import baylor.csi5324.careerbridge.service.ApplicationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -36,29 +34,13 @@ public class ApplicationController {
     }
 
     @PostMapping("/application")
-    public ResponseEntity<?> submitApplicationWithReason(@PathVariable Long postingId,
-                                                         @RequestBody SubmitApplicationRequest request) {
+    public ResponseEntity<?> submitApplication(@PathVariable Long postingId,
+                                               @RequestBody SubmitApplicationRequest request) {
         try {
             return ResponseEntity.status(HttpStatus.CREATED).body(ApplicationResponse.from(
                     applicationService.submitApplication(postingId, request.toResumeSnapshot())));
         } catch (ApplicationRefusedException refused) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(RefusalResponse.of(refused.getReason()));
         }
-    }
-
-    // The screen built on this endpoint reads a refusal as plain text; /application names the reason instead
-    @PostMapping("/apply")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ApplicationResponse submitApplication(@PathVariable Long postingId,
-                                                 @RequestBody SubmitApplicationRequest request) {
-        return ApplicationResponse.from(
-                applicationService.submitApplication(postingId, request.toResumeSnapshot()));
-    }
-
-    // Only this exception: any other failure is the server's, not the applicant's
-    @ExceptionHandler(ApplicationRefusedException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public String handleRefused(ApplicationRefusedException ex) {
-        return ex.getMessage();
     }
 }

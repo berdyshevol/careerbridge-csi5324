@@ -27,10 +27,13 @@ test("a posting past its deadline no longer offers to apply", async ({ page }) =
 });
 
 test("the backend refuses an application to a posting past its deadline", async ({ request }) => {
-  const response = await request.post("http://localhost:8080/api/postings/9/apply", {
+  const response = await request.post("http://localhost:8080/api/postings/9/application", {
     data: { resumeFileName: "Jordan_Lee_Resume.pdf", resumeFileType: "application/pdf", resumeFileSize: 184_320 },
   });
 
-  expect(response.status()).toBe(400);
-  expect(await response.text()).toBe("This posting no longer accepts applications.");
+  expect(response.status()).toBe(409);
+  expect(await response.json()).toMatchObject({
+    reason: "POSTING_CLOSED",
+    message: "This posting no longer accepts applications.",
+  });
 });
