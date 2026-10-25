@@ -70,6 +70,11 @@ public class LogInService {
         return new LoggedIn(token(user, now), user);
     }
 
+    // For an account that has just proved who it is another way: UC-02 logs the new Applicant in
+    public LoggedIn startSession(User user) {
+        return new LoggedIn(token(user, clock.instant()), user);
+    }
+
     @Transactional(readOnly = true)
     public User currentUser(String email) {
         return userRepository.findByEmailIgnoreCase(email)

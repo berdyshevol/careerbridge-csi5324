@@ -20,9 +20,9 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC02.1:** The system shall let a visitor create an Applicant account with full name, email address and password, without Administrator approval. (BR-14; UC-02 steps 1–5)
 
-- **FR-UC02.2:** The system shall reject a registration with a missing field, a malformed or already registered email address, or a password shorter than 10 characters or lacking a letter or a number. (A15; UC-02 step 4, extensions 4a–4c)
+- **FR-UC02.2:** The system shall reject a registration with a missing field, a full name without a last name, a malformed or already registered email address, or a password shorter than 10 characters or lacking a letter or a number. (A15; UC-02 step 4, extensions 4a–4c)
 
-- **FR-UC02.3:** The system shall email the new Applicant a verification link valid for 24 hours and activate the account only when the link is opened before it expires. (A15; UC-02 steps 5–8, extension 7a)
+- **FR-UC02.3:** The system shall create the account as Active and log the new Applicant in at once, without a verification email, and invite them to add a resume. (A15; UC-02 step 5)
 
 #### UC-03 Maintain Profile and Resume
 
@@ -250,7 +250,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **NFR-UC02.1 (Security):** Passwords are stored only as salted hashes, and all traffic uses HTTPS.
 
-- **NFR-UC02.2 (Performance):** The system hands the verification email to the Notification Service within 1 minute of registration. (A11)
+- **NFR-UC02.2 (Performance):** A registration is answered, with the Applicant logged in, within 2 seconds.
 
 - **NFR-UC02.3 (Usability):** Pages work on current desktop and mobile browsers and meet WCAG 2.1 AA.
 
@@ -445,7 +445,7 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC01.3|UC-01 steps 5–6|viewPosting(postingId)|CO-01.2|
 |FR-UC02.1|UC-02 steps 1–5|register(fullName, email, password)|CO-02.1|
 |FR-UC02.2|UC-02 step 4, extensions 4a–4c|register(fullName, email, password)|CO-02.1|
-|FR-UC02.3|UC-02 steps 5–8, extension 7a|register(fullName, email, password),<br>verifyEmail(token)|CO-02.1, CO-02.2|
+|FR-UC02.3|UC-02 step 5|register(fullName, email, password)|CO-02.1|
 |FR-UC03.1|UC-03 steps 1–4, extension 4a|viewProfile(), updateProfile(details)|CO-03.1, CO-03.2|
 |FR-UC03.2|UC-03 steps 5–7, extensions 6a, 6b|uploadResume(file)|CO-03.3|
 |FR-UC03.3|UC-03 step 6, Success Guarantee|uploadResume(file)|CO-03.3|

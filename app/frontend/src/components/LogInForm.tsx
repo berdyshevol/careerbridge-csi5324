@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LogInRefused, logIn } from "@/lib/api";
 import { safeNext, saveSession } from "@/lib/session";
+import FormField from "./FormField";
 import PageTitle from "./PageTitle";
 
 export default function LogInForm({ next }: { next?: string }) {
@@ -42,34 +43,24 @@ export default function LogInForm({ next }: { next?: string }) {
           </div>
         )}
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor="login-email" className="font-medium">
-            Email
-          </label>
-          <input
-            id="login-email"
-            type="email"
-            className="input w-full"
-            autoComplete="username"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label htmlFor="login-password" className="font-medium">
-            Password
-          </label>
-          <input
-            id="login-password"
-            type="password"
-            className="input w-full"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
-        </div>
+        <FormField
+          id="login-email"
+          label="Email"
+          type="email"
+          autoComplete="username"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          required
+        />
+        <FormField
+          id="login-password"
+          label="Password"
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          required
+        />
 
         <div className="flex flex-col-reverse gap-3 border-t border-base-300 pt-4 sm:flex-row sm:items-center sm:justify-between">
           <Link href="/register" className="link link-primary">

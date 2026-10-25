@@ -22,9 +22,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         if (publicDeployment) {
-            // Logging in writes only the A15 counters, and every later write still meets this switch
+            // Logging in writes only the A15 counters and registering only the new account (UC-02);
+            // every later write still meets this switch
             registry.addInterceptor(new ReadOnlyWithoutLogin()).addPathPatterns("/api/**")
-                    .excludePathPatterns("/api/auth/login");
+                    .excludePathPatterns("/api/auth/login", "/api/applicants");
         }
     }
 
