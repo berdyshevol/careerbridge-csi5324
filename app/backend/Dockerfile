@@ -13,5 +13,7 @@ COPY --from=build /app/target/careerbridge-0.0.1-SNAPSHOT.jar app.jar
 ENV PUBLIC_DEPLOYMENT=true
 # No administrator unless the host sets ADMIN_PASSWORD (ADR-0007)
 ENV ADMIN_PASSWORD=""
+# The H2 console is for the local fallback database only (ADR-0009)
+ENV SPRING_H2_CONSOLE_ENABLED=false
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

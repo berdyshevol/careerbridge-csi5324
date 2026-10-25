@@ -7,7 +7,7 @@ semester project of team CareerBridge for CSI 5324 Software Engineering (Baylor,
 
 - [spec/](spec/README.md) — the specification, current version: requirements, use cases, SSDs and
   operation contracts, domain model, design, architecture, ADRs.
-- [app/backend/](app/backend/) — Spring Boot 4, Java 17, Maven, Spring Data JPA, H2, JUnit.
+- [app/backend/](app/backend/) — Spring Boot 4, Java 17, Maven, Spring Data JPA, PostgreSQL (Neon), JUnit.
 - [app/frontend/](app/frontend/) — Next.js (TypeScript), Tailwind, daisyUI with one theme in `globals.css`.
 - How to run, test and deploy: [app/README.md](app/README.md).
 

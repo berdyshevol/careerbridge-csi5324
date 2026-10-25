@@ -9,7 +9,7 @@
 
 | Part | Folder | Technology | Responsibility |
 | --- | --- | --- | --- |
-| Backend | `app/backend/` | Java 17, Spring Boot 4, Maven, Spring Data JPA, H2 | Business rules and data. Serves JSON under `/api`; has no pages. |
+| Backend | `app/backend/` | Java 17, Spring Boot 4, Maven, Spring Data JPA, PostgreSQL | Business rules and data. Serves JSON under `/api`; has no pages. |
 | Frontend | `app/frontend/` | Next.js (TypeScript), Tailwind, daisyUI | Pages for phone, tablet and laptop. Holds no business rules; it calls the backend. |
 
 The browser loads pages from the frontend. The frontend reads data from the backend over HTTP and
@@ -40,8 +40,10 @@ there is the shape of one request or one response:
 
 ### Data
 
-An in-memory H2 database. At startup the backend loads sample job postings from a CSV file
-(`app/backend/src/main/resources/data/jobs.csv`); every restart starts from that file again.
+PostgreSQL on Neon ([ADR-0009](adr/0009-postgresql-on-neon.md)); the tests use PostgreSQL in Docker,
+and a backend started without `DATABASE_URL` falls back to in-memory H2. Into an empty database the
+backend loads sample job postings and applications from CSV files
+(`app/backend/src/main/resources/data/`).
 
 ### From specification to code
 
@@ -58,7 +60,7 @@ and UC-03 exist, the applicant is the sample applicant and the resume comes with
 confirmation Notification of CO-04.1 comes with the Notification Service.
 
 UC-01 Browse Job Postings is implemented end to end: page → `lib/api.ts` → `JobPostingController`
-(`/api/postings`) → `JobPostingService` (`searchPostings`, `viewPosting`) → `JobPostingRepository` → H2.
+(`/api/postings`) → `JobPostingService` (`searchPostings`, `viewPosting`) → `JobPostingRepository` → PostgreSQL.
 
 ### Tests
 
