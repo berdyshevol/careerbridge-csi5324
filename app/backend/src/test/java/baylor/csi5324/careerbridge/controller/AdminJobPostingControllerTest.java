@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -18,7 +20,7 @@ import org.springframework.web.context.WebApplicationContext;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
@@ -28,9 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = {
-        "careerbridge.admin.username=root",
-        "careerbridge.admin.password=secret"})
+@SpringBootTest
 class AdminJobPostingControllerTest {
 
     @Autowired
@@ -53,9 +53,9 @@ class AdminJobPostingControllerTest {
     void theQueueNeedsAnAdministrator() throws Exception {
         mockMvc.perform(get("/api/admin/postings/pending"))
                 .andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/api/admin/postings/pending").with(httpBasic("root", "wrong")))
-                .andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/api/admin/postings/pending").with(httpBasic("root", "secret")))
+        mockMvc.perform(get("/api/admin/postings/pending").with(asRecruiter()))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/admin/postings/pending").with(asAdministrator()))
                 .andExpect(status().isOk());
     }
 
@@ -64,10 +64,10 @@ class AdminJobPostingControllerTest {
         JobPosting pending = savePending();
 
         mockMvc.perform(post("/api/admin/postings/{id}/approve", pending.getJobPostId())
-                        .with(httpBasic("root", "secret")))
+                        .with(asAdministrator()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.postStatus").value("PUBLISHED"))
-                .andExpect(jsonPath("$.approvedBy").value("root"));
+                .andExpect(jsonPath("$.approvedBy").value("root@careerbridge.example"));
     }
 
     @Test
@@ -75,7 +75,7 @@ class AdminJobPostingControllerTest {
         JobPosting pending = savePending();
 
         mockMvc.perform(post("/api/admin/postings/{id}/reject", pending.getJobPostId())
-                        .with(httpBasic("root", "secret"))
+                        .with(asAdministrator())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"comment\": \" \"}"))
                 .andExpect(status().isBadRequest())
@@ -92,7 +92,7 @@ class AdminJobPostingControllerTest {
         jobPostingRepository.save(pending);
 
         mockMvc.perform(post("/api/admin/postings/{id}/approve", pending.getJobPostId())
-                        .with(httpBasic("root", "secret")))
+                        .with(asAdministrator()))
                 .andExpect(status().isConflict())
                 .andExpect(content().string("This posting was already decided: it is Published"));
     }
@@ -123,5 +123,14 @@ class AdminJobPostingControllerTest {
         posting.setPostStatus(PostStatus.PENDING_APPROVAL);
         posting.setOrganization(organization);
         return jobPostingRepository.save(posting);
+    }
+
+    private static RequestPostProcessor asAdministrator() {
+        return jwt().jwt(token -> token.subject("root@careerbridge.example"))
+                .authorities(new SimpleGrantedAuthority("ROLE_ADMINISTRATOR"));
+    }
+
+    private static RequestPostProcessor asRecruiter() {
+        return jwt().authorities(new SimpleGrantedAuthority("ROLE_RECRUITER"));
     }
 }

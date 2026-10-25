@@ -1,6 +1,6 @@
 # ADR-0007: The Administrator signs in with HTTP Basic until Log In exists
 
-- **Status:** Accepted
+- **Status:** Replaced by [ADR-0010](0010-log-in-with-jwt.md)
 - **Date:** 2026-10-13
 
 ## Context

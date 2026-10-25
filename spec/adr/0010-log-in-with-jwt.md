@@ -27,8 +27,8 @@ browsers increasingly block. The feedback also asks for no external services.
   writes the Recruiter role, `/api/admin/**` the Administrator role.
 - Demo accounts, one per role, are created at start-up from passwords in the environment
   (`DEMO_*_PASSWORD`); the repository holds no real password.
-- Once every write checks its role, the read-only switch of ADR-0006 and the HTTP Basic
-  administrator of ADR-0007 are removed.
+- The HTTP Basic administrator of ADR-0007 is removed as soon as the administrator page uses the
+  token; the read-only switch of ADR-0006 once every write checks its role.
 
 ## Consequences
 

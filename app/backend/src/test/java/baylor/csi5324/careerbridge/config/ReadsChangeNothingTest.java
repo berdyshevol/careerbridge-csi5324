@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 // one is checked without anyone remembering to add it here.
 @SpringBootTest
 // A demo account, so that /api/auth/me finds its user
-@WithMockUser(username = "admin@careerbridge.example", roles = "ADMIN")
+@WithMockUser(username = "admin@careerbridge.example", roles = "ADMINISTRATOR")
 class ReadsChangeNothingTest {
 
     @Autowired
