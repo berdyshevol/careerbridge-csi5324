@@ -1,5 +1,10 @@
 package baylor.csi5324.careerbridge.config;
 
+import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.Organization;
+import baylor.csi5324.careerbridge.model.PostStatus;
+import baylor.csi5324.careerbridge.repository.JobPostingRepository;
+import baylor.csi5324.careerbridge.repository.OrganizationRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,16 +45,24 @@ class ReadsChangeNothingTest {
     @Autowired
     private JdbcTemplate jdbc;
 
+    @Autowired
+    private JobPostingRepository jobPostingRepository;
+
+    @Autowired
+    private OrganizationRepository organizationRepository;
+
     @Test
     void everyReadUnderApiLeavesTheDatabaseAsItWas() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
+        // A posting of its own: other tests share the database and may have removed the sample ones
+        String postingId = String.valueOf(publishedPosting().getJobPostId());
         List<String> reads = handlerMapping.getHandlerMethods().keySet().stream()
                 // A mapping without a method answers GET too
                 .filter(info -> info.getMethodsCondition().getMethods().isEmpty()
                         || info.getMethodsCondition().getMethods().contains(RequestMethod.GET))
                 .flatMap(info -> info.getPatternValues().stream())
                 .filter(pattern -> pattern.startsWith("/api/"))
-                .map(pattern -> pattern.replaceAll("\\{[^}]+}", "1"))
+                .map(pattern -> pattern.replaceAll("\\{[^}]+}", postingId))
                 .toList();
         assertFalse(reads.isEmpty());
 
@@ -75,5 +89,16 @@ class ReadsChangeNothingTest {
         }
         assertFalse(tables.isEmpty(), "found no tables to compare");
         return tables;
+    }
+
+    private JobPosting publishedPosting() {
+        JobPosting posting = new JobPosting();
+        posting.setOrganization(organizationRepository.save(new Organization("Reads Change Nothing " + System.nanoTime())));
+        posting.setTitle("Read-only Engineer");
+        posting.setNumberOfOpenings(1);
+        posting.setDatePosted(LocalDate.now());
+        posting.setApplicationDeadline(LocalDate.now().plusDays(30));
+        posting.setPostStatus(PostStatus.PUBLISHED);
+        return jobPostingRepository.save(posting);
     }
 }

@@ -1,5 +1,7 @@
 package baylor.csi5324.careerbridge.config;
 
+import baylor.csi5324.careerbridge.model.Organization;
+import baylor.csi5324.careerbridge.repository.OrganizationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,16 +27,22 @@ class AccessByRoleTest {
     private static final String RESUME = """
             {"resumeFileName": "cv.pdf", "resumeFileType": "application/pdf", "resumeFileSize": 2048}
             """;
-    private static final String BLANK_POSTING = "{\"organizationId\": 1, \"title\": \" \", \"numberOfOpenings\": 1}";
 
     @Autowired
     private WebApplicationContext context;
 
+    @Autowired
+    private OrganizationRepository organizationRepository;
+
     private MockMvc mockMvc;
+    private String blankPosting;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
+        // An organization of its own: other tests share the database, so no id is certain to exist
+        long organizationId = organizationRepository.save(new Organization("Access By Role " + System.nanoTime())).getOrganizationId();
+        blankPosting = "{\"organizationId\": " + organizationId + ", \"title\": \" \", \"numberOfOpenings\": 1}";
     }
 
     private static RequestPostProcessor as(String role) {
@@ -48,7 +56,7 @@ class AccessByRoleTest {
         mockMvc.perform(post("/api/postings/1/apply").contentType(MediaType.APPLICATION_JSON).content(RESUME))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/applicant/applications")).andExpect(status().isUnauthorized());
-        mockMvc.perform(post("/api/postings").contentType(MediaType.APPLICATION_JSON).content(BLANK_POSTING))
+        mockMvc.perform(post("/api/postings").contentType(MediaType.APPLICATION_JSON).content(blankPosting))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/postings/1/submit")).andExpect(status().isUnauthorized());
     }
@@ -85,13 +93,13 @@ class AccessByRoleTest {
     @Test
     void onlyARecruiterCreatesAPosting() throws Exception {
         mockMvc.perform(post("/api/postings").with(as("APPLICANT"))
-                        .contentType(MediaType.APPLICATION_JSON).content(BLANK_POSTING))
+                        .contentType(MediaType.APPLICATION_JSON).content(blankPosting))
                 .andExpect(status().isForbidden());
         mockMvc.perform(post("/api/postings/1/submit").with(as("APPLICANT"))).andExpect(status().isForbidden());
         mockMvc.perform(post("/api/postings/1/submit").with(as("ADMINISTRATOR"))).andExpect(status().isForbidden());
         // Reaches the service, which refuses the blank title: the recruiter's mistake, in plain text
         mockMvc.perform(post("/api/postings").with(as("RECRUITER"))
-                        .contentType(MediaType.APPLICATION_JSON).content(BLANK_POSTING))
+                        .contentType(MediaType.APPLICATION_JSON).content(blankPosting))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Job title is required"));
     }
