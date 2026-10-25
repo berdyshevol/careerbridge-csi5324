@@ -51,9 +51,8 @@ public class ApplicationService {
         JobPosting posting = jobPostingRepository.findById(postingId)
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
         Applicant applicant = sampleApplicant();
-        List<Application> active = applicationRepository.findByApplicant(applicant).stream()
-                .filter(application -> ApplicationStatus.ACTIVE.contains(application.getApplicationStatus()))
-                .toList();
+        List<Application> active = applicationRepository
+                .findByApplicantAndApplicationStatusIn(applicant, ApplicationStatus.ACTIVE);
 
         ApplicationStart.Refusal refusal = null;
         if (resume == null) {
