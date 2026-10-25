@@ -22,7 +22,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         if (publicDeployment) {
-            registry.addInterceptor(new ReadOnlyWithoutLogin()).addPathPatterns("/api/**");
+            // Registering writes only the new account and needs nobody logged in (UC-02, ADR-0010)
+            registry.addInterceptor(new ReadOnlyWithoutLogin()).addPathPatterns("/api/**")
+                    .excludePathPatterns("/api/applicants");
         }
     }
 
