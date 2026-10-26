@@ -48,13 +48,17 @@ Figure 5 shows SSD-01, the system sequence diagram for the main success scenario
 
 Figure 6 shows SSD-02, the system sequence diagram for the main success scenario of UC-02.
 
-![Figure 6: SSD-02: UC-02 Register as Applicant](diagrams/fig-06-ssd-02-uc-02-register-as-applicant.png)
+```mermaid
+sequenceDiagram
+    actor V as Visitor
+    participant S as :CareerBridge System
+    V->>S: register(fullName, email, password)
+    S-->>V: account created, Applicant logged in
+```
 
 **Figure 6: SSD-02: UC-02 Register as Applicant**
 
-1. Visitor to System: register(fullName, email, password); System returns "account created, Applicant logged in" (steps 3–5).
-
-Figure 6 was drawn for Iteration 1 and still shows a verification email and verifyEmail(token). Applicant accounts are now active at once (A15), so the text above is the current SSD.
+1. Visitor to System: register(fullName, email, password); System returns "account created, Applicant logged in" (steps 3–5). No verification email is sent (A15).
 
 #### CO-02.1: register
 
