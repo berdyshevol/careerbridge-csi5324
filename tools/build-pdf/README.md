@@ -29,14 +29,17 @@ A new deliverable needs a new list, not a new script.
 
 ## What it does
 
-1. `join.py` joins the files, drops the spec files' "Part of the CareerBridge specification" line
-   and makes relative links and images absolute.
+1. `join.py` joins the files, drops each spec file's title and "Part of the CareerBridge
+   specification" line (the template's numbered sections are the headings), turns the Word bullet
+   glyph left in some tables into "•" and makes relative links and images absolute.
 2. mermaid-cli (through `npx`, pinned) turns each ```` ```mermaid ```` block into an image.
 3. pandoc writes one HTML file with everything embedded; `place-toc.py` puts the table of contents
-   where the list's `TOC` line was.
-4. Headless Chrome prints it to PDF, US Letter (`style.css`).
+   of what follows the `TOC` line where that line was.
+4. Paged.js (`pagedjs-cli`, pinned, through `npx`) lays out US Letter pages (`style.css`): page
+   numbers in the footer and in the table of contents, none on the cover, tall diagrams shrunk to
+   one page.
 
 ## Needs
 
-pandoc (`brew install pandoc`), Node.js with `npx`, and Google Chrome. Chrome is looked for in
-`/Applications`; elsewhere, set `CHROME` to its executable.
+pandoc (`brew install pandoc`) and Node.js with `npx`. The first run downloads mermaid-cli and
+pagedjs-cli with their own headless browser.
