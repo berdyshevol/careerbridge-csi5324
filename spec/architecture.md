@@ -57,7 +57,7 @@ UC-04 Apply for Job is implemented end to end: `ApplyForm` → `lib/api.ts` → 
 and UC-03 exist, the applicant is the sample applicant and the resume comes with the request; the
 confirmation Notification of CO-04.1 comes with the Notification Service.
 
-UC-01 Browse Job Postings is implemented end to end: page → `lib/api.ts` → `JobPostingController`
+UC-01 Search Job Postings is implemented end to end: page → `lib/api.ts` → `JobPostingController`
 (`/api/postings`) → `JobPostingService` (`searchPostings`, `viewPosting`) → `JobPostingRepository` → H2.
 
 ### Tests

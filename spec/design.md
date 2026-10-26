@@ -18,6 +18,46 @@ objects of [architecture.md](architecture.md) realize an operation contract of
 The diagrams are Mermaid source, so GitHub draws them and the Deliverable PDF is rendered from the
 same text.
 
+### UC-01 Search Job Postings
+
+The job board is a server-rendered page: it reads the criteria from its address and asks the
+backend for the open postings with one request, so a search can be bookmarked and shared. The
+service loads the published postings whose deadline date has not passed anywhere, keeps those still
+open at this moment in their organization's time zone (`JobPosting.isOpen`, BR-10), filters them by
+each criterion the visitor gave and returns them newest first (FR-UC01.1, FR-UC01.2). The controller
+turns each posting into a `PublicPosting`, which leaves out who approved it and the review comment,
+so the public page shows no internal data (BR-3, BR-15). An empty answer is the end of the use case
+with a message (extensions 2a and 4a). Opening one posting from the list is a page of its own, not a
+step of UC-01 (Iteration 1 feedback).
+
+```mermaid
+sequenceDiagram
+    actor V as Visitor
+    participant JP as JobsPage
+    participant JC as JobPosting<br/>Controller
+    participant JS as JobPosting<br/>Service
+    participant JR as JobPosting<br/>Repository
+
+    V->>JP: open the job board, or submit keyword,<br/>location, organization, employment type
+    JP->>JC: GET /api/postings?keyword&location<br/>&organization&employmentType
+    JC->>JS: searchPostings(criteria)
+    JS->>JR: findByPostStatusAndApplicationDeadline...<br/>(PUBLISHED, today in the latest zone)
+    JR-->>JS: List<JobPosting>, newest first
+    JS->>JS: keep posting.isOpen(now) and<br/>each criterion the visitor gave
+    JS-->>JC: List<JobPosting>
+    JC->>JC: PublicPosting.of(posting) for each
+    JC-->>JP: 200 List<PublicPosting>
+    alt no posting is open (ext. 2a)
+        JP-->>V: "No open positions right now."
+    else none matches the criteria (ext. 4a)
+        JP-->>V: "No matching postings." and Clear the filters
+    else postings found
+        JP-->>V: one PostingCard per posting: title, organization,<br/>location, employment type, deadline
+    end
+```
+
+**Figure 26: SD-1 Search Job Postings (UC-01)**
+
 ### UC-02 Register as Applicant
 
 The service first checks the fields of CO-02.1: a full name with a last name, a well-formed email address and the password policy of A15 (at least 10 characters, including a letter and a number). Every invalid field comes back at once with its reason, so the form shows each one next to its field. Only then does the service look the address up, ignoring case, and refuse it if an account already exists, suggesting to log in instead. Otherwise it creates the Applicant as Active, keeps only a hash of the password and saves it; a unique constraint on the email turns two registrations at the same moment into the same refusal. No verification email is sent (A15): LogInService signs a token for the new Applicant (ADR-0010), and the form saves the session and opens the profile, where the Applicant is invited to add a resume (UC-03).
@@ -70,7 +110,7 @@ sequenceDiagram
     end
 ```
 
-**Figure 26: SD-8 Register as an applicant (UC-02)**
+**Figure 27: SD-8 Register as an applicant (UC-02)**
 
 ## 7. Design Class Diagram (DCD)
 
@@ -84,4 +124,5 @@ the DCD must contain each of them.
 
 | Diagram | Controller method | Service method | Repository calls |
 | --- | --- | --- | --- |
+| SD-1 | `JobPostingController.searchPostings` | `JobPostingService.searchPostings`; `JobPosting.isOpen`; `PublicPosting.of` | `JobPostingRepository.findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDescJobPostIdDesc` |
 | SD-8 | `RegistrationController.register` | `RegistrationService.register`; `LogInService.startSession` | `UserRepository.findByEmailIgnoreCase`, `saveAndFlush` |

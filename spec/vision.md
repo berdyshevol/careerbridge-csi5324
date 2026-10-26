@@ -16,7 +16,7 @@ Without a shared board, each organization runs its own hiring process: applicant
 
 Seen from outside, CareerBridge offers the following capabilities. The use cases in section 4 describe each one in detail.
 
-- Public browsing and search of open postings from all organizations (UC-01).
+- Public search of open postings from all organizations (UC-01).
 
 - Applicant self-registration, one profile and one resume per applicant (UC-02, UC-03).
 

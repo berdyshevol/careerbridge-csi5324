@@ -6,19 +6,27 @@
 
 For each use case, the system sequence diagram (SSD) shows the main success scenario with CareerBridge as a black box, and the operation contracts define each system operation. Contract postconditions are written only as instances created or deleted, associations formed or broken and attributes modified, using the classes and attribute names of the domain model in section 5 (attribute names in italics). Messages that only return information are queries and have no contract.
 
-#### UC-01 Browse Job Postings
+#### UC-01 Search Job Postings
 
 Figure 5 shows SSD-01, the system sequence diagram for the main success scenario of UC-01.
 
-![Figure 5: SSD-01: UC-01 Browse Job Postings](diagrams/fig-05-ssd-01-uc-01-browse-job-postings.png)
+```mermaid
+sequenceDiagram
+    actor V as Visitor
+    participant S as :CareerBridge System
+    V->>S: searchPostings(criteria)
+    S-->>V: open postings, newest first
+    loop until done
+        V->>S: searchPostings(criteria)
+        S-->>V: open postings matching the criteria
+    end
+```
 
-**Figure 5: SSD-01: UC-01 Browse Job Postings**
+**Figure 5: SSD-01: UC-01 Search Job Postings**
 
 1. Visitor to System: searchPostings(criteria); System returns the open postings, newest first (steps 1–2, criteria empty).
 
 2. Visitor to System: searchPostings(criteria); System returns the matching open postings (steps 3–4).
-
-3. Visitor to System: viewPosting(postingId); System returns the posting details (steps 5–6).
 
 #### CO-01.1: searchPostings
 
@@ -36,7 +44,7 @@ Figure 5 shows SSD-01, the system sequence diagram for the main success scenario
 
 **Operation:** viewPosting(postingId)
 
-**Cross-references:** UC-01 steps 5–6, extension 5a; FR-UC01.3
+**Cross-references:** the posting page UC-04 starts from (UC-04 step 1, extension 1c); FR-UC01.3
 
 **Preconditions:** The Job Posting exists and was published (BR-9).
 
