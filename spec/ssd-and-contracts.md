@@ -52,9 +52,9 @@ Figure 6 shows SSD-02, the system sequence diagram for the main success scenario
 
 **Figure 6: SSD-02: UC-02 Register as Applicant**
 
-1. Visitor to System: register(fullName, email, password); System asks the Notification Service to send the verification email and returns "verification email sent" (steps 3–6).
+1. Visitor to System: register(fullName, email, password); System returns "account created, Applicant logged in" (steps 3–5).
 
-2. Visitor to System: verifyEmail(token); System returns "account activated, Applicant logged in" (steps 7–8).
+Figure 6 was drawn for Iteration 1 and still shows a verification email and verifyEmail(token). Applicant accounts are now active at once (A15), so the text above is the current SSD.
 
 #### CO-02.1: register
 
@@ -66,27 +66,11 @@ Figure 6 shows SSD-02, the system sequence diagram for the main success scenario
 
 **Postconditions:**
 
-- An Applicant instance was created with _First Name_ and _Last Name_ from fullName and _email_ from email, and its _account Status_ became Pending Verification.
+- An Applicant instance was created with _First Name_ and _Last Name_ from fullName (the last word is the
+  last name) and _email_ from email, a hash of password, and its _account Status_ became Active.
 
-- A Notification instance was created with _type_ Email verification and _status_ Pending, and associated with the Applicant.
-
-**Output:** System hands the new Notification to the Notification Service.
-
-#### CO-02.2: verifyEmail
-
-**Operation:** verifyEmail(token)
-
-**Cross-references:** UC-02 steps 7–8, extension 7a; FR-UC02.3
-
-**Preconditions:** The token belongs to the verification email sent to an Applicant whose _account Status_ is Pending Verification.
-
-**Postconditions:**
-
-- If the link had expired (extension 7a): a Notification instance was created with _type_ Email verification and _status_ Pending, and associated with the Applicant.
-
-- Otherwise: the Applicant's _account Status_ became Active.
-
-**Output:** System hands any new Notification to the Notification Service.
+**Output:** A session for the new Applicant ([ADR-0010](adr/0010-log-in-with-jwt.md)): the Applicant is
+logged in.
 
 #### UC-03 Maintain Profile and Resume
 

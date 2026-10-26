@@ -47,6 +47,14 @@ class PublicDeploymentTest {
     }
 
     @Test
+    void stillLetsVisitorsRegister() throws Exception {
+        mockMvc.perform(post("/api/applicants").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fullName\": \"Pat Kim\", \"email\": \"pat-public-" + System.nanoTime()
+                                + "@example.com\", \"password\": \"Sunrise-2026x\"}"))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
     void stillShowsPostings() throws Exception {
         mockMvc.perform(get("/api/postings")).andExpect(status().isOk());
     }

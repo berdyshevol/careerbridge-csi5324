@@ -1,4 +1,5 @@
 import { STAGES, type DeskApplication } from "./sampleDesk";
+import type { Session } from "./session";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
@@ -85,6 +86,10 @@ export type PostingSearchCriteria = Partial<Record<(typeof SEARCH_CRITERIA)[numb
 
 export type PageQuery = Record<string, string | string[] | undefined>;
 
+export function queryValue(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 // A hand-edited link can repeat a key, and Next.js then hands over an array;
 // the search knows one value per criterion, so it takes the first.
 export function searchCriteria(query: PageQuery): PostingSearchCriteria {
@@ -104,6 +109,46 @@ export function searchQuery(criteria: PostingSearchCriteria): string {
   }
   const text = query.toString();
   return text ? `?${text}` : "";
+}
+
+// UC-02 extension 4a: the backend's reason for each field it refused, keyed by field
+export class RegistrationRefused extends Error {
+  constructor(readonly fieldErrors: Partial<Record<"fullName" | "email" | "password", string>>) {
+    super("The registration was refused");
+  }
+}
+
+// UC-02 extension 4b
+export class AlreadyRegistered extends Error {}
+
+// UC-02, CO-02.1: the new Applicant is logged in at once, so the answer is a session
+export async function register(fullName: string, email: string, password: string): Promise<Session> {
+  const response = await backendFetch("/api/applicants", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fullName, email, password }),
+  });
+  if (response.status === 400 && response.headers.get("Content-Type")?.startsWith("application/json")) {
+    // Spring's own 400 is JSON too: only the form's fields are reasons for the visitor
+    const body: Record<string, unknown> = await response.json();
+    const fieldErrors = Object.fromEntries(
+      (["fullName", "email", "password"] as const).flatMap((name) =>
+        typeof body[name] === "string" ? [[name, body[name] as string]] : [],
+      ),
+    );
+    if (Object.keys(fieldErrors).length > 0) {
+      throw new RegistrationRefused(fieldErrors);
+    }
+    throw new Error("Backend answered 400");
+  }
+  const reason = await refusal(response, [409]);
+  if (reason !== null) {
+    throw new AlreadyRegistered(reason);
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
 }
 
 export async function searchPostings(criteria: PostingSearchCriteria = {}): Promise<JobPosting[]> {
@@ -202,8 +247,8 @@ export async function viewApplications(): Promise<Applications> {
 
 // Only a refusal in plain text is a reason for the user; any other body is the
 // server's own error report and must not reach the screen.
-async function refusal(response: Response): Promise<string | null> {
-  const refused = response.status === 400 || response.status === 403;
+async function refusal(response: Response, statuses = [400, 403]): Promise<string | null> {
+  const refused = statuses.includes(response.status);
   if (refused && response.headers.get("Content-Type")?.startsWith("text/plain")) {
     return response.text();
   }
