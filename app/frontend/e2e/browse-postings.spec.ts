@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-// UC-01 Browse Job Postings, against the sample data in jobs.csv.
+// UC-01 Search Job Postings, against the sample data in jobs.csv.
 
 test("the job board lists only open postings", async ({ page }) => {
   await page.goto("/jobs");
