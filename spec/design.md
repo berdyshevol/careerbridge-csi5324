@@ -4,7 +4,7 @@
 
 ## 6. Sequence Diagrams (Design)
 
-One design sequence diagram per system operation of the implemented use cases. Each shows how the
+One design sequence diagram per system operation of the implemented use cases, and the design of use cases not built yet. Each shows how the
 objects of [architecture.md](architecture.md) realize an operation contract of
 [ssd-and-contracts.md](ssd-and-contracts.md):
 
@@ -142,6 +142,103 @@ sequenceDiagram
 
 **Figure 27: SD-8 Register as an applicant (UC-02)**
 
+### UC-03 Update Applicant Profile
+
+UC-03 is not built yet: SD-9 and SD-10 are its design for Iteration 3, in the shape of the code
+that exists. The logged-in Applicant is the subject of the session token (ADR-0010); the
+controller passes that email to the service, so an applicant can only ever read and change their own
+profile (BR-15). CO-03.2 changes First Name, Last Name and phone #, the User attributes of the
+domain model; the other profile fields of step 2 wait for the domain model to have them.
+
+**SD-9.** The profile page asks for the profile, and the service reads the Applicant with the resume
+on file, if any (CO-03.1). On save it checks the fields (a first and a last name, a well-formed
+phone number) and returns every invalid one with its reason, so the page shows each next to its
+field (extension 4a); otherwise it changes the Applicant and confirms the save (CO-03.2).
+
+```mermaid
+sequenceDiagram
+    actor AP as Applicant
+    participant PP as ProfilePage
+    participant PC as ApplicantProfile<br/>Controller
+    participant PS as ApplicantProfile<br/>Service
+    participant AR as Applicant<br/>Repository
+    participant A as :Applicant
+
+    AP->>PP: open Profile & resume
+    PP->>PC: GET /api/applicant/profile (bearer token)
+    PC->>PS: viewProfile(email)
+    PS->>AR: findByEmailIgnoreCase(email)
+    AR-->>PS: Applicant, with its Resume if any
+    PS-->>PC: Applicant
+    PC-->>PP: 200 ProfileResponse {firstName, lastName,<br/>email, phone, resume {fileName, uploadDate}}
+    PP-->>AP: the profile and the resume on file
+
+    AP->>PP: edit first name, last name, phone and save
+    PP->>PC: PUT /api/applicant/profile<br/>{firstName, lastName, phone}
+    PC->>PS: updateProfile(email, details)
+    PS->>PS: validate: first and last name present,<br/>phone well formed
+    alt invalid fields (ext. 4a)
+        PS-->>PC: ProfileRefusedException(fieldErrors)
+        PC-->>PP: 400 {field: reason}
+        PP-->>AP: each reason next to its field, nothing saved
+    else fields valid
+        PS->>AR: findByEmailIgnoreCase(email)
+        AR-->>PS: Applicant
+        PS->>A: setFirstName(..), setLastName(..), setPhone(..)
+        PS->>AR: save(applicant)
+        AR-->>PS: Applicant
+        PS-->>PC: Applicant
+        PC-->>PP: 200 ProfileResponse
+        PP-->>AP: "Profile saved."
+    end
+```
+
+**Figure 28: SD-9 Update applicant profile (UC-03)**
+
+**SD-10.** The page sends the file as a multipart upload. The service accepts only a PDF or DOCX of
+at most 5 MB and otherwise refuses it, keeping the current resume (extension 6a). An accepted file
+becomes a new Resume with its name, type, size and upload date, stored in the database, and
+replaces the Applicant's previous one: an applicant has at most one resume (BR-6). Applications
+already submitted keep their own Resume Snapshot, so replacing the resume changes none of them
+(FR-UC03.3, A6). No external malware scanner is used (Iteration 1 feedback).
+
+```mermaid
+sequenceDiagram
+    actor AP as Applicant
+    participant PP as ProfilePage
+    participant PC as ApplicantProfile<br/>Controller
+    participant PS as ApplicantProfile<br/>Service
+    participant AR as Applicant<br/>Repository
+    participant RR as Resume<br/>Repository
+    participant A as :Applicant
+
+    AP->>PP: choose a resume file and upload
+    PP->>PC: POST /api/applicant/resume<br/>(multipart file, bearer token)
+    PC->>PS: uploadResume(email, file)
+    PS->>PS: check type (PDF or DOCX) and size (at most 5 MB)
+    alt not a PDF or DOCX, or larger than 5 MB (ext. 6a)
+        PS-->>PC: ResumeRefusedException(reason)
+        PC-->>PP: 400 reason
+        PP-->>AP: accepted types and size limit,<br/>current resume kept
+    else file accepted
+        PS->>AR: findByEmailIgnoreCase(email)
+        AR-->>PS: Applicant
+        create participant R as :Resume
+        PS->>R: new Resume(fileName, fileType,<br/>fileSize, content, uploadDate = now)
+        PS->>RR: save(resume)
+        RR-->>PS: Resume
+        PS->>A: setResume(resume)
+        Note over A: the previous Resume is no longer the<br/>applicant's (BR-6), application snapshots unchanged (A6)
+        PS->>AR: save(applicant)
+        AR-->>PS: Applicant
+        PS-->>PC: Resume
+        PC-->>PP: 201 ResumeResponse {fileName, uploadDate}
+        PP-->>AP: the new resume's file name and upload date
+    end
+```
+
+**Figure 29: SD-10 Upload a resume (UC-03)**
+
 ## 7. Design Class Diagram (DCD)
 
 Not written yet. Iteration 2 adds the design class diagram, consistent with the sequence diagrams
@@ -156,3 +253,5 @@ the DCD must contain each of them.
 | --- | --- | --- | --- |
 | SD-1 | `JobPostingController.searchPostings`; `PublicPosting.of` | `JobPostingService.searchPostings`; `JobPosting.isOpen` | `JobPostingRepository.findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDescJobPostIdDesc` |
 | SD-8 | `RegistrationController.register` | `RegistrationService.register`; `LogInService.startSession` | `UserRepository.findByEmailIgnoreCase`, `saveAndFlush` |
+| SD-9 | `ApplicantProfileController.viewProfile`, `updateProfile` | `ApplicantProfileService.viewProfile`, `updateProfile` | `ApplicantRepository.findByEmailIgnoreCase`, `save` |
+| SD-10 | `ApplicantProfileController.uploadResume` | `ApplicantProfileService.uploadResume` | `ApplicantRepository.findByEmailIgnoreCase`, `save`; `ResumeRepository.save` |

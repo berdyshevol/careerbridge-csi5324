@@ -84,15 +84,25 @@ sequenceDiagram
 **Output:** A session for the new Applicant ([ADR-0010](adr/0010-log-in-with-jwt.md)): the Applicant is
 logged in.
 
-#### UC-03 Maintain Profile and Resume
+#### UC-03 Update Applicant Profile
 
 Figure 7 shows SSD-03, the system sequence diagram for the main success scenario of UC-03.
 
-![Figure 7: SSD-03: UC-03 Maintain Profile and Resume](diagrams/fig-07-ssd-03-uc-03-maintain-profile-and-resume.png)
+```mermaid
+sequenceDiagram
+    actor A as Applicant
+    participant S as :CareerBridge System
+    A->>S: viewProfile()
+    S-->>A: profile details and the resume on file, if any
+    A->>S: updateProfile(details)
+    S-->>A: profile saved
+    A->>S: uploadResume(file)
+    S-->>A: resume file name and upload date
+```
 
-**Figure 7: SSD-03: UC-03 Maintain Profile and Resume**
+**Figure 7: SSD-03: UC-03 Update Applicant Profile**
 
-1. Applicant to System: viewProfile(); System returns the profile details and the resume on file (steps 1– 2).
+1. Applicant to System: viewProfile(); System returns the profile details and the resume on file (steps 1–2).
 
 2. Applicant to System: updateProfile(details); System returns "profile saved" (steps 3–4).
 
@@ -124,7 +134,7 @@ Figure 7 shows SSD-03, the system sequence diagram for the main success scenario
 
 **Operation:** uploadResume(file)
 
-**Cross-references:** UC-03 steps 5–7, extensions 6a, 6b; FR-UC03.2, FR-UC03.3
+**Cross-references:** UC-03 steps 5–7, extension 6a; FR-UC03.2, FR-UC03.3
 
 **Preconditions:** The Applicant is logged in.
 

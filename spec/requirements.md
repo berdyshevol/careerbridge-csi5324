@@ -24,11 +24,11 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC02.3:** The system shall create the account as Active and log the new Applicant in at once, without a verification email, and invite them to add a resume. (A15; UC-02 step 5)
 
-#### UC-03 Maintain Profile and Resume
+#### UC-03 Update Applicant Profile
 
 - **FR-UC03.1:** The system shall let an applicant view their profile details and edit their full name, phone, location, headline, skills, education and work experience, and shall reject the changes if the full name is empty or the phone number is malformed. (UC-03 steps 1–4, extension 4a)
 
-- **FR-UC03.2:** The system shall let an applicant upload one resume, a PDF or DOCX file of up to 5 MB, that replaces any previous resume, and shall reject any other file or a file flagged by the malware scan. (BR-6; UC-03 steps 5–7, extensions 6a, 6b)
+- **FR-UC03.2:** The system shall let an applicant upload one resume, a PDF or DOCX file of up to 5 MB, that replaces any previous resume, and shall reject any other file. (BR-6; UC-03 steps 5–7, extension 6a)
 
 - **FR-UC03.3:** The system shall keep the resume copy attached to each submitted application unchanged when the applicant replaces their resume. (BR-5, A6; UC-03 step 6, Success Guarantee)
 
@@ -44,7 +44,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC04.5:** After creating the application, the system shall ask the Notification Service to send the Applicant a confirmation, and shall confirm the submission with the updated count of active applications and a link to Track Application Status (UC-05). (UC-04 steps 6–7)
 
-- **FR-UC04.6:** If the Applicant has no resume on file, the system shall explain that a resume is required and send the Applicant to Maintain Profile and Resume (UC-03), then resume the application. (BR-6; UC-04 extension 2a)
+- **FR-UC04.6:** If the Applicant has no resume on file, the system shall explain that a resume is required and send the Applicant to Update Applicant Profile (UC-03), then resume the application. (BR-6; UC-04 extension 2a)
 
 - **FR-UC04.7:** If the Applicant already has 5 active applications, the system shall block the application, list the active applications and explain that a slot frees up when one is withdrawn or reaches Hired, Rejected or Offer Declined. (BR-4, A7; UC-04 extensions 2b, 4b)
 
@@ -254,9 +254,9 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **NFR-UC02.3 (Usability):** Pages work on current desktop and mobile browsers and meet WCAG 2.1 AA.
 
-#### UC-03 Maintain Profile and Resume
+#### UC-03 Update Applicant Profile
 
-- **NFR-UC03.1 (Performance):** The system validates, scans and stores a 5 MB resume within 10 seconds after receiving it.
+- **NFR-UC03.1 (Performance):** The system validates and stores a 5 MB resume within 10 seconds after receiving it.
 
 - **NFR-UC03.2 (Security/Privacy):** Resume files are encrypted at rest. Only the applicant and the Administrator can open the resume on file; a recruiter sees only the resume copy attached to an application to their organization's posting. (BR-15, A6)
 
@@ -447,7 +447,7 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC02.2|UC-02 step 4, extensions 4a–4c|register(fullName, email, password)|CO-02.1|
 |FR-UC02.3|UC-02 step 5|register(fullName, email, password)|CO-02.1|
 |FR-UC03.1|UC-03 steps 1–4, extension 4a|viewProfile(), updateProfile(details)|CO-03.1, CO-03.2|
-|FR-UC03.2|UC-03 steps 5–7, extensions 6a, 6b|uploadResume(file)|CO-03.3|
+|FR-UC03.2|UC-03 steps 5–7, extensions 6a|uploadResume(file)|CO-03.3|
 |FR-UC03.3|UC-03 step 6, Success Guarantee|uploadResume(file)|CO-03.3|
 |FR-UC04.1|UC-04 steps 1–2|startApplication(postingId, resume)|query (no contract)|
 |FR-UC04.2|UC-04 step 3, extension 3b|submitApplication(postingId)|CO-04.1|
