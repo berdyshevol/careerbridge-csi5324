@@ -370,21 +370,21 @@ Table 2 lists the 14 clarification questions submitted in Deliverable 0, the cus
 
 |**Q**|**Question**|**Customer answer**|**Business rule**|**Enforced in**|
 |---|---|---|---|---|
-|1|Is the system for a single<br>organization's internal recruiting, or a<br>multi-company job board where<br>many organizations post jobs?|Multi-organization,<br>similar to LinkedIn.|BR-1: Many organizations post<br>jobs; applicants browse and apply<br>across organizations.|UC-01|
-|2|Can one recruiter belong to multiple<br>organizations?|Yes.|BR-2: A recruiter may belong to<br>more than one organization.|UC-09, UC-11,<br>UC-14|
-|3|Should the public (not-logged-in<br>visitors) be able to browse job<br>postings, or is everything behind a<br>login?|Some pages are public.|BR-3: Some pages are public:<br>visitors can browse open postings<br>without logging in.|UC-01, UC-12|
-|4|Can an applicant apply to multiple<br>jobs at once? Is there a limit on|Yes, 5 active<br>applications.|BR-4: An applicant may have at<br>most 5 active applications at a time.|UC-04 to UC-<br>07, UC-13,|
-||active applications?|||UC-14, Close<br>Job Posting|
-|5|Can an applicant withdraw or edit an<br>application after submitting it?|They can withdraw but<br>not edit it.|BR-5: An applicant may withdraw a<br>submitted application but may not<br>edit it.|UC-03 to UC-<br>06|
-|6|One resume per applicant, or<br>multiple resumes or cover letters<br>tailored per application?|One resume.|BR-6: Each applicant has exactly<br>one resume on file; no cover letters<br>or per-job resumes.|UC-03, UC-04|
-|7|What should an applicant see about<br>their application status: every<br>internal stage, or only coarse<br>outcomes?|All stages.|BR-7: Applicants see every pipeline<br>stage of their own applications.|UC-05, UC-14|
-|8|What are the stages of the recruiting<br>pipeline? Is the pipeline fixed or<br>configurable per job?|Fixed pipeline.|BR-8: The recruiting pipeline is<br>fixed for all postings (see diagram<br>below).|UC-05, UC-06,<br>UC-14, UC-15|
-|9|Do job postings need an approval<br>step before going live, and do they<br>expire (deadline, auto-close when<br>filled)?|Yes, and they do expire.|BR-9: A job posting must be<br>approved before it is published.<br>BR-10: A posting closes<br>automatically when its deadline<br>passes or when it is filled (A2<br>defines filled).|UC-01, UC-04,<br>UC-05, UC-07,<br>UC-11 to UC-<br>13, Close Job<br>Posting|
-|10|Should rejected applicants be<br>notified automatically? Are rejection<br>reasons recorded and/or shared?|Yes and yes.|BR-11: Rejected applicants are<br>notified automatically, and the<br>recorded rejection reason is shared<br>with them.|UC-05, UC-07,<br>UC-14, Close<br>Job Posting|
-|11|Should interview coordination<br>happen inside the system, or is it<br>enough to record that an interview<br>was scheduled and its outcome?|It is enough to record<br>that an interview was<br>scheduled.|BR-12: The system records that an<br>interview was scheduled and its<br>outcome; it does not coordinate<br>times.|UC-05, UC-14|
-|12|Is an offer extended and accepted or<br>declined through the system, and<br>should a job posting close<br>automatically once it is filled?|Yes; the posting should<br>close automatically to<br>save memory and time<br>for other applications.|BR-10: A posting closes<br>automatically when its deadline<br>passes or when it is filled (A2<br>defines filled).<br>BR-13: Offers are extended,<br>accepted and declined inside the<br>system.|UC-01, UC-04,<br>UC-05, UC-07,<br>UC-13, UC-15,<br>Close Job<br>Posting|
-|13|Who creates and approves new<br>recruiter and organization accounts?<br>Is applicant self-registration open?|Applicants can self-<br>register. Recruiter and<br>organization accounts<br>require Administrator<br>approval.|BR-14: Applicants self-register;<br>recruiter and organization accounts<br>require Administrator approval.|UC-02, UC-08,<br>UC-10, UC-11,<br>UC-14, UC-15,<br>Log In|
-|14|Are there privacy expectations<br>(company A cannot see applications<br>to company B; recruiters cannot see<br>an applicant's other applications)?|Yes. Recruiters only<br>access applications to<br>jobs within their own<br>organization and cannot<br>view an applicant's<br>applications to other<br>organizations.|BR-15: Recruiters see only<br>applications to their own<br>organizations' postings, never an<br>applicant's applications elsewhere.|UC-01, UC-03<br>to UC-05, UC-<br>09 to UC-11,<br>UC-14, UC-15,<br>Log In|
+|1|Is the system for a single<br/>organization's internal recruiting, or a<br/>multi-company job board where<br/>many organizations post jobs?|Multi-organization,<br/>similar to LinkedIn.|BR-1: Many organizations post<br/>jobs; applicants browse and apply<br/>across organizations.|UC-01|
+|2|Can one recruiter belong to multiple<br/>organizations?|Yes.|BR-2: A recruiter may belong to<br/>more than one organization.|UC-09, UC-11,<br/>UC-14|
+|3|Should the public (not-logged-in<br/>visitors) be able to browse job<br/>postings, or is everything behind a<br/>login?|Some pages are public.|BR-3: Some pages are public:<br/>visitors can browse open postings<br/>without logging in.|UC-01, UC-12|
+|4|Can an applicant apply to multiple<br/>jobs at once? Is there a limit on|Yes, 5 active<br/>applications.|BR-4: An applicant may have at<br/>most 5 active applications at a time.|UC-04 to UC-<br/>07, UC-13,|
+||active applications?|||UC-14, Close<br/>Job Posting|
+|5|Can an applicant withdraw or edit an<br/>application after submitting it?|They can withdraw but<br/>not edit it.|BR-5: An applicant may withdraw a<br/>submitted application but may not<br/>edit it.|UC-03 to UC-<br/>06|
+|6|One resume per applicant, or<br/>multiple resumes or cover letters<br/>tailored per application?|One resume.|BR-6: Each applicant has exactly<br/>one resume on file; no cover letters<br/>or per-job resumes.|UC-03, UC-04|
+|7|What should an applicant see about<br/>their application status: every<br/>internal stage, or only coarse<br/>outcomes?|All stages.|BR-7: Applicants see every pipeline<br/>stage of their own applications.|UC-05, UC-14|
+|8|What are the stages of the recruiting<br/>pipeline? Is the pipeline fixed or<br/>configurable per job?|Fixed pipeline.|BR-8: The recruiting pipeline is<br/>fixed for all postings (see diagram<br/>below).|UC-05, UC-06,<br/>UC-14, UC-15|
+|9|Do job postings need an approval<br/>step before going live, and do they<br/>expire (deadline, auto-close when<br/>filled)?|Yes, and they do expire.|BR-9: A job posting must be<br/>approved before it is published.<br/>BR-10: A posting closes<br/>automatically when its deadline<br/>passes or when it is filled (A2<br/>defines filled).|UC-01, UC-04,<br/>UC-05, UC-07,<br/>UC-11 to UC-<br/>13, Close Job<br/>Posting|
+|10|Should rejected applicants be<br/>notified automatically? Are rejection<br/>reasons recorded and/or shared?|Yes and yes.|BR-11: Rejected applicants are<br/>notified automatically, and the<br/>recorded rejection reason is shared<br/>with them.|UC-05, UC-07,<br/>UC-14, Close<br/>Job Posting|
+|11|Should interview coordination<br/>happen inside the system, or is it<br/>enough to record that an interview<br/>was scheduled and its outcome?|It is enough to record<br/>that an interview was<br/>scheduled.|BR-12: The system records that an<br/>interview was scheduled and its<br/>outcome; it does not coordinate<br/>times.|UC-05, UC-14|
+|12|Is an offer extended and accepted or<br/>declined through the system, and<br/>should a job posting close<br/>automatically once it is filled?|Yes; the posting should<br/>close automatically to<br/>save memory and time<br/>for other applications.|BR-10: A posting closes<br/>automatically when its deadline<br/>passes or when it is filled (A2<br/>defines filled).<br/>BR-13: Offers are extended,<br/>accepted and declined inside the<br/>system.|UC-01, UC-04,<br/>UC-05, UC-07,<br/>UC-13, UC-15,<br/>Close Job<br/>Posting|
+|13|Who creates and approves new<br/>recruiter and organization accounts?<br/>Is applicant self-registration open?|Applicants can self-<br/>register. Recruiter and<br/>organization accounts<br/>require Administrator<br/>approval.|BR-14: Applicants self-register;<br/>recruiter and organization accounts<br/>require Administrator approval.|UC-02, UC-08,<br/>UC-10, UC-11,<br/>UC-14, UC-15,<br/>Log In|
+|14|Are there privacy expectations<br/>(company A cannot see applications<br/>to company B; recruiters cannot see<br/>an applicant's other applications)?|Yes. Recruiters only<br/>access applications to<br/>jobs within their own<br/>organization and cannot<br/>view an applicant's<br/>applications to other<br/>organizations.|BR-15: Recruiters see only<br/>applications to their own<br/>organizations' postings, never an<br/>applicant's applications elsewhere.|UC-01, UC-03<br/>to UC-05, UC-<br/>09 to UC-11,<br/>UC-14, UC-15,<br/>Log In|
 
 Writing the use cases raised further questions for the customer. Table 3 lists them with the use case that raised each one and the answer the team works with until the customer replies.
 
@@ -392,45 +392,45 @@ Writing the use cases raised further questions for the customer. Table 3 lists t
 
 |**Use case**|**Question for the customer**|**Team's working answer**|
 |---|---|---|
-|UC-04|Confirm that an applicant cannot reapply to a posting after<br>withdrawing.|As stated in A5 (section 2.2).|
-|UC-04|Should recruiters also get a notice for each new application, or<br>only see new applications among their postings?|This model only lists them (UC-14).|
-|UC-04|Confirm that an application at the Offer stage counts toward the<br>limit until the offer is accepted, declined or expires.|As stated in A7 (section 2.2).|
-|UC-14|Confirm that every active recruiter of an organization sees all of<br>its postings and applications.|As stated in A10 (section 2.2).|
-|UC-14|Confirm the notice times: a rejection before the Interview stage<br>by the end of the business day; an advance, or a rejection at the<br>Interview or Offer stage, within 4 business days.|As stated in A11 (section 2.2).|
-|UC-14|Confirm that an application can never be moved back a stage and<br>that a rejection is final.|As stated in A8 (section 2.2).|
-|UC-14|Confirm that interview outcomes stay hidden from applicants and<br>that an application has at most two interview rounds.|As stated in A12, A13 (section 2.2).|
+|UC-04|Confirm that an applicant cannot reapply to a posting after<br/>withdrawing.|As stated in A5 (section 2.2).|
+|UC-04|Should recruiters also get a notice for each new application, or<br/>only see new applications among their postings?|This model only lists them (UC-14).|
+|UC-04|Confirm that an application at the Offer stage counts toward the<br/>limit until the offer is accepted, declined or expires.|As stated in A7 (section 2.2).|
+|UC-14|Confirm that every active recruiter of an organization sees all of<br/>its postings and applications.|As stated in A10 (section 2.2).|
+|UC-14|Confirm the notice times: a rejection before the Interview stage<br/>by the end of the business day; an advance, or a rejection at the<br/>Interview or Offer stage, within 4 business days.|As stated in A11 (section 2.2).|
+|UC-14|Confirm that an application can never be moved back a stage and<br/>that a rejection is final.|As stated in A8 (section 2.2).|
+|UC-14|Confirm that interview outcomes stay hidden from applicants and<br/>that an application has at most two interview rounds.|As stated in A12, A13 (section 2.2).|
 |UC-15|Is 7 days a sensible default response deadline?|As stated in A14 (section 2.2).|
-|UC-15|Should an interview with the outcome Passed be required before<br>an offer, rather than only warned about?|This model only warns.|
-|UC-15|A14: may a revision shorten the response deadline, or only<br>extend it?|This model allows any future deadline.|
-|UC-05|BR-7 says applicants see all stages. Confirm that this means<br>stage names and dates only, not recruiter notes or recruiter<br>names; this model shows names and dates only.|Not covered by the current use cases; left for<br>the customer to decide.|
-|UC-05|Should rejection reasons come from a fixed list with an optional<br>comment, to keep them professional, or be free text?|This model uses a fixed list (A18).|
-|UC-05|Confirm that applications to a filled posting are rejected with the<br>reason "Posting closed."|As stated in A3 (section 2.2).|
+|UC-15|Should an interview with the outcome Passed be required before<br/>an offer, rather than only warned about?|This model only warns.|
+|UC-15|A14: may a revision shorten the response deadline, or only<br/>extend it?|This model allows any future deadline.|
+|UC-05|BR-7 says applicants see all stages. Confirm that this means<br/>stage names and dates only, not recruiter notes or recruiter<br/>names; this model shows names and dates only.|Not covered by the current use cases; left for<br/>the customer to decide.|
+|UC-05|Should rejection reasons come from a fixed list with an optional<br/>comment, to keep them professional, or be free text?|This model uses a fixed list (A18).|
+|UC-05|Confirm that applications to a filled posting are rejected with the<br/>reason "Posting closed."|As stated in A3 (section 2.2).|
 |UC-06|Confirm that an applicant cannot reapply after withdrawing.|As stated in A5 (section 2.2).|
-|UC-06|Is the withdrawal reason shared with the recruiter, or kept for<br>platform statistics only?|This model shares it.|
-|UC-06|Should an applicant be able to withdraw at the Offer stage?|This model routes that case to Decline in<br>UC-07.|
-|UC-07|Once hired, should the applicant's other active applications be<br>withdrawn automatically?|This model leaves them to the applicant.|
-|UC-07|Confirm the number-of-openings rule and the automatic rejection<br>with the reason "Posting closed."|As stated in A2 and A3 (section 2.2).|
-|UC-07|Confirm that an offer past its response deadline can no longer be<br>accepted and stays in Offer until a recruiter rejects it.|As stated in A14 (section 2.2).|
-|UC-08|What evidence should the Administrator require to approve a<br>request (matching email domain, business registration number)?|Not covered by the current use cases; left for<br>the customer to decide.|
-|UC-08|When a new recruiter asks to join an existing organization,<br>should an approved recruiter of that organization approve instead<br>of the Administrator?|As stated in A4 (section 2.2).|
-|UC-08|Should a pending recruiter be able to draft postings before<br>approval?|This model says no.|
+|UC-06|Is the withdrawal reason shared with the recruiter, or kept for<br/>platform statistics only?|This model shares it.|
+|UC-06|Should an applicant be able to withdraw at the Offer stage?|This model routes that case to Decline in<br/>UC-07.|
+|UC-07|Once hired, should the applicant's other active applications be<br/>withdrawn automatically?|This model leaves them to the applicant.|
+|UC-07|Confirm the number-of-openings rule and the automatic rejection<br/>with the reason "Posting closed."|As stated in A2 and A3 (section 2.2).|
+|UC-07|Confirm that an offer past its response deadline can no longer be<br/>accepted and stays in Offer until a recruiter rejects it.|As stated in A14 (section 2.2).|
+|UC-08|What evidence should the Administrator require to approve a<br/>request (matching email domain, business registration number)?|Not covered by the current use cases; left for<br/>the customer to decide.|
+|UC-08|When a new recruiter asks to join an existing organization,<br/>should an approved recruiter of that organization approve instead<br/>of the Administrator?|As stated in A4 (section 2.2).|
+|UC-08|Should a pending recruiter be able to draft postings before<br/>approval?|This model says no.|
 |UC-09|Should the Administrator approve membership requests, or an|As stated in A4 (section 2.2).|
 ||existing recruiter of the target organization?||
-|UC-09|Is there a limit on how many organizations one recruiter can<br>join?|Not covered by the current use cases; left for<br>the customer to decide.|
-|UC-09|Leaving an organization, or being removed from one, is not<br>covered by any current use case.|Not covered by the current use cases; left for<br>the customer to decide.|
-|UC-10|What verification criteria must be met before approval? This ties<br>to UC-08.|Not covered by the current use cases; left for<br>the customer to decide.|
-|UC-10|Confirm that the Administrator, not the organization, approves<br>membership requests.|As stated in A4 (section 2.2).|
-|UC-10|Suspending or revoking an approved recruiter or organization is<br>not covered by any current use case.|Not covered by the current use cases; left for<br>the customer to decide.|
-|UC-11|Confirm that the Administrator, not a reviewer inside the<br>organization, approves postings.|As stated in A1 (section 2.2).|
-|UC-11|Can a published posting be edited, and does an edit need re-<br>approval? Can the deadline be extended?|Not covered by the current use cases; left for<br>the customer to decide.|
-|UC-11|Is the 90-day maximum deadline acceptable, and is salary range<br>required?|Not covered by the current use cases; left for<br>the customer to decide.|
-|UC-11|Can every recruiter of an organization manage all of its postings,<br>or only their own?|Not covered by the current use cases; left for<br>the customer to decide.|
+|UC-09|Is there a limit on how many organizations one recruiter can<br/>join?|Not covered by the current use cases; left for<br/>the customer to decide.|
+|UC-09|Leaving an organization, or being removed from one, is not<br/>covered by any current use case.|Not covered by the current use cases; left for<br/>the customer to decide.|
+|UC-10|What verification criteria must be met before approval? This ties<br/>to UC-08.|Not covered by the current use cases; left for<br/>the customer to decide.|
+|UC-10|Confirm that the Administrator, not the organization, approves<br/>membership requests.|As stated in A4 (section 2.2).|
+|UC-10|Suspending or revoking an approved recruiter or organization is<br/>not covered by any current use case.|Not covered by the current use cases; left for<br/>the customer to decide.|
+|UC-11|Confirm that the Administrator, not a reviewer inside the<br/>organization, approves postings.|As stated in A1 (section 2.2).|
+|UC-11|Can a published posting be edited, and does an edit need re-<br/>approval? Can the deadline be extended?|Not covered by the current use cases; left for<br/>the customer to decide.|
+|UC-11|Is the 90-day maximum deadline acceptable, and is salary range<br/>required?|Not covered by the current use cases; left for<br/>the customer to decide.|
+|UC-11|Can every recruiter of an organization manage all of its postings,<br/>or only their own?|Not covered by the current use cases; left for<br/>the customer to decide.|
 |UC-12|Confirm that the Administrator approves postings.|As stated in A1 (section 2.2).|
-|UC-12|Who writes the posting guidelines, and what do they prohibit?|Not covered by the current use cases; left for<br>the customer to decide.|
-|UC-12|Should organizations with a good track record be allowed to<br>publish without review?|Not covered by the current use cases; left for<br>the customer to decide.|
-|UC-13|Confirm that applications submitted before the deadline continue<br>after the posting expires.|As stated in A3 (section 2.2).|
-|UC-13|Can a recruiter reopen an expired posting with a new deadline,<br>and would that need re-approval?|Not covered by the current use cases; left for<br>the customer to decide.|
-|UC-13|Applications never processed after expiry keep occupying<br>applicants' slots (BR-4). Should they be rejected automatically<br>after some period?|Not covered by the current use cases; left for<br>the customer to decide.|
+|UC-12|Who writes the posting guidelines, and what do they prohibit?|Not covered by the current use cases; left for<br/>the customer to decide.|
+|UC-12|Should organizations with a good track record be allowed to<br/>publish without review?|Not covered by the current use cases; left for<br/>the customer to decide.|
+|UC-13|Confirm that applications submitted before the deadline continue<br/>after the posting expires.|As stated in A3 (section 2.2).|
+|UC-13|Can a recruiter reopen an expired posting with a new deadline,<br/>and would that need re-approval?|Not covered by the current use cases; left for<br/>the customer to decide.|
+|UC-13|Applications never processed after expiry keep occupying<br/>applicants' slots (BR-4). Should they be rejected automatically<br/>after some period?|Not covered by the current use cases; left for<br/>the customer to decide.|
 
 ### 3.4 Traceability Matrix
 
@@ -455,7 +455,7 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC04.4|UC-04 step 5|submitApplication(postingId)|CO-04.1|
 |FR-UC04.5|UC-04 steps 6–7|submitApplication(postingId)|CO-04.1|
 |FR-UC04.6|UC-04 extension 2a|startApplication(postingId, resume)|query (no contract)|
-|FR-UC04.7|UC-04 extensions 2b, 4b|startApplication(postingId, resume),<br>submitApplication(postingId)|query (no contract), CO-04.1|
+|FR-UC04.7|UC-04 extensions 2b, 4b|startApplication(postingId, resume),<br/>submitApplication(postingId)|query (no contract), CO-04.1|
 |FR-UC04.8|UC-04 extension 6a|submitApplication(postingId)|CO-04.1|
 |FR-UC05.1|UC-05 steps 1–2|viewApplications()|CO-05.1|
 |FR-UC05.2|UC-05 steps 3–4|viewApplication(applicationId)|CO-05.2|
@@ -465,7 +465,7 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC05.6|UC-05 extension *a|viewApplication(applicationId)|CO-05.2|
 |FR-UC05.7|UC-05 extension 2b|viewApplications()|CO-05.1|
 |FR-UC05.8|UC-05 step 2|viewApplications()|CO-05.1|
-|FR-UC06.1|UC-06 Preconditions|requestWithdrawal(applicationId),<br>withdrawApplication(applicationId, reason)|CO-06.1, CO-06.2|
+|FR-UC06.1|UC-06 Preconditions|requestWithdrawal(applicationId),<br/>withdrawApplication(applicationId, reason)|CO-06.1, CO-06.2|
 |FR-UC06.2|UC-06 steps 1–2|requestWithdrawal(applicationId)|CO-06.1|
 |FR-UC06.3|UC-06 step 3|withdrawApplication(applicationId, reason)|CO-06.2|
 |FR-UC06.4|UC-06 step 4, extensions 4a–4b|withdrawApplication(applicationId, reason)|CO-06.2|
@@ -475,34 +475,34 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC06.8|UC-06 extension 6a|withdrawApplication(applicationId, reason)|CO-06.2|
 |FR-UC06.9|UC-06 Special Requirements|withdrawApplication(applicationId, reason)|CO-06.2|
 |FR-UC07.1|UC-07 steps 1–2|viewOffer(applicationId)|CO-07.1|
-|FR-UC07.2|UC-07 step 3, extension 3a|acceptOffer(applicationId),<br>declineOffer(applicationId, reason)|CO-07.2, CO-07.3|
-|FR-UC07.3|UC-07 steps 4–5; UC-07 extensions<br>3a, 3b, 5a|acceptOffer(applicationId),<br>declineOffer(applicationId, reason)|CO-07.2, CO-07.3|
+|FR-UC07.2|UC-07 step 3, extension 3a|acceptOffer(applicationId),<br/>declineOffer(applicationId, reason)|CO-07.2, CO-07.3|
+|FR-UC07.3|UC-07 steps 4–5; UC-07 extensions<br/>3a, 3b, 5a|acceptOffer(applicationId),<br/>declineOffer(applicationId, reason)|CO-07.2, CO-07.3|
 |FR-UC07.4|UC-07 step 6|acceptOffer(applicationId)|CO-07.2|
-|FR-UC07.5|UC-07 extension 3a, Success<br>Guarantee|declineOffer(applicationId, reason)|CO-07.3|
-|FR-UC07.6|UC-07 extension 6a|acceptOffer(applicationId),<br>declineOffer(applicationId, reason)|CO-07.2, CO-07.3|
+|FR-UC07.5|UC-07 extension 3a, Success<br/>Guarantee|declineOffer(applicationId, reason)|CO-07.3|
+|FR-UC07.6|UC-07 extension 6a|acceptOffer(applicationId),<br/>declineOffer(applicationId, reason)|CO-07.2, CO-07.3|
 |FR-UC07.7|UC-07 extension 6c|acceptOffer(applicationId)|CO-07.2|
-|FR-UC07.8|UC-07 steps 7–8|acceptOffer(applicationId),<br>declineOffer(applicationId, reason)|CO-07.2, CO-07.3|
-|FR-UC07.9|UC-07 extension 7a|acceptOffer(applicationId),<br>declineOffer(applicationId, reason)|CO-07.2, CO-07.3|
+|FR-UC07.8|UC-07 steps 7–8|acceptOffer(applicationId),<br/>declineOffer(applicationId, reason)|CO-07.2, CO-07.3|
+|FR-UC07.9|UC-07 extension 7a|acceptOffer(applicationId),<br/>declineOffer(applicationId, reason)|CO-07.2, CO-07.3|
 |FR-UC07.10|UC-07 Special Requirements|acceptOffer(applicationId)|CO-07.2|
 |FR-UC07.11|UC-07 extension 6b|acceptOffer(applicationId)|CO-07.2|
-|FR-UC08.1|UC-08 step 4, extension 4a|submitRecruiterRegistration(recruiterData,<br>organizationData)|CO-08.1|
-|FR-UC08.2|UC-08 step 4, extension 4b|submitRecruiterRegistration(recruiterData,<br>organizationData)|CO-08.1|
-|FR-UC08.3|UC-08 step 4, extension 4c|submitRecruiterRegistration(recruiterData,<br>organizationData)|CO-08.1|
+|FR-UC08.1|UC-08 step 4, extension 4a|submitRecruiterRegistration(recruiterData,<br/>organizationData)|CO-08.1|
+|FR-UC08.2|UC-08 step 4, extension 4b|submitRecruiterRegistration(recruiterData,<br/>organizationData)|CO-08.1|
+|FR-UC08.3|UC-08 step 4, extension 4c|submitRecruiterRegistration(recruiterData,<br/>organizationData)|CO-08.1|
 |FR-UC08.4|UC-08 steps 6–7|verifyRecruiterEmail(token)|CO-08.2|
-|FR-UC09.1|UC-09 step 6, extensions 6a–6b|submitMembershipRequest(organizationId, role,<br>justification)|CO-09.1|
-|FR-UC09.2|UC-09 Success Guarantee|submitMembershipRequest(organizationId, role,<br>justification)|CO-09.1|
+|FR-UC09.1|UC-09 step 6, extensions 6a–6b|submitMembershipRequest(organizationId, role,<br/>justification)|CO-09.1|
+|FR-UC09.2|UC-09 Success Guarantee|submitMembershipRequest(organizationId, role,<br/>justification)|CO-09.1|
 |FR-UC09.3|UC-09 extension 3a|none for UC-09 ext. 3a|none for UC-09 ext. 3a|
-|FR-UC10.1|UC-10 Preconditions, Special<br>Requirements|openApprovalQueue()|query (no contract)|
+|FR-UC10.1|UC-10 Preconditions, Special<br/>Requirements|openApprovalQueue()|query (no contract)|
 |FR-UC10.2|UC-10 step 6|approveRequest(requestId)|CO-10.1|
-|FR-UC10.3|UC-10 step 7, extension 5a|approveRequest(requestId); none for UC-10 ext.<br>5a|CO-10.1; none for UC-10 ext.<br>5a|
-|FR-UC11.1|UC-11 Preconditions, extension 2a|selectCreatePosting(),<br>submitJobPosting(organizationId, postingData)|query (no contract), CO-11.1|
+|FR-UC10.3|UC-10 step 7, extension 5a|approveRequest(requestId); none for UC-10 ext.<br/>5a|CO-10.1; none for UC-10 ext.<br/>5a|
+|FR-UC11.1|UC-11 Preconditions, extension 2a|selectCreatePosting(),<br/>submitJobPosting(organizationId, postingData)|query (no contract), CO-11.1|
 |FR-UC11.2|UC-11 steps 3 and 5, extension 5a|submitJobPosting(organizationId, postingData)|CO-11.1|
 |FR-UC11.3|UC-11 steps 3 and 5|submitJobPosting(organizationId, postingData)|CO-11.1|
 |FR-UC11.4|UC-11 step 5, extension 5b|submitJobPosting(organizationId, postingData)|CO-11.1|
 |FR-UC11.5|UC-11 step 6|submitJobPosting(organizationId, postingData)|CO-11.1|
 |FR-UC11.6|UC-11 Success Guarantee|submitJobPosting(organizationId, postingData)|CO-11.1|
 |FR-UC11.7|UC-11 extension 3b|none for UC-11 ext. 3b|none for UC-11 ext. 3b|
-|FR-UC11.8|UC-11 extension 6a; UC-12<br>extension 5a|submitJobPosting(organizationId, postingData);<br>none for UC-12 ext. 5a|CO-11.1; none for UC-12 ext.<br>5a|
+|FR-UC11.8|UC-11 extension 6a; UC-12<br/>extension 5a|submitJobPosting(organizationId, postingData);<br/>none for UC-12 ext. 5a|CO-11.1; none for UC-12 ext.<br/>5a|
 |FR-UC12.1|UC-12 Preconditions|openPostingApprovalQueue()|query (no contract)|
 |FR-UC12.2|UC-12 step 2|openPostingApprovalQueue()|query (no contract)|
 |FR-UC12.3|UC-12 step 4|selectPosting(postingId)|query (no contract)|
@@ -510,7 +510,7 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC12.5|UC-12 extension 5a|none for UC-12 ext. 5a|none for UC-12 ext. 5a|
 |FR-UC12.6|UC-12 extension 5b|none for UC-12 ext. 5b|none for UC-12 ext. 5b|
 |FR-UC12.7|UC-12 extensions 6a, 6b|approveJobPosting(postingId)|CO-12.1|
-|FR-UC12.8|UC-12 step 7; UC-12 extensions 5a,<br>5b|approveJobPosting(postingId); none for UC-12<br>ext. 5a, 5b|CO-12.1; none for UC-12 ext.<br>5a, 5b|
+|FR-UC12.8|UC-12 step 7; UC-12 extensions 5a,<br/>5b|approveJobPosting(postingId); none for UC-12<br/>ext. 5a, 5b|CO-12.1; none for UC-12 ext.<br/>5a, 5b|
 |FR-UC13.1|UC-13 step 1, Special Requirements|runExpirationJob()|CO-13.1|
 |FR-UC13.2|UC-13 step 2|runExpirationJob()|CO-13.1|
 |FR-UC13.3|UC-13 step 3|runExpirationJob()|CO-13.1|
@@ -524,11 +524,11 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC14.3|UC-14 steps 5–6|advanceApplication(applicationId, note)|CO-14.2|
 |FR-UC14.4|UC-14 step 7|advanceApplication(applicationId, note)|CO-14.2|
 |FR-UC14.5|UC-14 extension 5b|advanceApplication(applicationId, note)|CO-14.2|
-|FR-UC14.6|UC-14 extension 5a|rejectApplication(applicationId, reason,<br>comment)|CO-14.3|
+|FR-UC14.6|UC-14 extension 5a|rejectApplication(applicationId, reason,<br/>comment)|CO-14.3|
 |FR-UC14.7|UC-14 extension 5c|recordInterview(applicationId, interviewDetails)|CO-14.4|
 |FR-UC14.8|UC-14 extension 5d|advanceApplication(applicationId, note)|CO-14.2|
 |FR-UC14.9|UC-14 extension *a|reviewApplication(applicationId)|CO-14.1|
-|FR-UC14.10|UC-14 extension 6a|advanceApplication(applicationId, note),<br>rejectApplication(applicationId, reason,<br>comment)|CO-14.2, CO-14.3|
+|FR-UC14.10|UC-14 extension 6a|advanceApplication(applicationId, note),<br/>rejectApplication(applicationId, reason,<br/>comment)|CO-14.2, CO-14.3|
 |FR-UC14.11|UC-14 extension 2a|listPostings()|query (no contract)|
 |FR-UC15.1|UC-15 steps 1–2, extension 1a|startOffer(applicationId)|query (no contract)|
 |FR-UC15.2|UC-15 step 3, Special Requirements|extendOffer(applicationId, offerTerms)|CO-15.1|
@@ -538,5 +538,5 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC15.6|UC-15 steps 7–8|extendOffer(applicationId, offerTerms)|CO-15.1|
 |FR-UC15.7|UC-15 extension 1b|reviseOffer(applicationId, offerTerms)|CO-15.2|
 |FR-UC15.8|UC-15 extensions 2a, 2b|startOffer(applicationId)|query (no contract)|
-|FR-UC15.9|UC-15 extension 5b|extendOffer(applicationId, offerTerms),<br>reviseOffer(applicationId, offerTerms)|CO-15.1, CO-15.2|
+|FR-UC15.9|UC-15 extension 5b|extendOffer(applicationId, offerTerms),<br/>reviseOffer(applicationId, offerTerms)|CO-15.1, CO-15.2|
 |FR-UC15.10|UC-15 extension *a|startOffer(applicationId)|query (no contract)|

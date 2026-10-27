@@ -4,7 +4,9 @@ What the system must do and how it is built. These files are the current version
 together with the code. If code and specification disagree, fix one of them in the same pull request.
 
 Each file is one part of the documentation, in the order of the course template; the documentation
-PDF is built from them (`tools/build-pdf/`). Find the topic here before reading or adding text.
+PDF is built from them (`tools/build-pdf/`), and the Mintlify docs site from [docs.json](../docs.json) (it reads only `spec/`, see `.mintignore`).
+Mintlify reads Markdown as MDX: write `<br/>`, not `<br>`, and `[text](url)`, not `<url>`. Find the
+topic here before reading or adding text.
 
 | File | Holds | Read when | Put here, not elsewhere | Section |
 | --- | --- | --- | --- | --- |
