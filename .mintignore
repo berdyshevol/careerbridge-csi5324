@@ -1,0 +1,5 @@
+# Mintlify publishes spec/ only (docs.json)
+/*
+!/docs.json
+!/spec/
+/spec/CLAUDE.md
