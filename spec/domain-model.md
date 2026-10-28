@@ -38,7 +38,7 @@ Figure 25; classes and associations that are not in the figure are listed in sec
   contracts call the entries of an application its _statusHistory_.
 - A **Job Posting**'s _location_ is On-site, Hybrid or Remote (UC-11 step 3), and its
   _employmentType_ is Full-time, Part-time, Internship, Contract or Temporary. The job board
-  filters by these same values (UC-01 step 3).
+  filters by these same values (UC-01 step 1).
 - An **Organization**'s _timeZone_ is where its deadlines are read: a **Job Posting** stops
   accepting applications at 23:59 on its _applicationDeadline_ in that zone (UC-13 variation 2a,
   NFR-UC13.5). An organization with no zone recorded uses UTC.

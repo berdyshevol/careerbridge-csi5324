@@ -10,9 +10,9 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 #### UC-01 Search Job Postings
 
-- **FR-UC01.1:** The system shall let any visitor, without logging in, view the open job postings of all organizations, newest first. (BR-1, BR-3, BR-9, BR-10; UC-01 steps 1–2)
+- **FR-UC01.1:** The system shall let any visitor, without logging in, view the open job postings of all organizations, newest first, with their details. (BR-1, BR-3, BR-9, BR-10; UC-01 steps 1–2)
 
-- **FR-UC01.2:** The system shall let a visitor search open postings by keyword, location, organization and employment type. (UC-01 steps 3–4)
+- **FR-UC01.2:** The system shall let a visitor search open postings by keyword, location, organization and employment type, in the same request. (UC-01 steps 1–2, extensions 2a, 2b)
 
 - **FR-UC01.3:** The system shall show a posting's full details on its own page, from which UC-04 starts; opening it is a page of the job board, not a step of UC-01 (Iteration 1 feedback). (UC-04 step 1, extension 1c)
 
@@ -441,7 +441,7 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |**FR**|**Use-case steps**|**SSD message**|**Operation contract**|
 |---|---|---|---|
 |FR-UC01.1|UC-01 steps 1–2|searchPostings(criteria)|CO-01.1|
-|FR-UC01.2|UC-01 steps 3–4|searchPostings(criteria)|CO-01.1|
+|FR-UC01.2|UC-01 steps 1–2, extensions 2a, 2b|searchPostings(criteria)|CO-01.1|
 |FR-UC01.3|UC-04 step 1, extension 1c|viewPosting(postingId)|CO-01.2|
 |FR-UC02.1|UC-02 steps 1–5|register(fullName, email, password)|CO-02.1|
 |FR-UC02.2|UC-02 step 4, extensions 4a–4c|register(fullName, email, password)|CO-02.1|
