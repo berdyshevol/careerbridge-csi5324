@@ -41,8 +41,6 @@ export default async function DeskPage() {
   const session = await serverSession();
   // The desk is the logged-in Applicant's; anyone else sees the job board part only
   const applicant = session?.user.role === "APPLICANT" ? session : null;
-  // A recruiter or administrator is logged in already: no applicant section, no log-in prompt
-  const visitor = session === null;
   const [postings, desk] = await Promise.all([
     openPostings(),
     applicant ? deskOf(applicant.token) : ("none" as const),
@@ -56,18 +54,17 @@ export default async function DeskPage() {
           ordered around the side column; on laptops it is the white canvas. */}
       <div className="contents min-w-0 lg:flex lg:flex-1 lg:flex-col lg:gap-6 lg:rounded-2xl lg:border lg:border-base-300 lg:bg-base-100 lg:p-8">
         <div className="order-1">
-          {applicant ? (
-            <PageTitle subtitle="Here is where your applications stand.">
-              Welcome back, {applicant.user.firstName}
+          {session ? (
+            <PageTitle subtitle={applicant ? "Here is where your applications stand." : "Here are the job postings open now."}>
+              Welcome back, {session.user.firstName}
             </PageTitle>
-          ) : session ? (
-            <PageTitle subtitle="Here are the job postings open now.">Welcome back, {session.user.firstName}</PageTitle>
           ) : (
             <PageTitle subtitle="Find a job and apply in a few steps.">Welcome to CareerBridge</PageTitle>
           )}
         </div>
 
-        {(visitor || applicant) && (
+        {/* A recruiter or administrator is logged in already: no applicant section, no log-in prompt */}
+        {(!session || applicant) && (
         <section className="order-3 flex flex-col gap-3">
           <div className="flex items-baseline justify-between">
             <h2 className="text-lg font-semibold">Your applications</h2>

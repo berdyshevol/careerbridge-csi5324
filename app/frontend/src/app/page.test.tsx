@@ -76,6 +76,7 @@ describe("home page", () => {
       screen.getByRole("heading", { name: "Welcome back, Riley" }),
     ).toBeInTheDocument();
     expect(screen.getByText("1 of 5 active")).toBeInTheDocument();
+    expect(screen.getByText("Data Analyst Intern")).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: "Log in as an applicant" }),
     ).not.toBeInTheDocument();
