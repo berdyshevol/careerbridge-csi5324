@@ -57,8 +57,8 @@ The service first normalises the input, collapsing any spaces in the full name a
 lower-casing the email address, the way log-in looks it up, and checks the fields of CO-02.1: a full
 name with a last name, a well-formed email address, at most 255 characters each, and the password
 policy of A15 (at least 10 characters, including a letter and a number; at most 72 bytes, which
-BCrypt reads). Every invalid field comes back at once with its reason (extensions 4a, 4c). Only then
-does the service look the address up and refuse it if an account already exists (4b). Otherwise it
+BCrypt reads). Every invalid field comes back at once with its reason (extensions 2a, 2c). Only then
+does the service look the address up and refuse it if an account already exists (2b). Otherwise it
 creates the Applicant as Active, keeps only a hash of the password and saves it; the unique
 constraint on the email turns two registrations at the same moment into the same refusal. No
 verification email is sent (A15): LogInService signs a token for the new Applicant (ADR-0010), and
@@ -77,12 +77,12 @@ sequenceDiagram
     RC->>RS: register(fullName, email, password)
     RS->>RS: normalise (spaces in the name, email stripped,<br/>lower-cased → address), validate fields:<br/>full name with a last name, email well formed,<br/>lengths, password policy (A15)
 
-    alt invalid fields (ext. 4a, 4c)
+    alt invalid fields (ext. 2a, 2c)
         RS-->>RC: RegistrationRefusedException(fieldErrors)
         RC-->>V: 400 {field: reason}, nothing saved
     else fields valid
         RS->>UR: findByEmailIgnoreCase(address)
-        alt email already registered (ext. 4b)
+        alt email already registered (ext. 2b)
             UR-->>RS: Optional<User> (present)
             RS-->>RC: AlreadyRegisteredException
             RC-->>V: 409 "An account already exists…", nothing saved
@@ -95,7 +95,7 @@ sequenceDiagram
             PE-->>RS: hash
             RS->>A: setPasswordHash(hash)
             RS->>UR: saveAndFlush(applicant)
-            alt same email registered at the same moment (ext. 4b)
+            alt same email registered at the same moment (ext. 2b)
                 UR-->>RS: DataIntegrityViolationException
                 RS-->>RC: AlreadyRegisteredException
                 RC-->>V: 409 "An account already exists…", nothing saved

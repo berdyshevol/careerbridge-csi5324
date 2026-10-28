@@ -202,7 +202,7 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
               <p className="mt-1 text-sm text-muted">Uploaded {formatUtcDay(resume.uploadDate)}</p>
             </div>
           ) : (
-            // UC-02 step 5: a new applicant lands here and is asked for a resume
+            // UC-02 step 3: a new applicant lands here and is asked for a resume
             <div className="mt-5">
               <EmptyState>No resume on file yet. Add your resume here to apply for jobs.</EmptyState>
             </div>

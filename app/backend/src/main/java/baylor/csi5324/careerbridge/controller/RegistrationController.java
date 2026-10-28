@@ -32,7 +32,7 @@ public class RegistrationController {
                 registrationService.register(request.fullName(), request.email(), request.password()));
     }
 
-    // Field by field, so the form can put each reason next to its field (UC-02 extension 4a)
+    // Field by field, so the form can put each reason next to its field (UC-02 extension 2a)
     @ExceptionHandler(RegistrationRefusedException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleRefused(RegistrationRefusedException ex) {

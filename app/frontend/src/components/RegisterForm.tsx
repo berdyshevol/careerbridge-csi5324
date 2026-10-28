@@ -36,7 +36,7 @@ export default function RegisterForm({ next }: { next?: string }) {
     setSubmitting(true);
     try {
       saveSession(await register(values.fullName, values.email, values.password));
-      // Step 5: logged in and invited to add a resume (UC-03), unless they came to apply (UC-04 extension 1a)
+      // UC-02 step 3: logged in and invited to add a resume (UC-03), unless they came to apply (UC-04 extension 1a)
       router.replace(next ? safeNext(next, "APPLICANT") : "/profile");
       router.refresh();
     } catch (err) {

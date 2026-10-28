@@ -5,7 +5,7 @@ type FieldProps = {
   hint?: string;
 };
 
-// A labelled input with its hint or, after a refusal, its reason (UC-02 extension 4a)
+// A labelled input with its hint or, after a refusal, its reason (UC-02 extension 2a)
 export default function FormField({
   id,
   label,
