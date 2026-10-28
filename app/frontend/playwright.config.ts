@@ -5,7 +5,6 @@ const FRONTEND_PORT = Number(process.env.E2E_FRONTEND_PORT ?? 3000);
 const FRONTEND_URL = `http://localhost:${FRONTEND_PORT}`;
 
 export default defineConfig({
-  testDir: "./e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -16,8 +15,10 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   projects: [
-    { name: "laptop", use: { ...devices["Desktop Chrome"] } },
-    { name: "phone", use: { ...devices["Pixel 7"] } },
+    { name: "laptop", testDir: "./e2e", use: { ...devices["Desktop Chrome"] } },
+    { name: "phone", testDir: "./e2e", use: { ...devices["Pixel 7"] } },
+    // Executable acceptance specifications (ADR-0011): API only, so one run, not one per device
+    { name: "acceptance", testDir: "./acceptance/specs" },
   ],
   webServer: [
     {

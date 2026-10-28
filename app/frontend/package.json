@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:acceptance": "playwright test --project=acceptance",
     "prepare": "cd ../.. && husky app/frontend/.husky"
   },
   "dependencies": {
