@@ -2,18 +2,20 @@
 "use client";
 
 import { useState, type ChangeEvent } from "react";
-import { resume } from "@/lib/sampleDesk";
-import type { SessionUser } from "@/lib/session";
+import EmptyState from "@/components/EmptyState";
+import PageTitle from "@/components/PageTitle";
+import { formatDate, type Profile } from "@/lib/api";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-// UC-03 preview for the logged-in Applicant: their account details, a sample resume, nothing saved
-export default function ProfilePreview({ applicant }: { applicant: SessionUser }) {
+// UC-03 for the logged-in Applicant: the details and resume on file come from the backend (CO-03.1).
+// Saving the details (SCRUM-162) and uploading a resume (SCRUM-163) are not connected yet.
+export default function ProfilePreview({ profile: onFile }: { profile: Profile }) {
   const [profile, setProfile] = useState({
-    firstName: applicant.firstName,
-    lastName: applicant.lastName,
-    email: applicant.email,
-    phone: applicant.phone ?? "",
+    firstName: onFile.firstName,
+    lastName: onFile.lastName,
+    email: onFile.email,
+    phone: onFile.phone ?? "",
     location: "",
     skills: "",
     education: "",
@@ -55,124 +57,128 @@ export default function ProfilePreview({ applicant }: { applicant: SessionUser }
 
   function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setProfileMessage(
-      "Profile changes are shown in this preview only. Backend saving is not connected yet."
-    );
+    setProfileMessage("Saving is not connected yet: your changes were not saved.");
   }
 
   return (
-    <main className="w-full space-y-6">
-      <div>
-        <p className="text-sm font-semibold uppercase tracking-wider text-muted">
-          Applicant account
-        </p>
-        <h1 className="mt-2 text-3xl font-bold">Profile & resume</h1>
-        <p className="mt-2 text-muted">
-          Review your information and prepare your resume for job applications.
-        </p>
-      </div>
+    <div className="w-full space-y-6">
+      <PageTitle
+        eyebrow="Applicant account"
+        subtitle="Review your information and the resume you apply with."
+      >
+        Profile & resume
+      </PageTitle>
 
       <div className="alert border border-base-300 bg-secondary text-secondary-content">
-        Add your resume here to apply for jobs (UC-02 step 5). This page is still a preview of
-        UC-03: it shows sample applicant data, and changes are not saved to the server yet.
+        These are the details and the resume on file in your account. Editing them and uploading a
+        new resume are not connected yet, so changes made here are not saved.
       </div>
 
-      <section className="rounded-2xl border border-base-300 bg-base-100 p-6">
-        <h2 className="text-xl font-semibold">Personal information</h2>
+      <section className="card border border-base-300 bg-base-100">
+        <div className="card-body">
+          <h2 className="font-display text-xl font-semibold">Personal information</h2>
 
-        <form onSubmit={handleSave} className="mt-5 space-y-5">
-          <div className="grid gap-4 md:grid-cols-2">
-            {(
-              [
-                ["firstName", "First name"],
-                ["lastName", "Last name"],
-                ["email", "Email address"],
-                ["phone", "Phone number"],
-                ["location", "Location"],
-                ["skills", "Skills"],
-                ["education", "Education"],
-                ["experience", "Work experience"],
-              ] as const
-            ).map(([field, label]) => (
-              <label key={field} className="form-control block">
-                <span className="mb-2 block text-sm font-semibold">
-                  {label}
-                </span>
-                <input
-                  className="input w-full border-base-300 bg-base-100"
-                  type={field === "email" ? "email" : "text"}
-                  value={profile[field]}
-                  onChange={(event) =>
-                    updateField(field, event.target.value)
-                  }
-                  required={field === "firstName" || field === "lastName"}
-                />
-              </label>
-            ))}
+          <form onSubmit={handleSave} className="mt-5 space-y-5">
+            <div className="grid gap-4 md:grid-cols-2">
+              {(
+                [
+                  ["firstName", "First name"],
+                  ["lastName", "Last name"],
+                  ["email", "Email address"],
+                  ["phone", "Phone number"],
+                  ["location", "Location"],
+                  ["skills", "Skills"],
+                  ["education", "Education"],
+                  ["experience", "Work experience"],
+                ] as const
+              ).map(([field, label]) => (
+                <label key={field} className="form-control block">
+                  <span className="mb-2 block text-sm font-semibold">
+                    {label}
+                  </span>
+                  <input
+                    className="input w-full border-base-300 bg-base-100"
+                    type={field === "email" ? "email" : "text"}
+                    value={profile[field]}
+                    onChange={(event) =>
+                      updateField(field, event.target.value)
+                    }
+                    required={field === "firstName" || field === "lastName"}
+                  />
+                </label>
+              ))}
+            </div>
+
+            <button type="submit" className="btn btn-primary">
+              Save changes (not connected yet)
+            </button>
+
+            {profileMessage && (
+              <p role="status" className="text-sm text-muted">
+                {profileMessage}
+              </p>
+            )}
+          </form>
+        </div>
+      </section>
+
+      <section className="card border border-base-300 bg-base-100">
+        <div className="card-body">
+          <h2 className="font-display text-xl font-semibold">Your resume</h2>
+          <p className="mt-2 text-muted">
+            You can keep one current resume on your profile.
+            Accepted formats: PDF or DOCX, maximum 5 MB.
+          </p>
+
+          {onFile.resume ? (
+            <div className="mt-5 rounded-xl border border-base-300 bg-base-200 p-4">
+              <p className="font-semibold">{onFile.resume.fileName}</p>
+              <p className="mt-1 text-sm text-muted">
+                Uploaded {formatDate(onFile.resume.uploadDate.slice(0, 10))}
+              </p>
+            </div>
+          ) : (
+            // UC-02 step 5: a new applicant lands here and is asked for a resume
+            <div className="mt-5">
+              <EmptyState>No resume on file yet. Add your resume here to apply for jobs.</EmptyState>
+            </div>
+          )}
+
+          <div className="mt-5">
+            <label
+              htmlFor="resume-file"
+              className="mb-2 block text-sm font-semibold"
+            >
+              Select a new resume
+            </label>
+            <input
+              id="resume-file"
+              type="file"
+              accept=".pdf,.docx"
+              onChange={handleResumeChange}
+              className="file-input w-full max-w-md"
+            />
           </div>
 
-          <button type="submit" className="btn btn-primary">
-            Preview profile changes
-          </button>
-
-          {profileMessage && (
-            <p role="status" className="text-sm text-muted">
-              {profileMessage}
+          {fileError && (
+            <p role="alert" className="mt-3 text-sm text-error">
+              {fileError}
             </p>
           )}
-        </form>
-      </section>
 
-      <section className="rounded-2xl border border-base-300 bg-base-100 p-6">
-        <h2 className="text-xl font-semibold">Your resume</h2>
-        <p className="mt-2 text-muted">
-          You can keep one current resume on your profile.
-          Accepted formats: PDF or DOCX, maximum 5 MB.
-        </p>
-
-        {resume && (
-          <div className="mt-5 rounded-xl border border-base-300 bg-base-200 p-4">
-            <p className="font-semibold">{resume.fileName}</p>
-            <p className="mt-1 text-sm text-muted">
-              Sample resume · Uploaded {resume.uploadDate}
-            </p>
-          </div>
-        )}
-
-        <div className="mt-5">
-          <label
-            htmlFor="resume-file"
-            className="mb-2 block text-sm font-semibold"
-          >
-            Select a new resume
-          </label>
-          <input
-            id="resume-file"
-            type="file"
-            accept=".pdf,.docx"
-            onChange={handleResumeChange}
-            className="file-input w-full max-w-md"
-          />
+          {selectedFile && (
+            <div className="mt-4 rounded-xl bg-secondary p-4">
+              <p className="font-semibold text-secondary-content">
+                Ready for upload: {selectedFile.name}
+              </p>
+              <p className="mt-1 text-sm text-muted">
+                {(selectedFile.size / 1024).toFixed(1)} KB · Uploading is not connected yet,
+                so this file is not saved
+              </p>
+            </div>
+          )}
         </div>
-
-        {fileError && (
-          <p role="alert" className="mt-3 text-sm text-error">
-            {fileError}
-          </p>
-        )}
-
-        {selectedFile && (
-          <div className="mt-4 rounded-xl bg-secondary p-4">
-            <p className="font-semibold text-secondary-content">
-              Ready for upload: {selectedFile.name}
-            </p>
-            <p className="mt-1 text-sm text-muted">
-              {(selectedFile.size / 1024).toFixed(1)} KB ·
-              File selected locally, not uploaded to the server
-            </p>
-          </div>
-        )}
       </section>
-    </main>
+    </div>
   );
 }

@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { SessionEnded, viewApplications, viewPosting, type JobPosting } from "@/lib/api";
+import { SessionEnded, viewApplications, viewPosting, viewProfile, type JobPosting } from "@/lib/api";
 import { serverSession } from "@/lib/serverSession";
 import type { Role, Session } from "@/lib/session";
 import ApplyPage from "./jobs/[id]/apply/page";
@@ -11,6 +11,7 @@ vi.mock("@/lib/api", async (importActual) => ({
   ...(await importActual<typeof import("@/lib/api")>()),
   viewPosting: vi.fn(),
   viewApplications: vi.fn(),
+  viewProfile: vi.fn(),
 }));
 const refresh = vi.fn();
 vi.mock("next/navigation", async (importActual) => ({
@@ -32,6 +33,7 @@ describe("pages that need a log-in", () => {
   afterEach(() => {
     vi.mocked(serverSession).mockReset();
     vi.mocked(viewApplications).mockReset();
+    vi.mocked(viewProfile).mockReset();
     refresh.mockReset();
   });
 
@@ -85,5 +87,30 @@ describe("pages that need a log-in", () => {
     vi.mocked(serverSession).mockResolvedValue(as("ADMINISTRATOR"));
     render(await ProfilePage());
     expect(screen.getByRole("heading", { name: "Applicants only" })).toBeInTheDocument();
+  });
+
+  it("shows an applicant their own profile from the backend", async () => {
+    vi.mocked(serverSession).mockResolvedValue(as("APPLICANT"));
+    vi.mocked(viewProfile).mockResolvedValue({
+      firstName: "Jordan",
+      lastName: "Lee",
+      email: "jordan.lee@example.com",
+      phone: null,
+      resume: null,
+    });
+    render(await ProfilePage());
+
+    expect(viewProfile).toHaveBeenCalledWith("t");
+    expect(screen.getByLabelText("First name")).toHaveValue("Jordan");
+    expect(screen.getByText(/No resume on file yet/)).toBeInTheDocument();
+  });
+
+  it("ends a session the backend refused on the profile", async () => {
+    vi.mocked(serverSession).mockResolvedValue(as("APPLICANT"));
+    vi.mocked(viewProfile).mockRejectedValue(new SessionEnded());
+    render(await ProfilePage());
+
+    expect(screen.getByRole("heading", { name: "Your session has ended" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Log in/ })).toHaveAttribute("href", "/login?next=%2Fprofile");
   });
 });

@@ -309,6 +309,24 @@ export async function viewApplications(token: string): Promise<Applications> {
   return { active, appliedPostingIds: applications.map((application) => application.postingId) };
 }
 
+// CO-03.1: resume is null until the applicant uploads one; uploadDate is the backend's local date-time
+export type Profile = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+  resume: { fileName: string; uploadDate: string } | null;
+};
+
+export async function viewProfile(token: string): Promise<Profile> {
+  const response = await backendFetch("/api/applicant/profile", { headers: bearer(token) });
+  endedSession(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
 // UC-12: the queue of postings waiting for an administrator
 export async function openPostingApprovalQueue(token: string): Promise<JobPosting[]> {
   const response = await backendFetch("/api/admin/postings/pending", { headers: bearer(token) });

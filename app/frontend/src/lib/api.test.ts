@@ -10,6 +10,7 @@ import { SessionEnded,
   startApplication,
   submitApplication,
   viewApplications,
+  viewProfile,
   ApplicationRefused,
   type JobPosting,
   type NewPosting,
@@ -329,5 +330,38 @@ describe("viewApplications", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
 
     await expect(viewApplications("t")).rejects.toThrow("500");
+  });
+});
+
+describe("viewProfile", () => {
+  const profile = {
+    firstName: "Jordan",
+    lastName: "Lee",
+    email: "jordan.lee@example.com",
+    phone: "(254) 555-0142",
+    resume: { fileName: "Jordan_Lee_CV.pdf", uploadDate: "2026-10-01T09:30:00" },
+  };
+
+  it("asks for the logged-in applicant's own profile with their token", async () => {
+    const fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(profile) });
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(viewProfile("t")).resolves.toEqual(profile);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/applicant/profile"),
+      expect.objectContaining({ headers: { Authorization: "Bearer t" } }),
+    );
+  });
+
+  it("ends the session when the backend refuses the token", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 401 }));
+
+    await expect(viewProfile("t")).rejects.toBeInstanceOf(SessionEnded);
+  });
+
+  it("fails when the backend does not answer well", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
+
+    await expect(viewProfile("t")).rejects.toThrow("500");
   });
 });
