@@ -18,6 +18,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // ADR-0010: every write asks for its role; reading postings, logging in and registering need none (BR-3)
@@ -79,6 +80,15 @@ class AccessByRoleTest {
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/api/applicant/applications").with(as("APPLICANT")))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void onlyAnApplicantHasAProfile() throws Exception {
+        mockMvc.perform(get("/api/applicant/profile")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/applicant/profile").with(as("RECRUITER"))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/applicant/profile").with(as("APPLICANT")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("jordan.lee@example.com"));
     }
 
     @Test

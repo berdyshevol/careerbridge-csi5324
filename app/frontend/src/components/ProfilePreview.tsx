@@ -2,18 +2,20 @@
 "use client";
 
 import { useState, type ChangeEvent } from "react";
-import { resume } from "@/lib/sampleDesk";
-import type { SessionUser } from "@/lib/session";
+import EmptyState from "@/components/EmptyState";
+import PageTitle from "@/components/PageTitle";
+import { formatDate, type Profile } from "@/lib/api";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-// UC-03 preview for the logged-in Applicant: their account details, a sample resume, nothing saved
-export default function ProfilePreview({ applicant }: { applicant: SessionUser }) {
+// UC-03 for the logged-in Applicant: the details and resume on file come from the backend (CO-03.1).
+// Saving the details (SCRUM-162) and uploading a resume (SCRUM-163) are not connected yet.
+export default function ProfilePreview({ profile: onFile }: { profile: Profile }) {
   const [profile, setProfile] = useState({
-    firstName: applicant.firstName,
-    lastName: applicant.lastName,
-    email: applicant.email,
-    phone: applicant.phone ?? "",
+    firstName: onFile.firstName,
+    lastName: onFile.lastName,
+    email: onFile.email,
+    phone: onFile.phone ?? "",
     location: "",
     skills: "",
     education: "",
@@ -55,26 +57,21 @@ export default function ProfilePreview({ applicant }: { applicant: SessionUser }
 
   function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setProfileMessage(
-      "Profile changes are shown in this preview only. Backend saving is not connected yet."
-    );
+    setProfileMessage("Saving is not connected yet: your changes were not saved.");
   }
 
   return (
     <main className="w-full space-y-6">
-      <div>
-        <p className="text-sm font-semibold uppercase tracking-wider text-muted">
-          Applicant account
-        </p>
-        <h1 className="mt-2 text-3xl font-bold">Profile & resume</h1>
-        <p className="mt-2 text-muted">
-          Review your information and prepare your resume for job applications.
-        </p>
-      </div>
+      <PageTitle
+        eyebrow="Applicant account"
+        subtitle="Review your information and the resume you apply with."
+      >
+        Profile & resume
+      </PageTitle>
 
       <div className="alert border border-base-300 bg-secondary text-secondary-content">
-        Add your resume here to apply for jobs (UC-02 step 5). This page is still a preview of
-        UC-03: it shows sample applicant data, and changes are not saved to the server yet.
+        These are the details and the resume on file in your account. Editing them and uploading a
+        new resume are not connected yet, so changes made here are not saved.
       </div>
 
       <section className="rounded-2xl border border-base-300 bg-base-100 p-6">
@@ -112,7 +109,7 @@ export default function ProfilePreview({ applicant }: { applicant: SessionUser }
           </div>
 
           <button type="submit" className="btn btn-primary">
-            Preview profile changes
+            Save changes (not connected yet)
           </button>
 
           {profileMessage && (
@@ -130,12 +127,17 @@ export default function ProfilePreview({ applicant }: { applicant: SessionUser }
           Accepted formats: PDF or DOCX, maximum 5 MB.
         </p>
 
-        {resume && (
+        {onFile.resume ? (
           <div className="mt-5 rounded-xl border border-base-300 bg-base-200 p-4">
-            <p className="font-semibold">{resume.fileName}</p>
+            <p className="font-semibold">{onFile.resume.fileName}</p>
             <p className="mt-1 text-sm text-muted">
-              Sample resume · Uploaded {resume.uploadDate}
+              Uploaded {formatDate(onFile.resume.uploadDate.slice(0, 10))}
             </p>
+          </div>
+        ) : (
+          // UC-02 step 5: a new applicant lands here and is asked for a resume
+          <div className="mt-5">
+            <EmptyState>No resume on file yet. Add your resume here to apply for jobs.</EmptyState>
           </div>
         )}
 
@@ -167,8 +169,8 @@ export default function ProfilePreview({ applicant }: { applicant: SessionUser }
               Ready for upload: {selectedFile.name}
             </p>
             <p className="mt-1 text-sm text-muted">
-              {(selectedFile.size / 1024).toFixed(1)} KB ·
-              File selected locally, not uploaded to the server
+              {(selectedFile.size / 1024).toFixed(1)} KB · Uploading is not connected yet,
+              so this file is not saved
             </p>
           </div>
         )}

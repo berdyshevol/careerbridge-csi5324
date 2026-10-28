@@ -115,8 +115,8 @@ sequenceDiagram
 
 ### UC-03 Update Applicant Profile
 
-UC-03 is not built yet: SD-9 and SD-10 are its design for Iteration 3, in the shape of the code
-that exists. The logged-in Applicant is the subject of the session token (ADR-0010); the
+Viewing the profile (the first half of SD-9, CO-03.1) is built; saving it (the second half) and
+SD-10 are the design for the rest of Iteration 3, in the shape of the code that exists. The logged-in Applicant is the subject of the session token (ADR-0010); the
 controller passes that email to the service, so an applicant can only ever read and change their own
 profile (BR-15). CO-03.2 changes First Name, Last Name and phone #, the User attributes of the
 domain model; the other profile fields of step 2 wait for the domain model to have them.
