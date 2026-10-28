@@ -26,7 +26,7 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 #### UC-03 Update Applicant Profile
 
-- **FR-UC03.1:** The system shall let an applicant view their profile details and edit their full name, phone, location, headline, skills, education and work experience, and shall reject the changes if the full name is empty or the phone number is malformed. (UC-03 steps 1–4, extension 4a)
+- **FR-UC03.1:** The system shall let an applicant view their profile details and edit their first and last name, phone, location, headline, skills, education and work experience, and shall reject the changes if the first or last name is empty or the phone number is malformed. (UC-03 steps 1–4, extension 4a)
 
 - **FR-UC03.2:** The system shall let an applicant upload one resume, a PDF or DOCX file of up to 5 MB, that replaces any previous resume, and shall reject any other file. (BR-6; UC-03 steps 5–7, extension 6a)
 

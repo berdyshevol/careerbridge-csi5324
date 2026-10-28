@@ -18,7 +18,7 @@ Figure 25; classes and associations that are not in the figure are listed in sec
 | Class | Attributes |
 | --- | --- |
 | User | userId, First Name, Last Name, email, phone #, account Status, password (kept only as a salted hash, NFR-UC02.1), failed log-ins, locked until (A15) |
-| Applicant | none of its own (a kind of User) |
+| Applicant | location, headline, skills, education, work experience (a kind of User) |
 | Recruiter | none of its own (a kind of User) |
 | Administrator | none of its own (a kind of User) |
 | Resume | resumeId, file Name, file Type, file Size, upload Date |
@@ -70,9 +70,9 @@ Multiplicities are read as "one A is linked to … B".
 
 ### 5.4 Differences from Figure 25
 
-The figure was drawn for Iteration 1 and has not been redrawn. The text above corrects it in eight
-places: five needed for UC-04 Apply for Job, one for UC-12 Approve Job Posting and two for UC-13
-Expire Job Posting:
+The figure was drawn for Iteration 1 and has not been redrawn. The text above corrects it in nine
+places: five needed for UC-04 Apply for Job, one for UC-12 Approve Job Posting, two for UC-13
+Expire Job Posting and one for UC-03 Update Applicant Profile:
 
 | # | Figure 25 | Current model | Why |
 | --- | --- | --- | --- |
@@ -84,6 +84,7 @@ Expire Job Posting:
 | 6 | Job Posting has no review comment; approvedBy and approvedAt suggest an approval only | Job Posting has reviewComment; approvedBy and approvedAt record the Administrator who made any decision (approve, return or reject) and when | UC-12 requires comments to return or reject a posting (extensions 5a, 5b), and logs every decision with who decided and when (Special Requirements). |
 | 7 | Organization has no time zone | Organization has timeZone | UC-13 variation 2a: a deadline means 23:59 on that date in the organization's time zone (A11, NFR-UC13.5). |
 | 8 | Job Posting does not record how or when it closed | Job Posting has closingReason and closedAt | UC-13 closes an overdue posting with the reason Expired and the time it closed (FR-UC13.3). |
+| 9 | Applicant has no attributes of its own | Applicant has location, headline, skills, education and work experience | UC-03 step 2 and FR-UC03.1: the applicant views and edits these profile details, so the model keeps them. |
 
 Two more things in the figure are not carried into the text:
 
@@ -99,7 +100,6 @@ are left for the iteration that implements the use cases named.
 
 | Class | Gap | Where it comes from |
 | --- | --- | --- |
-| Applicant | No location, headline, skills, education, work experience | UC-03 step 2, FR-UC03.1 |
 | Recruiter | No job title | UC-08 step 3 |
 | Organization | No industry, headquarters location, size | UC-08 step 3 |
 | Organization Membership | No role, justification, denial reason, review flag; no link to the deciding Administrator | CO-09.1; UC-10; A17 |

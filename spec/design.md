@@ -115,15 +115,17 @@ sequenceDiagram
 
 ### UC-03 Update Applicant Profile
 
-Viewing the profile (the first half of SD-9, CO-03.1) is built; saving it (the second half) and
-SD-10 are the design for the rest of Iteration 3, in the shape of the code that exists. The logged-in Applicant is the subject of the session token (ADR-0010); the
+Viewing and saving the profile (SD-9, CO-03.1 and CO-03.2) are built; SD-10 is the design for the
+rest of Iteration 3, in the shape of the code that exists. The logged-in Applicant is the subject of the session token (ADR-0010); the
 controller passes that email to the service, so an applicant can only ever read and change their own
-profile (BR-15). CO-03.2 changes First Name, Last Name and phone #, the User attributes of the
-domain model; the other profile fields of step 2 wait for the domain model to have them.
+profile (BR-15). CO-03.2 changes First Name and Last Name, which every User has, and phone #,
+location, headline, skills, education and work experience, the profile details of step 2.
 
 **SD-9.** The service reads the Applicant with the resume on file, if any (CO-03.1). On save it
-checks the fields (a first and a last name, a well-formed phone number) and returns every invalid
-one with its reason (extension 4a); otherwise it changes the Applicant (CO-03.2).
+checks the fields (a first and a last name, a well-formed phone number or none, as registration
+does not ask for one, and no field longer than its column: 255 characters for the names, location
+and headline, 2,000 for skills, 4,000 for education, 10,000 for work experience) and returns every
+invalid one with its reason (extension 4a); otherwise it changes the Applicant (CO-03.2).
 
 ```mermaid
 sequenceDiagram
@@ -138,18 +140,18 @@ sequenceDiagram
     PS->>AR: findByEmailIgnoreCase(email)
     AR-->>PS: Applicant, with its Resume if any
     PS-->>PC: Applicant
-    PC-->>AP: 200 ProfileResponse {firstName, lastName,<br/>email, phone, resume {fileName, uploadDate}}
+    PC-->>AP: 200 ProfileResponse {firstName, lastName, email,<br/>phone, location, headline, skills, education,<br/>workExperience, resume {fileName, uploadDate}}
 
-    AP->>PC: PUT /api/applicant/profile<br/>{firstName, lastName, phone}
+    AP->>PC: PUT /api/applicant/profile<br/>{firstName, lastName, phone, location,<br/>headline, skills, education, workExperience}
     PC->>PS: updateProfile(email, details)
-    PS->>PS: validate: first and last name present,<br/>phone well formed
+    PS->>PS: validate: first and last name present,<br/>phone well formed, lengths within the columns
     alt invalid fields (ext. 4a)
         PS-->>PC: ProfileRefusedException(fieldErrors)
         PC-->>AP: 400 {field: reason}, nothing saved
     else fields valid
         PS->>AR: findByEmailIgnoreCase(email)
         AR-->>PS: Applicant
-        PS->>A: setFirstName(..), setLastName(..), setPhone(..)
+        PS->>A: setFirstName(..), setLastName(..), setPhone(..),<br/>setLocation(..), setHeadline(..), setSkills(..),<br/>setEducation(..), setWorkExperience(..)
         PS->>AR: save(applicant)
         AR-->>PS: Applicant
         PS-->>PC: Applicant

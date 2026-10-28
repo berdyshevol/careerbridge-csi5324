@@ -10,8 +10,10 @@ import { SessionEnded,
   startApplication,
   submitApplication,
   viewApplications,
+  updateProfile,
   viewProfile,
   ApplicationRefused,
+  ProfileRefused,
   type JobPosting,
   type NewPosting,
 } from "./api";
@@ -339,6 +341,11 @@ describe("viewProfile", () => {
     lastName: "Lee",
     email: "jordan.lee@example.com",
     phone: "(254) 555-0142",
+    location: null,
+    headline: null,
+    skills: null,
+    education: null,
+    workExperience: null,
     resume: { fileName: "Jordan_Lee_CV.pdf", uploadDate: "2026-10-01T09:30:00" },
   };
 
@@ -363,5 +370,61 @@ describe("viewProfile", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
 
     await expect(viewProfile("t")).rejects.toThrow("500");
+  });
+});
+
+describe("updateProfile", () => {
+  const details = {
+    firstName: "Jordan",
+    lastName: "Lee",
+    phone: "(254) 555-0199",
+    location: "Waco, TX",
+    headline: "Data analyst",
+    skills: "",
+    education: "",
+    workExperience: "",
+  };
+
+  function answer(status: number, body: unknown) {
+    return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  }
+
+  it("sends every detail of the form with the applicant's token and answers with the saved profile", async () => {
+    const saved = { ...details, email: "jordan.lee@example.com", skills: null, education: null, workExperience: null, resume: null };
+    const fetch = vi.fn().mockResolvedValue(answer(200, saved));
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(updateProfile("t", details)).resolves.toEqual(saved);
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toContain("/api/applicant/profile");
+    expect(init.method).toBe("PUT");
+    expect(init.headers).toEqual({ Authorization: "Bearer t", "Content-Type": "application/json" });
+    expect(JSON.parse(init.body)).toEqual(details);
+  });
+
+  it("hands over the reason for each refused field (UC-03 extension 4a)", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(answer(400, {
+      firstName: "Enter your first name.",
+      phone: "Enter a phone number like (254) 555-0142.",
+    })));
+
+    const refused = await updateProfile("t", details).catch((err) => err);
+    expect(refused).toBeInstanceOf(ProfileRefused);
+    expect(refused.fieldErrors).toEqual({
+      firstName: "Enter your first name.",
+      phone: "Enter a phone number like (254) 555-0142.",
+    });
+  });
+
+  it("keeps Spring's own 400 report off the screen", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(answer(400, { status: 400, error: "Bad Request", path: "/x" })));
+
+    await expect(updateProfile("t", details)).rejects.toThrow("Backend answered 400");
+  });
+
+  it("ends the session when the backend refuses the token", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 401 })));
+
+    await expect(updateProfile("t", details)).rejects.toBeInstanceOf(SessionEnded);
   });
 });
