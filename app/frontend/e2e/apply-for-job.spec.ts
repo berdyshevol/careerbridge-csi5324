@@ -89,7 +89,7 @@ test("given a recruiter, when they ask to apply, then they are told only applica
 });
 
 test("given no log-in, when someone posts an application to the backend, then it is refused", async ({ request }) => {
-  const response = await request.post("http://localhost:8080/api/postings/2/apply", {
+  const response = await request.post("http://localhost:8080/api/postings/2/application", {
     data: { resumeFileName: "cv.pdf", resumeFileType: "application/pdf", resumeFileSize: 1 },
   });
   expect(response.status()).toBe(401);
