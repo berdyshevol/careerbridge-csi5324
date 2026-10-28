@@ -60,7 +60,7 @@ sequenceDiagram
 
 **Figure 6: SSD-02: UC-02 Register as Applicant**
 
-1. Visitor to System: register(fullName, email, password); System returns "account created, Applicant logged in" (steps 3–5). No verification email is sent (A15).
+1. Visitor to System: register(fullName, email, password); System returns "account created, Applicant logged in" (steps 1–3). No verification email is sent (A15).
 
 #### CO-02.1: register
 
