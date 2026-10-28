@@ -15,30 +15,24 @@ sequenceDiagram
     actor V as Visitor
     participant S as :CareerBridge System
     V->>S: searchPostings(criteria)
-    S-->>V: open postings, newest first
-    loop until done
-        V->>S: searchPostings(criteria)
-        S-->>V: open postings matching the criteria
-    end
+    S-->>V: the matching open postings, newest first, with their details
 ```
 
 **Figure 5: SSD-01: UC-01 Search Job Postings**
 
-1. Visitor to System: searchPostings(criteria); System returns the open postings, newest first (steps 1–2, criteria empty).
-
-2. Visitor to System: searchPostings(criteria); System returns the matching open postings (steps 3–4).
+1. Visitor to System: searchPostings(criteria); System returns the matching open postings, newest first, with their details (steps 1–2). It is the only transaction of UC-01.
 
 #### CO-01.1: searchPostings
 
-**Operation:** searchPostings(criteria); criteria may be empty (steps 1–2)
+**Operation:** searchPostings(criteria); any criterion may be blank
 
-**Cross-references:** UC-01 steps 1–4; FR-UC01.1, FR-UC01.2
+**Cross-references:** UC-01 steps 1–2, extensions 2a, 2b; FR-UC01.1, FR-UC01.2
 
 **Preconditions:** None
 
 **Postconditions:** None. This is a query operation.
 
-**Output:** The open Job Postings that match the criteria, newest first.
+**Output:** The open Job Postings that match the criteria, newest first, with their details.
 
 #### CO-01.2: viewPosting
 
