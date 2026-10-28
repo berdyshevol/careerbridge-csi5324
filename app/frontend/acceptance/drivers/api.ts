@@ -20,6 +20,9 @@ export type SearchOutcome = {
   postings: PostingDetails[];
   // Anything the answer carries, details or not, so a test can say what must never be in it (BR-15)
   mentions(text: string): boolean;
+  // Set instead of postings when the system answered with an error, so a failure never reads as "none found"
+  failure?: string;
+  responseTimeMs: number;
 };
 
 // Sample data, the same for the whole run
@@ -39,14 +42,20 @@ export class ApiDriver {
 
   async searchPostings(criteria: PostingSearchCriteria, as?: Account): Promise<SearchOutcome> {
     const params = Object.fromEntries(Object.entries(criteria).filter(([, value]) => value !== undefined));
-    const answer = await expectOk(
-      await this.request.get(`/api/postings`, {
-        params,
-        headers: as ? await this.tokenOf(as) : {},
-      }),
-      "Searching the job postings",
-    );
+    const headers = as ? await this.tokenOf(as) : {};
+    // Only the search itself is timed (NFR-UC01.1), not logging in
+    const started = performance.now();
+    const answer = await this.request.get(`/api/postings`, { params, headers });
     const body = await answer.text();
+    const responseTimeMs = performance.now() - started;
+    if (!answer.ok()) {
+      return {
+        postings: [],
+        mentions: () => false,
+        failure: `Searching the job postings was refused: ${answer.status()} ${body}`,
+        responseTimeMs,
+      };
+    }
     const found = JSON.parse(body) as JobPosting[];
     return {
       postings: found.map((posting) => ({
@@ -60,6 +69,7 @@ export class ApiDriver {
         numberOfOpenings: posting.numberOfOpenings,
       })),
       mentions: (text) => body.toLowerCase().includes(text.toLowerCase()),
+      responseTimeMs,
     };
   }
 
