@@ -61,7 +61,7 @@ export default function ProfilePreview({ profile: onFile }: { profile: Profile }
   }
 
   return (
-    <main className="w-full space-y-6">
+    <div className="w-full space-y-6">
       <PageTitle
         eyebrow="Applicant account"
         subtitle="Review your information and the resume you apply with."
@@ -74,107 +74,111 @@ export default function ProfilePreview({ profile: onFile }: { profile: Profile }
         new resume are not connected yet, so changes made here are not saved.
       </div>
 
-      <section className="rounded-2xl border border-base-300 bg-base-100 p-6">
-        <h2 className="text-xl font-semibold">Personal information</h2>
+      <section className="card border border-base-300 bg-base-100">
+        <div className="card-body">
+          <h2 className="font-display text-xl font-semibold">Personal information</h2>
 
-        <form onSubmit={handleSave} className="mt-5 space-y-5">
-          <div className="grid gap-4 md:grid-cols-2">
-            {(
-              [
-                ["firstName", "First name"],
-                ["lastName", "Last name"],
-                ["email", "Email address"],
-                ["phone", "Phone number"],
-                ["location", "Location"],
-                ["skills", "Skills"],
-                ["education", "Education"],
-                ["experience", "Work experience"],
-              ] as const
-            ).map(([field, label]) => (
-              <label key={field} className="form-control block">
-                <span className="mb-2 block text-sm font-semibold">
-                  {label}
-                </span>
-                <input
-                  className="input w-full border-base-300 bg-base-100"
-                  type={field === "email" ? "email" : "text"}
-                  value={profile[field]}
-                  onChange={(event) =>
-                    updateField(field, event.target.value)
-                  }
-                  required={field === "firstName" || field === "lastName"}
-                />
-              </label>
-            ))}
+          <form onSubmit={handleSave} className="mt-5 space-y-5">
+            <div className="grid gap-4 md:grid-cols-2">
+              {(
+                [
+                  ["firstName", "First name"],
+                  ["lastName", "Last name"],
+                  ["email", "Email address"],
+                  ["phone", "Phone number"],
+                  ["location", "Location"],
+                  ["skills", "Skills"],
+                  ["education", "Education"],
+                  ["experience", "Work experience"],
+                ] as const
+              ).map(([field, label]) => (
+                <label key={field} className="form-control block">
+                  <span className="mb-2 block text-sm font-semibold">
+                    {label}
+                  </span>
+                  <input
+                    className="input w-full border-base-300 bg-base-100"
+                    type={field === "email" ? "email" : "text"}
+                    value={profile[field]}
+                    onChange={(event) =>
+                      updateField(field, event.target.value)
+                    }
+                    required={field === "firstName" || field === "lastName"}
+                  />
+                </label>
+              ))}
+            </div>
+
+            <button type="submit" className="btn btn-primary">
+              Save changes (not connected yet)
+            </button>
+
+            {profileMessage && (
+              <p role="status" className="text-sm text-muted">
+                {profileMessage}
+              </p>
+            )}
+          </form>
+        </div>
+      </section>
+
+      <section className="card border border-base-300 bg-base-100">
+        <div className="card-body">
+          <h2 className="font-display text-xl font-semibold">Your resume</h2>
+          <p className="mt-2 text-muted">
+            You can keep one current resume on your profile.
+            Accepted formats: PDF or DOCX, maximum 5 MB.
+          </p>
+
+          {onFile.resume ? (
+            <div className="mt-5 rounded-xl border border-base-300 bg-base-200 p-4">
+              <p className="font-semibold">{onFile.resume.fileName}</p>
+              <p className="mt-1 text-sm text-muted">
+                Uploaded {formatDate(onFile.resume.uploadDate.slice(0, 10))}
+              </p>
+            </div>
+          ) : (
+            // UC-02 step 5: a new applicant lands here and is asked for a resume
+            <div className="mt-5">
+              <EmptyState>No resume on file yet. Add your resume here to apply for jobs.</EmptyState>
+            </div>
+          )}
+
+          <div className="mt-5">
+            <label
+              htmlFor="resume-file"
+              className="mb-2 block text-sm font-semibold"
+            >
+              Select a new resume
+            </label>
+            <input
+              id="resume-file"
+              type="file"
+              accept=".pdf,.docx"
+              onChange={handleResumeChange}
+              className="file-input w-full max-w-md"
+            />
           </div>
 
-          <button type="submit" className="btn btn-primary">
-            Save changes (not connected yet)
-          </button>
-
-          {profileMessage && (
-            <p role="status" className="text-sm text-muted">
-              {profileMessage}
+          {fileError && (
+            <p role="alert" className="mt-3 text-sm text-error">
+              {fileError}
             </p>
           )}
-        </form>
-      </section>
 
-      <section className="rounded-2xl border border-base-300 bg-base-100 p-6">
-        <h2 className="text-xl font-semibold">Your resume</h2>
-        <p className="mt-2 text-muted">
-          You can keep one current resume on your profile.
-          Accepted formats: PDF or DOCX, maximum 5 MB.
-        </p>
-
-        {onFile.resume ? (
-          <div className="mt-5 rounded-xl border border-base-300 bg-base-200 p-4">
-            <p className="font-semibold">{onFile.resume.fileName}</p>
-            <p className="mt-1 text-sm text-muted">
-              Uploaded {formatDate(onFile.resume.uploadDate.slice(0, 10))}
-            </p>
-          </div>
-        ) : (
-          // UC-02 step 5: a new applicant lands here and is asked for a resume
-          <div className="mt-5">
-            <EmptyState>No resume on file yet. Add your resume here to apply for jobs.</EmptyState>
-          </div>
-        )}
-
-        <div className="mt-5">
-          <label
-            htmlFor="resume-file"
-            className="mb-2 block text-sm font-semibold"
-          >
-            Select a new resume
-          </label>
-          <input
-            id="resume-file"
-            type="file"
-            accept=".pdf,.docx"
-            onChange={handleResumeChange}
-            className="file-input w-full max-w-md"
-          />
+          {selectedFile && (
+            <div className="mt-4 rounded-xl bg-secondary p-4">
+              <p className="font-semibold text-secondary-content">
+                Ready for upload: {selectedFile.name}
+              </p>
+              <p className="mt-1 text-sm text-muted">
+                {(selectedFile.size / 1024).toFixed(1)} KB · Uploading is not connected yet,
+                so this file is not saved
+              </p>
+            </div>
+          )}
         </div>
-
-        {fileError && (
-          <p role="alert" className="mt-3 text-sm text-error">
-            {fileError}
-          </p>
-        )}
-
-        {selectedFile && (
-          <div className="mt-4 rounded-xl bg-secondary p-4">
-            <p className="font-semibold text-secondary-content">
-              Ready for upload: {selectedFile.name}
-            </p>
-            <p className="mt-1 text-sm text-muted">
-              {(selectedFile.size / 1024).toFixed(1)} KB · Uploading is not connected yet,
-              so this file is not saved
-            </p>
-          </div>
-        )}
       </section>
-    </main>
+    </div>
   );
 }
