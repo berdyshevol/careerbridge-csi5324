@@ -333,6 +333,18 @@ export const PROFILE_FIELDS = [
 
 export type ProfileField = (typeof PROFILE_FIELDS)[number];
 
+// The backend's limits: its column lengths, and the longest phone number its pattern accepts
+export const PROFILE_MAX_LENGTH: Record<ProfileField, number> = {
+  firstName: 255,
+  lastName: 255,
+  phone: 31,
+  location: 255,
+  headline: 255,
+  skills: 2000,
+  education: 4000,
+  workExperience: 10000,
+};
+
 export type ProfileDetails = Record<ProfileField, string>;
 
 // CO-03.1: an empty detail is null; resume is null until the applicant uploads one, and its

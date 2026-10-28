@@ -9,16 +9,16 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import static baylor.csi5324.careerbridge.model.Applicant.MAX_EDUCATION_LENGTH;
+import static baylor.csi5324.careerbridge.model.Applicant.MAX_LINE_LENGTH;
+import static baylor.csi5324.careerbridge.model.Applicant.MAX_SKILLS_LENGTH;
+import static baylor.csi5324.careerbridge.model.Applicant.MAX_WORK_EXPERIENCE_LENGTH;
+
 // UC-03, SD-9 and SD-10: the email is the token's subject, so an applicant only reaches their own profile (BR-15)
 @Service
 @Transactional
 public class ApplicantProfileService {
 
-    // The column lengths of User and Applicant
-    private static final int MAX_LINE_LENGTH = 255;
-    private static final int MAX_SKILLS_LENGTH = 2000;
-    private static final int MAX_EDUCATION_LENGTH = 4000;
-    private static final int MAX_WORK_EXPERIENCE_LENGTH = 10000;
     // Digits with the usual separators and an optional leading +; 7 to 15 digits reach from a local
     // number to the longest international one (E.164)
     private static final Pattern PHONE = Pattern.compile("^\\+?[0-9 ().-]{7,30}$");
@@ -70,8 +70,7 @@ public class ApplicantProfileService {
             throw new ProfileRefusedException(errors);
         }
 
-        Applicant applicant = applicantRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new AccountGoneException(email));
+        Applicant applicant = viewProfile(email);
         applicant.setFirstName(firstName);
         applicant.setLastName(lastName);
         applicant.setPhone(nullIfEmpty(phone));

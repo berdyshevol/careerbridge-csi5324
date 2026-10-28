@@ -8,6 +8,7 @@ import PageTitle from "@/components/PageTitle";
 import {
   formatDate,
   PROFILE_FIELDS,
+  PROFILE_MAX_LENGTH,
   ProfileRefused,
   SessionEnded,
   updateProfile,
@@ -101,11 +102,11 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
     }
   }
 
-  function fieldProps(field: ProfileField, maxLength: number) {
+  function fieldProps(field: ProfileField) {
     return {
       id: `profile-${field}`,
       value: details[field],
-      maxLength,
+      maxLength: PROFILE_MAX_LENGTH[field],
       error: fieldErrors[field],
       onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setDetails((previous) => ({ ...previous, [field]: event.target.value }));
@@ -135,8 +136,8 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
             )}
 
             <div className="grid gap-4 md:grid-cols-2">
-              <FormField label="First name" autoComplete="given-name" required {...fieldProps("firstName", 255)} />
-              <FormField label="Last name" autoComplete="family-name" required {...fieldProps("lastName", 255)} />
+              <FormField label="First name" autoComplete="given-name" required {...fieldProps("firstName")} />
+              <FormField label="Last name" autoComplete="family-name" required {...fieldProps("lastName")} />
               <FormField
                 id="profile-email"
                 label="Email address"
@@ -150,14 +151,14 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
                 type="tel"
                 autoComplete="tel"
                 hint="Optional, for example (254) 555-0142."
-                {...fieldProps("phone", 31)}
+                {...fieldProps("phone")}
               />
-              <FormField label="Location" autoComplete="address-level2" hint="Optional, for example Waco, TX." {...fieldProps("location", 255)} />
-              <FormField label="Headline" hint="Optional, for example Data analyst." {...fieldProps("headline", 255)} />
+              <FormField label="Location" autoComplete="address-level2" hint="Optional, for example Waco, TX." {...fieldProps("location")} />
+              <FormField label="Headline" hint="Optional, for example Data analyst." {...fieldProps("headline")} />
             </div>
-            <TextAreaField label="Skills" {...fieldProps("skills", 2000)} />
-            <TextAreaField label="Education" {...fieldProps("education", 4000)} />
-            <TextAreaField label="Work experience" {...fieldProps("workExperience", 10000)} />
+            <TextAreaField label="Skills" {...fieldProps("skills")} />
+            <TextAreaField label="Education" {...fieldProps("education")} />
+            <TextAreaField label="Work experience" {...fieldProps("workExperience")} />
 
             <div className="flex flex-wrap items-center gap-4 border-t border-base-300 pt-5">
               <button type="submit" className="btn btn-primary" disabled={saving}>
