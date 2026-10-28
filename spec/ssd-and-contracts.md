@@ -6,37 +6,39 @@
 
 For each use case, the system sequence diagram (SSD) shows the main success scenario with CareerBridge as a black box, and the operation contracts define each system operation. Contract postconditions are written only as instances created or deleted, associations formed or broken and attributes modified, using the classes and attribute names of the domain model in section 5 (attribute names in italics). Messages that only return information are queries and have no contract.
 
-#### UC-01 Browse Job Postings
+#### UC-01 Search Job Postings
 
 Figure 5 shows SSD-01, the system sequence diagram for the main success scenario of UC-01.
 
-![Figure 5: SSD-01: UC-01 Browse Job Postings](diagrams/fig-05-ssd-01-uc-01-browse-job-postings.png)
+```mermaid
+sequenceDiagram
+    actor V as Visitor
+    participant S as :CareerBridge System
+    V->>S: searchPostings(criteria)
+    S-->>V: the matching open postings, newest first, with their details
+```
 
-**Figure 5: SSD-01: UC-01 Browse Job Postings**
+**Figure 5: SSD-01: UC-01 Search Job Postings**
 
-1. Visitor to System: searchPostings(criteria); System returns the open postings, newest first (steps 1–2, criteria empty).
-
-2. Visitor to System: searchPostings(criteria); System returns the matching open postings (steps 3–4).
-
-3. Visitor to System: viewPosting(postingId); System returns the posting details (steps 5–6).
+1. Visitor to System: searchPostings(criteria); System returns the matching open postings, newest first, with their details (steps 1–2). It is the only transaction of UC-01.
 
 #### CO-01.1: searchPostings
 
-**Operation:** searchPostings(criteria); criteria may be empty (steps 1–2)
+**Operation:** searchPostings(criteria); any criterion may be blank
 
-**Cross-references:** UC-01 steps 1–4; FR-UC01.1, FR-UC01.2
+**Cross-references:** UC-01 steps 1–2, extensions 2a, 2b; FR-UC01.1, FR-UC01.2
 
 **Preconditions:** None
 
 **Postconditions:** None. This is a query operation.
 
-**Output:** The open Job Postings that match the criteria, newest first.
+**Output:** The open Job Postings that match the criteria, newest first, with their details.
 
 #### CO-01.2: viewPosting
 
 **Operation:** viewPosting(postingId)
 
-**Cross-references:** UC-01 steps 5–6, extension 5a; FR-UC01.3
+**Cross-references:** the posting page UC-04 starts from (UC-04 step 1, extension 1c); FR-UC01.3
 
 **Preconditions:** The Job Posting exists and was published (BR-9).
 
@@ -48,13 +50,17 @@ Figure 5 shows SSD-01, the system sequence diagram for the main success scenario
 
 Figure 6 shows SSD-02, the system sequence diagram for the main success scenario of UC-02.
 
-![Figure 6: SSD-02: UC-02 Register as Applicant](diagrams/fig-06-ssd-02-uc-02-register-as-applicant.png)
+```mermaid
+sequenceDiagram
+    actor V as Visitor
+    participant S as :CareerBridge System
+    V->>S: register(fullName, email, password)
+    S-->>V: account created, Applicant logged in
+```
 
 **Figure 6: SSD-02: UC-02 Register as Applicant**
 
-1. Visitor to System: register(fullName, email, password); System returns "account created, Applicant logged in" (steps 3–5).
-
-Figure 6 was drawn for Iteration 1 and still shows a verification email and verifyEmail(token). Applicant accounts are now active at once (A15), so the text above is the current SSD.
+1. Visitor to System: register(fullName, email, password); System returns "account created, Applicant logged in" (steps 3–5). No verification email is sent (A15).
 
 #### CO-02.1: register
 
@@ -72,15 +78,25 @@ Figure 6 was drawn for Iteration 1 and still shows a verification email and veri
 **Output:** A session for the new Applicant ([ADR-0010](adr/0010-log-in-with-jwt.md)): the Applicant is
 logged in.
 
-#### UC-03 Maintain Profile and Resume
+#### UC-03 Update Applicant Profile
 
 Figure 7 shows SSD-03, the system sequence diagram for the main success scenario of UC-03.
 
-![Figure 7: SSD-03: UC-03 Maintain Profile and Resume](diagrams/fig-07-ssd-03-uc-03-maintain-profile-and-resume.png)
+```mermaid
+sequenceDiagram
+    actor A as Applicant
+    participant S as :CareerBridge System
+    A->>S: viewProfile()
+    S-->>A: profile details and the resume on file, if any
+    A->>S: updateProfile(details)
+    S-->>A: profile saved
+    A->>S: uploadResume(file)
+    S-->>A: resume file name and upload date
+```
 
-**Figure 7: SSD-03: UC-03 Maintain Profile and Resume**
+**Figure 7: SSD-03: UC-03 Update Applicant Profile**
 
-1. Applicant to System: viewProfile(); System returns the profile details and the resume on file (steps 1– 2).
+1. Applicant to System: viewProfile(); System returns the profile details and the resume on file (steps 1–2).
 
 2. Applicant to System: updateProfile(details); System returns "profile saved" (steps 3–4).
 
@@ -112,7 +128,7 @@ Figure 7 shows SSD-03, the system sequence diagram for the main success scenario
 
 **Operation:** uploadResume(file)
 
-**Cross-references:** UC-03 steps 5–7, extensions 6a, 6b; FR-UC03.2, FR-UC03.3
+**Cross-references:** UC-03 steps 5–7, extension 6a; FR-UC03.2, FR-UC03.3
 
 **Preconditions:** The Applicant is logged in.
 
@@ -126,7 +142,11 @@ Figure 8 shows SSD-04, the system sequence diagram for the main success scenario
 
 **Figure 8: SSD-04: UC-04 Apply for Job**
 
-startApplication(postingId) only presents the application summary and changes nothing, so it has no contract.
+startApplication(postingId, resume) only presents the application summary and changes nothing, so it has no contract. The _resume_ parameter is a STAND-IN until UC-03 keeps the Applicant's Resume in the backend; then the system reads it itself and the parameter goes away.
+
+startApplication returns an application start: the posting, the Applicant, the Resume, the Applicant's active Applications, and an optional refusal. A refusal is returned as data, not thrown, so the screen can show it beside the summary and the active list. There are two refusals: no Resume (extension 2a) and the limit of 5 active Applications (extension 2b).
+
+startApplication does not check that the posting is open or that the Applicant has not already applied to it. Those checks happen only at submitApplication (extensions 4a and 4c).
 
 #### CO-04.1: submitApplication
 

@@ -1,0 +1,29 @@
+@page {
+  size: Letter;
+  margin: 2cm 2cm 2.2cm;
+  @bottom-center { content: counter(page); font-family: Helvetica, Arial, sans-serif; font-size: 9pt; color: #555; }
+}
+/* The cover carries no page number */
+@page :first { @bottom-center { content: none; } }
+body { font-family: Helvetica, Arial, sans-serif; font-size: 10.5pt; line-height: 1.45; color: #111; max-width: none; }
+h1 { font-size: 20pt; margin-top: 0; }
+h2 { font-size: 15pt; margin-top: 1.4em; }
+h3 { font-size: 12.5pt; margin-top: 1.2em; }
+h4 { font-size: 11pt; }
+h2, h3, h4 { page-break-after: avoid; }
+table { border-collapse: collapse; width: 100%; margin: 0.8em 0; font-size: 9.5pt; page-break-inside: auto; }
+th, td { border: 1px solid #999; padding: 4px 6px; vertical-align: top; text-align: left; }
+th { background: #eee; }
+tr { page-break-inside: avoid; }
+/* A tall sequence diagram shrinks to one page rather than being cut */
+img { max-width: 100%; max-height: 8.6in; height: auto; display: block; margin: 0.6em auto; page-break-inside: avoid; }
+code { font-size: 9.5pt; }
+pre { white-space: pre-wrap; font-size: 9pt; background: #f6f6f6; padding: 6px; }
+blockquote { margin-left: 0; padding-left: 1em; border-left: 3px solid #ccc; color: #444; }
+.page-break { page-break-after: always; }
+nav.toc ul { list-style: none; padding-left: 1.2em; }
+nav.toc > ul { padding-left: 0; }
+nav.toc a { color: #111; text-decoration: none; }
+nav.toc li { display: block; }
+nav.toc a { display: flex; }
+nav.toc a::after { content: target-counter(attr(href), page); margin-left: auto; padding-left: 1em; }

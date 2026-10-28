@@ -1,0 +1,52 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "CareerBridge",
+  "colors": {
+    "primary": "#1f5f56"
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Specification",
+        "pages": [
+          "spec/change-log",
+          "spec/vision",
+          "spec/requirements",
+          "spec/use-cases",
+          "spec/ssd-and-contracts",
+          "spec/ui-drafts",
+          "spec/domain-model",
+          "spec/design",
+          "spec/architecture",
+          "spec/testing",
+          "spec/team"
+        ]
+      },
+      {
+        "group": "Architecture decisions",
+        "pages": [
+          "spec/adr/0001-spring-boot-and-nextjs",
+          "spec/adr/0002-repository-layout",
+          "spec/adr/0003-pull-requests-and-manual-deploy",
+          "spec/adr/0004-frontend",
+          "spec/adr/0005-user-inheritance",
+          "spec/adr/0006-public-backend-is-read-only-without-login",
+          "spec/adr/0007-administrator-signs-in-with-http-basic",
+          "spec/adr/0008-pull-requests-name-their-ticket",
+          "spec/adr/0010-log-in-with-jwt"
+        ]
+      }
+    ]
+  },
+  "redirects": [
+    {
+      "source": "/spec/README",
+      "destination": "/spec/change-log"
+    },
+    {
+      "source": "/spec/adr/README",
+      "destination": "/spec/adr/0001-spring-boot-and-nextjs"
+    }
+  ]
+}

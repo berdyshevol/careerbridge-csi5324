@@ -18,6 +18,10 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization"})
     List<Application> findByApplicant(Applicant applicant);
 
+    @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization"})
+    List<Application> findByApplicantAndApplicationStatusIn(Applicant applicant,
+                                                            Collection<ApplicationStatus> statuses);
+
     long countByApplicantAndApplicationStatusIn(Applicant applicant,
                                                 Collection<ApplicationStatus> statuses);
 

@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -96,6 +97,70 @@ class ApplicationServiceTest {
     }
 
     @Test
+    void startsWithTheSummaryAndChangesNothing() {
+        JobPosting posting = save("Software Engineer", PostStatus.PUBLISHED, today.plusDays(14));
+        JobPosting other = save("DevOps Specialist", PostStatus.PUBLISHED, today.plusDays(14));
+        applicationService.submitApplication(other.getJobPostId(), RESUME, JORDAN);
+
+        ApplicationStart start = applicationService.startApplication(posting.getJobPostId(), RESUME, JORDAN);
+
+        assertEquals("Software Engineer", start.posting().getTitle());
+        assertEquals("Test Organization", start.posting().getOrganization().getName());
+        assertEquals(applicant.getEmail(), start.applicant().getEmail());
+        assertEquals("cv.pdf", start.resume().getFileName());
+        assertEquals(1, start.activeApplicationCount());
+        assertNull(start.refusal());
+        assertEquals(1, applicationRepository.count());
+    }
+
+    @Test
+    void startsWithNoResumeAsARefusalNotAnInventedOne() {
+        JobPosting posting = save("Software Engineer", PostStatus.PUBLISHED, today.plusDays(14));
+
+        ApplicationStart start = applicationService.startApplication(posting.getJobPostId(), null, JORDAN);
+
+        assertEquals(ApplicationRefusal.NO_RESUME, start.refusal());
+        assertNull(start.resume());
+        assertEquals("Software Engineer", start.posting().getTitle());
+    }
+
+    @Test
+    void startsAtTheLimitOfFiveWithTheActiveApplicationsListed() {
+        for (int i = 1; i <= ApplicationService.APPLICATION_LIMIT; i++) {
+            JobPosting posting = save("Position " + i, PostStatus.PUBLISHED, today.plusDays(10));
+            applicationService.submitApplication(posting.getJobPostId(), RESUME, JORDAN);
+        }
+        JobPosting sixth = save("Position 6", PostStatus.PUBLISHED, today.plusDays(10));
+
+        ApplicationStart start = applicationService.startApplication(sixth.getJobPostId(), RESUME, JORDAN);
+
+        assertEquals(ApplicationRefusal.LIMIT_REACHED, start.refusal());
+        assertEquals(ApplicationService.APPLICATION_LIMIT, start.activeApplicationCount());
+        assertEquals(ApplicationService.APPLICATION_LIMIT, start.activeApplications().size());
+    }
+
+    @Test
+    void startsBelowTheLimitWhenAnEndedApplicationFreedItsSlot() {
+        for (int i = 1; i <= ApplicationService.APPLICATION_LIMIT; i++) {
+            JobPosting posting = save("Position " + i, PostStatus.PUBLISHED, today.plusDays(10));
+            applicationService.submitApplication(posting.getJobPostId(), RESUME, JORDAN);
+        }
+        applicationRepository.findAll().get(0).setApplicationStatus(ApplicationStatus.REJECTED);
+        JobPosting sixth = save("Position 6", PostStatus.PUBLISHED, today.plusDays(10));
+
+        ApplicationStart start = applicationService.startApplication(sixth.getJobPostId(), RESUME, JORDAN);
+
+        assertNull(start.refusal());
+        assertEquals(ApplicationService.APPLICATION_LIMIT - 1, start.activeApplicationCount());
+    }
+
+    @Test
+    void startingOnAPostingThatDoesNotExistFails() {
+        assertThrows(PostingNotFoundException.class,
+                () -> applicationService.startApplication(-1L, RESUME, JORDAN));
+    }
+
+    @Test
     void refusesAPostingThatIsNotOpen() {
         JobPosting closed = save("Closed", PostStatus.CLOSED, today.plusDays(10));
         JobPosting expired = save("Expired", PostStatus.PUBLISHED, today.minusDays(1));
@@ -106,6 +171,7 @@ class ApplicationServiceTest {
             ApplicationRefusedException refused = assertThrows(ApplicationRefusedException.class,
                     () -> applicationService.submitApplication(posting.getJobPostId(), RESUME, JORDAN));
             assertEquals("This posting no longer accepts applications.", refused.getMessage());
+            assertEquals(ApplicationRefusal.POSTING_CLOSED, refused.getReason());
         }
         assertEquals(0, applicationRepository.count());
     }
@@ -118,6 +184,7 @@ class ApplicationServiceTest {
                 () -> applicationService.submitApplication(posting.getJobPostId(), null, JORDAN));
 
         assertTrue(refused.getMessage().startsWith("A resume is required"));
+        assertEquals(ApplicationRefusal.NO_RESUME, refused.getReason());
         assertEquals(0, applicationRepository.count());
     }
 
@@ -126,8 +193,9 @@ class ApplicationServiceTest {
         JobPosting posting = save("DevOps Specialist", PostStatus.PUBLISHED, today.plusDays(14));
         applicationService.submitApplication(posting.getJobPostId(), RESUME, JORDAN);
 
-        assertThrows(ApplicationRefusedException.class,
+        ApplicationRefusedException refused = assertThrows(ApplicationRefusedException.class,
                 () -> applicationService.submitApplication(posting.getJobPostId(), RESUME, JORDAN));
+        assertEquals(ApplicationRefusal.ALREADY_APPLIED, refused.getReason());
         assertEquals(1, applicationRepository.count());
     }
 
@@ -139,8 +207,9 @@ class ApplicationServiceTest {
         }
         JobPosting sixth = save("Position 6", PostStatus.PUBLISHED, today.plusDays(10));
 
-        assertThrows(ApplicationRefusedException.class,
+        ApplicationRefusedException refused = assertThrows(ApplicationRefusedException.class,
                 () -> applicationService.submitApplication(sixth.getJobPostId(), RESUME, JORDAN));
+        assertEquals(ApplicationRefusal.LIMIT_REACHED, refused.getReason());
         assertEquals(ApplicationService.APPLICATION_LIMIT, applicationRepository.count());
     }
 

@@ -52,3 +52,8 @@ Besides the tests, every pull request to `main` runs three workflows:
 - **Claude review** (`claude-review.yml`) posts one advisory comment per run: bugs, the ticket, the specification and ADRs, and the screen rules read from the code. It runs when the pull request opens; re-run it from the Actions tab after larger changes. It is no screen review: for a page, `screen-review` with its screenshots is still needed.
 
 They read three repository secrets: `JIRA_EMAIL` and `JIRA_API_TOKEN` (an Atlassian API token; status changes appear under that account) and `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`, Oleg's Claude subscription). Unlike the deploy secrets, these are readable by the workflow copy on any collaborator's branch, which is accepted while the collaborators are the team ([ADR-0008](../spec/adr/0008-pull-requests-name-their-ticket.md)).
+
+## Documentation PDF
+
+`tools/build-pdf/build.sh <list.txt> <output.pdf>` builds a deliverable's documentation from the
+Markdown in `spec/`, Mermaid diagrams included ([tools/build-pdf/README.md](../tools/build-pdf/README.md)).

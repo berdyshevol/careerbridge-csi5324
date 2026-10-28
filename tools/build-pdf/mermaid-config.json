@@ -1,0 +1,5 @@
+{
+  "theme": "neutral",
+  "sequence": { "showSequenceNumbers": false, "mirrorActors": false },
+  "themeVariables": { "fontFamily": "Helvetica, Arial, sans-serif" }
+}

@@ -36,7 +36,7 @@ const members = [
     name: "Oleg Berdyshev",
     role: "Project Librarian",
     useCases:
-      "UC-01 Browse Job Postings, UC-02 Register as Applicant, UC-03 Maintain Profile and Resume",
+      "UC-01 Search Job Postings, UC-02 Register as Applicant, UC-03 Update Applicant Profile",
   },
 ];
 

@@ -36,7 +36,7 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/admin/**").hasRole(Role.ADMINISTRATOR.name())
-                        .requestMatchers(HttpMethod.POST, "/api/postings/*/apply").hasRole(Role.APPLICANT.name())
+                        .requestMatchers("/api/postings/*/application").hasRole(Role.APPLICANT.name())
                         .requestMatchers("/api/applicant/**").hasRole(Role.APPLICANT.name())
                         // UC-11: creating and submitting a posting
                         .requestMatchers(HttpMethod.POST, "/api/postings", "/api/postings/*/submit")
@@ -56,8 +56,11 @@ public class SecurityConfig {
                 PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/postings/**"),
                 PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/postings"),
                 PathPatternRequestMatcher.withDefaults().matcher("/api/auth/login"));
+        // Starting an application is a GET under /api/postings too, but it is the applicant's own (UC-04)
+        RequestMatcher applicantsOwn = PathPatternRequestMatcher.withDefaults().matcher("/api/postings/*/application");
         DefaultBearerTokenResolver resolver = new DefaultBearerTokenResolver();
-        return request -> publicReads.matches(request) ? null : resolver.resolve(request);
+        return request -> publicReads.matches(request) && !applicantsOwn.matches(request)
+                ? null : resolver.resolve(request);
     }
 
     private static JwtAuthenticationConverter roleFromToken() {

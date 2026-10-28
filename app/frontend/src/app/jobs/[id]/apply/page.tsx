@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import AccessNotice from "@/components/AccessNotice";
 import ApplyForm from "@/components/ApplyForm";
 import BackendDown from "@/components/BackendDown";
-import { SessionEnded, viewApplications, viewPosting, type Applications, type JobPosting } from "@/lib/api";
+import { SessionEnded, startApplication, viewApplications, viewPosting, type ApplicationStart, type Applications, type JobPosting } from "@/lib/api";
 import { resume } from "@/lib/sampleDesk";
 import { serverSession } from "@/lib/serverSession";
 
@@ -44,8 +44,12 @@ export default async function ApplyPage({ params }: { params: Promise<{ id: stri
   }
 
   let applications: Applications;
+  let start: ApplicationStart;
   try {
-    applications = await viewApplications(session.token);
+    [applications, start] = await Promise.all([
+      viewApplications(session.token),
+      startApplication(session.token, posting.jobPostId, resume),
+    ]);
   } catch (err) {
     if (err instanceof SessionEnded) {
       return (
@@ -61,7 +65,12 @@ export default async function ApplyPage({ params }: { params: Promise<{ id: stri
     <ApplyForm
       posting={posting}
       session={session}
-      desk={{ applications: applications.active, appliedPostingIds: applications.appliedPostingIds, resume }}
+      desk={{
+        applications: applications.active,
+        appliedPostingIds: applications.appliedPostingIds,
+        resume,
+        refusal: start.refusal?.reason ?? null,
+      }}
     />
   );
 }

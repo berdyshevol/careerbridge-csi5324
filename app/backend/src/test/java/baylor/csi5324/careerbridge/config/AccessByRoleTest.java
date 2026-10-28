@@ -53,9 +53,11 @@ class AccessByRoleTest {
     @Test
     void aVisitorReadsPostingsButWritesNothing() throws Exception {
         mockMvc.perform(get("/api/postings")).andExpect(status().isOk());
-        mockMvc.perform(post("/api/postings/1/apply").contentType(MediaType.APPLICATION_JSON).content(RESUME))
+        mockMvc.perform(post("/api/postings/1/application").contentType(MediaType.APPLICATION_JSON).content(RESUME))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/applicant/applications")).andExpect(status().isUnauthorized());
+        // A GET under /api/postings, yet it starts the applicant's own application (UC-04)
+        mockMvc.perform(get("/api/postings/1/application")).andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/postings").contentType(MediaType.APPLICATION_JSON).content(blankPosting))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/postings/1/submit")).andExpect(status().isUnauthorized());
@@ -63,14 +65,14 @@ class AccessByRoleTest {
 
     @Test
     void onlyAnApplicantApplies() throws Exception {
-        mockMvc.perform(post("/api/postings/1/apply").with(as("RECRUITER"))
+        mockMvc.perform(post("/api/postings/1/application").with(as("RECRUITER"))
                         .contentType(MediaType.APPLICATION_JSON).content(RESUME))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(post("/api/postings/1/apply").with(as("ADMINISTRATOR"))
+        mockMvc.perform(post("/api/postings/1/application").with(as("ADMINISTRATOR"))
                         .contentType(MediaType.APPLICATION_JSON).content(RESUME))
                 .andExpect(status().isForbidden());
         // Reaches the service: an unknown posting is the applicant's 404, not a refused role
-        mockMvc.perform(post("/api/postings/999999/apply").with(as("APPLICANT"))
+        mockMvc.perform(post("/api/postings/999999/application").with(as("APPLICANT"))
                         .contentType(MediaType.APPLICATION_JSON).content(RESUME))
                 .andExpect(status().isNotFound());
         mockMvc.perform(get("/api/applicant/applications").with(as("ADMINISTRATOR")))

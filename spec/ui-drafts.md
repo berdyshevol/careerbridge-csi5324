@@ -8,7 +8,7 @@ Low-fidelity wireframes (desktop, 1280 pixels wide) for the main screens of each
 
 #### Applicant Home Page
 
-Figure 20. The applicant's workspace. Its icons open Maintain Profile and Resume (UC-03), Apply for Job (UC-04), Track Application Status (UC-05), Withdraw Application (UC-06) and Respond to Job Offer (UC-07) in the central canvas.
+Figure 20. The applicant's workspace. Its icons open Update Applicant Profile (UC-03), Apply for Job (UC-04), Track Application Status (UC-05), Withdraw Application (UC-06) and Respond to Job Offer (UC-07) in the central canvas.
 
 ![Figure 20: Applicant Home Page wireframe](diagrams/fig-20-applicant-home-page-wireframe.png)
 

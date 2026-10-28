@@ -2,6 +2,7 @@ package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
+import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
@@ -22,9 +23,6 @@ public class ApplicationService {
 
     public static final int APPLICATION_LIMIT = 5;
 
-    private static final String ALREADY_APPLIED =
-            "You already applied to this posting. A posting can be applied to once.";
-
     private final ApplicationRepository applicationRepository;
     private final ApplicantRepository applicantRepository;
     private final JobPostingRepository jobPostingRepository;
@@ -41,27 +39,42 @@ public class ApplicationService {
     }
 
     // STAND-IN: the resume comes from the caller until UC-03 keeps it in the backend
+    @Transactional(readOnly = true)
+    public ApplicationStart startApplication(Long postingId, ResumeSnapshot resume, String applicantEmail) {
+        JobPosting posting = jobPostingRepository.findById(postingId)
+                .orElseThrow(() -> new PostingNotFoundException(postingId));
+        Applicant applicant = applicant(applicantEmail);
+        List<Application> active = applicationRepository
+                .findByApplicantAndApplicationStatusIn(applicant, ApplicationStatus.ACTIVE);
+
+        ApplicationRefusal refusal = null;
+        if (resume == null) {
+            refusal = ApplicationRefusal.NO_RESUME;
+        } else if (active.size() >= APPLICATION_LIMIT) {
+            refusal = ApplicationRefusal.LIMIT_REACHED;
+        }
+        return new ApplicationStart(posting, applicant, resume, active, refusal);
+    }
+
+    // STAND-IN: the resume comes from the caller until UC-03 keeps it in the backend
     public SubmittedApplication submitApplication(Long postingId, ResumeSnapshot resume, String applicantEmail) {
         JobPosting posting = jobPostingRepository.findById(postingId)
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
         Instant now = clock.instant();
         if (!posting.isOpen(now)) {
-            throw new ApplicationRefusedException("This posting no longer accepts applications.");
+            throw new ApplicationRefusedException(ApplicationRefusal.POSTING_CLOSED);
         }
         if (resume == null) {
-            throw new ApplicationRefusedException("A resume is required to apply. "
-                    + "Upload one in Profile & resume, then come back to this posting.");
+            throw new ApplicationRefusedException(ApplicationRefusal.NO_RESUME);
         }
 
         Applicant applicant = applicant(applicantEmail);
         if (applicationRepository.existsByApplicantAndJobPosting(applicant, posting)) {
-            throw new ApplicationRefusedException(ALREADY_APPLIED);
+            throw new ApplicationRefusedException(ApplicationRefusal.ALREADY_APPLIED);
         }
         long active = applicationRepository.countActiveByApplicant(applicant);
         if (active >= APPLICATION_LIMIT) {
-            throw new ApplicationRefusedException("You have " + APPLICATION_LIMIT
-                    + " active applications, the most allowed at once. A slot frees up when you "
-                    + "withdraw one or it reaches Hired, Rejected or Offer Declined.");
+            throw new ApplicationRefusedException(ApplicationRefusal.LIMIT_REACHED);
         }
 
         try {
@@ -71,7 +84,7 @@ public class ApplicationService {
             return new SubmittedApplication(application, active + 1);
         } catch (DataIntegrityViolationException sameMomentDuplicate) {
             // A double click: the other request passed the check above first
-            throw new ApplicationRefusedException(ALREADY_APPLIED);
+            throw new ApplicationRefusedException(ApplicationRefusal.ALREADY_APPLIED);
         }
     }
 
@@ -81,7 +94,6 @@ public class ApplicationService {
         return applicationRepository.findByApplicant(applicant(applicantEmail));
     }
 
-    // The logged-in Applicant (ADR-0010); SecurityConfig lets only that role reach these operations
     private Applicant applicant(String email) {
         return applicantRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new AccountGoneException(email));
