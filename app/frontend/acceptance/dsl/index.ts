@@ -119,6 +119,11 @@ export class Employers {
     await this.leavePosting("Published", spec);
   }
 
+  // The Administrator approves a posting the test left Pending Approval
+  async approvePosting(title: string) {
+    await this.world.driver.decidePosting(ACCOUNTS.administrator, this.world.posting(title).jobPostId, "approve");
+  }
+
   async leavePosting(status: PostStatus, spec: PostingSpec) {
     const jobPostId = await this.world.createPosting(spec);
     for (const step of STEPS_TO[status]) {
