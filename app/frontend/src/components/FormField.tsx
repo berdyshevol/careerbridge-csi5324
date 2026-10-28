@@ -51,6 +51,33 @@ export function TextAreaField({
   );
 }
 
+// The same for choosing a file
+export function FileField({
+  id,
+  label,
+  error,
+  hint,
+  inputRef,
+  ...input
+}: FieldProps & {
+  inputRef?: React.Ref<HTMLInputElement>;
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "id" | "className" | "type">) {
+  return (
+    <Field id={id} label={label} error={error} hint={hint}>
+      {(described) => (
+        <input
+          id={id}
+          ref={inputRef}
+          type="file"
+          className={`file-input w-full ${error ? "file-input-error" : ""}`}
+          {...described}
+          {...input}
+        />
+      )}
+    </Field>
+  );
+}
+
 function Field({
   id,
   label,

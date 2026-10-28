@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import EmptyState from "@/components/EmptyState";
-import FormField, { TextAreaField } from "@/components/FormField";
+import FormField, { FileField, TextAreaField } from "@/components/FormField";
 import PageTitle from "@/components/PageTitle";
 import {
-  formatDate,
+  formatUtcDay,
   PROFILE_FIELDS,
   PROFILE_MAX_LENGTH,
   ProfileRefused,
+  ResumeRefused,
   SessionEnded,
   updateProfile,
+  uploadResume,
   type Profile,
   type ProfileDetails,
   type ProfileField,
@@ -19,14 +21,12 @@ import {
 import { readSession, saveSession } from "@/lib/session";
 import { useEndSession } from "@/lib/useEndSession";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
-
 function detailsOf(profile: Profile): ProfileDetails {
   return Object.fromEntries(PROFILE_FIELDS.map((field) => [field, profile[field] ?? ""])) as ProfileDetails;
 }
 
-// UC-03 for the logged-in Applicant: the details and resume on file come from the backend (CO-03.1)
-// and the details are saved there (CO-03.2). Uploading a resume (SCRUM-163) is not connected yet.
+// UC-03 for the logged-in Applicant: the details and resume on file come from the backend (CO-03.1),
+// the details are saved there (CO-03.2) and a new resume replaces the one on file (CO-03.3)
 export default function ProfilePreview({ profile: onFile, token }: { profile: Profile; token: string }) {
   const router = useRouter();
   const endSession = useEndSession();
@@ -36,8 +36,13 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const [resume, setResume] = useState(onFile.resume);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileError, setFileError] = useState("");
+  const [fileRefusal, setFileRefusal] = useState("");
+  const [uploaded, setUploaded] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   // A screen reader hears the first reason: focus moves to the first field the backend refused
   useEffect(() => {
@@ -48,27 +53,37 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
   }, [fieldErrors]);
 
   function handleResumeChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    setFileError("");
-    setSelectedFile(null);
+    setSelectedFile(event.target.files?.[0] ?? null);
+    setFileRefusal("");
+    setUploaded(false);
+    setUploadError("");
+  }
 
-    if (!file) return;
-
-    const validExtension = /\.(pdf|docx)$/i.test(file.name);
-
-    if (!validExtension) {
-      setFileError("Please select a PDF or DOCX file.");
-      event.target.value = "";
-      return;
+  // The backend checks the type and size (extension 6a), so its reason is the only one the applicant sees
+  async function handleUpload(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedFile) return;
+    setUploading(true);
+    try {
+      setResume(await uploadResume(token, selectedFile));
+      setUploaded(true);
+      setSelectedFile(null);
+      if (fileInput.current) {
+        fileInput.current.value = "";
+      }
+    } catch (err) {
+      if (err instanceof ResumeRefused) {
+        setFileRefusal(err.message);
+        fileInput.current?.focus();
+      } else if (err instanceof SessionEnded) {
+        endSession();
+        setUploadError("Your session has ended. Log in again to upload your resume.");
+      } else {
+        setUploadError("Unable to upload the resume. Your current resume is kept. Please try again.");
+      }
+    } finally {
+      setUploading(false);
     }
-
-    if (file.size > MAX_FILE_SIZE) {
-      setFileError("The resume must be 5 MB or smaller.");
-      event.target.value = "";
-      return;
-    }
-
-    setSelectedFile(file);
   }
 
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
@@ -178,16 +193,14 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
         <div className="card-body">
           <h2 className="font-display text-xl font-semibold">Your resume</h2>
           <p className="mt-2 text-muted">
-            You can keep one current resume on your profile.
+            You keep one resume on your profile, and a new upload replaces it.
             Accepted formats: PDF or DOCX, maximum 5 MB.
           </p>
 
-          {onFile.resume ? (
+          {resume ? (
             <div className="mt-5 rounded-xl border border-base-300 bg-base-200 p-4">
-              <p className="font-semibold">{onFile.resume.fileName}</p>
-              <p className="mt-1 text-sm text-muted">
-                Uploaded {formatDate(onFile.resume.uploadDate.slice(0, 10))}
-              </p>
+              <p className="font-semibold">{resume.fileName}</p>
+              <p className="mt-1 text-sm text-muted">Uploaded {formatUtcDay(resume.uploadDate)}</p>
             </div>
           ) : (
             // UC-02 step 5: a new applicant lands here and is asked for a resume
@@ -196,39 +209,34 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
             </div>
           )}
 
-          <div className="mt-5">
-            <label
-              htmlFor="resume-file"
-              className="mb-2 block text-sm font-semibold"
-            >
-              Select a new resume
-            </label>
-            <input
+          <form onSubmit={handleUpload} className="mt-5 space-y-5" noValidate>
+            {uploadError && (
+              <div role="alert" className="alert alert-error">
+                <span>{uploadError}</span>
+              </div>
+            )}
+
+            <FileField
               id="resume-file"
-              type="file"
+              label={resume ? "Replace your resume" : "Choose your resume"}
               accept=".pdf,.docx"
+              hint="PDF or DOCX, at most 5 MB."
+              error={fileRefusal || undefined}
+              inputRef={fileInput}
               onChange={handleResumeChange}
-              className="file-input w-full max-w-md"
             />
-          </div>
 
-          {fileError && (
-            <p role="alert" className="mt-3 text-sm text-error">
-              {fileError}
-            </p>
-          )}
-
-          {selectedFile && (
-            <div className="mt-4 rounded-xl bg-secondary p-4">
-              <p className="font-semibold text-secondary-content">
-                Ready for upload: {selectedFile.name}
-              </p>
-              <p className="mt-1 text-sm text-muted">
-                {(selectedFile.size / 1024).toFixed(1)} KB · Uploading is not connected yet,
-                so this file is not saved
-              </p>
+            <div className="flex flex-wrap items-center gap-4">
+              <button type="submit" className="btn" disabled={!selectedFile || uploading}>
+                {uploading ? "Uploading..." : "Upload resume"}
+              </button>
+              {uploaded && (
+                <p role="status" className="text-sm text-success">
+                  Resume uploaded
+                </p>
+              )}
             </div>
-          )}
+          </form>
         </div>
       </section>
     </div>

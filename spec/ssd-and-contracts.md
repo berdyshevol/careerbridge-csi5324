@@ -132,7 +132,7 @@ sequenceDiagram
 
 **Preconditions:** The Applicant is logged in.
 
-**Postconditions:** A Resume was created for the accepted file, with its _file Name_ and _upload Date_ , and associated with the Applicant. Any previous Resume was dissociated from the Applicant (BR-6).
+**Postconditions:** A Resume was created for the accepted file, with its _file Name_ and _upload Date_ , and associated with the Applicant. Any previous Resume of the Applicant was replaced by it and deleted (BR-6); the Resume Snapshots of submitted Applications are unchanged (A6).
 
 #### UC-04 Apply for Job
 

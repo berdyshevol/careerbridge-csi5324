@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -16,6 +17,7 @@ import org.springframework.web.context.WebApplicationContext;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -91,6 +93,11 @@ class AccessByRoleTest {
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(put("/api/applicant/profile").with(as("RECRUITER"))
                         .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(multipart("/api/applicant/resume").file(new MockMultipartFile("file", "cv.pdf", "application/pdf", new byte[1])))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(multipart("/api/applicant/resume").file(new MockMultipartFile("file", "cv.pdf", "application/pdf", new byte[1]))
+                        .with(as("RECRUITER")))
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/api/applicant/profile").with(as("APPLICANT")))
                 .andExpect(status().isOk())

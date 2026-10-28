@@ -1,7 +1,18 @@
-import { expect, test } from "@playwright/test";
+import path from "node:path";
+import { expect, test, type Page } from "@playwright/test";
 import { ACCOUNTS, logIn } from "./accounts";
 
-// UC-03 Update Applicant Profile, CO-03.1 and CO-03.2 (spec/use-cases.md), as Given / When / Then
+// UC-03 Update Applicant Profile, CO-03.1 to CO-03.3 (spec/use-cases.md), as Given / When / Then
+
+// An account of its own: the demo applicant's details, and having no resume, are what the other tests expect
+async function registerNewApplicant(page: Page, label: string, projectName: string) {
+  await page.goto("/register");
+  await page.getByLabel("Full name").fill("Pat Kim");
+  await page.getByLabel("Email").fill(`pat.${label}.${projectName}.${Date.now()}@example.com`);
+  await page.getByLabel("Password").fill("Sunrise-2026x");
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page).toHaveURL(/\/profile$/);
+}
 
 test("given a logged-in applicant, when they open their profile, then it shows their own details from the backend", async ({ page }) => {
   await logIn(page, ACCOUNTS.applicant);
@@ -13,19 +24,13 @@ test("given a logged-in applicant, when they open their profile, then it shows t
   await expect(page.getByLabel("Last name")).toHaveValue("Lee");
   await expect(page.getByLabel("Email address")).toHaveValue(ACCOUNTS.applicant.email);
   await expect(page.getByLabel("Phone number")).toHaveValue("(254) 555-0142");
-  // The demo applicant starts without a resume: nothing uploads one until SCRUM-163
+  // The demo applicant has no resume: the tests that upload one register an applicant of their own
   await expect(page.getByText(/No resume on file yet/)).toBeVisible();
   await expect(page.getByText("Jordan_Lee_Resume.pdf")).toHaveCount(0);
 });
 
 test("given a new applicant, when they change their phone and headline and save, then both are still there after a reload", async ({ page }, testInfo) => {
-  // An account of its own: the demo applicant's details are what the other tests expect
-  await page.goto("/register");
-  await page.getByLabel("Full name").fill("Pat Kim");
-  await page.getByLabel("Email").fill(`pat.profile.${testInfo.project.name}.${Date.now()}@example.com`);
-  await page.getByLabel("Password").fill("Sunrise-2026x");
-  await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL(/\/profile$/);
+  await registerNewApplicant(page, "profile", testInfo.project.name);
 
   await page.getByLabel("Phone number").fill("(254) 555-0199");
   await page.getByLabel("Headline").fill("Data analyst");
@@ -53,4 +58,40 @@ test("given a logged-in applicant, when they save a malformed phone number, then
 
   await page.reload();
   await expect(page.getByLabel("Phone number")).toHaveValue("(254) 555-0142");
+});
+
+test("given a new applicant, when they upload a PDF resume, then its name and upload date are still there after a reload", async ({ page }, testInfo) => {
+  await registerNewApplicant(page, "resume", testInfo.project.name);
+  await expect(page.getByText(/No resume on file yet/)).toBeVisible();
+
+  await page.getByLabel("Choose your resume").setInputFiles(path.join(__dirname, "fixtures", "Pat_Kim_Resume.pdf"));
+  await page.getByRole("button", { name: "Upload resume" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Resume uploaded" })).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
+  // The date the backend recorded, which is today
+  const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  await expect(page.getByText(`Uploaded ${today}`)).toBeVisible();
+  await expect(page.getByText(/No resume on file yet/)).toHaveCount(0);
+});
+
+test("given an applicant with a resume, when they upload a text file, then the field says why and the resume stays on file", async ({ page }, testInfo) => {
+  await registerNewApplicant(page, "refused", testInfo.project.name);
+  await page.getByLabel("Choose your resume").setInputFiles(path.join(__dirname, "fixtures", "Pat_Kim_Resume.pdf"));
+  await page.getByRole("button", { name: "Upload resume" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Resume uploaded" })).toBeVisible();
+
+  await page.getByLabel("Replace your resume").setInputFiles({
+    name: "notes.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("Pat Kim, data analyst"),
+  });
+  await page.getByRole("button", { name: "Upload resume" }).click();
+
+  await expect(page.getByLabel("Replace your resume")).toHaveAccessibleDescription(
+    "The file is not a PDF or DOCX. Choose a PDF or DOCX file of at most 5 MB.",
+  );
+  await page.reload();
+  await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
 });

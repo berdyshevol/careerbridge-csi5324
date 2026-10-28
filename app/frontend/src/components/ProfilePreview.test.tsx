@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { ProfileRefused, SessionEnded, updateProfile, type Profile } from "@/lib/api";
+import { ProfileRefused, ResumeRefused, SessionEnded, updateProfile, uploadResume, type Profile } from "@/lib/api";
 import { clearSession, readSession, saveSession } from "@/lib/session";
 import ProfilePreview from "./ProfilePreview";
 
@@ -8,6 +8,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 vi.mock("@/lib/api", async (importActual) => ({
   ...(await importActual<typeof import("@/lib/api")>()),
   updateProfile: vi.fn(),
+  uploadResume: vi.fn(),
 }));
 
 const jordan: Profile = {
@@ -30,6 +31,7 @@ function show(profile: Profile = jordan) {
 describe("ProfilePreview", () => {
   afterEach(() => {
     vi.mocked(updateProfile).mockReset();
+    vi.mocked(uploadResume).mockReset();
     refresh.mockReset();
     clearSession();
   });
@@ -131,5 +133,86 @@ describe("ProfilePreview", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Unable to save the profile");
+  });
+
+  describe("uploading a resume (UC-03 steps 5–7)", () => {
+    const pdf = new File(["%PDF-1.4"], "Jordan_Lee_2026.pdf", { type: "application/pdf" });
+
+    function choose(file: File, label = "Replace your resume") {
+      fireEvent.change(screen.getByLabelText(label), { target: { files: [file] } });
+    }
+
+    it("can upload only once a file is chosen", () => {
+      show();
+
+      expect(screen.getByRole("button", { name: "Upload resume" })).toBeDisabled();
+      choose(pdf);
+      expect(screen.getByRole("button", { name: "Upload resume" })).toBeEnabled();
+      expect(screen.getByLabelText("Replace your resume")).toHaveAccessibleDescription("PDF or DOCX, at most 5 MB.");
+    });
+
+    it("shows the new resume's name and upload date in place of the previous one", async () => {
+      vi.mocked(uploadResume).mockResolvedValue({ fileName: "Jordan_Lee_2026.pdf", uploadDate: "2026-10-27T14:05:00" });
+      show();
+
+      choose(pdf);
+      fireEvent.click(screen.getByRole("button", { name: "Upload resume" }));
+
+      expect(await screen.findByRole("status")).toHaveTextContent("Resume uploaded");
+      expect(uploadResume).toHaveBeenCalledWith("t", pdf);
+      expect(screen.getByText("Jordan_Lee_2026.pdf")).toBeInTheDocument();
+      expect(screen.getByText("Uploaded Oct 27, 2026")).toBeInTheDocument();
+      expect(screen.queryByText("Jordan_Lee_CV.pdf")).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Upload resume" })).toBeDisabled();
+    });
+
+    it("lets a new applicant add their first resume", async () => {
+      vi.mocked(uploadResume).mockResolvedValue({ fileName: "Jordan_Lee_2026.pdf", uploadDate: "2026-10-27T14:05:00" });
+      show({ ...jordan, resume: null });
+
+      choose(pdf, "Choose your resume");
+      fireEvent.click(screen.getByRole("button", { name: "Upload resume" }));
+
+      expect(await screen.findByText("Jordan_Lee_2026.pdf")).toBeInTheDocument();
+      expect(screen.queryByText(/No resume on file yet/)).not.toBeInTheDocument();
+    });
+
+    it("shows the backend's reason for a refused file next to the field and keeps the resume on file (extension 6a)", async () => {
+      const reason = "The file is not a PDF or DOCX. Choose a PDF or DOCX file of at most 5 MB.";
+      vi.mocked(uploadResume).mockRejectedValue(new ResumeRefused(reason));
+      show();
+
+      choose(new File(["notes"], "notes.txt", { type: "text/plain" }));
+      fireEvent.click(screen.getByRole("button", { name: "Upload resume" }));
+
+      await screen.findByText(reason);
+      expect(screen.getByLabelText("Replace your resume")).toHaveAccessibleDescription(reason);
+      expect(screen.getByLabelText("Replace your resume")).toHaveAttribute("aria-invalid", "true");
+      expect(screen.getByLabelText("Replace your resume")).toHaveFocus();
+      expect(screen.getByText("Jordan_Lee_CV.pdf")).toBeInTheDocument();
+      expect(screen.queryByText("Resume uploaded")).not.toBeInTheDocument();
+    });
+
+    it("ends a session the backend refused", async () => {
+      vi.mocked(uploadResume).mockRejectedValue(new SessionEnded());
+      show();
+
+      choose(pdf);
+      fireEvent.click(screen.getByRole("button", { name: "Upload resume" }));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("Your session has ended");
+      expect(refresh).toHaveBeenCalled();
+    });
+
+    it("says when the upload failed and that the current resume is kept", async () => {
+      vi.mocked(uploadResume).mockRejectedValue(new Error("Backend answered 500"));
+      show();
+
+      choose(pdf);
+      fireEvent.click(screen.getByRole("button", { name: "Upload resume" }));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("Unable to upload the resume. Your current resume is kept.");
+      expect(screen.getByText("Jordan_Lee_CV.pdf")).toBeInTheDocument();
+    });
   });
 });

@@ -7,6 +7,9 @@ import java.time.LocalDateTime;
 @Entity
 public class Resume {
 
+    // UC-03 extension 6a: the largest file an applicant may upload
+    public static final int MAX_FILE_SIZE = 5 * 1024 * 1024;
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long resumeId;
@@ -23,7 +26,20 @@ public class Resume {
     @Column(nullable = false)
     private LocalDateTime uploadDate;
 
+    // bytea on PostgreSQL and varbinary on H2. Not @Lob: on PostgreSQL that is a large object, which
+    // outlives a deleted row. Nullable, as rows saved before uploads existed have no content.
+    @Column(length = MAX_FILE_SIZE)
+    private byte[] content;
+
     public Resume() {
+    }
+
+    public Resume(String fileName, String fileType, long fileSize, byte[] content, LocalDateTime uploadDate) {
+        this.fileName = fileName;
+        this.fileType = fileType;
+        this.fileSize = fileSize;
+        this.content = content;
+        this.uploadDate = uploadDate;
     }
 
     public Long getResumeId() {
@@ -64,5 +80,9 @@ public class Resume {
 
     public void setUploadDate(LocalDateTime uploadDate) {
         this.uploadDate = uploadDate;
+    }
+
+    public byte[] getContent() {
+        return content;
     }
 }

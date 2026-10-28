@@ -115,8 +115,8 @@ sequenceDiagram
 
 ### UC-03 Update Applicant Profile
 
-Viewing and saving the profile (SD-9, CO-03.1 and CO-03.2) are built; SD-10 is the design for the
-rest of Iteration 3, in the shape of the code that exists. The logged-in Applicant is the subject of the session token (ADR-0010); the
+Viewing and saving the profile (SD-9, CO-03.1 and CO-03.2) and uploading a resume (SD-10, CO-03.3)
+are built. The logged-in Applicant is the subject of the session token (ADR-0010); the
 controller passes that email to the service, so an applicant can only ever read and change their own
 profile (BR-15). CO-03.2 changes First Name and Last Name, which every User has, and phone #,
 location, headline, skills, education and work experience, the profile details of step 2.
@@ -162,11 +162,16 @@ sequenceDiagram
 **Figure 28: SD-9 Update applicant profile (UC-03)**
 
 **SD-10.** The file comes as a multipart upload. The service accepts only a PDF or DOCX of at most
-5 MB and otherwise refuses it, keeping the current resume (extension 6a). An accepted file becomes a
-new Resume with its name, type, size and upload date, stored in the database, and replaces the
-Applicant's previous one: an applicant has at most one resume (BR-6). Applications already
-submitted keep their own Resume Snapshot, so replacing the resume changes none of them (FR-UC03.3,
-A6). No external malware scanner is used (Iteration 1 feedback).
+5 MB: the file name's extension, the type the browser declares (or none, or
+`application/octet-stream`) and the file's first bytes (`%PDF`, or the `PK` of the zip a DOCX is)
+must agree. Otherwise it refuses the file with a reason in plain text that states the accepted
+types and size, keeping the current resume (extension 6a). A file over the multipart limit never
+reaches the service; the controller answers it with the same reason. An accepted file becomes a
+new Resume with its name, type, size, content and upload date (UTC), stored in the database, and
+replaces the Applicant's previous one: an applicant has at most one resume (BR-6). The previous
+Resume is deleted, as nothing else refers to it: applications already submitted keep their own
+Resume Snapshot, an embedded copy, so replacing the resume changes none of them (FR-UC03.3, A6). No
+external malware scanner is used (Iteration 1 feedback).
 
 ```mermaid
 sequenceDiagram
@@ -179,7 +184,7 @@ sequenceDiagram
 
     AP->>PC: POST /api/applicant/resume<br/>(multipart file, bearer token)
     PC->>PS: uploadResume(email, file)
-    PS->>PS: check type (PDF or DOCX) and size (at most 5 MB)
+    PS->>PS: check type (PDF or DOCX: name, declared type,<br/>first bytes) and size (at most 5 MB)
     alt not a PDF or DOCX, or larger than 5 MB (ext. 6a)
         PS-->>PC: ResumeRefusedException(reason)
         PC-->>AP: 400 reason, current resume kept
@@ -191,9 +196,10 @@ sequenceDiagram
         PS->>RR: save(resume)
         RR-->>PS: Resume
         PS->>A: setResume(resume)
-        Note over A: the previous Resume is no longer the<br/>applicant's (BR-6), application snapshots unchanged (A6)
         PS->>AR: save(applicant)
         AR-->>PS: Applicant
+        PS->>RR: delete(previous)
+        Note over RR: the previous Resume, if any, is gone (BR-6);<br/>application snapshots are copies, unchanged (A6)
         PS-->>PC: Resume
         PC-->>AP: 201 ResumeResponse {fileName, uploadDate}
     end
@@ -216,4 +222,4 @@ the DCD must contain each of them.
 | SD-1 | `JobPostingController.searchPostings`; `PublicPosting.of` | `JobPostingService.searchPostings`; `JobPosting.isOpen` | `JobPostingRepository.findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDescJobPostIdDesc` |
 | SD-8 | `RegistrationController.register` | `RegistrationService.register`; `LogInService.startSession` | `UserRepository.findByEmailIgnoreCase`, `saveAndFlush` |
 | SD-9 | `ApplicantProfileController.viewProfile`, `updateProfile` | `ApplicantProfileService.viewProfile`, `updateProfile` | `ApplicantRepository.findByEmailIgnoreCase`, `save` |
-| SD-10 | `ApplicantProfileController.uploadResume` | `ApplicantProfileService.uploadResume` | `ApplicantRepository.findByEmailIgnoreCase`, `save`; `ResumeRepository.save` |
+| SD-10 | `ApplicantProfileController.uploadResume` | `ApplicantProfileService.uploadResume` | `ApplicantRepository.findByEmailIgnoreCase`, `save`; `ResumeRepository.save`, `delete` |
