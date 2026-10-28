@@ -2,6 +2,7 @@ import { SessionEnded,
   BACKEND_TIMEOUT_MS,
   createPosting,
   formatDate,
+  formatUtcDay,
   isOpen,
   PostingRejected,
   searchPostings,
@@ -14,6 +15,8 @@ import { SessionEnded,
   viewProfile,
   ApplicationRefused,
   ProfileRefused,
+  ResumeRefused,
+  uploadResume,
   type JobPosting,
   type NewPosting,
 } from "./api";
@@ -75,6 +78,15 @@ describe("isOpen", () => {
 describe("formatDate", () => {
   it("shows the calendar day that was stored, whatever the time zone", () => {
     expect(formatDate("2026-12-20")).toBe("Dec 20, 2026");
+  });
+});
+
+describe("formatUtcDay", () => {
+  it("shows the day of a UTC moment where the user is", () => {
+    const moment = "2026-10-28T04:30:00";
+    expect(formatUtcDay(moment)).toBe(
+      new Date(Date.UTC(2026, 9, 28, 4, 30)).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    );
   });
 });
 
@@ -426,5 +438,48 @@ describe("updateProfile", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 401 })));
 
     await expect(updateProfile("t", details)).rejects.toBeInstanceOf(SessionEnded);
+  });
+});
+
+describe("uploadResume", () => {
+  const file = new File(["%PDF-1.4"], "Pat_Kim_CV.pdf", { type: "application/pdf" });
+
+  it("sends the file as multipart with the applicant's token and answers with the resume on file", async () => {
+    const onFile = { fileName: "Pat_Kim_CV.pdf", uploadDate: "2026-10-27T14:05:00" };
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(onFile), { status: 201, headers: { "Content-Type": "application/json" } }),
+    );
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(uploadResume("t", file)).resolves.toEqual(onFile);
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toContain("/api/applicant/resume");
+    expect(init.method).toBe("POST");
+    // No Content-Type of our own: the browser adds multipart/form-data with its boundary
+    expect(init.headers).toEqual({ Authorization: "Bearer t" });
+    expect((init.body as FormData).get("file")).toBe(file);
+  });
+
+  it("hands over the backend's reason for a refused file (UC-03 extension 6a)", async () => {
+    const reason = "The file is not a PDF or DOCX. Choose a PDF or DOCX file of at most 5 MB.";
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      new Response(reason, { status: 400, headers: { "Content-Type": "text/plain;charset=UTF-8" } }),
+    ));
+
+    const refused = await uploadResume("t", file).catch((err) => err);
+    expect(refused).toBeInstanceOf(ResumeRefused);
+    expect(refused.message).toBe(reason);
+  });
+
+  it("keeps any other failure's report off the screen", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{}", { status: 500 })));
+
+    await expect(uploadResume("t", file)).rejects.toThrow("Backend answered 500");
+  });
+
+  it("ends the session when the backend refuses the token", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 403 })));
+
+    await expect(uploadResume("t", file)).rejects.toBeInstanceOf(SessionEnded);
   });
 });

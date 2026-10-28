@@ -1,11 +1,22 @@
 package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.model.Applicant;
+import baylor.csi5324.careerbridge.model.Resume;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
+import baylor.csi5324.careerbridge.repository.ResumeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -26,10 +37,48 @@ public class ApplicantProfileService {
     private static final int PHONE_MAX_DIGITS = 15;
     static final String PHONE_FORMAT = "Enter a phone number like (254) 555-0142.";
 
-    private final ApplicantRepository applicantRepository;
+    // UC-03 extension 6a: every refusal states the accepted types and the size limit
+    private static final String ACCEPTED = " Choose a PDF or DOCX file of at most 5 MB.";
+    public static final String RESUME_TOO_LARGE = "The file is larger than 5 MB." + ACCEPTED;
+    static final String RESUME_EMPTY = "The file is empty." + ACCEPTED;
+    static final String RESUME_WRONG_TYPE = "The file is not a PDF or DOCX." + ACCEPTED;
+    static final String RESUME_NAME_TOO_LONG = "The file name is longer than " + MAX_LINE_LENGTH
+            + " characters. Rename the file and upload it again.";
 
-    public ApplicantProfileService(ApplicantRepository applicantRepository) {
+    // The name, the type the browser declares and the first bytes must agree, so a renamed file is
+    // refused. A browser that does not know the type declares application/octet-stream, or nothing.
+    private enum ResumeFormat {
+        PDF(".pdf", "application/pdf", "%PDF"),
+        DOCX(".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "PK\u0003\u0004");
+
+        final String extension;
+        final String contentType;
+        final byte[] signature;
+
+        ResumeFormat(String extension, String contentType, String signature) {
+            this.extension = extension;
+            this.contentType = contentType;
+            this.signature = signature.getBytes(StandardCharsets.ISO_8859_1);
+        }
+
+        boolean matches(String fileName, String declaredType, byte[] content) {
+            return fileName.toLowerCase(Locale.ROOT).endsWith(extension)
+                    && (declaredType == null || declaredType.isBlank()
+                        || declaredType.equals("application/octet-stream") || declaredType.equals(contentType))
+                    && content.length >= signature.length
+                    && Arrays.equals(content, 0, signature.length, signature, 0, signature.length);
+        }
+    }
+
+    private final ApplicantRepository applicantRepository;
+    private final ResumeRepository resumeRepository;
+    private final Clock clock;
+
+    public ApplicantProfileService(ApplicantRepository applicantRepository, ResumeRepository resumeRepository,
+                                   Clock clock) {
         this.applicantRepository = applicantRepository;
+        this.resumeRepository = resumeRepository;
+        this.clock = clock;
     }
 
     @Transactional(readOnly = true)
@@ -80,6 +129,45 @@ public class ApplicantProfileService {
         applicant.setEducation(nullIfEmpty(education));
         applicant.setWorkExperience(nullIfEmpty(workExperience));
         return applicantRepository.save(applicant);
+    }
+
+    // CO-03.3: the accepted file replaces the resume on file (BR-6); a refused one changes nothing (6a)
+    public Resume uploadResume(String email, MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new ResumeRefusedException(RESUME_EMPTY);
+        }
+        if (file.getSize() > Resume.MAX_FILE_SIZE) {
+            throw new ResumeRefusedException(RESUME_TOO_LARGE);
+        }
+        // Some browsers send the whole path; only the name is the applicant's
+        String fileName = stripped(file.getOriginalFilename()).replaceAll(".*[/\\\\]", "");
+        if (fileName.length() > MAX_LINE_LENGTH) {
+            throw new ResumeRefusedException(RESUME_NAME_TOO_LONG);
+        }
+        byte[] content;
+        try {
+            content = file.getBytes();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        ResumeFormat format = Arrays.stream(ResumeFormat.values())
+                .filter(candidate -> candidate.matches(fileName, file.getContentType(), content))
+                .findFirst()
+                .orElseThrow(() -> new ResumeRefusedException(RESUME_WRONG_TYPE));
+
+        Applicant applicant = viewProfile(email);
+        Resume previous = applicant.getResume();
+        // In UTC, the clock's zone; the screen shows the day where the applicant is. Microseconds, as
+        // PostgreSQL keeps them: a Linux clock gives nanoseconds, and the answer must match what is stored
+        Resume resume = resumeRepository.save(new Resume(fileName, format.contentType, content.length, content,
+                LocalDateTime.now(clock).truncatedTo(ChronoUnit.MICROS)));
+        applicant.setResume(resume);
+        applicantRepository.save(applicant);
+        // Submitted applications keep their own copy (ResumeSnapshot, A6), so nothing else refers to it
+        if (previous != null) {
+            resumeRepository.delete(previous);
+        }
+        return resume;
     }
 
     private static String stripped(String value) {

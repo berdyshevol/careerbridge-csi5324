@@ -21,7 +21,7 @@ Figure 25; classes and associations that are not in the figure are listed in sec
 | Applicant | location, headline, skills, education, work experience (a kind of User) |
 | Recruiter | none of its own (a kind of User) |
 | Administrator | none of its own (a kind of User) |
-| Resume | resumeId, file Name, file Type, file Size, upload Date |
+| Resume | resumeId, file Name, file Type, file Size, content, upload Date |
 | Application | applicationId, dateApplied, applicationStatus, rejectionReason, withdrawnAt |
 | Resume Snapshot | file Name, file Type, file Size |
 | Status History Entry | status, date |
@@ -112,7 +112,5 @@ Wording elsewhere in the specification that still follows the figure and should 
 5.3 when those use cases are implemented:
 
 - Business rule BR-6 says "exactly one resume on file"; UC-02 and UC-03 say "at most one".
-- CO-03.3 says the previous Resume "was dissociated from the Applicant"; with Applicant 1 — 0..1
-  Resume it is replaced.
 - CO-14.2, CO-14.3, CO-14.4, CO-15.1 and CO-15.2 say "the Applicant who owns the Application's
   Resume"; it is the Applicant who submitted the Application.

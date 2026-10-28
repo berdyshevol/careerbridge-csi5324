@@ -84,11 +84,15 @@ export type ApplicationStart = {
   refusal: { reason: StartRefusalReason; message: string } | null;
 };
 
-function backendFetch(path: string, init?: Omit<RequestInit, "signal">): Promise<Response> {
+function backendFetch(
+  path: string,
+  init?: Omit<RequestInit, "signal">,
+  timeoutMs = BACKEND_TIMEOUT_MS,
+): Promise<Response> {
   return fetch(`${API_URL}${path}`, {
     cache: "no-store",
     ...init,
-    signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeoutMs),
   });
 }
 
@@ -347,8 +351,10 @@ export const PROFILE_MAX_LENGTH: Record<ProfileField, number> = {
 
 export type ProfileDetails = Record<ProfileField, string>;
 
-// CO-03.1: an empty detail is null; resume is null until the applicant uploads one, and its
-// uploadDate is the backend's local date-time
+// CO-03.1 and CO-03.3; uploadDate is a date-time in UTC, without the zone
+export type Resume = { fileName: string; uploadDate: string };
+
+// CO-03.1: an empty detail is null; resume is null until the applicant uploads one
 export type Profile = {
   firstName: string;
   lastName: string;
@@ -359,7 +365,7 @@ export type Profile = {
   skills: string | null;
   education: string | null;
   workExperience: string | null;
-  resume: { fileName: string; uploadDate: string } | null;
+  resume: Resume | null;
 };
 
 export async function viewProfile(token: string): Promise<Profile> {
@@ -389,6 +395,28 @@ export async function updateProfile(token: string, details: ProfileDetails): Pro
   const fieldErrors = await fieldRefusal(response, PROFILE_FIELDS);
   if (fieldErrors) {
     throw new ProfileRefused(fieldErrors);
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+// UC-03 extension 6a; its message is the backend's reason, which states the accepted types and size
+export class ResumeRefused extends Error {}
+
+// A 5 MB file on a slow connection takes longer than a call without one
+const UPLOAD_TIMEOUT_MS = 60000;
+
+// CO-03.3: the answer is the resume now on file, which replaced any previous one (BR-6)
+export async function uploadResume(token: string, file: File): Promise<Resume> {
+  const body = new FormData();
+  body.append("file", file);
+  const response = await backendFetch("/api/applicant/resume", { method: "POST", headers: bearer(token), body }, UPLOAD_TIMEOUT_MS);
+  endedSession(response);
+  const reason = await refusal(response);
+  if (reason !== null) {
+    throw new ResumeRefused(reason);
   }
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
@@ -447,10 +475,13 @@ export function isOpen(posting: JobPosting): boolean {
   return posting.postStatus === "PUBLISHED" && posting.closesAt != null && Date.now() < Date.parse(posting.closesAt);
 }
 
+const DATE_FORMAT: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" };
+
 export function formatDate(isoDate: string): string {
-  return new Date(`${isoDate}T00:00:00`).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return new Date(`${isoDate}T00:00:00`).toLocaleDateString("en-US", DATE_FORMAT);
+}
+
+// A moment the backend recorded by its UTC clock, shown as the day it was where the user is
+export function formatUtcDay(utcDateTime: string): string {
+  return new Date(`${utcDateTime}Z`).toLocaleDateString("en-US", DATE_FORMAT);
 }

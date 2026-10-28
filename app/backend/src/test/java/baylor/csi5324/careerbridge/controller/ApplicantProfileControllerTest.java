@@ -5,8 +5,10 @@ import baylor.csi5324.careerbridge.model.Resume;
 import baylor.csi5324.careerbridge.service.ApplicantProfileService;
 import baylor.csi5324.careerbridge.service.ProfileDetails;
 import baylor.csi5324.careerbridge.service.ProfileRefusedException;
+import baylor.csi5324.careerbridge.service.ResumeRefusedException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -14,10 +16,14 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -97,5 +103,34 @@ class ApplicantProfileControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.firstName").value("Enter your first name."))
                 .andExpect(jsonPath("$.phone").value("Enter a phone number like (254) 555-0142."));
+    }
+
+    @Test
+    void storesTheUploadedFileAsTheResume() throws Exception {
+        Resume resume = new Resume("Jordan_Lee_CV.pdf", "application/pdf", 8L, "%PDF-1.4".getBytes(),
+                LocalDateTime.of(2026, 10, 27, 14, 5));
+        when(applicantProfileService.uploadResume(eq("jordan.lee@example.com"),
+                argThat(file -> "Jordan_Lee_CV.pdf".equals(file.getOriginalFilename())))).thenReturn(resume);
+
+        mockMvc.perform(multipart("/api/applicant/resume")
+                        .file(new MockMultipartFile("file", "Jordan_Lee_CV.pdf", "application/pdf", "%PDF-1.4".getBytes()))
+                        .principal(() -> "jordan.lee@example.com"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.fileName").value("Jordan_Lee_CV.pdf"))
+                .andExpect(jsonPath("$.uploadDate").value("2026-10-27T14:05:00"))
+                .andExpect(jsonPath("$.content").doesNotExist());
+    }
+
+    @Test
+    void answersARefusedFileWithTheReasonInPlainText() throws Exception {
+        when(applicantProfileService.uploadResume(any(), any()))
+                .thenThrow(new ResumeRefusedException("The file is not a PDF or DOCX. Choose a PDF or DOCX file of at most 5 MB."));
+
+        mockMvc.perform(multipart("/api/applicant/resume")
+                        .file(new MockMultipartFile("file", "notes.txt", "text/plain", "notes".getBytes()))
+                        .principal(() -> "jordan.lee@example.com"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
+                .andExpect(content().string("The file is not a PDF or DOCX. Choose a PDF or DOCX file of at most 5 MB."));
     }
 }

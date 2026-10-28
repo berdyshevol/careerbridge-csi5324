@@ -19,10 +19,16 @@ export default function FormField({
   return (
     <Field id={id} label={label} error={error} hint={hint}>
       {(described) => (
-        <input id={id} ref={inputRef} className={`input w-full ${error ? "input-error" : ""}`} {...described} {...input} />
+        <input id={id} ref={inputRef} className={inputClass(input.type, error)} {...described} {...input} />
       )}
     </Field>
   );
+}
+
+// A file input has its own daisyUI class
+function inputClass(type: string | undefined, error: string | undefined) {
+  const base = type === "file" ? "file-input" : "input";
+  return `${base} w-full ${error ? `${base}-error` : ""}`;
 }
 
 // The same for text of several lines
