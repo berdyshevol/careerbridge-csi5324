@@ -14,8 +14,6 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC01.2:** The system shall let a visitor search open postings by keyword, location, organization and employment type, in the same request. (UC-01 steps 1–2, extensions 2a, 2b)
 
-- **FR-UC01.3:** The system shall show a posting's full details on its own page, from which UC-04 starts; opening it is a page of the job board, not a step of UC-01 (Iteration 1 feedback). (UC-04 step 1, extension 1c)
-
 #### UC-02 Register as Applicant
 
 - **FR-UC02.1:** The system shall let a visitor create an Applicant account with full name, email address and password, without Administrator approval. (BR-14; UC-02 steps 1–5)
@@ -49,6 +47,8 @@ The requirements below come from the use cases in section 4.2. Each functional r
 - **FR-UC04.7:** If the Applicant already has 5 active applications, the system shall block the application, list the active applications and explain that a slot frees up when one is withdrawn or reaches Hired, Rejected or Offer Declined. (BR-4, A7; UC-04 extensions 2b, 4b)
 
 - **FR-UC04.8:** If the Notification Service is unavailable, the system shall keep the application saved, retry the confirmation and still confirm the submission on screen. (UC-04 extension 6a)
+
+- **FR-UC04.9:** The system shall show one open posting's full details on its own page, the posting the Applicant applies to, and shall say so when it no longer accepts applications. (BR-9, BR-10; UC-04 step 1, extension 1c)
 
 #### UC-14 Screen Applications
 
@@ -442,7 +442,6 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |---|---|---|---|
 |FR-UC01.1|UC-01 steps 1–2|searchPostings(criteria)|CO-01.1|
 |FR-UC01.2|UC-01 steps 1–2, extensions 2a, 2b|searchPostings(criteria)|CO-01.1|
-|FR-UC01.3|UC-04 step 1, extension 1c|viewPosting(postingId)|CO-01.2|
 |FR-UC02.1|UC-02 steps 1–5|register(fullName, email, password)|CO-02.1|
 |FR-UC02.2|UC-02 step 4, extensions 4a–4c|register(fullName, email, password)|CO-02.1|
 |FR-UC02.3|UC-02 step 5|register(fullName, email, password)|CO-02.1|
@@ -457,6 +456,7 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC04.6|UC-04 extension 2a|startApplication(postingId)|query (no contract)|
 |FR-UC04.7|UC-04 extensions 2b, 4b|startApplication(postingId),<br/>submitApplication(postingId)|query (no contract), CO-04.1|
 |FR-UC04.8|UC-04 extension 6a|submitApplication(postingId)|CO-04.1|
+|FR-UC04.9|UC-04 step 1, extension 1c|viewPosting(postingId)|query (no contract)|
 |FR-UC05.1|UC-05 steps 1–2|viewApplications()|CO-05.1|
 |FR-UC05.2|UC-05 steps 3–4|viewApplication(applicationId)|CO-05.2|
 |FR-UC05.3|UC-05 step 4|viewApplication(applicationId)|CO-05.2|
