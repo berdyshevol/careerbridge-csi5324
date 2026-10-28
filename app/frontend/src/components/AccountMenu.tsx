@@ -1,17 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { clearSession, ROLE_LABELS, type SessionUser } from "@/lib/session";
 
 export default function AccountMenu({ user }: { user: SessionUser | null }) {
   const router = useRouter();
+  const pathname = usePathname();
 
-  // Register is the only way to start a session until Log In is built
   if (!user) {
+    const next = pathname && pathname !== "/login" ? `?next=${encodeURIComponent(pathname)}` : "";
+    // The search too, read at the click: useSearchParams would need a Suspense boundary around the header
+    const withSearch = (event: React.MouseEvent) => {
+      if (next && window.location.search) {
+        event.preventDefault();
+        router.push(`/login?next=${encodeURIComponent(pathname + window.location.search)}`);
+      }
+    };
     return (
-      <Link href="/register" className="btn btn-ghost">
-        Register
+      <Link href={`/login${next}`} onClick={withSearch} className="btn btn-ghost">
+        Log in
       </Link>
     );
   }
@@ -33,9 +41,15 @@ export default function AccountMenu({ user }: { user: SessionUser | null }) {
         </span>
         <span className="block text-muted">{ROLE_LABELS[user.role]}</span>
       </span>
-      <Link href="/profile" aria-label={label} className="btn btn-circle btn-primary font-semibold">
-        {initials}
-      </Link>
+      {user.role === "APPLICANT" ? (
+        <Link href="/profile" aria-label={label} className="btn btn-circle btn-primary font-semibold">
+          {initials}
+        </Link>
+      ) : (
+        <span aria-label={label} className="btn btn-circle btn-primary pointer-events-none font-semibold">
+          {initials}
+        </span>
+      )}
       <button type="button" onClick={logOut} className="btn btn-ghost btn-sm">
         Log out
       </button>

@@ -47,24 +47,24 @@ class ApplicationControllerTest {
 
     @Test
     void anEmptyResumeCountsAsNoResume() throws Exception {
-        when(applicationService.submitApplication(eq(2L), isNull()))
+        when(applicationService.submitApplication(eq(2L), isNull(), eq("jordan.lee@example.com")))
                 .thenThrow(new ApplicationRefusedException(ApplicationRefusal.NO_RESUME));
         String empty = """
                 {"resumeFileName": " ", "resumeFileType": "application/pdf", "resumeFileSize": 0}
                 """;
 
-        mockMvc.perform(post("/api/postings/2/application").contentType(MediaType.APPLICATION_JSON).content(empty))
+        mockMvc.perform(post("/api/postings/2/application").principal(() -> "jordan.lee@example.com").contentType(MediaType.APPLICATION_JSON).content(empty))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.reason").value("NO_RESUME"));
     }
 
     @Test
     void theApplicationEndpointAnswersWithTheSummaryAsJson() throws Exception {
-        when(applicationService.startApplication(eq(2L), any(ResumeSnapshot.class)))
+        when(applicationService.startApplication(eq(2L), any(ResumeSnapshot.class), eq("jordan.lee@example.com")))
                 .thenReturn(new ApplicationStart(posting(), jordan(),
                         new ResumeSnapshot("cv.pdf", "application/pdf", 2048L), List.of(), null));
 
-        mockMvc.perform(get("/api/postings/2/application")
+        mockMvc.perform(get("/api/postings/2/application").principal(() -> "jordan.lee@example.com")
                         .param("resumeFileName", "cv.pdf")
                         .param("resumeFileType", "application/pdf")
                         .param("resumeFileSize", "2048"))
@@ -81,11 +81,11 @@ class ApplicationControllerTest {
 
     @Test
     void theSummaryNamesWhyTheApplicationCannotGoAhead() throws Exception {
-        when(applicationService.startApplication(eq(2L), isNull()))
+        when(applicationService.startApplication(eq(2L), isNull(), eq("jordan.lee@example.com")))
                 .thenReturn(new ApplicationStart(posting(), jordan(), null, List.of(),
                         ApplicationRefusal.NO_RESUME));
 
-        mockMvc.perform(get("/api/postings/2/application"))
+        mockMvc.perform(get("/api/postings/2/application").principal(() -> "jordan.lee@example.com"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.refusal.reason").value("NO_RESUME"))
                 .andExpect(jsonPath("$.refusal.message").value(ApplicationRefusal.NO_RESUME.message()))
@@ -96,10 +96,10 @@ class ApplicationControllerTest {
     void submittingToTheApplicationEndpointAnswersWithTheNewApplication() throws Exception {
         Application application = new Application(new Applicant(), new JobPosting(),
                 new ResumeSnapshot("cv.pdf", "application/pdf", 2048L), LocalDate.now());
-        when(applicationService.submitApplication(eq(2L), any(ResumeSnapshot.class)))
+        when(applicationService.submitApplication(eq(2L), any(ResumeSnapshot.class), eq("jordan.lee@example.com")))
                 .thenReturn(new SubmittedApplication(application, 3));
 
-        mockMvc.perform(post("/api/postings/2/application").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/postings/2/application").principal(() -> "jordan.lee@example.com").contentType(MediaType.APPLICATION_JSON)
                         .content(RESUME_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.applicationStatus").value("APPLIED"))
@@ -108,10 +108,10 @@ class ApplicationControllerTest {
 
     @Test
     void aRefusalOnTheApplicationEndpointNamesItsReasonAsJson() throws Exception {
-        when(applicationService.submitApplication(eq(2L), any(ResumeSnapshot.class)))
+        when(applicationService.submitApplication(eq(2L), any(ResumeSnapshot.class), eq("jordan.lee@example.com")))
                 .thenThrow(new ApplicationRefusedException(ApplicationRefusal.LIMIT_REACHED));
 
-        mockMvc.perform(post("/api/postings/2/application").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/postings/2/application").principal(() -> "jordan.lee@example.com").contentType(MediaType.APPLICATION_JSON)
                         .content(RESUME_JSON))
                 .andExpect(status().isConflict())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))

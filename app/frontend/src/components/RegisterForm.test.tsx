@@ -64,7 +64,7 @@ describe("RegisterForm", () => {
     expect(readSession()).toBeNull();
   });
 
-  it("refuses an email that already has an account (extension 4b)", async () => {
+  it("suggests logging in for an email that already has an account (extension 4b)", async () => {
     vi.mocked(register).mockRejectedValue(
       new AlreadyRegistered("An account already exists for this email address. Log in instead."),
     );
@@ -73,6 +73,7 @@ describe("RegisterForm", () => {
     fill("Sam Rivera", "sam.rivera@example.com", "Sunrise-2026x");
 
     expect(await screen.findByRole("alert")).toHaveTextContent("An account already exists");
+    expect(screen.getByRole("link", { name: "Go to log in" })).toHaveAttribute("href", "/login");
   });
 
   it("points a recruiter to recruiter registration (extension 3a)", () => {

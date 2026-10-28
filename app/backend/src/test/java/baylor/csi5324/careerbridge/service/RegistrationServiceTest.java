@@ -7,7 +7,6 @@ import baylor.csi5324.careerbridge.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
 import java.util.Map;
@@ -16,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // UC-02 Register as Applicant, CO-02.1
 @SpringBootTest
@@ -26,7 +24,7 @@ class RegistrationServiceTest {
     private RegistrationService registrationService;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private LogInService logInService;
 
     @Autowired
     private UserRepository userRepository;
@@ -51,8 +49,8 @@ class RegistrationServiceTest {
         assertEquals(AccountStatus.ACTIVE, saved.getAccountStatus());
         assertNotEquals("Sunrise-2026x", saved.getPasswordHash());
         assertEquals(email, jwtDecoder.decode(loggedIn.token()).getSubject());
-        // Only a hash is kept, and it is the new password's (NFR-UC02.1)
-        assertTrue(passwordEncoder.matches("Sunrise-2026x", saved.getPasswordHash()));
+        // The new password works for the next log-in too
+        assertEquals(email, logInService.logIn(email, "Sunrise-2026x").user().getEmail());
     }
 
     @Test
@@ -111,8 +109,7 @@ class RegistrationServiceTest {
         AlreadyRegisteredException refused = assertThrows(AlreadyRegisteredException.class,
                 () -> registrationService.register("Pat Kim", email.toUpperCase(), "Sunrise-2026x"));
         assertEquals("An account already exists for this email address. Log in instead.", refused.getMessage());
-        // The sample applicant has an account too, though no password yet
         assertThrows(AlreadyRegisteredException.class,
-                () -> registrationService.register("Jordan Lee", ApplicationService.SAMPLE_APPLICANT_EMAIL, "Sunrise-2026x"));
+                () -> registrationService.register("Riley Chen", "riley.chen@example.com", "Sunrise-2026x"));
     }
 }

@@ -1,35 +1,43 @@
-# ADR-0010: A session is a token the backend signs
+# ADR-0010: Users log in for a signed token, and each endpoint asks for a role
 
 - **Status:** Accepted
 - **Date:** 2026-10-25
+- **Replaces:** [ADR-0006](0006-public-backend-is-read-only-without-login.md) and
+  [ADR-0007](0007-administrator-signs-in-with-http-basic.md)
 
 ## Context
 
-UC-02 Register as Applicant ends with the new Applicant logged in. Nobody could log in before: the
-only account with a password was the HTTP Basic administrator (ADR-0007), and the public backend
-refuses every write (ADR-0006). The frontend (Vercel) and the backend (Render) are on different
-sites, so a session cookie set by the backend would be a third-party cookie, which browsers
-increasingly block. Iteration 1 feedback asks for no external services.
+Every operation that changes data was built before anyone could log in. ADR-0006 therefore made
+the public backend read-only, and ADR-0007 let only one in-memory Administrator sign in, with HTTP
+Basic. Iteration 1 feedback lists log-in among the features to build first, and the final
+deliverable asks for role-based access control. The frontend (Vercel) and the backend (Render) are
+on different sites, so a session cookie set by the backend would be a third-party cookie, which
+browsers increasingly block. The feedback also asks for no external services.
 
 ## Decision
 
-- A user keeps a BCrypt hash of the password, never the password (NFR-UC02.1).
-- A session is a JWT the backend signs (HS256, secret `JWT_SECRET`), valid for 8 hours, with the
-  email as subject and the role as a claim. No identity provider. Register (UC-02) starts one;
-  Log In will start the same kind.
-- The frontend keeps the session in a cookie on its own site, so the server-rendered header shows
-  who is logged in; logging out is forgetting it.
-- Registering needs nobody logged in, so `POST /api/applicants` is the one write the read-only
-  switch of ADR-0006 lets through.
+- Accounts are the `User` rows (Applicant, Recruiter, Administrator, ADR-0005). A user keeps a
+  BCrypt hash of the password, never the password (NFR-UC02.1). Five failed log-ins within 15
+  minutes lock the account for 15 minutes (A15).
+- `POST /api/auth/login` checks the email and password and answers with a JWT signed by the
+  backend (HS256, secret `JWT_SECRET`), valid for 8 hours, with the email as subject and the role
+  as a claim. No identity provider and no session cookie: the frontend keeps the token and sends it
+  as `Authorization: Bearer …`; Spring Security's resource server checks it.
+- Reading postings needs no log-in (BR-3). Applicant operations need the Applicant role, posting
+  writes the Recruiter role, `/api/admin/**` the Administrator role.
+- Demo accounts, one per role, are created at start-up from passwords in the environment
+  (`DEMO_*_PASSWORD`); the repository holds no real password.
+- With every write checking its role, the read-only switch of ADR-0006 and the HTTP Basic
+  administrator of ADR-0007 are gone.
 
 ## Consequences
 
-- No endpoint reads the token yet: UC-04 still acts for the sample applicant until Log In and the
-  role checks arrive.
-- Without `JWT_SECRET` the backend signs with a random key, so a restart ends every session.
-  Render needs the variable set.
+- Logging out is the frontend forgetting the token; a stolen token stays valid until it expires.
+- Without `JWT_SECRET` the backend signs with a random key, so a restart logs everybody out. Render
+  needs the variable set.
 - A token is readable by the page's scripts, so the frontend must not render untrusted HTML.
+- Register (UC-02) and the other use cases that create accounts reuse the same hash and token.
 - Anyone can create applicant accounts, on the public site too: there is no rate limit or CAPTCHA.
 - Registering with an address that has an account says so (UC-02 extension 4b), which tells a
   visitor that the address is registered; with no email to warn the owner, that is the trade-off.
-  The refusal suggests logging in, which works once Log In is built.
+  Throttling registration and log-in per address is remaining work.

@@ -4,10 +4,14 @@ import AccountMenu from "./AccountMenu";
 
 const push = vi.fn();
 const refresh = vi.fn();
+let pathname = "/jobs/3";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push, refresh }),
+  usePathname: () => pathname,
+}));
 
-const pat = { firstName: "Pat", lastName: "Kim", email: "pat@example.com", phone: null, role: "APPLICANT" as const };
+const riley = { firstName: "Riley", lastName: "Chen", email: "riley.chen@example.com", phone: null, role: "RECRUITER" as const };
 
 describe("AccountMenu", () => {
   afterEach(() => {
@@ -16,16 +20,23 @@ describe("AccountMenu", () => {
     clearSession();
   });
 
-  it("offers a visitor to register", () => {
+  it("offers a visitor to log in and come back to this page", () => {
     render(<AccountMenu user={null} />);
-    expect(screen.getByRole("link", { name: "Register" })).toHaveAttribute("href", "/register");
+    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/login?next=%2Fjobs%2F3");
+  });
+
+  it("does not send the log-in page back to itself", () => {
+    pathname = "/login";
+    render(<AccountMenu user={null} />);
+    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/login");
+    pathname = "/jobs/3";
   });
 
   it("shows who is logged in and logs them out", () => {
-    saveSession({ token: "t", user: pat });
-    render(<AccountMenu user={pat} />);
+    saveSession({ token: "t", user: riley });
+    render(<AccountMenu user={riley} />);
 
-    expect(screen.getByLabelText("Pat Kim, Applicant")).toHaveTextContent("PK");
+    expect(screen.getByLabelText("Riley Chen, Recruiter")).toHaveTextContent("RC");
     fireEvent.click(screen.getByRole("button", { name: "Log out" }));
 
     expect(readSession()).toBeNull();

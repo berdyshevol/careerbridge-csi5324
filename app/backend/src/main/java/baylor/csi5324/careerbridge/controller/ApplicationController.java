@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.Principal;
+
 @RestController
 @RequestMapping("/api/postings/{postingId}")
 public class ApplicationController {
@@ -28,17 +30,19 @@ public class ApplicationController {
     // STAND-IN: the resume rides in the query until UC-03 keeps it in the backend
     @GetMapping("/application")
     public ApplicationStartResponse startApplication(@PathVariable Long postingId,
-                                                     SubmitApplicationRequest resume) {
+                                                     SubmitApplicationRequest resume,
+                                                     Principal applicant) {
         return ApplicationStartResponse.from(
-                applicationService.startApplication(postingId, resume.toResumeSnapshot()));
+                applicationService.startApplication(postingId, resume.toResumeSnapshot(), applicant.getName()));
     }
 
     @PostMapping("/application")
     public ResponseEntity<?> submitApplication(@PathVariable Long postingId,
-                                               @RequestBody SubmitApplicationRequest request) {
+                                               @RequestBody SubmitApplicationRequest request,
+                                               Principal applicant) {
         try {
             return ResponseEntity.status(HttpStatus.CREATED).body(ApplicationResponse.from(
-                    applicationService.submitApplication(postingId, request.toResumeSnapshot())));
+                    applicationService.submitApplication(postingId, request.toResumeSnapshot(), applicant.getName())));
         } catch (ApplicationRefusedException refused) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(RefusalResponse.of(refused.getReason()));
         }

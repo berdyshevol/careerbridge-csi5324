@@ -23,10 +23,6 @@ public class ApplicationService {
 
     public static final int APPLICATION_LIMIT = 5;
 
-    // STAND-IN: nobody can log in yet, so every application comes from the sample
-    // applicant (Jordan Lee in src/lib/sampleDesk.ts). Log In replaces it.
-    public static final String SAMPLE_APPLICANT_EMAIL = "jordan.lee@example.com";
-
     private final ApplicationRepository applicationRepository;
     private final ApplicantRepository applicantRepository;
     private final JobPostingRepository jobPostingRepository;
@@ -44,10 +40,10 @@ public class ApplicationService {
 
     // STAND-IN: the resume comes from the caller until UC-03 keeps it in the backend
     @Transactional(readOnly = true)
-    public ApplicationStart startApplication(Long postingId, ResumeSnapshot resume) {
+    public ApplicationStart startApplication(Long postingId, ResumeSnapshot resume, String applicantEmail) {
         JobPosting posting = jobPostingRepository.findById(postingId)
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
-        Applicant applicant = sampleApplicant();
+        Applicant applicant = applicant(applicantEmail);
         List<Application> active = applicationRepository
                 .findByApplicantAndApplicationStatusIn(applicant, ApplicationStatus.ACTIVE);
 
@@ -61,7 +57,7 @@ public class ApplicationService {
     }
 
     // STAND-IN: the resume comes from the caller until UC-03 keeps it in the backend
-    public SubmittedApplication submitApplication(Long postingId, ResumeSnapshot resume) {
+    public SubmittedApplication submitApplication(Long postingId, ResumeSnapshot resume, String applicantEmail) {
         JobPosting posting = jobPostingRepository.findById(postingId)
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
         Instant now = clock.instant();
@@ -72,7 +68,7 @@ public class ApplicationService {
             throw new ApplicationRefusedException(ApplicationRefusal.NO_RESUME);
         }
 
-        Applicant applicant = sampleApplicant();
+        Applicant applicant = applicant(applicantEmail);
         if (applicationRepository.existsByApplicantAndJobPosting(applicant, posting)) {
             throw new ApplicationRefusedException(ApplicationRefusal.ALREADY_APPLIED);
         }
@@ -94,12 +90,12 @@ public class ApplicationService {
 
     // Ended applications too: the apply screen needs them, since a posting can be applied to once (A5)
     @Transactional(readOnly = true)
-    public List<Application> viewApplications() {
-        return applicationRepository.findByApplicant(sampleApplicant());
+    public List<Application> viewApplications(String applicantEmail) {
+        return applicationRepository.findByApplicant(applicant(applicantEmail));
     }
 
-    private Applicant sampleApplicant() {
-        return applicantRepository.findByEmail(SAMPLE_APPLICANT_EMAIL)
-                .orElseThrow(() -> new IllegalStateException("The sample applicant was not loaded"));
+    private Applicant applicant(String email) {
+        return applicantRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new AccountGoneException(email));
     }
 }

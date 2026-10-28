@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ApplicationRefused, formatDate, submitApplication, type JobPosting } from "@/lib/api";
+import { ApplicationRefused, formatDate, SessionEnded, submitApplication, type JobPosting } from "@/lib/api";
 import { checkApplication, type Desk } from "@/lib/apply";
-import { APPLICATION_LIMIT, applicant } from "@/lib/sampleDesk";
+import { APPLICATION_LIMIT } from "@/lib/sampleDesk";
+import type { Session } from "@/lib/session";
+import { useEndSession } from "@/lib/useEndSession";
 import PageTitle from "./PageTitle";
 import SlotMeter from "./SlotMeter";
 
-export default function ApplyForm({ posting, desk }: { posting: JobPosting; desk: Desk }) {
+export default function ApplyForm({ posting, session, desk }: { posting: JobPosting; session: Session; desk: Desk }) {
+  const applicant = session.user;
+  const endSession = useEndSession();
   const [acknowledged, setAcknowledged] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -25,13 +29,18 @@ export default function ApplyForm({ posting, desk }: { posting: JobPosting; desk
     setError("");
     setSubmitting(true);
     try {
-      const submitted = await submitApplication(posting.jobPostId, desk.resume);
+      const submitted = await submitApplication(session.token, posting.jobPostId, desk.resume);
       setActiveCount(submitted.activeApplicationCount);
     } catch (err) {
+      if (err instanceof SessionEnded) {
+        endSession();
+      }
       setError(
         err instanceof ApplicationRefused && err.message
           ? err.message
-          : "Unable to submit the application. Please try again.",
+          : err instanceof SessionEnded
+            ? "Your session has ended. Log in again, then submit the application."
+            : "Unable to submit the application. Please try again.",
       );
     } finally {
       setSubmitting(false);
@@ -78,7 +87,7 @@ export default function ApplyForm({ posting, desk }: { posting: JobPosting; desk
               </div>
               <div>
                 <dt className="text-sm text-muted">Phone</dt>
-                <dd className="font-medium">{applicant.phone}</dd>
+                <dd className="font-medium">{applicant.phone ?? "Not given"}</dd>
               </div>
             </dl>
             <p className="mt-2 text-sm text-muted">

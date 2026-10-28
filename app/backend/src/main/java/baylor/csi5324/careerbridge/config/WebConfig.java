@@ -3,29 +3,16 @@ package baylor.csi5324.careerbridge.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
     private final String[] frontendOrigins;
-    private final boolean publicDeployment;
 
     public WebConfig(
-            @Value("${careerbridge.frontend-origins}") String[] frontendOrigins,
-            @Value("${careerbridge.public-deployment}") boolean publicDeployment) {
+            @Value("${careerbridge.frontend-origins}") String[] frontendOrigins) {
         this.frontendOrigins = frontendOrigins;
-        this.publicDeployment = publicDeployment;
-    }
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        if (publicDeployment) {
-            // Registering writes only the new account and needs nobody logged in (UC-02, ADR-0010)
-            registry.addInterceptor(new ReadOnlyWithoutLogin()).addPathPatterns("/api/**")
-                    .excludePathPatterns("/api/applicants");
-        }
     }
 
     @Override

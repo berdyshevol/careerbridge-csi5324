@@ -1,18 +1,26 @@
 package baylor.csi5324.careerbridge.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import baylor.csi5324.careerbridge.model.Role;
+import baylor.csi5324.careerbridge.service.LogInService;
+import org.springframework.http.HttpMethod;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.security.web.SecurityFilterChain;
 
-// ADR-0007: only the Administrator signs in, with HTTP Basic, until Log In exists
+// ADR-0010: users log in for a signed token (LogInService) and send it as a bearer token
 @Configuration
 public class SecurityConfig {
 
@@ -21,30 +29,47 @@ public class SecurityConfig {
         http
                 // CORS comes from WebConfig, so the allowed origins live in one place
                 .cors(Customizer.withDefaults())
-                // No session cookie is issued: every admin request carries its own credentials
+                // No session cookie is issued: every request carries its own credentials
                 .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // The H2 console draws itself in frames
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole(Role.ADMINISTRATOR.name())
+                        .requestMatchers("/api/postings/*/application").hasRole(Role.APPLICANT.name())
+                        .requestMatchers("/api/applicant/**").hasRole(Role.APPLICANT.name())
+                        // UC-11: creating and submitting a posting
+                        .requestMatchers(HttpMethod.POST, "/api/postings", "/api/postings/*/submit")
+                        .hasRole(Role.RECRUITER.name())
+                        .requestMatchers("/api/auth/me").authenticated()
                         .anyRequest().permitAll())
-                .httpBasic(Customizer.withDefaults());
+                .oauth2ResourceServer(server -> server
+                        .bearerTokenResolver(ignoredOnPublicReads())
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(roleFromToken())));
 
         return http.build();
     }
 
-    @Bean
-    UserDetailsService userDetailsService(
-            @Value("${careerbridge.admin.username}") String username,
-            @Value("${careerbridge.admin.password}") String password,
-            PasswordEncoder passwordEncoder) {
-        if (username.isBlank() || password.isBlank()) {
-            return new InMemoryUserDetailsManager();
-        }
-        return new InMemoryUserDetailsManager(User.withUsername(username)
-                .password(passwordEncoder.encode(password))
-                .roles("ADMIN")
-                .build());
+    // An expired token must not cost a visitor the job board (BR-3): public reads never look at it
+    private static BearerTokenResolver ignoredOnPublicReads() {
+        RequestMatcher publicReads = new OrRequestMatcher(
+                PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/postings/**"),
+                PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/postings"),
+                PathPatternRequestMatcher.withDefaults().matcher("/api/auth/login"));
+        // Starting an application is a GET under /api/postings too, but it is the applicant's own (UC-04)
+        RequestMatcher applicantsOwn = PathPatternRequestMatcher.withDefaults().matcher("/api/postings/*/application");
+        DefaultBearerTokenResolver resolver = new DefaultBearerTokenResolver();
+        return request -> publicReads.matches(request) && !applicantsOwn.matches(request)
+                ? null : resolver.resolve(request);
+    }
+
+    private static JwtAuthenticationConverter roleFromToken() {
+        JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
+        authorities.setAuthoritiesClaimName(LogInService.ROLE_CLAIM);
+        authorities.setAuthorityPrefix("ROLE_");
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(authorities);
+        return converter;
     }
 
     @Bean

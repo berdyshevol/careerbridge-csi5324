@@ -12,9 +12,9 @@ import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
-import baylor.csi5324.careerbridge.service.ApplicationService;
 import baylor.csi5324.careerbridge.util.CsvReader;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
@@ -24,11 +24,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
+@Order(1)
 public class SampleDataLoader implements CommandLineRunner {
 
     private static final String JOBS_FILE = "data/jobs.csv";
     // The sample applicant's desk, the same as src/lib/sampleDesk.ts in the frontend
     private static final String APPLICATIONS_FILE = "data/applications.csv";
+    // Jordan Lee, the demo applicant who starts with the sample applications (DemoUsers gives the password)
+    public static final String SAMPLE_APPLICANT_EMAIL = "jordan.lee@example.com";
     private static final ResumeSnapshot SAMPLE_RESUME =
             new ResumeSnapshot("Jordan_Lee_Resume.pdf", "application/pdf", 184_320L);
 
@@ -80,7 +83,7 @@ public class SampleDataLoader implements CommandLineRunner {
         Applicant applicant = new Applicant();
         applicant.setFirstName("Jordan");
         applicant.setLastName("Lee");
-        applicant.setEmail(ApplicationService.SAMPLE_APPLICANT_EMAIL);
+        applicant.setEmail(SAMPLE_APPLICANT_EMAIL);
         applicant.setPhone("(254) 555-0142");
         applicant.setAccountStatus(AccountStatus.ACTIVE);
         return applicant;

@@ -7,5 +7,5 @@ Read them before writing code.
 Known traps (`npm run lint` and the backend tests catch the common forms of the first two, not every one):
 
 - Await every backend call and show its refusal on the screen; never leave a `catch` empty.
-- A GET changes nothing in the database (ADR-0006).
+- A GET changes nothing in the database: reads need no role (ADR-0010), and `ReadsChangeNothingTest` checks every one.
 - When the request lacks a value (a resume, an applicant), refuse; do not invent one.

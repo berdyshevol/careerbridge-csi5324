@@ -21,11 +21,12 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "./mvnw -q spring-boot:run",
+      // The test classpath: a fresh PostgreSQL in Docker, never the shared database in .env (ADR-0009)
+      command: "./mvnw -q spring-boot:test-run",
       cwd: "../backend",
       env: { FRONTEND_ORIGINS: FRONTEND_URL },
       url: "http://localhost:8080/api/postings",
-      // A backend already running on 8080 would not allow FRONTEND_URL: fail on the busy port instead
+      // A backend already running on 8080 would be the developer's, on Neon: fail on the busy port instead
       reuseExistingServer: false,
       timeout: 240_000,
     },

@@ -77,7 +77,12 @@ export default function RegisterForm({ next }: { next?: string }) {
 
         {alreadyRegistered && (
           <div role="alert" className="alert alert-warning">
-            <span>{alreadyRegistered}</span>
+            <span>
+              {alreadyRegistered}{" "}
+              <Link href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"} className="link link-primary">
+                Go to log in
+              </Link>
+            </span>
           </div>
         )}
         {error && (
@@ -98,6 +103,12 @@ export default function RegisterForm({ next }: { next?: string }) {
             Create account
           </button>
         </div>
+        <p className="text-sm text-muted">
+          Already have an account?{" "}
+          <Link href="/login" className="link link-primary">
+            Log in
+          </Link>
+        </p>
       </form>
     </section>
   );

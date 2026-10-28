@@ -1,4 +1,4 @@
-import {
+import { SessionEnded,
   BACKEND_TIMEOUT_MS,
   createPosting,
   formatDate,
@@ -147,7 +147,7 @@ describe("createPosting", () => {
     const saved = posting({ postStatus: "DRAFT" });
     const fetch = answer(201, JSON.stringify(saved), "application/json");
 
-    await expect(createPosting(newPosting)).resolves.toEqual(saved);
+    await expect(createPosting("t", newPosting)).resolves.toEqual(saved);
 
     const [url, init] = fetch.mock.calls[0];
     expect(url).toMatch(/\/api\/postings$/);
@@ -156,16 +156,19 @@ describe("createPosting", () => {
     expect(init.signal).toBe(timeout.mock.results[0].value);
   });
 
-  it.each([
-    [400, "Job title is required"],
-    [403, "Saving is switched off"],
-  ])("passes on the reason when the backend refuses the posting: %i", async (status, reason) => {
-    answer(status, reason, "text/plain;charset=UTF-8");
+  it("passes on the reason when the backend refuses the posting", async () => {
+    answer(400, "Job title is required", "text/plain;charset=UTF-8");
 
-    const refused = await createPosting(newPosting).catch((error) => error);
+    const refused = await createPosting("t", newPosting).catch((error) => error);
 
     expect(refused).toBeInstanceOf(PostingRejected);
-    expect(refused.message).toBe(reason);
+    expect(refused.message).toBe("Job title is required");
+  });
+
+  it.each([401, 403])("ends the session when the backend refuses the token: %i", async (status) => {
+    answer(status, "", "application/json");
+
+    await expect(createPosting("t", newPosting)).rejects.toBeInstanceOf(SessionEnded);
   });
 
   it.each([
@@ -174,7 +177,7 @@ describe("createPosting", () => {
   ])("keeps the backend's own error report off the screen: %i, %s", async (status) => {
     answer(status, '{"status":' + status + ',"path":"/api/postings"}', "application/json");
 
-    const failed = await createPosting(newPosting).catch((error) => error);
+    const failed = await createPosting("t", newPosting).catch((error) => error);
 
     expect(failed).not.toBeInstanceOf(PostingRejected);
     expect(failed.message).not.toContain("path");
@@ -194,9 +197,10 @@ describe("startApplication", () => {
     const fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(summary) });
     vi.stubGlobal("fetch", fetch);
 
-    await expect(startApplication(2, resume)).resolves.toEqual(summary);
+    await expect(startApplication("t", 2, resume)).resolves.toEqual(summary);
     const url = new URL(fetch.mock.calls[0][0]);
     expect(url.pathname).toBe("/api/postings/2/application");
+    expect(fetch.mock.calls[0][1].headers).toEqual({ Authorization: "Bearer t" });
     expect(Object.fromEntries(url.searchParams)).toEqual({
       resumeFileName: "cv.pdf",
       resumeFileType: "application/pdf",
@@ -209,7 +213,7 @@ describe("startApplication", () => {
     const fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(refused) });
     vi.stubGlobal("fetch", fetch);
 
-    const start = await startApplication(2, null);
+    const start = await startApplication("t", 2, null);
     expect(new URL(fetch.mock.calls[0][0]).search).toBe("");
     expect(start.refusal?.reason).toBe("NO_RESUME");
   });
@@ -217,7 +221,7 @@ describe("startApplication", () => {
   it("fails when the backend does not answer", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
 
-    await expect(startApplication(2, resume)).rejects.toThrow("Backend answered 500");
+    await expect(startApplication("t", 2, resume)).rejects.toThrow("Backend answered 500");
   });
 });
 
@@ -233,7 +237,7 @@ describe("submitApplication", () => {
     const fetch = vi.fn().mockResolvedValue({ ok: true, headers: new Headers(), json: () => Promise.resolve(answer) });
     vi.stubGlobal("fetch", fetch);
 
-    await expect(submitApplication(2, resume)).resolves.toEqual(answer);
+    await expect(submitApplication("t", 2, resume)).resolves.toEqual(answer);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/postings/2/application"),
       expect.objectContaining({ method: "POST" }),
@@ -244,7 +248,7 @@ describe("submitApplication", () => {
     const fetch = vi.fn().mockResolvedValue({ ok: true, headers: new Headers(), json: () => Promise.resolve({}) });
     vi.stubGlobal("fetch", fetch);
 
-    await submitApplication(2, null);
+    await submitApplication("t", 2, null);
     expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({});
   });
 
@@ -259,7 +263,7 @@ describe("submitApplication", () => {
       }),
     );
 
-    const refused = await submitApplication(2, resume).catch((error) => error);
+    const refused = await submitApplication("t", 2, resume).catch((error) => error);
     expect(refused).toBeInstanceOf(ApplicationRefused);
     expect(refused.message).toBe("You already applied to this posting.");
   });
@@ -275,7 +279,7 @@ describe("submitApplication", () => {
       }),
     );
 
-    const refused = await submitApplication(2, resume).catch((error) => error);
+    const refused = await submitApplication("t", 2, resume).catch((error) => error);
     expect(refused).toBeInstanceOf(ApplicationRefused);
     expect(refused.message).toBe("You have 5 active applications.");
   });
@@ -299,7 +303,7 @@ describe("viewApplications", () => {
     });
     vi.stubGlobal("fetch", fetch);
 
-    const applications = await viewApplications();
+    const applications = await viewApplications("t");
 
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/applicant/applications"), expect.anything());
     expect(applications.active.map((a) => a.applicationStatus)).toEqual(["Applied", "Interview"]);
@@ -315,7 +319,7 @@ describe("viewApplications", () => {
       }),
     );
 
-    const applications = await viewApplications();
+    const applications = await viewApplications("t");
 
     expect(applications.active.map((a) => a.postingId)).toEqual([1]);
     expect(applications.appliedPostingIds).toEqual([1, 7]);
@@ -324,6 +328,6 @@ describe("viewApplications", () => {
   it("fails when the backend does not answer well", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
 
-    await expect(viewApplications()).rejects.toThrow("500");
+    await expect(viewApplications("t")).rejects.toThrow("500");
   });
 });

@@ -56,7 +56,7 @@ class RegistrationControllerTest {
     @Test
     void anEmailAlreadyRegisteredIsAConflictInPlainText() throws Exception {
         mockMvc.perform(post("/api/applicants").contentType(MediaType.APPLICATION_JSON)
-                        .content(body("Jordan Lee", "jordan.lee@example.com", "Sunrise-2026x")))
+                        .content(body("Sam Rivera", "sam.rivera@example.com", "Sunrise-2026x")))
                 .andExpect(status().isConflict())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
                 .andExpect(content().string("An account already exists for this email address. Log in instead."));
