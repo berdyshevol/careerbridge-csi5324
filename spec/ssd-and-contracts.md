@@ -34,18 +34,6 @@ sequenceDiagram
 
 **Output:** The open Job Postings that match the criteria, newest first, with their details.
 
-#### CO-01.2: viewPosting
-
-**Operation:** viewPosting(postingId)
-
-**Cross-references:** the posting page UC-04 starts from (UC-04 step 1, extension 1c); FR-UC01.3
-
-**Preconditions:** The Job Posting exists and was published (BR-9).
-
-**Postconditions:** None. This is a query operation.
-
-**Output:** The posting's full details, or a notice that it no longer accepts applications if it has closed.
-
 #### UC-02 Register as Applicant
 
 Figure 6 shows SSD-02, the system sequence diagram for the main success scenario of UC-02.
@@ -141,6 +129,8 @@ Figure 8 shows SSD-04, the system sequence diagram for the main success scenario
 ![Figure 8: SSD-04: UC-04 Apply for Job](diagrams/fig-08-ssd-04-uc-04-apply-for-job.png)
 
 **Figure 8: SSD-04: UC-04 Apply for Job**
+
+viewPosting(postingId) opens the one posting the Applicant applies to (step 1), by its own link as well as from the job board. It returns the posting's details, or that it no longer accepts applications (extension 1c), and changes nothing, so it has no contract. It belongs to UC-04, not UC-01: the search of UC-01 already returns every posting's details (Deliverable 3 feedback).
 
 startApplication(postingId) only presents the application summary and changes nothing, so it has no contract. The system reads the Applicant's Resume on file itself (UC-03); the Applicant does not send one.
 
