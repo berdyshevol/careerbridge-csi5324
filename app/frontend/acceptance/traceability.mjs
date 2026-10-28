@@ -18,10 +18,11 @@ const known = new Set([
   ...[...requirements.matchAll(/\*\*(NFR-UC\d+\.\d+)\b/g)].map((m) => m[1]),
   ...[...requirements.matchAll(/\b(BR-\d+):/g)].map((m) => m[1]),
 ]);
-for (const [, id] of useCases.matchAll(/\*\*Table \d+: (UC-\d+)\b/g)) {
+for (const match of useCases.matchAll(/\*\*Table \d+: (UC-\d+)\b/g)) {
+  const id = match[1];
   known.add(id);
   // The use case's own table runs to the next table; its extensions are written **2a.**, **\*a.**
-  const table = useCases.slice(useCases.indexOf(`: ${id} `)).split(/\n\*\*Table \d+:/)[0];
+  const table = useCases.slice(match.index + match[0].length).split(/\n\*\*Table \d+:/)[0];
   const extensions = table.split("\n").find((row) => row.startsWith("|**Extensions**|")) ?? "";
   for (const [, ext] of extensions.matchAll(/\*\*(\\\*a|\d+[a-z])\.\*\*/g)) known.add(`${id}-${ext.replace("\\", "")}`);
 }
@@ -35,6 +36,7 @@ const listed = JSON.parse(
 const tests = [];
 const walk = (suite) => {
   for (const s of suite.specs ?? []) {
+    // --list sees only a declared test.fixme(title, ...); a fixme or skip inside a body would count as running
     tests.push({ title: s.title, tags: s.tags, running: s.tests.every((t) => t.expectedStatus !== "skipped") });
   }
   (suite.suites ?? []).forEach(walk);
@@ -48,7 +50,9 @@ for (const test of tests) {
   }
 }
 for (const useCase of COVERED_USE_CASES) {
-  for (const fr of frs.filter((id) => id.startsWith(`FR-${useCase.replace("-", "")}.`))) {
+  const ids = frs.filter((id) => id.startsWith(`FR-${useCase.replace("-", "")}.`));
+  if (!ids.length) problems.push(`${useCase} has no FRs in spec/requirements.md`);
+  for (const fr of ids) {
     const tagged = tests.filter((test) => test.tags.includes(fr));
     const running = tagged.filter((test) => test.running).length;
     console.log(`${fr}: ${running} running, ${tagged.length - running} fixme`);

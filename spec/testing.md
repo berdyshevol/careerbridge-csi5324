@@ -12,16 +12,9 @@ Not written yet. What the JUnit tests cover per layer (entities, services, contr
 there are and how they run (on PostgreSQL in Docker, in CI on every pull request), plus the frontend
 tests (Vitest) and the end-to-end tests (Playwright).
 
-Each use case is also checked by executable acceptance specifications
-([ADR-0011](adr/0011-executable-acceptance-specifications.md)) in `app/frontend/acceptance/`: one
-Playwright test per acceptance criterion of the use case (its main scenario, extensions, FRs and the
-business rules it cites), written from this specification alone and run against the API with data
-each test creates for itself. Each test is tagged with the item it checks (`@FR-UC01.2`, `@BR-9`,
-`@UC-01-2b`); `npm run test:traceability`, run in CI, fails when an FR of a covered use case has no
-running specification or a tag names an item that is not in the specification. A scenario the
-specification leaves open, or the system cannot yet reach, is a `test.fixme` that states the
-question or the reason. They run with `npm run test:acceptance` and are part of `npm run test:e2e`.
-UC-01 is covered so far.
+Use cases are also checked by executable acceptance specifications in `app/frontend/acceptance/`
+([ADR-0011](adr/0011-executable-acceptance-specifications.md)): `npm run test:acceptance` runs them,
+and `npm run test:traceability`, run in CI, checks that their tags name items of this specification.
 
 ### 9.2 Test Cases
 
