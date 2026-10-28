@@ -194,7 +194,6 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
           <h2 className="font-display text-xl font-semibold">Your resume</h2>
           <p className="mt-2 text-muted">
             You keep one resume on your profile, and a new upload replaces it.
-            Accepted formats: PDF or DOCX, maximum 5 MB.
           </p>
 
           {resume ? (
