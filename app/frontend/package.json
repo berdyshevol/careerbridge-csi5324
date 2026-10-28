@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:acceptance": "playwright test --project=acceptance",
+    "test:traceability": "node acceptance/traceability.mjs",
     "prepare": "cd ../.. && husky app/frontend/.husky"
   },
   "dependencies": {
