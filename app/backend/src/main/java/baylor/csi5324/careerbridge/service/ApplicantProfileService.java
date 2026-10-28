@@ -13,6 +13,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -156,9 +157,10 @@ public class ApplicantProfileService {
 
         Applicant applicant = viewProfile(email);
         Resume previous = applicant.getResume();
-        // In UTC, the clock's zone; the screen shows the day where the applicant is
+        // In UTC, the clock's zone; the screen shows the day where the applicant is. Microseconds, as
+        // PostgreSQL keeps them: a Linux clock gives nanoseconds, and the answer must match what is stored
         Resume resume = resumeRepository.save(new Resume(fileName, format.contentType, content.length, content,
-                LocalDateTime.now(clock)));
+                LocalDateTime.now(clock).truncatedTo(ChronoUnit.MICROS)));
         applicant.setResume(resume);
         applicantRepository.save(applicant);
         // Submitted applications keep their own copy (ResumeSnapshot, A6), so nothing else refers to it
