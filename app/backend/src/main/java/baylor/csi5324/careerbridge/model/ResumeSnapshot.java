@@ -32,7 +32,7 @@ public class ResumeSnapshot {
     // Domain model 5.4 #4: the resume on file as it is at submission, in the format the applicant uploaded
     public static ResumeSnapshot of(Resume resume) {
         ResumeSnapshot snapshot = new ResumeSnapshot(resume.getFileName(), resume.getFileType(), resume.getFileSize());
-        snapshot.content = resume.getContent() == null ? null : resume.getContent().clone();
+        snapshot.content = resume.getContent();
         return snapshot;
     }
 

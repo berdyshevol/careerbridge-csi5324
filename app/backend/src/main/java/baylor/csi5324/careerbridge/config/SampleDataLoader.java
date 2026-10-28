@@ -92,7 +92,7 @@ public class SampleDataLoader implements CommandLineRunner {
 
     private static Resume sampleResume() throws Exception {
         byte[] content = new ClassPathResource(SAMPLE_RESUME_FILE).getContentAsByteArray();
-        return new Resume("Jordan_Lee_Resume.pdf", "application/pdf", content.length, content,
+        return new Resume(SAMPLE_RESUME.getFileName(), SAMPLE_RESUME.getFileType(), content.length, content,
                 LocalDateTime.of(2026, 9, 30, 14, 0));
     }
 

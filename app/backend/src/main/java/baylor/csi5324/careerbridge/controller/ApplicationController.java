@@ -25,7 +25,6 @@ public class ApplicationController {
         this.applicationService = applicationService;
     }
 
-    // The resume is the one on file (UC-03), so the request carries none
     @GetMapping("/application")
     public ApplicationStartResponse startApplication(@PathVariable Long postingId, Principal applicant) {
         return ApplicationStartResponse.from(applicationService.startApplication(postingId, applicant.getName()));

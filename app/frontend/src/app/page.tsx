@@ -4,10 +4,11 @@ import BackendDown from "@/components/BackendDown";
 import OfferPanel from "@/components/OfferPanel";
 import PageTitle from "@/components/PageTitle";
 import PostingCard from "@/components/PostingCard";
+import ResumeOnFile from "@/components/ResumeOnFile";
 import SlotMeter from "@/components/SlotMeter";
 import EmptyState from "@/components/EmptyState";
 import EndSession from "@/components/EndSession";
-import { formatUtcDay, searchPostings, SessionEnded, viewApplications, viewProfile } from "@/lib/api";
+import { searchPostings, SessionEnded, viewApplications, viewProfile } from "@/lib/api";
 import { APPLICATION_LIMIT, offer } from "@/lib/sampleDesk";
 import { serverSession } from "@/lib/serverSession";
 
@@ -132,26 +133,7 @@ export default async function DeskPage() {
             />
           )}
 
-          {loaded && (
-            <section className="flex flex-col gap-1 rounded-2xl border border-base-300 bg-base-100 p-5">
-              <h2 className="font-semibold">Resume on file</h2>
-              {loaded.resume ? (
-                <>
-                  <p>{loaded.resume.fileName}</p>
-                  <p className="text-sm text-muted">Uploaded {formatUtcDay(loaded.resume.uploadDate)}</p>
-                </>
-              ) : (
-                <p className="text-muted">No resume yet.</p>
-              )}
-              <div className="grow" />
-              <Link
-                href="/profile"
-                className="link link-primary pt-2 font-semibold no-underline hover:underline"
-              >
-                {loaded.resume ? "Replace resume" : "Upload a resume"}
-              </Link>
-            </section>
-          )}
+          {loaded && <ResumeOnFile resume={loaded.resume} />}
         </div>
       </aside>
       )}

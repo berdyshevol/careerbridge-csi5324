@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ApplicationRefused, formatDate, formatUtcDay, SessionEnded, submitApplication, type JobPosting } from "@/lib/api";
+import { ApplicationRefused, formatDate, SessionEnded, submitApplication, type JobPosting } from "@/lib/api";
 import { checkApplication, type Desk } from "@/lib/apply";
 import { APPLICATION_LIMIT } from "@/lib/sampleDesk";
 import type { Session } from "@/lib/session";
 import { useEndSession } from "@/lib/useEndSession";
 import PageTitle from "./PageTitle";
+import ResumeOnFile from "./ResumeOnFile";
 import SlotMeter from "./SlotMeter";
 
 export default function ApplyForm({ posting, session, desk }: { posting: JobPosting; session: Session; desk: Desk }) {
@@ -126,26 +127,11 @@ export default function ApplyForm({ posting, session, desk }: { posting: JobPost
       </article>
 
       <aside className="flex flex-col gap-4 lg:w-80 lg:shrink-0">
-        <section className="flex flex-col gap-1 rounded-2xl border border-base-300 bg-base-100 p-5">
-          <h2 className="font-semibold">Resume on file</h2>
-          {desk.resume ? (
-            <>
-              <p>{desk.resume.fileName}</p>
-              <p className="text-sm text-muted">Uploaded {formatUtcDay(desk.resume.uploadDate)}</p>
-              <p className="pt-2 text-sm text-muted">
-                A copy as it is now goes with this application; later changes do not affect it.
-              </p>
-            </>
-          ) : (
-            <p className="text-muted">No resume yet.</p>
-          )}
-          <Link
-            href="/profile"
-            className="link link-primary pt-2 font-semibold no-underline hover:underline"
-          >
-            {desk.resume ? "Replace resume" : "Upload a resume"}
-          </Link>
-        </section>
+        <ResumeOnFile resume={desk.resume}>
+          <p className="pt-2 text-sm text-muted">
+            A copy as it is now goes with this application; later changes do not affect it.
+          </p>
+        </ResumeOnFile>
 
         <SlotMeter used={desk.applications.length} total={APPLICATION_LIMIT} />
       </aside>

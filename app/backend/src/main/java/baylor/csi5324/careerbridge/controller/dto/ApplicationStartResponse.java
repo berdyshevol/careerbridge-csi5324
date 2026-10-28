@@ -25,7 +25,7 @@ public record ApplicationStartResponse(PostingSummary posting, ApplicantContact 
                         posting.getOrganization().getName()),
                 new ApplicantContact(applicant.getFirstName(), applicant.getLastName(),
                         applicant.getEmail(), applicant.getPhone()),
-                start.resume() == null ? null : ResumeResponse.from(start.resume()),
+                ResumeResponse.from(start.resume()),
                 start.activeApplications().stream().map(ApplicationSummaryResponse::from).toList(),
                 start.activeApplicationCount(),
                 ApplicationService.APPLICATION_LIMIT,

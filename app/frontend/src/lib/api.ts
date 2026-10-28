@@ -249,7 +249,6 @@ export async function submitJobPosting(token: string, postingId: number): Promis
   return response.json();
 }
 
-// The backend takes the resume on file (CO-04.1), so neither call sends one
 export async function startApplication(token: string, postingId: number): Promise<ApplicationStart> {
   const response = await backendFetch(`/api/postings/${postingId}/application`, { headers: bearer(token) });
   endedSession(response);

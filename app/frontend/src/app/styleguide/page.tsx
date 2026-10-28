@@ -7,6 +7,7 @@ import OfferPanel from "@/components/OfferPanel";
 import PageTitle from "@/components/PageTitle";
 import Placeholder from "@/components/Placeholder";
 import PostingCard from "@/components/PostingCard";
+import ResumeOnFile from "@/components/ResumeOnFile";
 import SlotMeter from "@/components/SlotMeter";
 import { StageBadge, StageProgress } from "@/components/StageBadge";
 import { formatDate, type JobPosting } from "@/lib/api";
@@ -164,6 +165,12 @@ export default function StyleguidePage() {
             <SlotMeter used={0} total={APPLICATION_LIMIT} />
             <SlotMeter used={3} total={APPLICATION_LIMIT} caption="With a caption." />
             <SlotMeter used={5} total={APPLICATION_LIMIT} />
+          </div>
+        </Block>
+        <Block title="Resume on file" use="<ResumeOnFile resume={…}>{what this screen says about it}</ResumeOnFile>">
+          <div className="grid gap-3 md:grid-cols-2">
+            <ResumeOnFile resume={{ fileName: "Jordan_Lee_Resume.pdf", uploadDate: "2026-09-30T14:00:00" }} />
+            <ResumeOnFile resume={null} />
           </div>
         </Block>
       </Section>
