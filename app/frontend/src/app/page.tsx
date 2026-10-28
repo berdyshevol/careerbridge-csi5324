@@ -4,11 +4,12 @@ import BackendDown from "@/components/BackendDown";
 import OfferPanel from "@/components/OfferPanel";
 import PageTitle from "@/components/PageTitle";
 import PostingCard from "@/components/PostingCard";
+import ResumeOnFile from "@/components/ResumeOnFile";
 import SlotMeter from "@/components/SlotMeter";
 import EmptyState from "@/components/EmptyState";
 import EndSession from "@/components/EndSession";
-import { formatDate, searchPostings, SessionEnded, viewApplications } from "@/lib/api";
-import { APPLICATION_LIMIT, offer, resume } from "@/lib/sampleDesk";
+import { searchPostings, SessionEnded, viewApplications, viewProfile } from "@/lib/api";
+import { APPLICATION_LIMIT, offer } from "@/lib/sampleDesk";
 import { serverSession } from "@/lib/serverSession";
 
 function longDate(isoDate: string): string {
@@ -30,13 +31,14 @@ async function openPostings() {
 
 async function deskOf(token: string) {
   try {
-    return (await viewApplications(token)).active;
+    const [applications, profile] = await Promise.all([viewApplications(token), viewProfile(token)]);
+    return { applications: applications.active, resume: profile.resume };
   } catch (err) {
     return err instanceof SessionEnded ? ("ended" as const) : ("down" as const);
   }
 }
 
-// The offer and the resume are sample data (see src/lib/sampleDesk.ts).
+// The offer is sample data (see src/lib/sampleDesk.ts).
 export default async function DeskPage() {
   const session = await serverSession();
   // The desk is the logged-in Applicant's; anyone else sees the job board part only
@@ -45,7 +47,8 @@ export default async function DeskPage() {
     openPostings(),
     applicant ? deskOf(applicant.token) : ("none" as const),
   ]);
-  const applications = typeof desk === "object" ? desk : null;
+  const loaded = typeof desk === "object" ? desk : null;
+  const applications = loaded?.applications ?? null;
   const sessionEnded = desk === "ended";
 
   return (
@@ -108,7 +111,7 @@ export default async function DeskPage() {
 
         {applicant && (
           <p className="order-5 text-sm text-muted">
-            The offer and the resume are sample data until UC-07 and UC-03 are implemented.
+            The offer is sample data until UC-07 is implemented.
           </p>
         )}
       </div>
@@ -130,24 +133,7 @@ export default async function DeskPage() {
             />
           )}
 
-          <section className="flex flex-col gap-1 rounded-2xl border border-base-300 bg-base-100 p-5">
-            <h2 className="font-semibold">Resume on file</h2>
-            {resume ? (
-              <>
-                <p>{resume.fileName}</p>
-                <p className="text-sm text-muted">Uploaded {formatDate(resume.uploadDate)}</p>
-              </>
-            ) : (
-              <p className="text-muted">No resume yet.</p>
-            )}
-            <div className="grow" />
-            <Link
-              href="/profile"
-              className="link link-primary pt-2 font-semibold no-underline hover:underline"
-            >
-              {resume ? "Replace resume" : "Upload a resume"}
-            </Link>
-          </section>
+          {loaded && <ResumeOnFile resume={loaded.resume} />}
         </div>
       </aside>
       )}

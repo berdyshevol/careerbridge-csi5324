@@ -1,7 +1,6 @@
 package baylor.csi5324.careerbridge.controller.dto;
 
 import baylor.csi5324.careerbridge.model.Applicant;
-import baylor.csi5324.careerbridge.model.Resume;
 
 // CO-03.1: resume is null when the applicant has none on file yet
 public record ProfileResponse(String firstName, String lastName, String email, String phone,
@@ -9,7 +8,6 @@ public record ProfileResponse(String firstName, String lastName, String email, S
                               String workExperience, ResumeResponse resume) {
 
     public static ProfileResponse from(Applicant applicant) {
-        Resume resume = applicant.getResume();
         return new ProfileResponse(
                 applicant.getFirstName(),
                 applicant.getLastName(),
@@ -20,6 +18,6 @@ public record ProfileResponse(String firstName, String lastName, String email, S
                 applicant.getSkills(),
                 applicant.getEducation(),
                 applicant.getWorkExperience(),
-                resume == null ? null : ResumeResponse.from(resume));
+                ResumeResponse.from(applicant.getResume()));
     }
 }

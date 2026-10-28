@@ -37,7 +37,7 @@ const desk: Desk = {
   applications: [application(1), application(3), application(4)],
   appliedPostingIds: [1, 3, 4, 7], // 7 was withdrawn
   refusal: null,
-  resume: { fileName: "Jordan_Lee_Resume.pdf", fileType: "application/pdf", fileSize: 184_320, uploadDate: "2026-09-30" },
+  resume: { fileName: "Jordan_Lee_Resume.pdf", uploadDate: "2026-09-30T14:00:00" },
 };
 
 describe("checkApplication (FR-UC04.3, FR-UC04.6, FR-UC04.7)", () => {

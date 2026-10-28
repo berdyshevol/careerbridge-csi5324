@@ -200,43 +200,42 @@ describe("createPosting", () => {
 });
 
 describe("startApplication", () => {
-  const resume = { fileName: "cv.pdf", fileType: "application/pdf", fileSize: 2048 };
   const summary = {
     posting: { postingId: 2, title: "Data Analyst Intern", organizationName: "Waco Health Partners" },
+    resume: { fileName: "cv.pdf", uploadDate: "2026-10-01T09:30:00" },
     activeApplicationCount: 3,
     applicationLimit: 5,
     refusal: null,
   };
 
-  it("reads the summary with the resume on file in the query (STAND-IN until UC-03)", async () => {
+  it("reads the summary with the resume the backend has on file, sending none itself", async () => {
     const fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(summary) });
     vi.stubGlobal("fetch", fetch);
 
-    await expect(startApplication("t", 2, resume)).resolves.toEqual(summary);
+    await expect(startApplication("t", 2)).resolves.toEqual(summary);
     const url = new URL(fetch.mock.calls[0][0]);
     expect(url.pathname).toBe("/api/postings/2/application");
+    expect(url.search).toBe("");
     expect(fetch.mock.calls[0][1].headers).toEqual({ Authorization: "Bearer t" });
-    expect(Object.fromEntries(url.searchParams)).toEqual({
-      resumeFileName: "cv.pdf",
-      resumeFileType: "application/pdf",
-      resumeFileSize: "2048",
-    });
   });
 
-  it("sends no resume when none is on file, so the backend names the refusal", async () => {
-    const refused = { ...summary, refusal: { reason: "NO_RESUME", message: "A resume is required to apply." } };
-    const fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(refused) });
-    vi.stubGlobal("fetch", fetch);
+  it("passes on the backend's refusal when no resume is on file (extension 2a)", async () => {
+    const refused = {
+      ...summary,
+      resume: null,
+      refusal: { reason: "NO_RESUME", message: "A resume is required to apply." },
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(refused) }));
 
-    const start = await startApplication("t", 2, null);
-    expect(new URL(fetch.mock.calls[0][0]).search).toBe("");
+    const start = await startApplication("t", 2);
+    expect(start.resume).toBeNull();
     expect(start.refusal?.reason).toBe("NO_RESUME");
   });
 
   it("fails when the backend does not answer", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
 
-    await expect(startApplication("t", 2, resume)).rejects.toThrow("Backend answered 500");
+    await expect(startApplication("t", 2)).rejects.toThrow("Backend answered 500");
   });
 });
 
@@ -245,26 +244,33 @@ describe("submitApplication", () => {
     vi.unstubAllGlobals();
   });
 
-  const resume = { fileName: "cv.pdf", fileType: "application/pdf", fileSize: 2048 };
-
-  it("posts the resume on file and returns the backend's answer", async () => {
+  it("posts without a body, as the backend copies the resume on file, and returns its answer", async () => {
     const answer = { applicationId: 7, applicationStatus: "APPLIED", activeApplicationCount: 4 };
     const fetch = vi.fn().mockResolvedValue({ ok: true, headers: new Headers(), json: () => Promise.resolve(answer) });
     vi.stubGlobal("fetch", fetch);
 
-    await expect(submitApplication("t", 2, resume)).resolves.toEqual(answer);
+    await expect(submitApplication("t", 2)).resolves.toEqual(answer);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/postings/2/application"),
-      expect.objectContaining({ method: "POST" }),
+      expect.objectContaining({ method: "POST", headers: { Authorization: "Bearer t" } }),
     );
+    expect(fetch.mock.calls[0][1].body).toBeUndefined();
   });
 
-  it("sends no resume when none is on file, so the backend can refuse", async () => {
-    const fetch = vi.fn().mockResolvedValue({ ok: true, headers: new Headers(), json: () => Promise.resolve({}) });
-    vi.stubGlobal("fetch", fetch);
+  it("turns the no-resume refusal into ApplicationRefused with the backend's reason (extension 2a)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 409,
+        headers: new Headers({ "Content-Type": "application/json" }),
+        json: () => Promise.resolve({ reason: "NO_RESUME", message: "A resume is required to apply." }),
+      }),
+    );
 
-    await submitApplication("t", 2, null);
-    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({});
+    const refused = await submitApplication("t", 2).catch((error) => error);
+    expect(refused).toBeInstanceOf(ApplicationRefused);
+    expect(refused.message).toBe("A resume is required to apply.");
   });
 
   it("turns a plain-text refusal into ApplicationRefused with the backend's reason", async () => {
@@ -278,7 +284,7 @@ describe("submitApplication", () => {
       }),
     );
 
-    const refused = await submitApplication("t", 2, resume).catch((error) => error);
+    const refused = await submitApplication("t", 2).catch((error) => error);
     expect(refused).toBeInstanceOf(ApplicationRefused);
     expect(refused.message).toBe("You already applied to this posting.");
   });
@@ -294,7 +300,7 @@ describe("submitApplication", () => {
       }),
     );
 
-    const refused = await submitApplication("t", 2, resume).catch((error) => error);
+    const refused = await submitApplication("t", 2).catch((error) => error);
     expect(refused).toBeInstanceOf(ApplicationRefused);
     expect(refused.message).toBe("You have 5 active applications.");
   });

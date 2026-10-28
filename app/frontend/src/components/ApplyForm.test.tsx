@@ -39,7 +39,7 @@ const desk: Desk = {
   ],
   appliedPostingIds: [3, 7], // 7 was withdrawn
   refusal: null,
-  resume: { fileName: "Jordan_Lee_Resume.pdf", fileType: "application/pdf", fileSize: 184_320, uploadDate: "2026-09-30" },
+  resume: { fileName: "Jordan_Lee_Resume.pdf", uploadDate: "2026-09-30T14:00:00" },
 };
 
 function backendAnswers(response: Partial<Response>) {
@@ -60,6 +60,7 @@ describe("ApplyForm", () => {
     expect(screen.getByText("Jordan Lee")).toBeInTheDocument();
     expect(screen.getByText("jordan.lee@example.com")).toBeInTheDocument();
     expect(screen.getByText("Jordan_Lee_Resume.pdf")).toBeInTheDocument();
+    expect(screen.getByText("Uploaded Sep 30, 2026")).toBeInTheDocument();
     expect(screen.getByText("of 5 in use").previousSibling).toHaveTextContent("1");
   });
 
@@ -89,11 +90,8 @@ describe("ApplyForm", () => {
 
     expect(await screen.findByRole("heading", { level: 1, name: "Application submitted" })).toBeInTheDocument();
     expect(fetch.mock.calls[0][0]).toContain("/api/postings/2/application");
-    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
-      resumeFileName: "Jordan_Lee_Resume.pdf",
-      resumeFileType: "application/pdf",
-      resumeFileSize: 184_320,
-    });
+    // The backend copies the resume on file; the screen sends none
+    expect(fetch.mock.calls[0][1].body).toBeUndefined();
     expect(screen.getByText(/2 of 5 active applications/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Track application status" })).toHaveAttribute(
       "href",

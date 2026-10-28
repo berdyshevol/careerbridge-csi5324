@@ -18,6 +18,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 
@@ -85,7 +86,11 @@ class ReadsChangeNothingTest {
         // PostgreSQL names the schema in lower case, H2 in upper case
         for (String table : jdbc.queryForList("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES "
                 + "WHERE LOWER(TABLE_SCHEMA) = 'public' AND TABLE_TYPE = 'BASE TABLE'", String.class)) {
-            tables.put(table, jdbc.queryForList("SELECT * FROM \"" + table + "\" ORDER BY 1"));
+            List<Map<String, Object>> rows = jdbc.queryForList("SELECT * FROM \"" + table + "\" ORDER BY 1");
+            // A file's content compares by its bytes, as two reads give two arrays
+            rows.forEach(row -> row.replaceAll((column, value) ->
+                    value instanceof byte[] bytes ? HexFormat.of().formatHex(bytes) : value));
+            tables.put(table, rows);
         }
         assertFalse(tables.isEmpty(), "found no tables to compare");
         return tables;

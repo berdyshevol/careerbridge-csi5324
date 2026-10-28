@@ -142,7 +142,7 @@ Figure 8 shows SSD-04, the system sequence diagram for the main success scenario
 
 **Figure 8: SSD-04: UC-04 Apply for Job**
 
-startApplication(postingId, resume) only presents the application summary and changes nothing, so it has no contract. The _resume_ parameter is a STAND-IN until UC-03 keeps the Applicant's Resume in the backend; then the system reads it itself and the parameter goes away.
+startApplication(postingId) only presents the application summary and changes nothing, so it has no contract. The system reads the Applicant's Resume on file itself (UC-03); the Applicant does not send one.
 
 startApplication returns an application start: the posting, the Applicant, the Resume, the Applicant's active Applications, and an optional refusal. A refusal is returned as data, not thrown, so the screen can show it beside the summary and the active list. There are two refusals: no Resume (extension 2a) and the limit of 5 active Applications (extension 2b).
 
@@ -166,7 +166,7 @@ startApplication does not check that the posting is open or that the Applicant h
 
 - The Application's _applicationStatus_ became Applied and its _dateApplied_ became the current date.
 
-- The Application's _resumeSnapshot_ became a copy of the Resume as it is at submission (A6).
+- The Application's _resumeSnapshot_ became a copy of the Applicant's Resume on file as it is at submission, its file content included, so replacing the Resume later does not change it (FR-UC03.3, A6). With no Resume on file nothing is created (extension 2a).
 
 - The Application's _statusHistory_ gained the entry Applied with the current date.
 

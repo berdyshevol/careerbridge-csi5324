@@ -4,6 +4,7 @@ import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.Resume;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
@@ -38,12 +39,12 @@ public class ApplicationService {
         this.clock = clock;
     }
 
-    // STAND-IN: the resume comes from the caller until UC-03 keeps it in the backend
     @Transactional(readOnly = true)
-    public ApplicationStart startApplication(Long postingId, ResumeSnapshot resume, String applicantEmail) {
+    public ApplicationStart startApplication(Long postingId, String applicantEmail) {
         JobPosting posting = jobPostingRepository.findById(postingId)
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
         Applicant applicant = applicant(applicantEmail);
+        Resume resume = applicant.getResume();
         List<Application> active = applicationRepository
                 .findByApplicantAndApplicationStatusIn(applicant, ApplicationStatus.ACTIVE);
 
@@ -56,19 +57,19 @@ public class ApplicationService {
         return new ApplicationStart(posting, applicant, resume, active, refusal);
     }
 
-    // STAND-IN: the resume comes from the caller until UC-03 keeps it in the backend
-    public SubmittedApplication submitApplication(Long postingId, ResumeSnapshot resume, String applicantEmail) {
+    public SubmittedApplication submitApplication(Long postingId, String applicantEmail) {
         JobPosting posting = jobPostingRepository.findById(postingId)
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
         Instant now = clock.instant();
         if (!posting.isOpen(now)) {
             throw new ApplicationRefusedException(ApplicationRefusal.POSTING_CLOSED);
         }
+
+        Applicant applicant = applicant(applicantEmail);
+        Resume resume = applicant.getResume();
         if (resume == null) {
             throw new ApplicationRefusedException(ApplicationRefusal.NO_RESUME);
         }
-
-        Applicant applicant = applicant(applicantEmail);
         if (applicationRepository.existsByApplicantAndJobPosting(applicant, posting)) {
             throw new ApplicationRefusedException(ApplicationRefusal.ALREADY_APPLIED);
         }
@@ -79,7 +80,7 @@ public class ApplicationService {
 
         try {
             Application application = applicationRepository.saveAndFlush(
-                    new Application(applicant, posting, resume,
+                    new Application(applicant, posting, ResumeSnapshot.of(resume),
                             LocalDate.ofInstant(now, posting.getOrganization().getZoneId())));
             return new SubmittedApplication(application, active + 1);
         } catch (DataIntegrityViolationException sameMomentDuplicate) {

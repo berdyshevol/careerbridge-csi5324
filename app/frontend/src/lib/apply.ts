@@ -1,15 +1,15 @@
 // The backend decides on submit (CO-04.1); these checks only let the screen say
 // up front why a posting cannot be applied to. The no-resume and limit refusals
 // come from startApplication; the closed and already-applied ones are worked out
-// here because it does not flag them. The resume is still sample data until UC-03.
+// here because it does not flag them.
 
-import { isOpen, type JobPosting, type StartRefusalReason } from "./api";
-import { type DeskApplication, type DeskResume } from "./sampleDesk";
+import { isOpen, type JobPosting, type Resume, type StartRefusalReason } from "./api";
+import { type DeskApplication } from "./sampleDesk";
 
 export type Desk = {
   applications: DeskApplication[]; // the active applications
   appliedPostingIds: number[]; // every posting applied to, ended applications too
-  resume: DeskResume | null;
+  resume: Resume | null; // the resume on file, from startApplication
   refusal: StartRefusalReason | null; // from startApplication
 };
 

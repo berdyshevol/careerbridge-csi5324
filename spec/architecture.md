@@ -56,8 +56,8 @@ backend loads sample job postings and applications from CSV files
 
 UC-04 Apply for Job is implemented end to end: `ApplyForm` → `lib/api.ts` → `ApplicationController`
 (`GET` and `POST /api/postings/{postingId}/application`) → `ApplicationService` (`startApplication`,
-`submitApplication`). The applicant is the logged-in Applicant (the token's subject, ADR-0010); until
-UC-03 exists the resume comes with the request. The confirmation Notification of CO-04.1 comes with the
+`submitApplication`). The applicant is the logged-in Applicant (the token's subject, ADR-0010), and the
+resume is the one that Applicant has on file (UC-03), so neither request carries one. The confirmation Notification of CO-04.1 comes with the
 Notification Service.
 
 UC-01 Search Job Postings is implemented end to end: page → `lib/api.ts` → `JobPostingController`

@@ -15,6 +15,11 @@ public class ResumeSnapshot {
     @Column(name = "resume_file_size", nullable = false)
     private long fileSize;
 
+    // A copy of the file, since a replaced Resume is deleted (A6). The same mapping as Resume.content;
+    // nullable, as snapshots taken before uploads existed have no content.
+    @Column(name = "resume_content", length = Resume.MAX_FILE_SIZE)
+    private byte[] content;
+
     public ResumeSnapshot() {
     }
 
@@ -22,6 +27,13 @@ public class ResumeSnapshot {
         this.fileName = fileName;
         this.fileType = fileType;
         this.fileSize = fileSize;
+    }
+
+    // Domain model 5.4 #4: the resume on file as it is at submission, in the format the applicant uploaded
+    public static ResumeSnapshot of(Resume resume) {
+        ResumeSnapshot snapshot = new ResumeSnapshot(resume.getFileName(), resume.getFileType(), resume.getFileSize());
+        snapshot.content = resume.getContent();
+        return snapshot;
     }
 
     public String getFileName() {
@@ -34,5 +46,9 @@ public class ResumeSnapshot {
 
     public long getFileSize() {
         return fileSize;
+    }
+
+    public byte[] getContent() {
+        return content;
     }
 }

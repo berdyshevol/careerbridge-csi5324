@@ -449,13 +449,13 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC03.1|UC-03 steps 1–4, extension 4a|viewProfile(), updateProfile(details)|CO-03.1, CO-03.2|
 |FR-UC03.2|UC-03 steps 5–7, extensions 6a|uploadResume(file)|CO-03.3|
 |FR-UC03.3|UC-03 step 6, Success Guarantee|uploadResume(file)|CO-03.3|
-|FR-UC04.1|UC-04 steps 1–2|startApplication(postingId, resume)|query (no contract)|
+|FR-UC04.1|UC-04 steps 1–2|startApplication(postingId)|query (no contract)|
 |FR-UC04.2|UC-04 step 3, extension 3b|submitApplication(postingId)|CO-04.1|
 |FR-UC04.3|UC-04 step 4, extensions 4a–4c|submitApplication(postingId)|CO-04.1|
 |FR-UC04.4|UC-04 step 5|submitApplication(postingId)|CO-04.1|
 |FR-UC04.5|UC-04 steps 6–7|submitApplication(postingId)|CO-04.1|
-|FR-UC04.6|UC-04 extension 2a|startApplication(postingId, resume)|query (no contract)|
-|FR-UC04.7|UC-04 extensions 2b, 4b|startApplication(postingId, resume),<br/>submitApplication(postingId)|query (no contract), CO-04.1|
+|FR-UC04.6|UC-04 extension 2a|startApplication(postingId)|query (no contract)|
+|FR-UC04.7|UC-04 extensions 2b, 4b|startApplication(postingId),<br/>submitApplication(postingId)|query (no contract), CO-04.1|
 |FR-UC04.8|UC-04 extension 6a|submitApplication(postingId)|CO-04.1|
 |FR-UC05.1|UC-05 steps 1–2|viewApplications()|CO-05.1|
 |FR-UC05.2|UC-05 steps 3–4|viewApplication(applicationId)|CO-05.2|

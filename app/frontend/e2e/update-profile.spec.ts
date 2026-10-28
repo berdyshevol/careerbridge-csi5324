@@ -1,18 +1,8 @@
 import path from "node:path";
-import { expect, test, type Page } from "@playwright/test";
-import { ACCOUNTS, logIn } from "./accounts";
+import { expect, test } from "@playwright/test";
+import { ACCOUNTS, logIn, registerNewApplicant } from "./accounts";
 
 // UC-03 Update Applicant Profile, CO-03.1 to CO-03.3 (spec/use-cases.md), as Given / When / Then
-
-// An account of its own: the demo applicant's details, and having no resume, are what the other tests expect
-async function registerNewApplicant(page: Page, label: string, projectName: string) {
-  await page.goto("/register");
-  await page.getByLabel("Full name").fill("Pat Kim");
-  await page.getByLabel("Email").fill(`pat.${label}.${projectName}.${Date.now()}@example.com`);
-  await page.getByLabel("Password").fill("Sunrise-2026x");
-  await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL(/\/profile$/);
-}
 
 test("given a logged-in applicant, when they open their profile, then it shows their own details from the backend", async ({ page }) => {
   await logIn(page, ACCOUNTS.applicant);
@@ -24,9 +14,9 @@ test("given a logged-in applicant, when they open their profile, then it shows t
   await expect(page.getByLabel("Last name")).toHaveValue("Lee");
   await expect(page.getByLabel("Email address")).toHaveValue(ACCOUNTS.applicant.email);
   await expect(page.getByLabel("Phone number")).toHaveValue("(254) 555-0142");
-  // The demo applicant has no resume: the tests that upload one register an applicant of their own
-  await expect(page.getByText(/No resume on file yet/)).toBeVisible();
-  await expect(page.getByText("Jordan_Lee_Resume.pdf")).toHaveCount(0);
+  // The demo applicant's resume on file; the tests that upload one register an applicant of their own
+  await expect(page.getByText("Jordan_Lee_Resume.pdf")).toBeVisible();
+  await expect(page.getByText(/No resume on file yet/)).toHaveCount(0);
 });
 
 test("given a new applicant, when they change their phone and headline and save, then both are still there after a reload", async ({ page }, testInfo) => {
