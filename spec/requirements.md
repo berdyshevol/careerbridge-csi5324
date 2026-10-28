@@ -18,11 +18,11 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 #### UC-02 Register as Applicant
 
-- **FR-UC02.1:** The system shall let a visitor create an Applicant account with full name, email address and password, without Administrator approval. (BR-14; UC-02 steps 1–5)
+- **FR-UC02.1:** The system shall let a visitor create an Applicant account with full name, email address and password, without Administrator approval. (BR-14; UC-02 steps 1–3)
 
-- **FR-UC02.2:** The system shall reject a registration with a missing field, a full name without a last name, a malformed or already registered email address, or a password shorter than 10 characters or lacking a letter or a number. (A15; UC-02 step 4, extensions 4a–4c)
+- **FR-UC02.2:** The system shall reject a registration with a missing field, a full name without a last name, a malformed or already registered email address, or a password shorter than 10 characters or lacking a letter or a number. (A15; UC-02 step 2, extensions 2a–2c)
 
-- **FR-UC02.3:** The system shall create the account as Active and log the new Applicant in at once, without a verification email, and invite them to add a resume. (A15; UC-02 step 5)
+- **FR-UC02.3:** The system shall create the account as Active and log the new Applicant in at once, without a verification email, and invite them to add a resume. (A15; UC-02 step 3)
 
 #### UC-03 Update Applicant Profile
 
@@ -443,9 +443,9 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC01.1|UC-01 steps 1–2|searchPostings(criteria)|CO-01.1|
 |FR-UC01.2|UC-01 steps 1–2, extensions 2a, 2b|searchPostings(criteria)|CO-01.1|
 |FR-UC01.3|UC-04 step 1, extension 1c|viewPosting(postingId)|CO-01.2|
-|FR-UC02.1|UC-02 steps 1–5|register(fullName, email, password)|CO-02.1|
-|FR-UC02.2|UC-02 step 4, extensions 4a–4c|register(fullName, email, password)|CO-02.1|
-|FR-UC02.3|UC-02 step 5|register(fullName, email, password)|CO-02.1|
+|FR-UC02.1|UC-02 steps 1–3|register(fullName, email, password)|CO-02.1|
+|FR-UC02.2|UC-02 step 2, extensions 2a–2c|register(fullName, email, password)|CO-02.1|
+|FR-UC02.3|UC-02 step 3|register(fullName, email, password)|CO-02.1|
 |FR-UC03.1|UC-03 steps 1–4, extension 4a|viewProfile(), updateProfile(details)|CO-03.1, CO-03.2|
 |FR-UC03.2|UC-03 steps 5–7, extensions 6a|uploadResume(file)|CO-03.3|
 |FR-UC03.3|UC-03 step 6, Success Guarantee|uploadResume(file)|CO-03.3|

@@ -158,14 +158,14 @@ async function fieldRefusal<Field extends string>(
   return fieldErrors;
 }
 
-// UC-02 extension 4a: the backend's reason for each field it refused, keyed by field
+// UC-02 extension 2a: the backend's reason for each field it refused, keyed by field
 export class RegistrationRefused extends Error {
   constructor(readonly fieldErrors: Partial<Record<"fullName" | "email" | "password", string>>) {
     super("The registration was refused");
   }
 }
 
-// UC-02 extension 4b; its message suggests logging in instead
+// UC-02 extension 2b; its message suggests logging in instead
 export class AlreadyRegistered extends Error {}
 
 // UC-02, CO-02.1: the new Applicant is logged in at once, so the answer is a session

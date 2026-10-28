@@ -66,7 +66,7 @@ sequenceDiagram
 
 **Operation:** register(fullName, email, password)
 
-**Cross-references:** UC-02 steps 3–5, extensions 4a–4c; FR-UC02.1, FR-UC02.2, FR-UC02.3
+**Cross-references:** UC-02 steps 1–3, extensions 2a–2c; FR-UC02.1, FR-UC02.2, FR-UC02.3
 
 **Preconditions:** The visitor is not logged in.
 
