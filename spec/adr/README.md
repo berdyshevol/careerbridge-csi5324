@@ -15,3 +15,4 @@ decision gets a new record that names the one it replaces.
 | [0008](0008-pull-requests-name-their-ticket.md) | A pull request names its ticket; Jira follows it; Claude reviews it | Accepted |
 | [0009](0009-postgresql-on-neon.md) | Data lives in PostgreSQL on Neon; tests run on PostgreSQL in Docker | Accepted |
 | [0010](0010-log-in-with-jwt.md) | Users log in for a signed token, and each endpoint asks for a role | Accepted |
+| [0011](0011-executable-acceptance-specifications.md) | Use cases are checked by executable acceptance specifications | Accepted |
