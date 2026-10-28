@@ -1,8 +1,9 @@
+import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { ACCOUNTS, logIn, tokenOf } from "./accounts";
+import { ACCOUNTS, logIn, registerNewApplicant, tokenOf } from "./accounts";
 
 // UC-04 Apply for Job, against the sample postings in jobs.csv and the demo
-// applicant Jordan Lee (three active applications from the backend, resume on file).
+// applicant Jordan Lee (three active applications and a resume on file, from SampleDataLoader).
 
 // The application is saved, and a posting takes one application from the
 // sample applicant, so each device applies to a posting of its own.
@@ -36,6 +37,29 @@ test("an applicant can cancel, then reviews, confirms and submits an application
   // 4 of 5, or 5 of 5 when the other device has applied first
   await expect(page.getByText(/[45] of 5 active applications/)).toBeVisible();
   await expect(page.getByRole("link", { name: "Track application status" })).toBeVisible();
+});
+
+// Extension 2a and FR-UC03.3: the resume that goes with the application is the one on file
+test("given a new applicant without a resume, when they apply, then they are sent to upload one and can apply after", async ({ page }, testInfo) => {
+  await registerNewApplicant(page, "apply", testInfo.project.name);
+
+  await page.goto("/jobs/1/apply");
+  await expect(page.getByRole("status")).toContainText("A resume is required to apply");
+  await expect(page.getByRole("button", { name: "Submit application" })).toHaveCount(0);
+
+  await page.getByRole("link", { name: "Upload one in Profile & resume" }).click();
+  await expect(page).toHaveURL(/\/profile$/);
+  await page.getByLabel("Choose your resume").setInputFiles(path.join(__dirname, "fixtures", "Pat_Kim_Resume.pdf"));
+  await page.getByRole("button", { name: "Upload resume" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Resume uploaded" })).toBeVisible();
+
+  await page.goto("/jobs/1/apply");
+  await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Submit application" }).click();
+
+  await expect(page.getByRole("heading", { level: 1, name: "Application submitted" })).toBeVisible();
+  await expect(page.getByText(/1 of 5 active applications/)).toBeVisible();
 });
 
 test("a posting already applied to cannot be applied to again", async ({ page }) => {
@@ -89,8 +113,6 @@ test("given a recruiter, when they ask to apply, then they are told only applica
 });
 
 test("given no log-in, when someone posts an application to the backend, then it is refused", async ({ request }) => {
-  const response = await request.post("http://localhost:8080/api/postings/2/application", {
-    data: { resumeFileName: "cv.pdf", resumeFileType: "application/pdf", resumeFileSize: 1 },
-  });
+  const response = await request.post("http://localhost:8080/api/postings/2/application");
   expect(response.status()).toBe(401);
 });

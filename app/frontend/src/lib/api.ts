@@ -42,12 +42,6 @@ export type NewPosting = {
   applicationDeadline: string;
 };
 
-export type ResumeOnFile = {
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-};
-
 export type SubmittedApplication = {
   applicationId: number;
   applicationStatus: string;
@@ -79,6 +73,7 @@ export type StartRefusalReason = "NO_RESUME" | "LIMIT_REACHED";
 // postings are not flagged here; the backend decides those on submit (UC-04 4a, 4c).
 export type ApplicationStart = {
   posting: { postingId: number; title: string; organizationName: string };
+  resume: Resume | null; // the resume on file, a copy of which goes with the application
   activeApplicationCount: number;
   applicationLimit: number;
   refusal: { reason: StartRefusalReason; message: string } | null;
@@ -254,22 +249,9 @@ export async function submitJobPosting(token: string, postingId: number): Promis
   return response.json();
 }
 
-// STAND-IN: the resume rides in the query until UC-03 keeps it in the backend
-function resumeParams(resume: ResumeOnFile | null): Record<string, string | number> {
-  return resume
-    ? { resumeFileName: resume.fileName, resumeFileType: resume.fileType, resumeFileSize: resume.fileSize }
-    : {};
-}
-
-export async function startApplication(
-  token: string,
-  postingId: number,
-  resume: ResumeOnFile | null,
-): Promise<ApplicationStart> {
-  const query = new URLSearchParams(Object.entries(resumeParams(resume)).map(([key, value]) => [key, String(value)])).toString();
-  const response = await backendFetch(`/api/postings/${postingId}/application${query ? `?${query}` : ""}`, {
-    headers: bearer(token),
-  });
+// The backend takes the resume on file (CO-04.1), so neither call sends one
+export async function startApplication(token: string, postingId: number): Promise<ApplicationStart> {
+  const response = await backendFetch(`/api/postings/${postingId}/application`, { headers: bearer(token) });
   endedSession(response);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
@@ -277,15 +259,10 @@ export async function startApplication(
   return response.json();
 }
 
-export async function submitApplication(
-  token: string,
-  postingId: number,
-  resume: ResumeOnFile | null,
-): Promise<SubmittedApplication> {
+export async function submitApplication(token: string, postingId: number): Promise<SubmittedApplication> {
   const response = await backendFetch(`/api/postings/${postingId}/application`, {
     method: "POST",
-    headers: { ...bearer(token), "Content-Type": "application/json" },
-    body: JSON.stringify(resumeParams(resume)),
+    headers: bearer(token),
   });
   endedSession(response);
   if (response.status === 409) {

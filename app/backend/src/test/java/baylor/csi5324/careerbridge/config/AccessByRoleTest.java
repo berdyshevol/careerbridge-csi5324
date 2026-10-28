@@ -28,10 +28,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 class AccessByRoleTest {
 
-    private static final String RESUME = """
-            {"resumeFileName": "cv.pdf", "resumeFileType": "application/pdf", "resumeFileSize": 2048}
-            """;
-
     @Autowired
     private WebApplicationContext context;
 
@@ -57,7 +53,7 @@ class AccessByRoleTest {
     @Test
     void aVisitorReadsPostingsButWritesNothing() throws Exception {
         mockMvc.perform(get("/api/postings")).andExpect(status().isOk());
-        mockMvc.perform(post("/api/postings/1/application").contentType(MediaType.APPLICATION_JSON).content(RESUME))
+        mockMvc.perform(post("/api/postings/1/application"))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/applicant/applications")).andExpect(status().isUnauthorized());
         // A GET under /api/postings, yet it starts the applicant's own application (UC-04)
@@ -69,15 +65,12 @@ class AccessByRoleTest {
 
     @Test
     void onlyAnApplicantApplies() throws Exception {
-        mockMvc.perform(post("/api/postings/1/application").with(as("RECRUITER"))
-                        .contentType(MediaType.APPLICATION_JSON).content(RESUME))
+        mockMvc.perform(post("/api/postings/1/application").with(as("RECRUITER")))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(post("/api/postings/1/application").with(as("ADMINISTRATOR"))
-                        .contentType(MediaType.APPLICATION_JSON).content(RESUME))
+        mockMvc.perform(post("/api/postings/1/application").with(as("ADMINISTRATOR")))
                 .andExpect(status().isForbidden());
         // Reaches the service: an unknown posting is the applicant's 404, not a refused role
-        mockMvc.perform(post("/api/postings/999999/application").with(as("APPLICANT"))
-                        .contentType(MediaType.APPLICATION_JSON).content(RESUME))
+        mockMvc.perform(post("/api/postings/999999/application").with(as("APPLICANT")))
                 .andExpect(status().isNotFound());
         mockMvc.perform(get("/api/applicant/applications").with(as("ADMINISTRATOR")))
                 .andExpect(status().isForbidden());

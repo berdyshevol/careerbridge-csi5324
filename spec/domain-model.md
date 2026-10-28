@@ -23,7 +23,7 @@ Figure 25; classes and associations that are not in the figure are listed in sec
 | Administrator | none of its own (a kind of User) |
 | Resume | resumeId, file Name, file Type, file Size, content, upload Date |
 | Application | applicationId, dateApplied, applicationStatus, rejectionReason, withdrawnAt |
-| Resume Snapshot | file Name, file Type, file Size |
+| Resume Snapshot | file Name, file Type, file Size, content |
 | Status History Entry | status, date |
 | Organization Membership | status, membershipId, requested at, approved at |
 | Organization | organizationId, name, organization Status, website, description, timeZone |
@@ -33,7 +33,8 @@ Figure 25; classes and associations that are not in the figure are listed in sec
 | Notification | notificationId, type, message, sentAt, status |
 
 - **Resume Snapshot** is the copy of the resume kept with an application as it was at submission
-  (A6). The operation contracts call it the Application's _resumeSnapshot_.
+  (A6), the file's content included, so it outlives a Resume that is replaced and deleted. The
+  operation contracts call it the Application's _resumeSnapshot_.
 - **Status History Entry** is one stage an application reached, with the date. The operation
   contracts call the entries of an application its _statusHistory_.
 - A **Job Posting**'s _location_ is On-site, Hybrid or Remote (UC-11 step 3), and its
@@ -79,7 +80,7 @@ Expire Job Posting and one for UC-03 Update Applicant Profile:
 | 1 | No association between Applicant and Application | Applicant 1 — * Application | UC-04 postcondition: "A new application exists in the Applied stage, linked to the Applicant and the posting". The limit of 5 active applications (BR-4) and the no-reapply rule (A5) are both about the applicant's applications. |
 | 2 | Resume 1 — 1 Application | Removed; Application 1 — 1 Resume Snapshot instead | An applicant has one resume and many applications, so 1 — 1 cannot hold. The application must not follow later changes to the resume (A6), so it keeps a copy, not a link to the resume on file. |
 | 3 | Applicant 1 — 1 Resume | Applicant 1 — 0..1 Resume | UC-02 postcondition: "An empty applicant profile with no resume has been created". UC-04 extension 2a handles an applicant with no resume. |
-| 4 | Application has the attribute resumeSnapshot | Class Resume Snapshot (file Name, file Type, file Size) | The copy has its own data ("available as a PDF or DOCX, in the format the applicant uploaded"), so it is a class, not a simple attribute. |
+| 4 | Application has the attribute resumeSnapshot | Class Resume Snapshot (file Name, file Type, file Size, content) | The copy has its own data ("available as a PDF or DOCX, in the format the applicant uploaded"), so it is a class, not a simple attribute. |
 | 5 | Application has the attribute statusHistory | Class Status History Entry (status, date) | The history has one entry per stage, each with its own date, so it is a class, not a simple attribute. |
 | 6 | Job Posting has no review comment; approvedBy and approvedAt suggest an approval only | Job Posting has reviewComment; approvedBy and approvedAt record the Administrator who made any decision (approve, return or reject) and when | UC-12 requires comments to return or reject a posting (extensions 5a, 5b), and logs every decision with who decided and when (Special Requirements). |
 | 7 | Organization has no time zone | Organization has timeZone | UC-13 variation 2a: a deadline means 23:59 on that date in the organization's time zone (A11, NFR-UC13.5). |

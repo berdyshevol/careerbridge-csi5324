@@ -170,7 +170,8 @@ reaches the service; the controller answers it with the same reason. An accepted
 new Resume with its name, type, size, content and upload date (UTC), stored in the database, and
 replaces the Applicant's previous one: an applicant has at most one resume (BR-6). The previous
 Resume is deleted, as nothing else refers to it: applications already submitted keep their own
-Resume Snapshot, an embedded copy, so replacing the resume changes none of them (FR-UC03.3, A6). No
+Resume Snapshot, an embedded copy with the file's content that submitApplication (CO-04.1) makes
+from the resume on file, so replacing the resume changes none of them (FR-UC03.3, A6). No
 external malware scanner is used (Iteration 1 feedback).
 
 ```mermaid

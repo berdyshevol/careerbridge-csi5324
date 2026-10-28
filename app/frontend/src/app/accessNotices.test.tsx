@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { SessionEnded, viewApplications, viewPosting, viewProfile, type JobPosting } from "@/lib/api";
+import { SessionEnded, startApplication, viewApplications, viewPosting, viewProfile, type ApplicationStart, type JobPosting } from "@/lib/api";
 import { serverSession } from "@/lib/serverSession";
 import type { Role, Session } from "@/lib/session";
 import ApplyPage from "./jobs/[id]/apply/page";
@@ -12,6 +12,7 @@ vi.mock("@/lib/api", async (importActual) => ({
   viewPosting: vi.fn(),
   viewApplications: vi.fn(),
   viewProfile: vi.fn(),
+  startApplication: vi.fn(),
 }));
 const refresh = vi.fn();
 vi.mock("next/navigation", async (importActual) => ({
@@ -19,7 +20,26 @@ vi.mock("next/navigation", async (importActual) => ({
   useRouter: () => ({ refresh, push: vi.fn(), replace: vi.fn() }),
 }));
 
-const posting = { jobPostId: 2, title: "Data Analyst Intern" } as JobPosting;
+const posting = {
+  jobPostId: 2,
+  title: "Data Analyst Intern",
+  location: "On-site",
+  employmentType: "Part-time",
+  applicationDeadline: "2999-12-31",
+  closesAt: "3000-01-01T05:59:00Z",
+  postStatus: "PUBLISHED",
+  organization: { organizationId: 2, name: "Waco Health Partners" },
+} as JobPosting;
+
+function started(resume: ApplicationStart["resume"]): ApplicationStart {
+  return {
+    posting: { postingId: 2, title: "Data Analyst Intern", organizationName: "Waco Health Partners" },
+    resume,
+    activeApplicationCount: 0,
+    applicationLimit: 5,
+    refusal: resume ? null : { reason: "NO_RESUME", message: "A resume is required to apply." },
+  };
+}
 
 function as(role: Role): Session {
   return { token: "t", user: { firstName: "Riley", lastName: "Chen", email: "r@example.com", phone: null, role } };
@@ -34,7 +54,30 @@ describe("pages that need a log-in", () => {
     vi.mocked(serverSession).mockReset();
     vi.mocked(viewApplications).mockReset();
     vi.mocked(viewProfile).mockReset();
+    vi.mocked(startApplication).mockReset();
     refresh.mockReset();
+  });
+
+  it("shows an applicant the resume the backend has on file, which goes with the application (FR-UC04.1)", async () => {
+    vi.mocked(serverSession).mockResolvedValue(as("APPLICANT"));
+    vi.mocked(viewApplications).mockResolvedValue({ active: [], appliedPostingIds: [] });
+    vi.mocked(startApplication).mockResolvedValue(started({ fileName: "Riley_Chen_CV.pdf", uploadDate: "2026-10-01T15:00:00" }));
+    render(await ApplyPage({ params: Promise.resolve({ id: "2" }) }));
+
+    expect(startApplication).toHaveBeenCalledWith("t", 2);
+    expect(screen.getByText("Riley_Chen_CV.pdf")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Submit application" })).toBeInTheDocument();
+  });
+
+  it("refuses an applicant with no resume on file and links to the profile (extension 2a, FR-UC04.6)", async () => {
+    vi.mocked(serverSession).mockResolvedValue(as("APPLICANT"));
+    vi.mocked(viewApplications).mockResolvedValue({ active: [], appliedPostingIds: [] });
+    vi.mocked(startApplication).mockResolvedValue(started(null));
+    render(await ApplyPage({ params: Promise.resolve({ id: "2" }) }));
+
+    expect(screen.getByRole("status")).toHaveTextContent("A resume is required to apply");
+    expect(screen.getByRole("link", { name: "Upload one in Profile & resume" })).toHaveAttribute("href", "/profile");
+    expect(screen.queryByRole("button", { name: "Submit application" })).not.toBeInTheDocument();
   });
 
   it("asks a visitor who wants to apply to log in or register, and to come back (6a)", async () => {

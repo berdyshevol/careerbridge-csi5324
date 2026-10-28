@@ -1,9 +1,6 @@
-// SAMPLE DATA for the applicant desk. The backend cannot answer these yet:
-// the offer comes with UC-07 and the resume with UC-03. Replace each piece with
-// an API call in src/lib/api.ts when its use case is implemented. The screens read the applications from
-// viewApplications; `applications` below only fills /styleguide.
-
-import type { ResumeOnFile } from "./api";
+// SAMPLE DATA for the applicant desk. The backend cannot answer the offer yet: it comes
+// with UC-07; replace it with an API call in src/lib/api.ts then. The screens read the
+// applications from viewApplications; `applications` below only fills /styleguide.
 
 export const STAGES = ["Applied", "Screening", "Interview", "Offer"] as const;
 export type Stage = (typeof STAGES)[number];
@@ -54,14 +51,4 @@ export const offer = {
   title: "IT Support Specialist",
   organizationName: "Waco Health Partners",
   expirationDate: "2026-10-16",
-};
-
-export type DeskResume = ResumeOnFile & { uploadDate: string };
-
-// The backend's sample applications (data/applications.csv) belong to this same applicant.
-export const resume: DeskResume | null = {
-  fileName: "Jordan_Lee_Resume.pdf",
-  fileType: "application/pdf",
-  fileSize: 184_320,
-  uploadDate: "2026-09-30",
 };

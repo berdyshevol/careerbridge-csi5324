@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ApplicationRefused, formatDate, SessionEnded, submitApplication, type JobPosting } from "@/lib/api";
+import { ApplicationRefused, formatDate, formatUtcDay, SessionEnded, submitApplication, type JobPosting } from "@/lib/api";
 import { checkApplication, type Desk } from "@/lib/apply";
 import { APPLICATION_LIMIT } from "@/lib/sampleDesk";
 import type { Session } from "@/lib/session";
@@ -29,7 +29,7 @@ export default function ApplyForm({ posting, session, desk }: { posting: JobPost
     setError("");
     setSubmitting(true);
     try {
-      const submitted = await submitApplication(session.token, posting.jobPostId, desk.resume);
+      const submitted = await submitApplication(session.token, posting.jobPostId);
       setActiveCount(submitted.activeApplicationCount);
     } catch (err) {
       if (err instanceof SessionEnded) {
@@ -131,7 +131,7 @@ export default function ApplyForm({ posting, session, desk }: { posting: JobPost
           {desk.resume ? (
             <>
               <p>{desk.resume.fileName}</p>
-              <p className="text-sm text-muted">Uploaded {formatDate(desk.resume.uploadDate)}</p>
+              <p className="text-sm text-muted">Uploaded {formatUtcDay(desk.resume.uploadDate)}</p>
               <p className="pt-2 text-sm text-muted">
                 A copy as it is now goes with this application; later changes do not affect it.
               </p>
