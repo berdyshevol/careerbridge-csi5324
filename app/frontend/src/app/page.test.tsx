@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { searchPostings, SessionEnded, viewApplications } from "@/lib/api";
+import { searchPostings, SessionEnded, viewApplications, viewProfile } from "@/lib/api";
 import type { DeskApplication } from "@/lib/sampleDesk";
 import { serverSession } from "@/lib/serverSession";
 import type { Role, Session } from "@/lib/session";
@@ -10,6 +10,7 @@ vi.mock("@/lib/api", async (importActual) => ({
   ...(await importActual<typeof import("@/lib/api")>()),
   searchPostings: vi.fn(),
   viewApplications: vi.fn(),
+  viewProfile: vi.fn(),
 }));
 const refresh = vi.fn();
 vi.mock("next/navigation", async (importActual) => ({
@@ -44,10 +45,23 @@ const application: DeskApplication = {
 describe("home page", () => {
   beforeEach(() => {
     vi.mocked(searchPostings).mockResolvedValue([]);
+    vi.mocked(viewProfile).mockResolvedValue({
+      firstName: "Riley",
+      lastName: "Chen",
+      email: "r@example.com",
+      phone: null,
+      location: null,
+      headline: null,
+      skills: null,
+      education: null,
+      workExperience: null,
+      resume: null,
+    });
   });
   afterEach(() => {
     vi.mocked(serverSession).mockReset();
     vi.mocked(viewApplications).mockReset();
+    vi.mocked(viewProfile).mockReset();
     refresh.mockReset();
   });
 
