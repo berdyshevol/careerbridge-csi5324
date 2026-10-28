@@ -54,3 +54,14 @@ test("given an applicant, when they open the approval page, then they are told o
   await page.goto("/admin/postings");
   await expect(page.getByText(/Only an administrator reviews postings/)).toBeVisible();
 });
+
+for (const account of [ACCOUNTS.recruiter, ACCOUNTS.administrator]) {
+  test(`given ${account.name} logged in, when they open the home page, then nobody asks them to log in as an applicant`, async ({ page }) => {
+    await logIn(page, account);
+    await page.goto("/");
+
+    await expect(page.getByRole("heading", { name: "Recently published" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Your applications" })).toHaveCount(0);
+    await expect(page.getByRole("main").getByRole("link", { name: "Log in as an applicant" })).toHaveCount(0);
+  });
+}
