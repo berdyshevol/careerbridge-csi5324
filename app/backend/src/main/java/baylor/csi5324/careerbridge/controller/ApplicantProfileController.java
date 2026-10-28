@@ -62,8 +62,7 @@ public class ApplicantProfileController {
         return ex.getMessage();
     }
 
-    // A file over the multipart limit never reaches the service. The multipart request is resolved
-    // lazily (application.properties), so this controller still handles it and gives the same reason.
+    // A file over the multipart limit never reaches the service (application.properties)
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleTooLarge() {

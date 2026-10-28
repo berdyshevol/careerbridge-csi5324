@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import EmptyState from "@/components/EmptyState";
-import FormField, { FileField, TextAreaField } from "@/components/FormField";
+import FormField, { TextAreaField } from "@/components/FormField";
 import PageTitle from "@/components/PageTitle";
 import {
   formatUtcDay,
@@ -216,8 +216,9 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
               </div>
             )}
 
-            <FileField
+            <FormField
               id="resume-file"
+              type="file"
               label={resume ? "Replace your resume" : "Choose your resume"}
               accept=".pdf,.docx"
               hint="PDF or DOCX, at most 5 MB."

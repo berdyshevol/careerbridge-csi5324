@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 @Entity
 public class Resume {
 
-    // UC-03 extension 6a: the largest file an applicant may upload
+    // UC-03 extension 6a
     public static final int MAX_FILE_SIZE = 5 * 1024 * 1024;
 
     @Id
