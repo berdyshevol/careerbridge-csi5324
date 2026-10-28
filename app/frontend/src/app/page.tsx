@@ -41,6 +41,8 @@ export default async function DeskPage() {
   const session = await serverSession();
   // The desk is the logged-in Applicant's; anyone else sees the job board part only
   const applicant = session?.user.role === "APPLICANT" ? session : null;
+  // A recruiter or administrator is logged in already: no applicant section, no log-in prompt
+  const visitor = session === null;
   const [postings, desk] = await Promise.all([
     openPostings(),
     applicant ? deskOf(applicant.token) : ("none" as const),
@@ -58,11 +60,14 @@ export default async function DeskPage() {
             <PageTitle subtitle="Here is where your applications stand.">
               Welcome back, {applicant.user.firstName}
             </PageTitle>
+          ) : session ? (
+            <PageTitle subtitle="Here are the job postings open now.">Welcome back, {session.user.firstName}</PageTitle>
           ) : (
             <PageTitle subtitle="Find a job and apply in a few steps.">Welcome to CareerBridge</PageTitle>
           )}
         </div>
 
+        {(visitor || applicant) && (
         <section className="order-3 flex flex-col gap-3">
           <div className="flex items-baseline justify-between">
             <h2 className="text-lg font-semibold">Your applications</h2>
@@ -87,6 +92,7 @@ export default async function DeskPage() {
             </ul>
           )}
         </section>
+        )}
 
         <section className="order-4 flex flex-col gap-3">
           <div className="flex items-baseline justify-between">
