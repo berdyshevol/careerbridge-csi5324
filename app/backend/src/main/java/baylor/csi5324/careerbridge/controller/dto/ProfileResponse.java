@@ -7,7 +7,8 @@ import java.time.LocalDateTime;
 
 // CO-03.1: resume is null when the applicant has none on file yet
 public record ProfileResponse(String firstName, String lastName, String email, String phone,
-                              ResumeOnFile resume) {
+                              String location, String headline, String skills, String education,
+                              String workExperience, ResumeOnFile resume) {
 
     public record ResumeOnFile(String fileName, LocalDateTime uploadDate) {
     }
@@ -19,6 +20,11 @@ public record ProfileResponse(String firstName, String lastName, String email, S
                 applicant.getLastName(),
                 applicant.getEmail(),
                 applicant.getPhone(),
+                applicant.getLocation(),
+                applicant.getHeadline(),
+                applicant.getSkills(),
+                applicant.getEducation(),
+                applicant.getWorkExperience(),
                 resume == null ? null : new ResumeOnFile(resume.getFileName(), resume.getUploadDate()));
     }
 }

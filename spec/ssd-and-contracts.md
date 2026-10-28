@@ -112,7 +112,7 @@ sequenceDiagram
 
 **Postconditions:** None. This is a query operation.
 
-**Output:** The Applicant's _First Name_ , _Last Name_ , _email_ and _phone #_ , the other profile details, and the _file Name_ and _upload Date_ of the Resume on file, if any.
+**Output:** The Applicant's _First Name_ , _Last Name_ , _email_ , _phone #_ , _location_ , _headline_ , _skills_ , _education_ and _work experience_ , and the _file Name_ and _upload Date_ of the Resume on file, if any.
 
 #### CO-03.2: updateProfile
 
@@ -122,7 +122,7 @@ sequenceDiagram
 
 **Preconditions:** The Applicant is logged in.
 
-**Postconditions:** The Applicant's _First Name_ , _Last Name_ and _phone #_ became the valid values in details.
+**Postconditions:** The Applicant's _First Name_ , _Last Name_ , _phone #_ , _location_ , _headline_ , _skills_ , _education_ and _work experience_ became the valid values in details.
 
 #### CO-03.3: uploadResume
 

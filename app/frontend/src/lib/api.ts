@@ -140,6 +140,25 @@ export async function logIn(email: string, password: string): Promise<Session> {
   return response.json();
 }
 
+// A 400 that names the form's fields: the backend's reason for each one it refused. Spring's own 400
+// is JSON too, so only the form's fields are reasons for the user; any other 400 is an error.
+async function fieldRefusal<Field extends string>(
+  response: Response,
+  fields: readonly Field[],
+): Promise<Partial<Record<Field, string>> | null> {
+  if (response.status !== 400 || !response.headers.get("Content-Type")?.startsWith("application/json")) {
+    return null;
+  }
+  const body: Record<string, unknown> = await response.json();
+  const fieldErrors = Object.fromEntries(
+    fields.flatMap((name) => (typeof body[name] === "string" ? [[name, body[name] as string]] : [])),
+  ) as Partial<Record<Field, string>>;
+  if (Object.keys(fieldErrors).length === 0) {
+    throw new Error("Backend answered 400");
+  }
+  return fieldErrors;
+}
+
 // UC-02 extension 4a: the backend's reason for each field it refused, keyed by field
 export class RegistrationRefused extends Error {
   constructor(readonly fieldErrors: Partial<Record<"fullName" | "email" | "password", string>>) {
@@ -157,18 +176,9 @@ export async function register(fullName: string, email: string, password: string
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ fullName, email, password }),
   });
-  if (response.status === 400 && response.headers.get("Content-Type")?.startsWith("application/json")) {
-    // Spring's own 400 is JSON too: only the form's fields are reasons for the visitor
-    const body: Record<string, unknown> = await response.json();
-    const fieldErrors = Object.fromEntries(
-      (["fullName", "email", "password"] as const).flatMap((name) =>
-        typeof body[name] === "string" ? [[name, body[name] as string]] : [],
-      ),
-    );
-    if (Object.keys(fieldErrors).length > 0) {
-      throw new RegistrationRefused(fieldErrors);
-    }
-    throw new Error("Backend answered 400");
+  const fieldErrors = await fieldRefusal(response, ["fullName", "email", "password"]);
+  if (fieldErrors) {
+    throw new RegistrationRefused(fieldErrors);
   }
   const reason = await refusal(response, [409]);
   if (reason !== null) {
@@ -309,18 +319,65 @@ export async function viewApplications(token: string): Promise<Applications> {
   return { active, appliedPostingIds: applications.map((application) => application.postingId) };
 }
 
-// CO-03.1: resume is null until the applicant uploads one; uploadDate is the backend's local date-time
+// CO-03.2 details, in the order the form shows them; all but the names may be left empty
+export const PROFILE_FIELDS = [
+  "firstName",
+  "lastName",
+  "phone",
+  "location",
+  "headline",
+  "skills",
+  "education",
+  "workExperience",
+] as const;
+
+export type ProfileField = (typeof PROFILE_FIELDS)[number];
+
+export type ProfileDetails = Record<ProfileField, string>;
+
+// CO-03.1: an empty detail is null; resume is null until the applicant uploads one, and its
+// uploadDate is the backend's local date-time
 export type Profile = {
   firstName: string;
   lastName: string;
   email: string;
   phone: string | null;
+  location: string | null;
+  headline: string | null;
+  skills: string | null;
+  education: string | null;
+  workExperience: string | null;
   resume: { fileName: string; uploadDate: string } | null;
 };
 
 export async function viewProfile(token: string): Promise<Profile> {
   const response = await backendFetch("/api/applicant/profile", { headers: bearer(token) });
   endedSession(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+// UC-03 extension 4a: the backend's reason for each field it refused, keyed by field
+export class ProfileRefused extends Error {
+  constructor(readonly fieldErrors: Partial<Record<ProfileField, string>>) {
+    super("The profile was refused");
+  }
+}
+
+// CO-03.2: the answer is the profile as saved
+export async function updateProfile(token: string, details: ProfileDetails): Promise<Profile> {
+  const response = await backendFetch("/api/applicant/profile", {
+    method: "PUT",
+    headers: { ...bearer(token), "Content-Type": "application/json" },
+    body: JSON.stringify(details),
+  });
+  endedSession(response);
+  const fieldErrors = await fieldRefusal(response, PROFILE_FIELDS);
+  if (fieldErrors) {
+    throw new ProfileRefused(fieldErrors);
+  }
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }

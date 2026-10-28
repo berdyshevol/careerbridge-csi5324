@@ -1,35 +1,50 @@
-
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 import EmptyState from "@/components/EmptyState";
+import FormField, { TextAreaField } from "@/components/FormField";
 import PageTitle from "@/components/PageTitle";
-import { formatDate, type Profile } from "@/lib/api";
+import {
+  formatDate,
+  PROFILE_FIELDS,
+  ProfileRefused,
+  SessionEnded,
+  updateProfile,
+  type Profile,
+  type ProfileDetails,
+  type ProfileField,
+} from "@/lib/api";
+import { readSession, saveSession } from "@/lib/session";
+import { useEndSession } from "@/lib/useEndSession";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-// UC-03 for the logged-in Applicant: the details and resume on file come from the backend (CO-03.1).
-// Saving the details (SCRUM-162) and uploading a resume (SCRUM-163) are not connected yet.
-export default function ProfilePreview({ profile: onFile }: { profile: Profile }) {
-  const [profile, setProfile] = useState({
-    firstName: onFile.firstName,
-    lastName: onFile.lastName,
-    email: onFile.email,
-    phone: onFile.phone ?? "",
-    location: "",
-    skills: "",
-    education: "",
-    experience: "",
-  });
+function detailsOf(profile: Profile): ProfileDetails {
+  return Object.fromEntries(PROFILE_FIELDS.map((field) => [field, profile[field] ?? ""])) as ProfileDetails;
+}
+
+// UC-03 for the logged-in Applicant: the details and resume on file come from the backend (CO-03.1)
+// and the details are saved there (CO-03.2). Uploading a resume (SCRUM-163) is not connected yet.
+export default function ProfilePreview({ profile: onFile, token }: { profile: Profile; token: string }) {
+  const router = useRouter();
+  const endSession = useEndSession();
+  const [details, setDetails] = useState(() => detailsOf(onFile));
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<ProfileField, string>>>({});
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState("");
-  const [profileMessage, setProfileMessage] = useState("");
 
-  function updateField(field: keyof typeof profile, value: string) {
-    setProfile((previous) => ({ ...previous, [field]: value }));
-    setProfileMessage("");
-  }
+  // A screen reader hears the first reason: focus moves to the first field the backend refused
+  useEffect(() => {
+    const first = PROFILE_FIELDS.find((field) => fieldErrors[field]);
+    if (first) {
+      document.getElementById(`profile-${first}`)?.focus();
+    }
+  }, [fieldErrors]);
 
   function handleResumeChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -55,9 +70,48 @@ export default function ProfilePreview({ profile: onFile }: { profile: Profile }
     setSelectedFile(file);
   }
 
-  function handleSave(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setProfileMessage("Saving is not connected yet: your changes were not saved.");
+    setFieldErrors({});
+    setSaved(false);
+    setError("");
+    setSaving(true);
+    try {
+      const profile = await updateProfile(token, details);
+      setDetails(detailsOf(profile));
+      setSaved(true);
+      // The header shows the name from the session, so a new name must reach it too
+      const session = readSession();
+      if (session) {
+        const { firstName, lastName, phone } = profile;
+        saveSession({ ...session, user: { ...session.user, firstName, lastName, phone } });
+        router.refresh();
+      }
+    } catch (err) {
+      if (err instanceof ProfileRefused) {
+        setFieldErrors(err.fieldErrors);
+      } else if (err instanceof SessionEnded) {
+        endSession();
+        setError("Your session has ended. Log in again to save your profile.");
+      } else {
+        setError("Unable to save the profile. Please try again.");
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function fieldProps(field: ProfileField, maxLength: number) {
+    return {
+      id: `profile-${field}`,
+      value: details[field],
+      maxLength,
+      error: fieldErrors[field],
+      onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setDetails((previous) => ({ ...previous, [field]: event.target.value }));
+        setSaved(false);
+      },
+    };
   }
 
   return (
@@ -69,55 +123,52 @@ export default function ProfilePreview({ profile: onFile }: { profile: Profile }
         Profile & resume
       </PageTitle>
 
-      <div className="alert border border-base-300 bg-secondary text-secondary-content">
-        These are the details and the resume on file in your account. Editing them and uploading a
-        new resume are not connected yet, so changes made here are not saved.
-      </div>
-
       <section className="card border border-base-300 bg-base-100">
         <div className="card-body">
           <h2 className="font-display text-xl font-semibold">Personal information</h2>
 
-          <form onSubmit={handleSave} className="mt-5 space-y-5">
-            <div className="grid gap-4 md:grid-cols-2">
-              {(
-                [
-                  ["firstName", "First name"],
-                  ["lastName", "Last name"],
-                  ["email", "Email address"],
-                  ["phone", "Phone number"],
-                  ["location", "Location"],
-                  ["skills", "Skills"],
-                  ["education", "Education"],
-                  ["experience", "Work experience"],
-                ] as const
-              ).map(([field, label]) => (
-                <label key={field} className="form-control block">
-                  <span className="mb-2 block text-sm font-semibold">
-                    {label}
-                  </span>
-                  <input
-                    className="input w-full border-base-300 bg-base-100"
-                    type={field === "email" ? "email" : "text"}
-                    value={profile[field]}
-                    onChange={(event) =>
-                      updateField(field, event.target.value)
-                    }
-                    required={field === "firstName" || field === "lastName"}
-                  />
-                </label>
-              ))}
-            </div>
-
-            <button type="submit" className="btn btn-primary">
-              Save changes (not connected yet)
-            </button>
-
-            {profileMessage && (
-              <p role="status" className="text-sm text-muted">
-                {profileMessage}
-              </p>
+          <form onSubmit={handleSave} className="mt-5 space-y-5" noValidate>
+            {error && (
+              <div role="alert" className="alert alert-error">
+                <span>{error}</span>
+              </div>
             )}
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormField label="First name" autoComplete="given-name" required {...fieldProps("firstName", 255)} />
+              <FormField label="Last name" autoComplete="family-name" required {...fieldProps("lastName", 255)} />
+              <FormField
+                id="profile-email"
+                label="Email address"
+                type="email"
+                value={onFile.email}
+                hint="You log in with this address, so it cannot be changed here."
+                readOnly
+              />
+              <FormField
+                label="Phone number"
+                type="tel"
+                autoComplete="tel"
+                hint="Optional, for example (254) 555-0142."
+                {...fieldProps("phone", 31)}
+              />
+              <FormField label="Location" autoComplete="address-level2" hint="Optional, for example Waco, TX." {...fieldProps("location", 255)} />
+              <FormField label="Headline" hint="Optional, for example Data analyst." {...fieldProps("headline", 255)} />
+            </div>
+            <TextAreaField label="Skills" {...fieldProps("skills", 2000)} />
+            <TextAreaField label="Education" {...fieldProps("education", 4000)} />
+            <TextAreaField label="Work experience" {...fieldProps("workExperience", 10000)} />
+
+            <div className="flex flex-wrap items-center gap-4 border-t border-base-300 pt-5">
+              <button type="submit" className="btn btn-primary" disabled={saving}>
+                {saving ? "Saving..." : "Save changes"}
+              </button>
+              {saved && (
+                <p role="status" className="text-sm text-success">
+                  Profile saved
+                </p>
+              )}
+            </div>
           </form>
         </div>
       </section>

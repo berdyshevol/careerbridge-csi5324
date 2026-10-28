@@ -2,7 +2,7 @@ import Link from "next/link";
 import ApplicationRow from "@/components/ApplicationRow";
 import BackendDown from "@/components/BackendDown";
 import EmptyState from "@/components/EmptyState";
-import FormField from "@/components/FormField";
+import FormField, { TextAreaField } from "@/components/FormField";
 import OfferPanel from "@/components/OfferPanel";
 import PageTitle from "@/components/PageTitle";
 import Placeholder from "@/components/Placeholder";
@@ -245,10 +245,11 @@ export default function StyleguidePage() {
             </select>
           </div>
         </Block>
-        <Block title="Field with a hint or a refusal" use="<FormField> from src/components: label, input, then the hint, or the backend's reason in text-error with aria-invalid">
+        <Block title="Field with a hint or a refusal" use="<FormField> (or <TextAreaField> for several lines) from src/components: label, input, then the hint, or the backend's reason in text-error with aria-invalid">
           <div className="flex flex-col gap-4">
             <FormField id="sg-hint" label="Password" type="password" hint="At least 10 characters, including a letter and a number." readOnly />
             <FormField id="sg-error" label="Full name" defaultValue="Pat" error="Enter your first and last name." readOnly />
+            <TextAreaField id="sg-textarea" label="Skills" defaultValue="SQL, Python" readOnly />
           </div>
         </Block>
         <Block title="Checkbox" use='<input type="checkbox" className="checkbox checkbox-primary" /> inside a label with the text'>

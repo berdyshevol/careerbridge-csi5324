@@ -96,6 +96,11 @@ describe("pages that need a log-in", () => {
       lastName: "Lee",
       email: "jordan.lee@example.com",
       phone: null,
+      location: null,
+      headline: null,
+      skills: null,
+      education: null,
+      workExperience: null,
       resume: null,
     });
     render(await ProfilePage());

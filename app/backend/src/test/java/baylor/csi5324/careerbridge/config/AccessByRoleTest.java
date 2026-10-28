@@ -17,6 +17,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -86,6 +87,11 @@ class AccessByRoleTest {
     void onlyAnApplicantHasAProfile() throws Exception {
         mockMvc.perform(get("/api/applicant/profile")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/applicant/profile").with(as("RECRUITER"))).andExpect(status().isForbidden());
+        mockMvc.perform(put("/api/applicant/profile").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(put("/api/applicant/profile").with(as("RECRUITER"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
         mockMvc.perform(get("/api/applicant/profile").with(as("APPLICANT")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("jordan.lee@example.com"));

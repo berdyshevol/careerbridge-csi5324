@@ -34,5 +34,5 @@ export default async function ProfilePage() {
     }
     return <BackendDown />;
   }
-  return <ProfilePreview profile={profile} />;
+  return <ProfilePreview profile={profile} token={session.token} />;
 }
