@@ -20,6 +20,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -62,6 +64,13 @@ public class SampleDataLoader implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         if (jobPostingRepository.count() > 0) {
+            // A database loaded before resumes existed: Jordan still needs one to apply
+            applicantRepository.findByEmailIgnoreCase(SAMPLE_APPLICANT_EMAIL)
+                    .filter(jordan -> jordan.getResume() == null)
+                    .ifPresent(jordan -> {
+                        jordan.setResume(resumeRepository.save(sampleResume()));
+                        applicantRepository.save(jordan);
+                    });
             return;
         }
         Map<String, JobPosting> postingsByTitle = new HashMap<>();
@@ -90,8 +99,13 @@ public class SampleDataLoader implements CommandLineRunner {
         return new ClassPathResource(file).getContentAsString(StandardCharsets.UTF_8);
     }
 
-    private static Resume sampleResume() throws Exception {
-        byte[] content = new ClassPathResource(SAMPLE_RESUME_FILE).getContentAsByteArray();
+    private static Resume sampleResume() {
+        byte[] content;
+        try {
+            content = new ClassPathResource(SAMPLE_RESUME_FILE).getContentAsByteArray();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
         return new Resume(SAMPLE_RESUME.getFileName(), SAMPLE_RESUME.getFileType(), content.length, content,
                 LocalDateTime.of(2026, 9, 30, 14, 0));
     }
