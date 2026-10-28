@@ -1,185 +1,312 @@
+import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { expect, test as base } from "@playwright/test";
+import { test as base } from "@playwright/test";
 import { ACCOUNTS } from "../../e2e/accounts";
-import type { PostingSearchCriteria } from "../../src/lib/api";
-import { ApiDriver, type Account, type PostingDetails, type SearchOutcome } from "../drivers/api";
+import type { NewPosting, ReviewAction } from "../../src/lib/api";
+import { ApiDriver, type Account } from "../drivers/api";
+import type {
+  Administrator,
+  Applicant,
+  Applicants,
+  BoardAnswer,
+  Calendar,
+  EmploymentType,
+  Employers,
+  FoundPosting,
+  JobBoard,
+  JobPosting,
+  JobPostingDetails,
+  Location,
+  OrganizationName,
+  Role,
+  SearchCriteria,
+  UC01Fixtures,
+} from "./vocabulary";
 
-// The language of the specifications (ADR-0011). A specification names a posting by its title,
-// such as "Backend Developer"; here that title becomes unique to the test, so tests running at
-// the same time against one database never see each other's postings, and every value a
-// specification leaves out gets a valid default.
+// Realizes the vocabulary of ./vocabulary.ts over the backend's HTTP interface (ADR-0011). Tests run
+// in parallel against one database, so every posting a spec names gets a title of its own here and
+// the board's answer is read back through that title.
 
-export type PostingSpec = {
-  title: string;
-  organization?: string;
-  location?: string;
-  employmentType?: string;
-  description?: string;
-  jobRequirements?: string;
-  numberOfOpenings?: number;
-};
-
-// How a recruiter and the Administrator take a posting to each postStatus of the domain model
-// (UC-11, UC-12)
-const STEPS_TO = {
-  Draft: [],
-  "Pending Approval": ["submit"],
-  Returned: ["submit", "return"],
-  Rejected: ["submit", "reject"],
-  Published: ["submit", "approve"],
+// The words of these defaults are no keyword of any spec, so a keyword search finds a posting only
+// through what the spec itself gave it
+const DEFAULTS = {
+  organization: "Brazos Analytics",
+  description: "Plan the week with the team and keep the customers informed.",
+  jobRequirements: "Two years of professional experience.",
+  location: "Remote",
+  employmentType: "Full-time",
+  daysUntilDeadline: 30,
+  numberOfOpenings: 1,
 } as const;
-export type PostStatus = keyof typeof STEPS_TO;
 
+const RESUME = path.join(__dirname, "../../e2e/fixtures/Pat_Kim_Resume.pdf");
+const PASSWORD = "Sunrise-2026x";
+
+function notReachable(reason: string): never {
+  throw new Error(`Not reachable through the public interface: ${reason}`);
+}
+
+// Hex alone could be all digits; a letter in front keeps it a word of its own
+const token = () => `q${randomUUID().replace(/-/g, "").slice(0, 12)}`;
+
+// The backend checks the deadline against its own local date (JobPostingService.submitJobPosting),
+// and it runs on this machine
 function inDays(days: number) {
   const date = new Date();
   date.setDate(date.getDate() + days);
-  return date.toLocaleDateString("en-CA"); // YYYY-MM-DD in the local zone, as the backend reads it
+  return date.toLocaleDateString("en-CA");
 }
+
+type Created = { jobPostId: number; systemTitle: string; posting: JobPosting };
 
 class World {
   readonly driver: ApiDriver;
-  // A retry runs against the same database, so the suffix is new on every attempt
-  private readonly suffix = ` [${randomUUID().slice(0, 8)}]`;
-  private readonly postings = new Map<string, { jobPostId: number; details: PostingDetails }>();
-  private readonly applicants = new Map<string, Account>();
-  private lastSearch?: SearchOutcome;
-  searchedForOwnPosting = false;
+  private readonly bySpecTitle = new Map<string, Created>();
+  private readonly specTitleOf = new Map<string, string>();
+  private readonly applicants = new Map<string, { account: Account; fullName: string; id: string }>();
 
   constructor(driver: ApiDriver) {
     this.driver = driver;
   }
 
-  async createPosting(spec: PostingSpec): Promise<number> {
-    const details: PostingDetails = {
-      title: spec.title + this.suffix,
-      organization: spec.organization ?? "Brazos Analytics",
-      location: spec.location ?? "Remote",
-      employmentType: spec.employmentType ?? "Full-time",
-      applicationDeadline: inDays(30),
-      description: spec.description ?? "Build and run the services behind the product.",
-      jobRequirements: spec.jobRequirements ?? "Two years of professional experience.",
-      numberOfOpenings: spec.numberOfOpenings ?? 1,
+  async createPosting(details: JobPostingDetails): Promise<Created> {
+    if (details.place) {
+      notReachable("a posting has no city, region or country: CreateJobPostingRequest takes only a location string");
+    }
+    if (this.bySpecTitle.has(details.title)) {
+      throw new Error(`The specification creates "${details.title}" twice; titles name its postings`);
+    }
+    const posting: JobPosting = {
+      title: details.title,
+      organization: details.organization ?? DEFAULTS.organization,
+      description: details.description ?? DEFAULTS.description,
+      jobRequirements: details.jobRequirements ?? DEFAULTS.jobRequirements,
+      location: details.location ?? DEFAULTS.location,
+      employmentType: details.employmentType ?? DEFAULTS.employmentType,
+      applicationDeadline: inDays(details.daysUntilDeadline ?? DEFAULTS.daysUntilDeadline),
+      numberOfOpenings: details.numberOfOpenings ?? DEFAULTS.numberOfOpenings,
     };
+    // The spec's words stay whole at the front, so a keyword taken from the title still matches
+    const systemTitle = `${details.title} ${token()}`;
     const jobPostId = await this.driver.createPosting(ACCOUNTS.recruiter, {
-      ...details,
-      organizationId: await this.driver.organizationIdOf(details.organization),
-      salaryRange: "$80,000 - $100,000",
+      ...this.newPosting(posting, await this.driver.organizationIdOf(posting.organization)),
+      title: systemTitle,
     });
-    this.postings.set(spec.title, { jobPostId, details });
-    return jobPostId;
+    const created = { jobPostId, systemTitle, posting };
+    this.bySpecTitle.set(details.title, created);
+    this.specTitleOf.set(systemTitle, details.title);
+    return created;
   }
 
-  posting(title: string) {
-    const posting = this.postings.get(title);
-    if (!posting) throw new Error(`The specification never created the posting "${title}"`);
+  newPosting(posting: JobPosting, organizationId: number): NewPosting {
+    return {
+      organizationId,
+      title: posting.title,
+      description: posting.description,
+      jobRequirements: posting.jobRequirements,
+      location: posting.location,
+      employmentType: posting.employmentType,
+      salaryRange: null,
+      numberOfOpenings: posting.numberOfOpenings,
+      applicationDeadline: posting.applicationDeadline,
+    };
+  }
+
+  posting(title: string): Created {
+    const created = this.bySpecTitle.get(title);
+    if (!created) throw new Error(`The specification never created the posting "${title}"`);
+    return created;
+  }
+
+  async newApplicant(): Promise<Applicant> {
+    const id = token();
+    const fullName = `Casey ${id}`;
+    const account = { email: `casey.${id}@example.com`, password: PASSWORD };
+    await this.driver.registerApplicant(fullName, account);
+    this.applicants.set(account.email, { account, fullName, id });
+    return { fullName, email: account.email };
+  }
+
+  accountOf(as: Role | Applicant | undefined): Account | undefined {
+    if (as === undefined || as === "Visitor") return undefined;
+    if (as === "Applicant") return ACCOUNTS.applicant;
+    if (as === "Recruiter") return ACCOUNTS.recruiter;
+    if (as === "Administrator") return ACCOUNTS.administrator;
+    const applicant = this.applicants.get(as.email);
+    if (!applicant) throw new Error(`The specification never introduced the applicant ${as.email}`);
+    return applicant.account;
+  }
+
+  async search(criteria: SearchCriteria, as?: Role | Applicant): Promise<BoardAnswer> {
+    const outcome = await this.driver.searchPostings(
+      {
+        keyword: criteria.keywords,
+        location: criteria.location,
+        organization: criteria.organization,
+        employmentType: criteria.employmentType,
+      },
+      this.accountOf(as),
+    );
+    const postings: FoundPosting[] = [];
+    for (const found of outcome.postings) {
+      const title = this.specTitleOf.get(found.title);
+      if (title === undefined) continue;
+      postings.push({
+        title,
+        organization: found.organization as OrganizationName,
+        location: found.location as Location,
+        employmentType: found.employmentType as EmploymentType,
+        applicationDeadline: found.applicationDeadline,
+        description: found.description,
+        jobRequirements: found.jobRequirements,
+        numberOfOpenings: found.numberOfOpenings,
+        // The answer never says whether the applicant applied, so alreadyAppliedTo stays unset
+      });
+    }
+    const disclosedApplicantData = [...this.applicants.values()]
+      // The id on its own too: it is the last name, so a leak of the name in parts still shows
+      .flatMap(({ account, fullName, id }) => [fullName, id, account.email])
+      .filter((text) => outcome.mentions(text));
+    return {
+      postings,
+      totalPostings: outcome.postings.length,
+      failure: outcome.failure,
+      disclosedApplicantData,
+      responseTimeMs: outcome.responseTimeMs,
+    };
+  }
+}
+
+class RecruitersOfTheOrganizations implements Employers {
+  constructor(private readonly world: World) {}
+
+  async saveDraft(details: JobPostingDetails) {
+    return (await this.world.createPosting(details)).posting;
+  }
+
+  async submitPosting(details: JobPostingDetails) {
+    const created = await this.world.createPosting(details);
+    await this.world.driver.submitPosting(ACCOUNTS.recruiter, created.jobPostId);
+    return created.posting;
+  }
+
+  async publishPosting(details: JobPostingDetails) {
+    const posting = await this.submitPosting(details);
+    await this.world.driver.decidePosting(ACCOUNTS.administrator, this.world.posting(posting.title).jobPostId, "approve");
     return posting;
   }
 
-  async search(criteria: PostingSearchCriteria, as?: Account) {
-    // A keyword that names one of this test's postings stands for that posting's unique title
-    const own = this.postings.get(criteria.keyword ?? "");
-    this.searchedForOwnPosting = own !== undefined;
-    const keyword = own?.details.title ?? criteria.keyword;
-    this.lastSearch = await this.driver.searchPostings({ ...criteria, keyword }, as);
+  async hireApplicants(): Promise<void> {
+    notReachable(
+      "no offer can be made or accepted (UC-14, UC-15): the only application endpoints are " +
+        "GET/POST /api/postings/{id}/application (ApplicationController) and GET /api/applicant/applications",
+    );
   }
 
-  get searched(): SearchOutcome {
-    if (!this.lastSearch) throw new Error("The specification confirms a search it never made");
-    return this.lastSearch;
-  }
-
-  // This test's postings in the last answer, in its order, by the titles the specification used
-  ownPostingsFound(): { title: string; details: PostingDetails }[] {
-    return this.searched.postings
-      .filter((posting) => posting.title.endsWith(this.suffix))
-      .map((posting) => ({ title: posting.title.slice(0, -this.suffix.length), details: posting }));
-  }
-
-  async newApplicant(name: string): Promise<Account> {
-    const account = {
-      email: `${name.toLowerCase().replace(/\W+/g, ".")}.${randomUUID().slice(0, 8)}@example.com`,
-      password: "Sunrise-2026x",
-    };
-    await this.driver.registerApplicant(name, account);
-    this.applicants.set(name, account);
-    return account;
-  }
-
-  applicant(name: string) {
-    const account = this.applicants.get(name);
-    if (!account) throw new Error(`The specification never introduced the applicant "${name}"`);
-    return account;
+  async fillPosting(): Promise<void> {
+    notReachable(
+      "a posting is filled only by accepted offers (UC-07 A2), and no endpoint makes or accepts an offer " +
+        "(controllers: ApplicationController, ApplicantApplicationsController, AdminJobPostingController)",
+    );
   }
 }
 
-export class Employers {
+class TheAdministrator implements Administrator {
   constructor(private readonly world: World) {}
 
-  async publishPosting(spec: PostingSpec) {
-    await this.leavePosting("Published", spec);
+  private async decide(title: string, decision: ReviewAction) {
+    await this.world.driver.decidePosting(ACCOUNTS.administrator, this.world.posting(title).jobPostId, decision);
   }
 
-  async leavePosting(status: PostStatus, spec: PostingSpec) {
-    const jobPostId = await this.world.createPosting(spec);
-    for (const step of STEPS_TO[status]) {
-      if (step === "submit") await this.world.driver.submitPosting(ACCOUNTS.recruiter, jobPostId);
-      else await this.world.driver.decidePosting(ACCOUNTS.administrator, jobPostId, step);
-    }
+  approvePosting(title: string) {
+    return this.decide(title, "approve");
+  }
+
+  returnPosting(title: string) {
+    return this.decide(title, "return");
+  }
+
+  rejectPosting(title: string) {
+    return this.decide(title, "reject");
   }
 }
 
-export class Applicants {
+class NewApplicants implements Applicants {
   constructor(private readonly world: World) {}
 
-  // A new applicant with a resume of their own, so no other test's applications get in the way
-  async apply({ name, to }: { name: string; to: string }) {
-    const applicant = await this.world.newApplicant(name);
-    await this.world.driver.uploadResume(applicant, "e2e/fixtures/Pat_Kim_Resume.pdf");
-    await this.world.driver.apply(applicant, this.world.posting(to).jobPostId);
+  // An applicant of its own with a resume, since applying needs one (ApplicationService, NO_RESUME)
+  async applyTo(title: string) {
+    const applicant = await this.world.newApplicant();
+    const account = this.world.accountOf(applicant)!;
+    await this.world.driver.uploadResume(account, RESUME);
+    await this.world.driver.apply(account, this.world.posting(title).jobPostId);
+    return applicant;
   }
 }
 
-export class JobBoard {
+class PublicJobBoard implements JobBoard {
   constructor(private readonly world: World) {}
 
-  async search(criteria: PostingSearchCriteria = {}) {
-    await this.world.search(criteria);
+  search(criteria: SearchCriteria = {}, options: { as?: Role | Applicant } = {}) {
+    return this.world.search(criteria, options.as);
   }
 
-  async searchLoggedInAsApplicant(criteria: PostingSearchCriteria = {}) {
-    await this.world.search(criteria, ACCOUNTS.applicant);
+  uniqueKeyword() {
+    return token();
   }
 
-  // Exactly these of the test's postings, in this order; other tests' postings are not its concern
-  confirmShows(titles: string[]) {
-    expect(this.world.ownPostingsFound().map((found) => found.title)).toEqual(titles);
+  async failNextSearch(): Promise<void> {
+    notReachable(
+      "nothing a caller sends makes the search fail: GET /api/postings is public, its criteria are free text " +
+        "and JobPostingService.searchPostings accepts any of them; the database cannot be taken away from outside",
+    );
   }
 
-  confirmShowsDetailsOf(title: string) {
-    const found = this.world.ownPostingsFound().find((posting) => posting.title === title);
-    expect(found, `"${title}" is on the job board`).toBeDefined();
-    expect(found!.details).toEqual(this.world.posting(title).details);
+  async haveNoOpenPostings(): Promise<void> {
+    notReachable(
+      "the sample postings of jobs.csv are Published with deadlines in December 2026 and no endpoint closes or " +
+        "withdraws a posting; the backend is also shared by the tests running in parallel",
+    );
   }
 
-  // The whole answer, not only this test's postings, so the search must name one of them
-  confirmNoMatches() {
-    if (!this.world.searchedForOwnPosting) {
-      throw new Error("confirmNoMatches needs a keyword naming one of this test's postings: other tests share the board");
-    }
-    expect(this.world.searched.postings).toEqual([]);
+  async holdOpenPostings(): Promise<void> {
+    notReachable(
+      "publishing 10,000 postings through the API works, but they would stay on the board that every other " +
+        "acceptance and end-to-end test of the run shares (one backend per run); NFR-UC01.1 needs a system of its own",
+    );
+  }
+}
+
+class SystemCalendar implements Calendar {
+  // Real time passes for real, so this waits; moving the system's clock is not possible from outside
+  async letTimePass({ minutes }: { minutes: number }) {
+    const ms = minutes * 60_000;
+    base.info().setTimeout(base.info().timeout + ms);
+    await new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  confirmRevealsNothingAbout(applicantName: string) {
-    const applicant = this.world.applicant(applicantName);
-    expect(this.world.searched.mentions(applicant.email), "the applicant's email").toBe(false);
-    expect(this.world.searched.mentions(applicantName), "the applicant's name").toBe(false);
+  async reachDeadlineDayOf(): Promise<void> {
+    notReachable(
+      "the backend's Clock is Clock.systemUTC() (ClockConfig) with no endpoint to move it, and a posting cannot be " +
+        "submitted with a deadline earlier than tomorrow (JobPostingService.submitJobPosting, MIN_DAYS_TO_DEADLINE = 1)",
+    );
+  }
+
+  async passDeadlineOf(): Promise<void> {
+    notReachable(
+      "a submitted deadline is at least one day away (JobPostingService.submitJobPosting), the backend's Clock " +
+        "cannot be moved from outside (ClockConfig), and the expiration run starts only on its 15-minute schedule " +
+        "(JobPostingExpirationScheduler)",
+    );
   }
 }
 
 // Fixtures hand over with "provide", not Playwright's usual "use", which React's lint rule takes for a hook
-export const test = base.extend<{ world: World; employers: Employers; applicants: Applicants; jobBoard: JobBoard }>({
+export const test = base.extend<UC01Fixtures & { world: World }>({
   world: async ({ request }, provide) => provide(new World(new ApiDriver(request))),
-  employers: async ({ world }, provide) => provide(new Employers(world)),
-  applicants: async ({ world }, provide) => provide(new Applicants(world)),
-  jobBoard: async ({ world }, provide) => provide(new JobBoard(world)),
+  employers: async ({ world }, provide) => provide(new RecruitersOfTheOrganizations(world)),
+  administrator: async ({ world }, provide) => provide(new TheAdministrator(world)),
+  applicants: async ({ world }, provide) => provide(new NewApplicants(world)),
+  jobBoard: async ({ world }, provide) => provide(new PublicJobBoard(world)),
+  calendar: async ({}, provide) => provide(new SystemCalendar()),
 });
