@@ -40,6 +40,8 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm test
+      # Each FR of a covered use case has a running acceptance specification (ADR-0011)
+      - run: npm run test:traceability
       - run: npm run build
 
   e2e:

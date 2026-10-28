@@ -16,7 +16,7 @@ const eslintConfig = defineConfig([
   // A backend call whose answer nobody waits for can fail without the screen
   // knowing, so it must be awaited or handled.
   {
-    files: ["src/**/*.{ts,tsx}", "e2e/**/*.ts"],
+    files: ["src/**/*.{ts,tsx}", "e2e/**/*.ts", "acceptance/**/*.ts"],
     languageOptions: {
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
     },

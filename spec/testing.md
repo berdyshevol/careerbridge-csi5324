@@ -12,6 +12,10 @@ Not written yet. What the JUnit tests cover per layer (entities, services, contr
 there are and how they run (on PostgreSQL in Docker, in CI on every pull request), plus the frontend
 tests (Vitest) and the end-to-end tests (Playwright).
 
+Use cases are also checked by executable acceptance specifications in `app/frontend/acceptance/`
+([ADR-0011](adr/0011-executable-acceptance-specifications.md)): `npm run test:acceptance` runs them,
+and `npm run test:traceability`, run in CI, checks that their tags name items of this specification.
+
 ### 9.2 Test Cases
 
 Not written yet. At least one test case per implemented feature, in the template's columns; the
