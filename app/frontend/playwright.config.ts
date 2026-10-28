@@ -18,7 +18,7 @@ export default defineConfig({
     { name: "laptop", testDir: "./e2e", use: { ...devices["Desktop Chrome"] } },
     { name: "phone", testDir: "./e2e", use: { ...devices["Pixel 7"] } },
     // Executable acceptance specifications (ADR-0011): API only, so one run, not one per device
-    { name: "acceptance", testDir: "./acceptance/specs" },
+    { name: "acceptance", testDir: "./acceptance/specs", use: { baseURL: "http://localhost:8080" } },
   ],
   webServer: [
     {

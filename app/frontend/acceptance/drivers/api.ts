@@ -1,44 +1,20 @@
 import { readFileSync } from "node:fs";
 import type { APIRequestContext, APIResponse } from "@playwright/test";
+import { tokenOf } from "../../e2e/accounts";
+import type { JobPosting, NewPosting, PostingSearchCriteria, ReviewAction } from "../../src/lib/api";
 
 // Talks to the backend the way the frontend does, and answers in the words of the domain model,
-// so the DSL never sees a status code or a JSON shape (ADR-0011).
-
-const BACKEND = "http://localhost:8080";
+// so the DSL never sees a status code or a JSON shape (ADR-0011). Paths are relative to the
+// acceptance project's baseURL, the backend.
 
 export type Account = { email: string; password: string };
 type Token = { Authorization: string };
 
-export type PostingCriteria = {
-  keyword?: string;
-  location?: string;
-  organization?: string;
-  employmentType?: string;
-};
-
-export type NewJobPosting = {
-  organizationId: number;
-  title: string;
-  description: string;
-  jobRequirements: string;
-  location: string;
-  employmentType: string;
-  salaryRange: string;
-  numberOfOpenings: number;
-  applicationDeadline: string;
-};
-
 // What UC-01 step 2 says a visitor receives for each posting
-export type PostingDetails = {
-  title: string;
-  organization: string;
-  location: string;
-  employmentType: string;
-  applicationDeadline: string;
-  description: string;
-  jobRequirements: string;
-  numberOfOpenings: number;
-};
+export type PostingDetails = Pick<
+  JobPosting,
+  "title" | "location" | "employmentType" | "applicationDeadline" | "description" | "jobRequirements" | "numberOfOpenings"
+> & { organization: string };
 
 export type SearchOutcome = {
   postings: PostingDetails[];
@@ -46,10 +22,8 @@ export type SearchOutcome = {
   mentions(text: string): boolean;
 };
 
-type PublicPosting = Omit<PostingDetails, "organization"> & {
-  jobPostId: number;
-  organization: { organizationId: number; name: string };
-};
+// Sample data, the same for the whole run
+const organizationIds = new Map<string, number>();
 
 async function expectOk(answer: APIResponse, what: string) {
   if (!answer.ok()) {
@@ -63,17 +37,17 @@ export class ApiDriver {
 
   constructor(private readonly request: APIRequestContext) {}
 
-  async searchPostings(criteria: PostingCriteria, as?: Account): Promise<SearchOutcome> {
+  async searchPostings(criteria: PostingSearchCriteria, as?: Account): Promise<SearchOutcome> {
     const params = Object.fromEntries(Object.entries(criteria).filter(([, value]) => value !== undefined));
     const answer = await expectOk(
-      await this.request.get(`${BACKEND}/api/postings`, {
+      await this.request.get(`/api/postings`, {
         params,
         headers: as ? await this.tokenOf(as) : {},
       }),
       "Searching the job postings",
     );
     const body = await answer.text();
-    const found = JSON.parse(body) as PublicPosting[];
+    const found = JSON.parse(body) as JobPosting[];
     return {
       postings: found.map((posting) => ({
         title: posting.title,
@@ -90,20 +64,23 @@ export class ApiDriver {
   }
 
   // No organization can be created through the API yet (UC-08), so the sample ones are found
-  // through their published postings.
+  // through the sample postings. A posting stays readable by id after it closes, so this still
+  // works once the sample deadlines in jobs.csv have passed; drafts and pending ones answer 404.
   async organizationIdOf(name: string): Promise<number> {
-    const answer = await expectOk(
-      await this.request.get(`${BACKEND}/api/postings`, { params: { organization: name } }),
-      `Looking up the organization ${name}`,
-    );
-    const match = ((await answer.json()) as PublicPosting[]).find((posting) => posting.organization.name === name);
-    if (!match) throw new Error(`No published posting of the sample organization ${name} to find it by`);
-    return match.organization.organizationId;
+    for (let jobPostId = 1; !organizationIds.has(name); jobPostId++) {
+      if (jobPostId > 50) throw new Error(`No sample posting of the organization ${name} to find it by`);
+      const answer = await this.request.get(`/api/postings/${jobPostId}`);
+      if (answer.ok()) {
+        const { organization } = (await answer.json()) as JobPosting;
+        organizationIds.set(organization.name, organization.organizationId);
+      }
+    }
+    return organizationIds.get(name)!;
   }
 
-  async createPosting(recruiter: Account, posting: NewJobPosting): Promise<number> {
+  async createPosting(recruiter: Account, posting: NewPosting): Promise<number> {
     const answer = await expectOk(
-      await this.request.post(`${BACKEND}/api/postings`, { data: posting, headers: await this.tokenOf(recruiter) }),
+      await this.request.post(`/api/postings`, { data: posting, headers: await this.tokenOf(recruiter) }),
       `Creating the posting ${posting.title}`,
     );
     return (await answer.json()).jobPostId;
@@ -111,14 +88,14 @@ export class ApiDriver {
 
   async submitPosting(recruiter: Account, jobPostId: number) {
     await expectOk(
-      await this.request.post(`${BACKEND}/api/postings/${jobPostId}/submit`, { headers: await this.tokenOf(recruiter) }),
+      await this.request.post(`/api/postings/${jobPostId}/submit`, { headers: await this.tokenOf(recruiter) }),
       `Submitting posting ${jobPostId}`,
     );
   }
 
-  async decidePosting(administrator: Account, jobPostId: number, decision: "approve" | "return" | "reject") {
+  async decidePosting(administrator: Account, jobPostId: number, decision: ReviewAction) {
     await expectOk(
-      await this.request.post(`${BACKEND}/api/admin/postings/${jobPostId}/${decision}`, {
+      await this.request.post(`/api/admin/postings/${jobPostId}/${decision}`, {
         data: { comment: `Decided by an acceptance test: ${decision}` },
         headers: await this.tokenOf(administrator),
       }),
@@ -128,7 +105,7 @@ export class ApiDriver {
 
   async registerApplicant(fullName: string, account: Account) {
     const answer = await expectOk(
-      await this.request.post(`${BACKEND}/api/applicants`, { data: { fullName, ...account } }),
+      await this.request.post(`/api/applicants`, { data: { fullName, ...account } }),
       `Registering ${account.email}`,
     );
     this.tokens.set(account.email, { Authorization: `Bearer ${(await answer.json()).token}` });
@@ -136,7 +113,7 @@ export class ApiDriver {
 
   async uploadResume(applicant: Account, path: string) {
     await expectOk(
-      await this.request.post(`${BACKEND}/api/applicant/resume`, {
+      await this.request.post(`/api/applicant/resume`, {
         multipart: {
           file: { name: path.split("/").pop()!, mimeType: "application/pdf", buffer: readFileSync(path) },
         },
@@ -148,7 +125,7 @@ export class ApiDriver {
 
   async apply(applicant: Account, jobPostId: number) {
     await expectOk(
-      await this.request.post(`${BACKEND}/api/postings/${jobPostId}/application`, {
+      await this.request.post(`/api/postings/${jobPostId}/application`, {
         headers: await this.tokenOf(applicant),
       }),
       `Applying to posting ${jobPostId}`,
@@ -156,14 +133,7 @@ export class ApiDriver {
   }
 
   private async tokenOf(account: Account): Promise<Token> {
-    const known = this.tokens.get(account.email);
-    if (known) return known;
-    const answer = await expectOk(
-      await this.request.post(`${BACKEND}/api/auth/login`, { data: account }),
-      `Logging in as ${account.email}`,
-    );
-    const token = { Authorization: `Bearer ${(await answer.json()).token}` };
-    this.tokens.set(account.email, token);
-    return token;
+    if (!this.tokens.has(account.email)) this.tokens.set(account.email, await tokenOf(this.request, account));
+    return this.tokens.get(account.email)!;
   }
 }

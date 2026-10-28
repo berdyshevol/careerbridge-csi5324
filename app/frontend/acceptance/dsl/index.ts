@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { expect, test as base } from "@playwright/test";
 import { ACCOUNTS } from "../../e2e/accounts";
-import { ApiDriver, type Account, type PostingCriteria, type PostingDetails, type SearchOutcome } from "../drivers/api";
+import type { PostingSearchCriteria } from "../../src/lib/api";
+import { ApiDriver, type Account, type PostingDetails, type SearchOutcome } from "../drivers/api";
 
 // The language of the specifications (ADR-0011). A specification names a posting by its title,
 // such as "Backend Developer"; here that title becomes unique to the test, so tests running at
@@ -18,8 +19,16 @@ export type PostingSpec = {
   numberOfOpenings?: number;
 };
 
-// The postStatus values a posting can be left in before it is published (domain model)
-export type UnpublishedStatus = "Draft" | "Pending Approval" | "Returned" | "Rejected";
+// How a recruiter and the Administrator take a posting to each postStatus of the domain model
+// (UC-11, UC-12)
+const STEPS_TO = {
+  Draft: [],
+  "Pending Approval": ["submit"],
+  Returned: ["submit", "return"],
+  Rejected: ["submit", "reject"],
+  Published: ["submit", "approve"],
+} as const;
+export type PostStatus = keyof typeof STEPS_TO;
 
 function inDays(days: number) {
   const date = new Date();
@@ -34,6 +43,7 @@ class World {
   private readonly postings = new Map<string, { jobPostId: number; details: PostingDetails }>();
   private readonly applicants = new Map<string, Account>();
   private lastSearch?: SearchOutcome;
+  searchedForOwnPosting = false;
 
   constructor(driver: ApiDriver) {
     this.driver = driver;
@@ -65,9 +75,11 @@ class World {
     return posting;
   }
 
-  async search(criteria: PostingCriteria, as?: Account) {
+  async search(criteria: PostingSearchCriteria, as?: Account) {
     // A keyword that names one of this test's postings stands for that posting's unique title
-    const keyword = this.postings.get(criteria.keyword ?? "")?.details.title ?? criteria.keyword;
+    const own = this.postings.get(criteria.keyword ?? "");
+    this.searchedForOwnPosting = own !== undefined;
+    const keyword = own?.details.title ?? criteria.keyword;
     this.lastSearch = await this.driver.searchPostings({ ...criteria, keyword }, as);
   }
 
@@ -103,19 +115,16 @@ class World {
 export class Employers {
   constructor(private readonly world: World) {}
 
-  // A recruiter creates and submits it, and the Administrator approves it (UC-11, UC-12)
   async publishPosting(spec: PostingSpec) {
-    const jobPostId = await this.world.createPosting(spec);
-    await this.world.driver.submitPosting(ACCOUNTS.recruiter, jobPostId);
-    await this.world.driver.decidePosting(ACCOUNTS.administrator, jobPostId, "approve");
+    await this.leavePosting("Published", spec);
   }
 
-  async leavePosting(status: UnpublishedStatus, spec: PostingSpec) {
+  async leavePosting(status: PostStatus, spec: PostingSpec) {
     const jobPostId = await this.world.createPosting(spec);
-    if (status === "Draft") return;
-    await this.world.driver.submitPosting(ACCOUNTS.recruiter, jobPostId);
-    if (status === "Returned") await this.world.driver.decidePosting(ACCOUNTS.administrator, jobPostId, "return");
-    if (status === "Rejected") await this.world.driver.decidePosting(ACCOUNTS.administrator, jobPostId, "reject");
+    for (const step of STEPS_TO[status]) {
+      if (step === "submit") await this.world.driver.submitPosting(ACCOUNTS.recruiter, jobPostId);
+      else await this.world.driver.decidePosting(ACCOUNTS.administrator, jobPostId, step);
+    }
   }
 }
 
@@ -133,11 +142,11 @@ export class Applicants {
 export class JobBoard {
   constructor(private readonly world: World) {}
 
-  async search(criteria: PostingCriteria = {}) {
+  async search(criteria: PostingSearchCriteria = {}) {
     await this.world.search(criteria);
   }
 
-  async searchLoggedInAsApplicant(criteria: PostingCriteria = {}) {
+  async searchLoggedInAsApplicant(criteria: PostingSearchCriteria = {}) {
     await this.world.search(criteria, ACCOUNTS.applicant);
   }
 
@@ -152,7 +161,11 @@ export class JobBoard {
     expect(found!.details).toEqual(this.world.posting(title).details);
   }
 
+  // The whole answer, not only this test's postings, so the search must name one of them
   confirmNoMatches() {
+    if (!this.world.searchedForOwnPosting) {
+      throw new Error("confirmNoMatches needs a keyword naming one of this test's postings: other tests share the board");
+    }
     expect(this.world.searched.postings).toEqual([]);
   }
 
