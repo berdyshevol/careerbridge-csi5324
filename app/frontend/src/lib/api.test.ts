@@ -2,6 +2,7 @@ import { SessionEnded,
   BACKEND_TIMEOUT_MS,
   createPosting,
   formatDate,
+  formatUtcDay,
   isOpen,
   PostingRejected,
   searchPostings,
@@ -10,7 +11,12 @@ import { SessionEnded,
   startApplication,
   submitApplication,
   viewApplications,
+  updateProfile,
+  viewProfile,
   ApplicationRefused,
+  ProfileRefused,
+  ResumeRefused,
+  uploadResume,
   type JobPosting,
   type NewPosting,
 } from "./api";
@@ -72,6 +78,15 @@ describe("isOpen", () => {
 describe("formatDate", () => {
   it("shows the calendar day that was stored, whatever the time zone", () => {
     expect(formatDate("2026-12-20")).toBe("Dec 20, 2026");
+  });
+});
+
+describe("formatUtcDay", () => {
+  it("shows the day of a UTC moment where the user is", () => {
+    const moment = "2026-10-28T04:30:00";
+    expect(formatUtcDay(moment)).toBe(
+      new Date(Date.UTC(2026, 9, 28, 4, 30)).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    );
   });
 });
 
@@ -185,43 +200,42 @@ describe("createPosting", () => {
 });
 
 describe("startApplication", () => {
-  const resume = { fileName: "cv.pdf", fileType: "application/pdf", fileSize: 2048 };
   const summary = {
     posting: { postingId: 2, title: "Data Analyst Intern", organizationName: "Waco Health Partners" },
+    resume: { fileName: "cv.pdf", uploadDate: "2026-10-01T09:30:00" },
     activeApplicationCount: 3,
     applicationLimit: 5,
     refusal: null,
   };
 
-  it("reads the summary with the resume on file in the query (STAND-IN until UC-03)", async () => {
+  it("reads the summary with the resume the backend has on file, sending none itself", async () => {
     const fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(summary) });
     vi.stubGlobal("fetch", fetch);
 
-    await expect(startApplication("t", 2, resume)).resolves.toEqual(summary);
+    await expect(startApplication("t", 2)).resolves.toEqual(summary);
     const url = new URL(fetch.mock.calls[0][0]);
     expect(url.pathname).toBe("/api/postings/2/application");
+    expect(url.search).toBe("");
     expect(fetch.mock.calls[0][1].headers).toEqual({ Authorization: "Bearer t" });
-    expect(Object.fromEntries(url.searchParams)).toEqual({
-      resumeFileName: "cv.pdf",
-      resumeFileType: "application/pdf",
-      resumeFileSize: "2048",
-    });
   });
 
-  it("sends no resume when none is on file, so the backend names the refusal", async () => {
-    const refused = { ...summary, refusal: { reason: "NO_RESUME", message: "A resume is required to apply." } };
-    const fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(refused) });
-    vi.stubGlobal("fetch", fetch);
+  it("passes on the backend's refusal when no resume is on file (extension 2a)", async () => {
+    const refused = {
+      ...summary,
+      resume: null,
+      refusal: { reason: "NO_RESUME", message: "A resume is required to apply." },
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(refused) }));
 
-    const start = await startApplication("t", 2, null);
-    expect(new URL(fetch.mock.calls[0][0]).search).toBe("");
+    const start = await startApplication("t", 2);
+    expect(start.resume).toBeNull();
     expect(start.refusal?.reason).toBe("NO_RESUME");
   });
 
   it("fails when the backend does not answer", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
 
-    await expect(startApplication("t", 2, resume)).rejects.toThrow("Backend answered 500");
+    await expect(startApplication("t", 2)).rejects.toThrow("Backend answered 500");
   });
 });
 
@@ -230,26 +244,33 @@ describe("submitApplication", () => {
     vi.unstubAllGlobals();
   });
 
-  const resume = { fileName: "cv.pdf", fileType: "application/pdf", fileSize: 2048 };
-
-  it("posts the resume on file and returns the backend's answer", async () => {
+  it("posts without a body, as the backend copies the resume on file, and returns its answer", async () => {
     const answer = { applicationId: 7, applicationStatus: "APPLIED", activeApplicationCount: 4 };
     const fetch = vi.fn().mockResolvedValue({ ok: true, headers: new Headers(), json: () => Promise.resolve(answer) });
     vi.stubGlobal("fetch", fetch);
 
-    await expect(submitApplication("t", 2, resume)).resolves.toEqual(answer);
+    await expect(submitApplication("t", 2)).resolves.toEqual(answer);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/postings/2/application"),
-      expect.objectContaining({ method: "POST" }),
+      expect.objectContaining({ method: "POST", headers: { Authorization: "Bearer t" } }),
     );
+    expect(fetch.mock.calls[0][1].body).toBeUndefined();
   });
 
-  it("sends no resume when none is on file, so the backend can refuse", async () => {
-    const fetch = vi.fn().mockResolvedValue({ ok: true, headers: new Headers(), json: () => Promise.resolve({}) });
-    vi.stubGlobal("fetch", fetch);
+  it("turns the no-resume refusal into ApplicationRefused with the backend's reason (extension 2a)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 409,
+        headers: new Headers({ "Content-Type": "application/json" }),
+        json: () => Promise.resolve({ reason: "NO_RESUME", message: "A resume is required to apply." }),
+      }),
+    );
 
-    await submitApplication("t", 2, null);
-    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({});
+    const refused = await submitApplication("t", 2).catch((error) => error);
+    expect(refused).toBeInstanceOf(ApplicationRefused);
+    expect(refused.message).toBe("A resume is required to apply.");
   });
 
   it("turns a plain-text refusal into ApplicationRefused with the backend's reason", async () => {
@@ -263,7 +284,7 @@ describe("submitApplication", () => {
       }),
     );
 
-    const refused = await submitApplication("t", 2, resume).catch((error) => error);
+    const refused = await submitApplication("t", 2).catch((error) => error);
     expect(refused).toBeInstanceOf(ApplicationRefused);
     expect(refused.message).toBe("You already applied to this posting.");
   });
@@ -279,7 +300,7 @@ describe("submitApplication", () => {
       }),
     );
 
-    const refused = await submitApplication("t", 2, resume).catch((error) => error);
+    const refused = await submitApplication("t", 2).catch((error) => error);
     expect(refused).toBeInstanceOf(ApplicationRefused);
     expect(refused.message).toBe("You have 5 active applications.");
   });
@@ -329,5 +350,142 @@ describe("viewApplications", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
 
     await expect(viewApplications("t")).rejects.toThrow("500");
+  });
+});
+
+describe("viewProfile", () => {
+  const profile = {
+    firstName: "Jordan",
+    lastName: "Lee",
+    email: "jordan.lee@example.com",
+    phone: "(254) 555-0142",
+    location: null,
+    headline: null,
+    skills: null,
+    education: null,
+    workExperience: null,
+    resume: { fileName: "Jordan_Lee_CV.pdf", uploadDate: "2026-10-01T09:30:00" },
+  };
+
+  it("asks for the logged-in applicant's own profile with their token", async () => {
+    const fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(profile) });
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(viewProfile("t")).resolves.toEqual(profile);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/applicant/profile"),
+      expect.objectContaining({ headers: { Authorization: "Bearer t" } }),
+    );
+  });
+
+  it("ends the session when the backend refuses the token", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 401 }));
+
+    await expect(viewProfile("t")).rejects.toBeInstanceOf(SessionEnded);
+  });
+
+  it("fails when the backend does not answer well", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
+
+    await expect(viewProfile("t")).rejects.toThrow("500");
+  });
+});
+
+describe("updateProfile", () => {
+  const details = {
+    firstName: "Jordan",
+    lastName: "Lee",
+    phone: "(254) 555-0199",
+    location: "Waco, TX",
+    headline: "Data analyst",
+    skills: "",
+    education: "",
+    workExperience: "",
+  };
+
+  function answer(status: number, body: unknown) {
+    return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  }
+
+  it("sends every detail of the form with the applicant's token and answers with the saved profile", async () => {
+    const saved = { ...details, email: "jordan.lee@example.com", skills: null, education: null, workExperience: null, resume: null };
+    const fetch = vi.fn().mockResolvedValue(answer(200, saved));
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(updateProfile("t", details)).resolves.toEqual(saved);
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toContain("/api/applicant/profile");
+    expect(init.method).toBe("PUT");
+    expect(init.headers).toEqual({ Authorization: "Bearer t", "Content-Type": "application/json" });
+    expect(JSON.parse(init.body)).toEqual(details);
+  });
+
+  it("hands over the reason for each refused field (UC-03 extension 4a)", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(answer(400, {
+      firstName: "Enter your first name.",
+      phone: "Enter a phone number like (254) 555-0142.",
+    })));
+
+    const refused = await updateProfile("t", details).catch((err) => err);
+    expect(refused).toBeInstanceOf(ProfileRefused);
+    expect(refused.fieldErrors).toEqual({
+      firstName: "Enter your first name.",
+      phone: "Enter a phone number like (254) 555-0142.",
+    });
+  });
+
+  it("keeps Spring's own 400 report off the screen", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(answer(400, { status: 400, error: "Bad Request", path: "/x" })));
+
+    await expect(updateProfile("t", details)).rejects.toThrow("Backend answered 400");
+  });
+
+  it("ends the session when the backend refuses the token", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 401 })));
+
+    await expect(updateProfile("t", details)).rejects.toBeInstanceOf(SessionEnded);
+  });
+});
+
+describe("uploadResume", () => {
+  const file = new File(["%PDF-1.4"], "Pat_Kim_CV.pdf", { type: "application/pdf" });
+
+  it("sends the file as multipart with the applicant's token and answers with the resume on file", async () => {
+    const onFile = { fileName: "Pat_Kim_CV.pdf", uploadDate: "2026-10-27T14:05:00" };
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(onFile), { status: 201, headers: { "Content-Type": "application/json" } }),
+    );
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(uploadResume("t", file)).resolves.toEqual(onFile);
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toContain("/api/applicant/resume");
+    expect(init.method).toBe("POST");
+    // No Content-Type of our own: the browser adds multipart/form-data with its boundary
+    expect(init.headers).toEqual({ Authorization: "Bearer t" });
+    expect((init.body as FormData).get("file")).toBe(file);
+  });
+
+  it("hands over the backend's reason for a refused file (UC-03 extension 6a)", async () => {
+    const reason = "The file is not a PDF or DOCX. Choose a PDF or DOCX file of at most 5 MB.";
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      new Response(reason, { status: 400, headers: { "Content-Type": "text/plain;charset=UTF-8" } }),
+    ));
+
+    const refused = await uploadResume("t", file).catch((err) => err);
+    expect(refused).toBeInstanceOf(ResumeRefused);
+    expect(refused.message).toBe(reason);
+  });
+
+  it("keeps any other failure's report off the screen", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{}", { status: 500 })));
+
+    await expect(uploadResume("t", file)).rejects.toThrow("Backend answered 500");
+  });
+
+  it("ends the session when the backend refuses the token", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 403 })));
+
+    await expect(uploadResume("t", file)).rejects.toBeInstanceOf(SessionEnded);
   });
 });

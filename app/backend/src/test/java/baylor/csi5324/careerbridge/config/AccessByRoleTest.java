@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -16,17 +17,16 @@ import org.springframework.web.context.WebApplicationContext;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // ADR-0010: every write asks for its role; reading postings, logging in and registering need none (BR-3)
 @SpringBootTest
 class AccessByRoleTest {
-
-    private static final String RESUME = """
-            {"resumeFileName": "cv.pdf", "resumeFileType": "application/pdf", "resumeFileSize": 2048}
-            """;
 
     @Autowired
     private WebApplicationContext context;
@@ -53,7 +53,7 @@ class AccessByRoleTest {
     @Test
     void aVisitorReadsPostingsButWritesNothing() throws Exception {
         mockMvc.perform(get("/api/postings")).andExpect(status().isOk());
-        mockMvc.perform(post("/api/postings/1/application").contentType(MediaType.APPLICATION_JSON).content(RESUME))
+        mockMvc.perform(post("/api/postings/1/application"))
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/applicant/applications")).andExpect(status().isUnauthorized());
         // A GET under /api/postings, yet it starts the applicant's own application (UC-04)
@@ -65,20 +65,36 @@ class AccessByRoleTest {
 
     @Test
     void onlyAnApplicantApplies() throws Exception {
-        mockMvc.perform(post("/api/postings/1/application").with(as("RECRUITER"))
-                        .contentType(MediaType.APPLICATION_JSON).content(RESUME))
+        mockMvc.perform(post("/api/postings/1/application").with(as("RECRUITER")))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(post("/api/postings/1/application").with(as("ADMINISTRATOR"))
-                        .contentType(MediaType.APPLICATION_JSON).content(RESUME))
+        mockMvc.perform(post("/api/postings/1/application").with(as("ADMINISTRATOR")))
                 .andExpect(status().isForbidden());
         // Reaches the service: an unknown posting is the applicant's 404, not a refused role
-        mockMvc.perform(post("/api/postings/999999/application").with(as("APPLICANT"))
-                        .contentType(MediaType.APPLICATION_JSON).content(RESUME))
+        mockMvc.perform(post("/api/postings/999999/application").with(as("APPLICANT")))
                 .andExpect(status().isNotFound());
         mockMvc.perform(get("/api/applicant/applications").with(as("ADMINISTRATOR")))
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/api/applicant/applications").with(as("APPLICANT")))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void onlyAnApplicantHasAProfile() throws Exception {
+        mockMvc.perform(get("/api/applicant/profile")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/applicant/profile").with(as("RECRUITER"))).andExpect(status().isForbidden());
+        mockMvc.perform(put("/api/applicant/profile").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(put("/api/applicant/profile").with(as("RECRUITER"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(multipart("/api/applicant/resume").file(new MockMultipartFile("file", "cv.pdf", "application/pdf", new byte[1])))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(multipart("/api/applicant/resume").file(new MockMultipartFile("file", "cv.pdf", "application/pdf", new byte[1]))
+                        .with(as("RECRUITER")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/applicant/profile").with(as("APPLICANT")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("jordan.lee@example.com"));
     }
 
     @Test

@@ -24,3 +24,14 @@ export async function tokenOf(request: APIRequestContext, account: { email: stri
   expect(answer.ok()).toBeTruthy();
   return { Authorization: `Bearer ${(await answer.json()).token}` };
 }
+
+// An account of its own, for a test that changes the profile or the resume: the demo applicants'
+// details and resume are what the other tests expect. Registering logs in and lands on /profile.
+export async function registerNewApplicant(page: Page, label: string, projectName: string) {
+  await page.goto("/register");
+  await page.getByLabel("Full name").fill("Pat Kim");
+  await page.getByLabel("Email").fill(`pat.${label}.${projectName}.${Date.now()}@example.com`);
+  await page.getByLabel("Password").fill("Sunrise-2026x");
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page).toHaveURL(/\/profile$/);
+}

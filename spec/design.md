@@ -57,8 +57,8 @@ The service first normalises the input, collapsing any spaces in the full name a
 lower-casing the email address, the way log-in looks it up, and checks the fields of CO-02.1: a full
 name with a last name, a well-formed email address, at most 255 characters each, and the password
 policy of A15 (at least 10 characters, including a letter and a number; at most 72 bytes, which
-BCrypt reads). Every invalid field comes back at once with its reason (extensions 4a, 4c). Only then
-does the service look the address up and refuse it if an account already exists (4b). Otherwise it
+BCrypt reads). Every invalid field comes back at once with its reason (extensions 2a, 2c). Only then
+does the service look the address up and refuse it if an account already exists (2b). Otherwise it
 creates the Applicant as Active, keeps only a hash of the password and saves it; the unique
 constraint on the email turns two registrations at the same moment into the same refusal. No
 verification email is sent (A15): LogInService signs a token for the new Applicant (ADR-0010), and
@@ -77,12 +77,12 @@ sequenceDiagram
     RC->>RS: register(fullName, email, password)
     RS->>RS: normalise (spaces in the name, email stripped,<br/>lower-cased → address), validate fields:<br/>full name with a last name, email well formed,<br/>lengths, password policy (A15)
 
-    alt invalid fields (ext. 4a, 4c)
+    alt invalid fields (ext. 2a, 2c)
         RS-->>RC: RegistrationRefusedException(fieldErrors)
         RC-->>V: 400 {field: reason}, nothing saved
     else fields valid
         RS->>UR: findByEmailIgnoreCase(address)
-        alt email already registered (ext. 4b)
+        alt email already registered (ext. 2b)
             UR-->>RS: Optional<User> (present)
             RS-->>RC: AlreadyRegisteredException
             RC-->>V: 409 "An account already exists…", nothing saved
@@ -95,7 +95,7 @@ sequenceDiagram
             PE-->>RS: hash
             RS->>A: setPasswordHash(hash)
             RS->>UR: saveAndFlush(applicant)
-            alt same email registered at the same moment (ext. 4b)
+            alt same email registered at the same moment (ext. 2b)
                 UR-->>RS: DataIntegrityViolationException
                 RS-->>RC: AlreadyRegisteredException
                 RC-->>V: 409 "An account already exists…", nothing saved
@@ -115,15 +115,17 @@ sequenceDiagram
 
 ### UC-03 Update Applicant Profile
 
-UC-03 is not built yet: SD-9 and SD-10 are its design for Iteration 3, in the shape of the code
-that exists. The logged-in Applicant is the subject of the session token (ADR-0010); the
+Viewing and saving the profile (SD-9, CO-03.1 and CO-03.2) and uploading a resume (SD-10, CO-03.3)
+are built. The logged-in Applicant is the subject of the session token (ADR-0010); the
 controller passes that email to the service, so an applicant can only ever read and change their own
-profile (BR-15). CO-03.2 changes First Name, Last Name and phone #, the User attributes of the
-domain model; the other profile fields of step 2 wait for the domain model to have them.
+profile (BR-15). CO-03.2 changes First Name and Last Name, which every User has, and phone #,
+location, headline, skills, education and work experience, the profile details of step 2.
 
 **SD-9.** The service reads the Applicant with the resume on file, if any (CO-03.1). On save it
-checks the fields (a first and a last name, a well-formed phone number) and returns every invalid
-one with its reason (extension 4a); otherwise it changes the Applicant (CO-03.2).
+checks the fields (a first and a last name, a well-formed phone number or none, as registration
+does not ask for one, and no field longer than its column: 255 characters for the names, location
+and headline, 2,000 for skills, 4,000 for education, 10,000 for work experience) and returns every
+invalid one with its reason (extension 4a); otherwise it changes the Applicant (CO-03.2).
 
 ```mermaid
 sequenceDiagram
@@ -138,18 +140,18 @@ sequenceDiagram
     PS->>AR: findByEmailIgnoreCase(email)
     AR-->>PS: Applicant, with its Resume if any
     PS-->>PC: Applicant
-    PC-->>AP: 200 ProfileResponse {firstName, lastName,<br/>email, phone, resume {fileName, uploadDate}}
+    PC-->>AP: 200 ProfileResponse {firstName, lastName, email,<br/>phone, location, headline, skills, education,<br/>workExperience, resume {fileName, uploadDate}}
 
-    AP->>PC: PUT /api/applicant/profile<br/>{firstName, lastName, phone}
+    AP->>PC: PUT /api/applicant/profile<br/>{firstName, lastName, phone, location,<br/>headline, skills, education, workExperience}
     PC->>PS: updateProfile(email, details)
-    PS->>PS: validate: first and last name present,<br/>phone well formed
+    PS->>PS: validate: first and last name present,<br/>phone well formed, lengths within the columns
     alt invalid fields (ext. 4a)
         PS-->>PC: ProfileRefusedException(fieldErrors)
         PC-->>AP: 400 {field: reason}, nothing saved
     else fields valid
         PS->>AR: findByEmailIgnoreCase(email)
         AR-->>PS: Applicant
-        PS->>A: setFirstName(..), setLastName(..), setPhone(..)
+        PS->>A: setFirstName(..), setLastName(..), setPhone(..),<br/>setLocation(..), setHeadline(..), setSkills(..),<br/>setEducation(..), setWorkExperience(..)
         PS->>AR: save(applicant)
         AR-->>PS: Applicant
         PS-->>PC: Applicant
@@ -160,11 +162,17 @@ sequenceDiagram
 **Figure 28: SD-9 Update applicant profile (UC-03)**
 
 **SD-10.** The file comes as a multipart upload. The service accepts only a PDF or DOCX of at most
-5 MB and otherwise refuses it, keeping the current resume (extension 6a). An accepted file becomes a
-new Resume with its name, type, size and upload date, stored in the database, and replaces the
-Applicant's previous one: an applicant has at most one resume (BR-6). Applications already
-submitted keep their own Resume Snapshot, so replacing the resume changes none of them (FR-UC03.3,
-A6). No external malware scanner is used (Iteration 1 feedback).
+5 MB: the file name's extension, the type the browser declares (or none, or
+`application/octet-stream`) and the file's first bytes (`%PDF`, or the `PK` of the zip a DOCX is)
+must agree. Otherwise it refuses the file with a reason in plain text that states the accepted
+types and size, keeping the current resume (extension 6a). A file over the multipart limit never
+reaches the service; the controller answers it with the same reason. An accepted file becomes a
+new Resume with its name, type, size, content and upload date (UTC), stored in the database, and
+replaces the Applicant's previous one: an applicant has at most one resume (BR-6). The previous
+Resume is deleted, as nothing else refers to it: applications already submitted keep their own
+Resume Snapshot, an embedded copy with the file's content that submitApplication (CO-04.1) makes
+from the resume on file, so replacing the resume changes none of them (FR-UC03.3, A6). No
+external malware scanner is used (Iteration 1 feedback).
 
 ```mermaid
 sequenceDiagram
@@ -177,7 +185,7 @@ sequenceDiagram
 
     AP->>PC: POST /api/applicant/resume<br/>(multipart file, bearer token)
     PC->>PS: uploadResume(email, file)
-    PS->>PS: check type (PDF or DOCX) and size (at most 5 MB)
+    PS->>PS: check type (PDF or DOCX: name, declared type,<br/>first bytes) and size (at most 5 MB)
     alt not a PDF or DOCX, or larger than 5 MB (ext. 6a)
         PS-->>PC: ResumeRefusedException(reason)
         PC-->>AP: 400 reason, current resume kept
@@ -189,9 +197,10 @@ sequenceDiagram
         PS->>RR: save(resume)
         RR-->>PS: Resume
         PS->>A: setResume(resume)
-        Note over A: the previous Resume is no longer the<br/>applicant's (BR-6), application snapshots unchanged (A6)
         PS->>AR: save(applicant)
         AR-->>PS: Applicant
+        PS->>RR: delete(previous)
+        Note over RR: the previous Resume, if any, is gone (BR-6);<br/>application snapshots are copies, unchanged (A6)
         PS-->>PC: Resume
         PC-->>AP: 201 ResumeResponse {fileName, uploadDate}
     end
@@ -214,4 +223,4 @@ the DCD must contain each of them.
 | SD-1 | `JobPostingController.searchPostings`; `PublicPosting.of` | `JobPostingService.searchPostings`; `JobPosting.isOpen` | `JobPostingRepository.findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDescJobPostIdDesc` |
 | SD-8 | `RegistrationController.register` | `RegistrationService.register`; `LogInService.startSession` | `UserRepository.findByEmailIgnoreCase`, `saveAndFlush` |
 | SD-9 | `ApplicantProfileController.viewProfile`, `updateProfile` | `ApplicantProfileService.viewProfile`, `updateProfile` | `ApplicantRepository.findByEmailIgnoreCase`, `save` |
-| SD-10 | `ApplicantProfileController.uploadResume` | `ApplicantProfileService.uploadResume` | `ApplicantRepository.findByEmailIgnoreCase`, `save`; `ResumeRepository.save` |
+| SD-10 | `ApplicantProfileController.uploadResume` | `ApplicantProfileService.uploadResume` | `ApplicantRepository.findByEmailIgnoreCase`, `save`; `ResumeRepository.save`, `delete` |

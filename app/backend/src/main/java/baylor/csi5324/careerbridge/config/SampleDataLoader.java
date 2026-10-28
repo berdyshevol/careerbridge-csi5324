@@ -7,19 +7,24 @@ import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
+import baylor.csi5324.careerbridge.model.Resume;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
+import baylor.csi5324.careerbridge.repository.ResumeRepository;
 import baylor.csi5324.careerbridge.util.CsvReader;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,27 +37,40 @@ public class SampleDataLoader implements CommandLineRunner {
     private static final String APPLICATIONS_FILE = "data/applications.csv";
     // Jordan Lee, the demo applicant who starts with the sample applications (DemoUsers gives the password)
     public static final String SAMPLE_APPLICANT_EMAIL = "jordan.lee@example.com";
+    // The copy that went with the sample applications, taken before uploads existed, so it has no content
     private static final ResumeSnapshot SAMPLE_RESUME =
             new ResumeSnapshot("Jordan_Lee_Resume.pdf", "application/pdf", 184_320L);
+    // Jordan's resume on file, so the demo applicant can apply at once (UC-04 2a refuses without one)
+    private static final String SAMPLE_RESUME_FILE = "data/Jordan_Lee_Resume.pdf";
 
     private final JobPostingRepository jobPostingRepository;
     private final OrganizationRepository organizationRepository;
     private final ApplicantRepository applicantRepository;
     private final ApplicationRepository applicationRepository;
+    private final ResumeRepository resumeRepository;
 
     public SampleDataLoader(JobPostingRepository jobPostingRepository,
                             OrganizationRepository organizationRepository,
                             ApplicantRepository applicantRepository,
-                            ApplicationRepository applicationRepository) {
+                            ApplicationRepository applicationRepository,
+                            ResumeRepository resumeRepository) {
         this.jobPostingRepository = jobPostingRepository;
         this.organizationRepository = organizationRepository;
         this.applicantRepository = applicantRepository;
         this.applicationRepository = applicationRepository;
+        this.resumeRepository = resumeRepository;
     }
 
     @Override
     public void run(String... args) throws Exception {
         if (jobPostingRepository.count() > 0) {
+            // A database loaded before resumes existed: Jordan still needs one to apply
+            applicantRepository.findByEmailIgnoreCase(SAMPLE_APPLICANT_EMAIL)
+                    .filter(jordan -> jordan.getResume() == null)
+                    .ifPresent(jordan -> {
+                        jordan.setResume(resumeRepository.save(sampleResume()));
+                        applicantRepository.save(jordan);
+                    });
             return;
         }
         Map<String, JobPosting> postingsByTitle = new HashMap<>();
@@ -61,7 +79,9 @@ public class SampleDataLoader implements CommandLineRunner {
             postingsByTitle.put(posting.getTitle(), posting);
         }
 
-        Applicant applicant = applicantRepository.save(sampleApplicant());
+        Applicant sample = sampleApplicant();
+        sample.setResume(resumeRepository.save(sampleResume()));
+        Applicant applicant = applicantRepository.save(sample);
         for (Map<String, String> record : CsvReader.parse(read(APPLICATIONS_FILE))) {
             JobPosting posting = postingsByTitle.get(record.get("jobTitle"));
             if (posting == null) {
@@ -77,6 +97,17 @@ public class SampleDataLoader implements CommandLineRunner {
 
     private static String read(String file) throws Exception {
         return new ClassPathResource(file).getContentAsString(StandardCharsets.UTF_8);
+    }
+
+    private static Resume sampleResume() {
+        byte[] content;
+        try {
+            content = new ClassPathResource(SAMPLE_RESUME_FILE).getContentAsByteArray();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return new Resume(SAMPLE_RESUME.getFileName(), SAMPLE_RESUME.getFileType(), content.length, content,
+                LocalDateTime.of(2026, 9, 30, 14, 0));
     }
 
     private static Applicant sampleApplicant() {

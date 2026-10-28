@@ -42,12 +42,6 @@ export type NewPosting = {
   applicationDeadline: string;
 };
 
-export type ResumeOnFile = {
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-};
-
 export type SubmittedApplication = {
   applicationId: number;
   applicationStatus: string;
@@ -79,16 +73,21 @@ export type StartRefusalReason = "NO_RESUME" | "LIMIT_REACHED";
 // postings are not flagged here; the backend decides those on submit (UC-04 4a, 4c).
 export type ApplicationStart = {
   posting: { postingId: number; title: string; organizationName: string };
+  resume: Resume | null; // the resume on file, a copy of which goes with the application
   activeApplicationCount: number;
   applicationLimit: number;
   refusal: { reason: StartRefusalReason; message: string } | null;
 };
 
-function backendFetch(path: string, init?: Omit<RequestInit, "signal">): Promise<Response> {
+function backendFetch(
+  path: string,
+  init?: Omit<RequestInit, "signal">,
+  timeoutMs = BACKEND_TIMEOUT_MS,
+): Promise<Response> {
   return fetch(`${API_URL}${path}`, {
     cache: "no-store",
     ...init,
-    signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeoutMs),
   });
 }
 
@@ -140,14 +139,33 @@ export async function logIn(email: string, password: string): Promise<Session> {
   return response.json();
 }
 
-// UC-02 extension 4a: the backend's reason for each field it refused, keyed by field
+// A 400 that names the form's fields: the backend's reason for each one it refused. Spring's own 400
+// is JSON too, so only the form's fields are reasons for the user; any other 400 is an error.
+async function fieldRefusal<Field extends string>(
+  response: Response,
+  fields: readonly Field[],
+): Promise<Partial<Record<Field, string>> | null> {
+  if (response.status !== 400 || !response.headers.get("Content-Type")?.startsWith("application/json")) {
+    return null;
+  }
+  const body: Record<string, unknown> = await response.json();
+  const fieldErrors = Object.fromEntries(
+    fields.flatMap((name) => (typeof body[name] === "string" ? [[name, body[name] as string]] : [])),
+  ) as Partial<Record<Field, string>>;
+  if (Object.keys(fieldErrors).length === 0) {
+    throw new Error("Backend answered 400");
+  }
+  return fieldErrors;
+}
+
+// UC-02 extension 2a: the backend's reason for each field it refused, keyed by field
 export class RegistrationRefused extends Error {
   constructor(readonly fieldErrors: Partial<Record<"fullName" | "email" | "password", string>>) {
     super("The registration was refused");
   }
 }
 
-// UC-02 extension 4b; its message suggests logging in instead
+// UC-02 extension 2b; its message suggests logging in instead
 export class AlreadyRegistered extends Error {}
 
 // UC-02, CO-02.1: the new Applicant is logged in at once, so the answer is a session
@@ -157,18 +175,9 @@ export async function register(fullName: string, email: string, password: string
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ fullName, email, password }),
   });
-  if (response.status === 400 && response.headers.get("Content-Type")?.startsWith("application/json")) {
-    // Spring's own 400 is JSON too: only the form's fields are reasons for the visitor
-    const body: Record<string, unknown> = await response.json();
-    const fieldErrors = Object.fromEntries(
-      (["fullName", "email", "password"] as const).flatMap((name) =>
-        typeof body[name] === "string" ? [[name, body[name] as string]] : [],
-      ),
-    );
-    if (Object.keys(fieldErrors).length > 0) {
-      throw new RegistrationRefused(fieldErrors);
-    }
-    throw new Error("Backend answered 400");
+  const fieldErrors = await fieldRefusal(response, ["fullName", "email", "password"]);
+  if (fieldErrors) {
+    throw new RegistrationRefused(fieldErrors);
   }
   const reason = await refusal(response, [409]);
   if (reason !== null) {
@@ -240,22 +249,8 @@ export async function submitJobPosting(token: string, postingId: number): Promis
   return response.json();
 }
 
-// STAND-IN: the resume rides in the query until UC-03 keeps it in the backend
-function resumeParams(resume: ResumeOnFile | null): Record<string, string | number> {
-  return resume
-    ? { resumeFileName: resume.fileName, resumeFileType: resume.fileType, resumeFileSize: resume.fileSize }
-    : {};
-}
-
-export async function startApplication(
-  token: string,
-  postingId: number,
-  resume: ResumeOnFile | null,
-): Promise<ApplicationStart> {
-  const query = new URLSearchParams(Object.entries(resumeParams(resume)).map(([key, value]) => [key, String(value)])).toString();
-  const response = await backendFetch(`/api/postings/${postingId}/application${query ? `?${query}` : ""}`, {
-    headers: bearer(token),
-  });
+export async function startApplication(token: string, postingId: number): Promise<ApplicationStart> {
+  const response = await backendFetch(`/api/postings/${postingId}/application`, { headers: bearer(token) });
   endedSession(response);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
@@ -263,15 +258,10 @@ export async function startApplication(
   return response.json();
 }
 
-export async function submitApplication(
-  token: string,
-  postingId: number,
-  resume: ResumeOnFile | null,
-): Promise<SubmittedApplication> {
+export async function submitApplication(token: string, postingId: number): Promise<SubmittedApplication> {
   const response = await backendFetch(`/api/postings/${postingId}/application`, {
     method: "POST",
-    headers: { ...bearer(token), "Content-Type": "application/json" },
-    body: JSON.stringify(resumeParams(resume)),
+    headers: bearer(token),
   });
   endedSession(response);
   if (response.status === 409) {
@@ -307,6 +297,107 @@ export async function viewApplications(token: string): Promise<Applications> {
     }
   }
   return { active, appliedPostingIds: applications.map((application) => application.postingId) };
+}
+
+// CO-03.2 details, in the order the form shows them; all but the names may be left empty
+export const PROFILE_FIELDS = [
+  "firstName",
+  "lastName",
+  "phone",
+  "location",
+  "headline",
+  "skills",
+  "education",
+  "workExperience",
+] as const;
+
+export type ProfileField = (typeof PROFILE_FIELDS)[number];
+
+// The backend's limits: its column lengths, and the longest phone number its pattern accepts
+export const PROFILE_MAX_LENGTH: Record<ProfileField, number> = {
+  firstName: 255,
+  lastName: 255,
+  phone: 31,
+  location: 255,
+  headline: 255,
+  skills: 2000,
+  education: 4000,
+  workExperience: 10000,
+};
+
+export type ProfileDetails = Record<ProfileField, string>;
+
+// CO-03.1 and CO-03.3; uploadDate is a date-time in UTC, without the zone
+export type Resume = { fileName: string; uploadDate: string };
+
+// CO-03.1: an empty detail is null; resume is null until the applicant uploads one
+export type Profile = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+  location: string | null;
+  headline: string | null;
+  skills: string | null;
+  education: string | null;
+  workExperience: string | null;
+  resume: Resume | null;
+};
+
+export async function viewProfile(token: string): Promise<Profile> {
+  const response = await backendFetch("/api/applicant/profile", { headers: bearer(token) });
+  endedSession(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+// UC-03 extension 4a: the backend's reason for each field it refused, keyed by field
+export class ProfileRefused extends Error {
+  constructor(readonly fieldErrors: Partial<Record<ProfileField, string>>) {
+    super("The profile was refused");
+  }
+}
+
+// CO-03.2: the answer is the profile as saved
+export async function updateProfile(token: string, details: ProfileDetails): Promise<Profile> {
+  const response = await backendFetch("/api/applicant/profile", {
+    method: "PUT",
+    headers: { ...bearer(token), "Content-Type": "application/json" },
+    body: JSON.stringify(details),
+  });
+  endedSession(response);
+  const fieldErrors = await fieldRefusal(response, PROFILE_FIELDS);
+  if (fieldErrors) {
+    throw new ProfileRefused(fieldErrors);
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+// UC-03 extension 6a; its message is the backend's reason, which states the accepted types and size
+export class ResumeRefused extends Error {}
+
+// A 5 MB file on a slow connection takes longer than a call without one
+const UPLOAD_TIMEOUT_MS = 60000;
+
+// CO-03.3: the answer is the resume now on file, which replaced any previous one (BR-6)
+export async function uploadResume(token: string, file: File): Promise<Resume> {
+  const body = new FormData();
+  body.append("file", file);
+  const response = await backendFetch("/api/applicant/resume", { method: "POST", headers: bearer(token), body }, UPLOAD_TIMEOUT_MS);
+  endedSession(response);
+  const reason = await refusal(response);
+  if (reason !== null) {
+    throw new ResumeRefused(reason);
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
 }
 
 // UC-12: the queue of postings waiting for an administrator
@@ -360,10 +451,13 @@ export function isOpen(posting: JobPosting): boolean {
   return posting.postStatus === "PUBLISHED" && posting.closesAt != null && Date.now() < Date.parse(posting.closesAt);
 }
 
+const DATE_FORMAT: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" };
+
 export function formatDate(isoDate: string): string {
-  return new Date(`${isoDate}T00:00:00`).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return new Date(`${isoDate}T00:00:00`).toLocaleDateString("en-US", DATE_FORMAT);
+}
+
+// A moment the backend recorded by its UTC clock, shown as the day it was where the user is
+export function formatUtcDay(utcDateTime: string): string {
+  return new Date(`${utcDateTime}Z`).toLocaleDateString("en-US", DATE_FORMAT);
 }

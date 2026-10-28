@@ -34,18 +34,6 @@ sequenceDiagram
 
 **Output:** The open Job Postings that match the criteria, newest first, with their details.
 
-#### CO-01.2: viewPosting
-
-**Operation:** viewPosting(postingId)
-
-**Cross-references:** the posting page UC-04 starts from (UC-04 step 1, extension 1c); FR-UC01.3
-
-**Preconditions:** The Job Posting exists and was published (BR-9).
-
-**Postconditions:** None. This is a query operation.
-
-**Output:** The posting's full details, or a notice that it no longer accepts applications if it has closed.
-
 #### UC-02 Register as Applicant
 
 Figure 6 shows SSD-02, the system sequence diagram for the main success scenario of UC-02.
@@ -60,13 +48,13 @@ sequenceDiagram
 
 **Figure 6: SSD-02: UC-02 Register as Applicant**
 
-1. Visitor to System: register(fullName, email, password); System returns "account created, Applicant logged in" (steps 3–5). No verification email is sent (A15).
+1. Visitor to System: register(fullName, email, password); System returns "account created, Applicant logged in" (steps 1–3). No verification email is sent (A15).
 
 #### CO-02.1: register
 
 **Operation:** register(fullName, email, password)
 
-**Cross-references:** UC-02 steps 3–5, extensions 4a–4c; FR-UC02.1, FR-UC02.2, FR-UC02.3
+**Cross-references:** UC-02 steps 1–3, extensions 2a–2c; FR-UC02.1, FR-UC02.2, FR-UC02.3
 
 **Preconditions:** The visitor is not logged in.
 
@@ -112,7 +100,7 @@ sequenceDiagram
 
 **Postconditions:** None. This is a query operation.
 
-**Output:** The Applicant's _First Name_ , _Last Name_ , _email_ and _phone #_ , the other profile details, and the _file Name_ and _upload Date_ of the Resume on file, if any.
+**Output:** The Applicant's _First Name_ , _Last Name_ , _email_ , _phone #_ , _location_ , _headline_ , _skills_ , _education_ and _work experience_ , and the _file Name_ and _upload Date_ of the Resume on file, if any.
 
 #### CO-03.2: updateProfile
 
@@ -122,7 +110,7 @@ sequenceDiagram
 
 **Preconditions:** The Applicant is logged in.
 
-**Postconditions:** The Applicant's _First Name_ , _Last Name_ and _phone #_ became the valid values in details.
+**Postconditions:** The Applicant's _First Name_ , _Last Name_ , _phone #_ , _location_ , _headline_ , _skills_ , _education_ and _work experience_ became the valid values in details.
 
 #### CO-03.3: uploadResume
 
@@ -132,7 +120,7 @@ sequenceDiagram
 
 **Preconditions:** The Applicant is logged in.
 
-**Postconditions:** A Resume was created for the accepted file, with its _file Name_ and _upload Date_ , and associated with the Applicant. Any previous Resume was dissociated from the Applicant (BR-6).
+**Postconditions:** A Resume was created for the accepted file, with its _file Name_ and _upload Date_ , and associated with the Applicant. Any previous Resume of the Applicant was replaced by it and deleted (BR-6); the Resume Snapshots of submitted Applications are unchanged (A6).
 
 #### UC-04 Apply for Job
 
@@ -142,7 +130,9 @@ Figure 8 shows SSD-04, the system sequence diagram for the main success scenario
 
 **Figure 8: SSD-04: UC-04 Apply for Job**
 
-startApplication(postingId, resume) only presents the application summary and changes nothing, so it has no contract. The _resume_ parameter is a STAND-IN until UC-03 keeps the Applicant's Resume in the backend; then the system reads it itself and the parameter goes away.
+viewPosting(postingId) opens the one posting the Applicant applies to (step 1), by its own link as well as from the job board. It returns the posting's details, or that it no longer accepts applications (extension 1c), and changes nothing, so it has no contract. It belongs to UC-04, not UC-01: the search of UC-01 already returns every posting's details (Deliverable 3 feedback).
+
+startApplication(postingId) only presents the application summary and changes nothing, so it has no contract. The system reads the Applicant's Resume on file itself (UC-03); the Applicant does not send one.
 
 startApplication returns an application start: the posting, the Applicant, the Resume, the Applicant's active Applications, and an optional refusal. A refusal is returned as data, not thrown, so the screen can show it beside the summary and the active list. There are two refusals: no Resume (extension 2a) and the limit of 5 active Applications (extension 2b).
 
@@ -166,7 +156,7 @@ startApplication does not check that the posting is open or that the Applicant h
 
 - The Application's _applicationStatus_ became Applied and its _dateApplied_ became the current date.
 
-- The Application's _resumeSnapshot_ became a copy of the Resume as it is at submission (A6).
+- The Application's _resumeSnapshot_ became a copy of the Applicant's Resume on file as it is at submission, its file content included, so replacing the Resume later does not change it (FR-UC03.3, A6). With no Resume on file nothing is created (extension 2a).
 
 - The Application's _statusHistory_ gained the entry Applied with the current date.
 

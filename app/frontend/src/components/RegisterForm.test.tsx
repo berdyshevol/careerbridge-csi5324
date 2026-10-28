@@ -28,7 +28,7 @@ describe("RegisterForm", () => {
     clearSession();
   });
 
-  it("logs the new applicant in and invites them to add a resume (step 5)", async () => {
+  it("logs the new applicant in and invites them to add a resume (step 3)", async () => {
     vi.mocked(register).mockResolvedValue({
       token: "t",
       user: { firstName: "Pat", lastName: "Kim", email: "pat@example.com", phone: null, role: "APPLICANT" },
@@ -43,7 +43,7 @@ describe("RegisterForm", () => {
     expect(refresh).toHaveBeenCalled();
   });
 
-  it("puts each reason next to its field (extensions 4a, 4c)", async () => {
+  it("puts each reason next to its field (extensions 2a, 2c)", async () => {
     vi.mocked(register).mockRejectedValue(
       new RegistrationRefused({
         fullName: "Enter your first and last name.",
@@ -64,7 +64,7 @@ describe("RegisterForm", () => {
     expect(readSession()).toBeNull();
   });
 
-  it("suggests logging in for an email that already has an account (extension 4b)", async () => {
+  it("suggests logging in for an email that already has an account (extension 2b)", async () => {
     vi.mocked(register).mockRejectedValue(
       new AlreadyRegistered("An account already exists for this email address. Log in instead."),
     );
@@ -76,7 +76,7 @@ describe("RegisterForm", () => {
     expect(screen.getByRole("link", { name: "Go to log in" })).toHaveAttribute("href", "/login");
   });
 
-  it("points a recruiter to recruiter registration (extension 3a)", () => {
+  it("points a recruiter to recruiter registration (extension 1a)", () => {
     render(<RegisterForm />);
     expect(screen.getByRole("link", { name: "Recruiting for an organization?" })).toHaveAttribute(
       "href",

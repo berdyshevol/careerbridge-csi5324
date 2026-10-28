@@ -2,11 +2,12 @@ import Link from "next/link";
 import ApplicationRow from "@/components/ApplicationRow";
 import BackendDown from "@/components/BackendDown";
 import EmptyState from "@/components/EmptyState";
-import FormField from "@/components/FormField";
+import FormField, { TextAreaField } from "@/components/FormField";
 import OfferPanel from "@/components/OfferPanel";
 import PageTitle from "@/components/PageTitle";
 import Placeholder from "@/components/Placeholder";
 import PostingCard from "@/components/PostingCard";
+import ResumeOnFile from "@/components/ResumeOnFile";
 import SlotMeter from "@/components/SlotMeter";
 import { StageBadge, StageProgress } from "@/components/StageBadge";
 import { formatDate, type JobPosting } from "@/lib/api";
@@ -166,6 +167,12 @@ export default function StyleguidePage() {
             <SlotMeter used={5} total={APPLICATION_LIMIT} />
           </div>
         </Block>
+        <Block title="Resume on file" use="<ResumeOnFile resume={…}>{what this screen says about it}</ResumeOnFile>">
+          <div className="grid gap-3 md:grid-cols-2">
+            <ResumeOnFile resume={{ fileName: "Jordan_Lee_Resume.pdf", uploadDate: "2026-09-30T14:00:00" }} />
+            <ResumeOnFile resume={null} />
+          </div>
+        </Block>
       </Section>
 
       <Section title="Blocks">
@@ -245,10 +252,12 @@ export default function StyleguidePage() {
             </select>
           </div>
         </Block>
-        <Block title="Field with a hint or a refusal" use="<FormField> from src/components: label, input, then the hint, or the backend's reason in text-error with aria-invalid">
+        <Block title="Field with a hint or a refusal" use="<FormField> (or <TextAreaField> for several lines, type='file' for a file) from src/components: label, input, then the hint, or the backend's reason in text-error with aria-invalid">
           <div className="flex flex-col gap-4">
             <FormField id="sg-hint" label="Password" type="password" hint="At least 10 characters, including a letter and a number." readOnly />
             <FormField id="sg-error" label="Full name" defaultValue="Pat" error="Enter your first and last name." readOnly />
+            <TextAreaField id="sg-textarea" label="Skills" defaultValue="SQL, Python" readOnly />
+            <FormField id="sg-file" type="file" label="Choose your resume" accept=".pdf,.docx" hint="PDF or DOCX, at most 5 MB." />
           </div>
         </Block>
         <Block title="Checkbox" use='<input type="checkbox" className="checkbox checkbox-primary" /> inside a label with the text'>

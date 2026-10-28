@@ -38,6 +38,6 @@ browsers increasingly block. The feedback also asks for no external services.
 - A token is readable by the page's scripts, so the frontend must not render untrusted HTML.
 - Register (UC-02) and the other use cases that create accounts reuse the same hash and token.
 - Anyone can create applicant accounts, on the public site too: there is no rate limit or CAPTCHA.
-- Registering with an address that has an account says so (UC-02 extension 4b), which tells a
+- Registering with an address that has an account says so (UC-02 extension 2b), which tells a
   visitor that the address is registered; with no email to warn the owner, that is the trade-off.
   Throttling registration and log-in per address is remaining work.

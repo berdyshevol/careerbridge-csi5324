@@ -4,11 +4,8 @@ import AccessNotice from "@/components/AccessNotice";
 import ApplyForm from "@/components/ApplyForm";
 import BackendDown from "@/components/BackendDown";
 import { SessionEnded, startApplication, viewApplications, viewPosting, type ApplicationStart, type Applications, type JobPosting } from "@/lib/api";
-import { resume } from "@/lib/sampleDesk";
 import { serverSession } from "@/lib/serverSession";
 
-// The applications come from the backend for the logged-in Applicant; the resume stays
-// sample data until UC-03 keeps it there (see src/lib/sampleDesk.ts and src/lib/apply.ts).
 export default async function ApplyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const here = `/jobs/${id}/apply`;
@@ -48,7 +45,7 @@ export default async function ApplyPage({ params }: { params: Promise<{ id: stri
   try {
     [applications, start] = await Promise.all([
       viewApplications(session.token),
-      startApplication(session.token, posting.jobPostId, resume),
+      startApplication(session.token, posting.jobPostId),
     ]);
   } catch (err) {
     if (err instanceof SessionEnded) {
@@ -68,7 +65,7 @@ export default async function ApplyPage({ params }: { params: Promise<{ id: stri
       desk={{
         applications: applications.active,
         appliedPostingIds: applications.appliedPostingIds,
-        resume,
+        resume: start.resume,
         refusal: start.refusal?.reason ?? null,
       }}
     />

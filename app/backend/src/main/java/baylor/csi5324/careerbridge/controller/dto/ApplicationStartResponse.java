@@ -1,13 +1,12 @@
 package baylor.csi5324.careerbridge.controller.dto;
 
-import baylor.csi5324.careerbridge.model.ResumeSnapshot;
 import baylor.csi5324.careerbridge.service.ApplicationService;
 import baylor.csi5324.careerbridge.service.ApplicationStart;
 
 import java.util.List;
 
 public record ApplicationStartResponse(PostingSummary posting, ApplicantContact applicant,
-                                       ResumeSnapshot resume,
+                                       ResumeResponse resume,
                                        List<ApplicationSummaryResponse> activeApplications,
                                        long activeApplicationCount, int applicationLimit,
                                        RefusalResponse refusal) {
@@ -26,7 +25,7 @@ public record ApplicationStartResponse(PostingSummary posting, ApplicantContact 
                         posting.getOrganization().getName()),
                 new ApplicantContact(applicant.getFirstName(), applicant.getLastName(),
                         applicant.getEmail(), applicant.getPhone()),
-                start.resume(),
+                ResumeResponse.from(start.resume()),
                 start.activeApplications().stream().map(ApplicationSummaryResponse::from).toList(),
                 start.activeApplicationCount(),
                 ApplicationService.APPLICATION_LIMIT,
