@@ -19,8 +19,8 @@ Software Engineering (Baylor University, Fall 2026).
 
 Work in your own branch and open a pull request into `main`. Its title starts with the Jira key,
 `SCRUM-NN …`: no ticket, no pull request. The tests run on the pull request and must pass before
-it can be merged; the ticket moves to In Review and Done by itself, and Claude leaves an advisory
-review ([ADR-0008](spec/adr/0008-pull-requests-name-their-ticket.md)).
+it can be merged; the ticket moves to In Review and Done by itself, and Claude leaves a review
+whose check turns red on a must-fix item without blocking the merge ([ADR-0008](spec/adr/0008-pull-requests-name-their-ticket.md)).
 
 ## Jira from Claude Code
 
