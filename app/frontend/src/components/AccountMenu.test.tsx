@@ -25,6 +25,11 @@ describe("AccountMenu", () => {
     expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/login?next=%2Fjobs%2F3");
   });
 
+  it("offers a visitor to register", () => {
+    render(<AccountMenu user={null} />);
+    expect(screen.getByRole("link", { name: "Register" })).toHaveAttribute("href", "/register");
+  });
+
   it("does not send the log-in page back to itself", () => {
     pathname = "/login";
     render(<AccountMenu user={null} />);
