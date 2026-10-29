@@ -108,7 +108,7 @@ match its mockup, and a screen that is not listed here is added before it is cod
 | ID | Address | Screen | Use cases | Holds and leads to |
 | --- | --- | --- | --- | --- |
 | [`applicant-home`](screens/applicant-home.html) | `/` | Desk | UC-05, UC-07, UC-03 | In this order: an offer waiting for an answer, with its deadline; "Add a resume" while none is on file (BR-6); active applications with stage and date of the last change; "N of 5 active"; recently published postings. |
-| [`applicant-jobs`](screens/applicant-jobs.html) | `/jobs` | Job board | UC-01 | As for the Visitor, plus "Applied · stage" on postings already applied to. |
+| [`applicant-jobs`](screens/applicant-jobs.html) | `/jobs` | Job board | UC-01 | As for the Visitor, inside the applicant's navigation. |
 | [`applicant-posting`](screens/applicant-posting.html) | `/jobs/{id}` | Posting | UC-01, UC-04 | As for the Visitor. Apply leads to the Apply page, or says why it is unavailable: 5 active applications (UC-04 2b) or an earlier application (4c). |
 | [`applicant-apply`](screens/applicant-apply.html) | `/jobs/{id}/apply` | Apply | UC-04 | Posting, contact details, resume on file with "Update resume" (3a), "3 of 5 active", the note that an application cannot be edited (BR-5), Submit. The blocked cases 1c, 2a, 2b and 4c each say what to do next. Done: "4 of 5 active" and a link to the new application. |
 | [`applicant-applications`](screens/applicant-applications.html) | `/applications` | Applications | UC-05 | Active first, filter Active / Closed (2b), "N of 5 active". None yet: a link to the job board (2a). |
