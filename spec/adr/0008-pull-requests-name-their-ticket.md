@@ -21,10 +21,11 @@ rules.
   hand. A workflow does it rather than a Jira automation rule, whose runs the free plan limits.
 - **Tickets that build a use case** sit under its epic, `UC-01` to `UC-15`, so the board shows
   progress per use case; a `Covers: FR-…` line names the requirements a ticket builds.
-- **Claude reviews every pull request,** advisory only: one comment on bugs, the ticket, the
-  specification and ADRs, and the screen rules, read from the code. It never blocks a merge,
-  because a model can be wrong. It does not replace the `screen-review` skill, which runs the
-  screen and takes the screenshots.
+- **Claude reviews every pull request:** one comment on bugs, the ticket, the specification and
+  ADRs, and the screen rules, read from the code. Its check turns red when the comment lists a
+  must-fix item, so nobody misses it (amended 2026-10-28), but it is not a required check and never
+  blocks a merge, because a model can be wrong. It does not replace the `screen-review` skill,
+  which runs the screen and takes the screenshots.
 
 ## Consequences
 

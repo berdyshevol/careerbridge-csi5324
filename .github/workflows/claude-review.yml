@@ -1,8 +1,9 @@
 name: Claude review
 
-# Advisory: one review comment per pull request, never a failed check, because a model can be
-# wrong and must not block the team. Runs on open, not on every push, to spare the subscription;
-# re-run it from the Actions tab after larger changes.
+# One review comment per pull request. The check turns red when the review lists a must-fix item,
+# so nobody misses it, but it is not a required check: a model can be wrong and must not block the
+# team. Runs on open, not on every push, to spare the subscription; re-run it from the Actions tab
+# after a fix or larger changes.
 on:
   pull_request:
     branches: [main]
@@ -77,4 +78,24 @@ jobs:
             for what passed), each finding as `file:line — what is wrong — the fix`. End with one
             line: ready to merge, or not and why. For a pull request that changes a screen, say "ready
             to merge once screen-review screenshots are attached" unless the description has a
-            `## Screens` section. If nothing is wrong, say so in one line.
+            `## Screens` section. If nothing is wrong, say so in one line. The very last line of the
+            comment is `<!-- must-fix: N -->`, where N is the number of items under "Must fix" (0 when
+            there are none).
+
+      - name: Turn red on a must-fix item
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # Only the bot's own comments count: anyone could post a "## Claude review" with a 0
+          body=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json comments \
+            --jq '[.comments[] | select(.author.login == "github-actions" and (.body | startswith("## Claude review")))] | last | .body // ""')
+          count=$(grep -oE '<!-- must-fix: [0-9]+ -->' <<<"$body" | grep -oE '[0-9]+' | tail -n 1 || true)
+          if [[ -z "$count" ]]; then
+            echo "::error::The review left no verdict. Read the pull request yourself or re-run the review."
+            exit 1
+          fi
+          if (( count > 0 )); then
+            echo "::error::The review lists $count must-fix item(s). Fix them and re-run the review, or merge if the model is wrong."
+            exit 1
+          fi
