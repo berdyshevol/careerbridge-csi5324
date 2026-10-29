@@ -19,6 +19,10 @@ rules.
 - **Jira follows the pull request.** The **Jira** workflow moves the ticket to In Review when the
   pull request opens (or its title is fixed) and to Done when it merges. Nobody moves statuses by
   hand. A workflow does it rather than a Jira automation rule, whose runs the free plan limits.
+- **Every pull request is checked, whatever branch it goes into** (amended 2026-10-28). A pull
+  request stacked on another one runs the tests, the Ticket check and the review, and moves its
+  ticket. Before, only pull requests into `main` did, so the tickets of stacked pull requests
+  stayed in To Do (SCRUM-147 and SCRUM-148).
 - **Tickets that build a use case** sit under its epic, `UC-01` to `UC-15`, so the board shows
   progress per use case; a `Covers: FR-…` line names the requirements a ticket builds.
 - **Claude reviews every pull request:** one comment on bugs, the ticket, the specification and
@@ -29,7 +33,9 @@ rules.
 
 ## Consequences
 
-- The board matches `main` without anyone tending it, and a use case's progress is one look.
+- The board matches the merged code without anyone tending it, and a use case's progress is one
+  look. A stacked ticket is Done when it merges into its base branch, before that branch reaches
+  `main`; if the base branch is abandoned, its tickets must be reopened by hand.
 - The Jira and Claude tokens are repository secrets, which the workflow copy on any collaborator's
   branch can read. Accepted while the collaborators are the five team members; the deploy secrets
   stay in environments that only `main` can use.

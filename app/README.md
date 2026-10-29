@@ -45,7 +45,7 @@ The workflows (`.github/workflows/deploy.yml`, `preview.yml`) read two secrets, 
 
 ## Pull request checks
 
-Besides the tests, every pull request to `main` runs three workflows:
+Besides the tests, every pull request runs three workflows, whatever branch it goes into, so a pull request stacked on another one is checked and moves its ticket too:
 
 - **Ticket** (`pr-ticket.yml`) fails a title without `SCRUM-NN`.
 - **Jira** (`jira-sync.yml`) moves that ticket to In Review when the pull request opens and to Done when it merges.
