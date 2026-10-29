@@ -17,7 +17,7 @@ npm run test:e2e      # end-to-end tests (Playwright, headless)
 ```
 
 - **Unit and component tests** sit next to the code as `*.test.ts` / `*.test.tsx` (see `src/components/ApplicationRow.test.tsx`).
-- **End-to-end tests** are in `e2e/`. Playwright starts the backend itself, on a fresh PostgreSQL in Docker, and builds and starts the frontend on port 3000; it stops if 8080 or 3000 is already taken, so stop your own servers first, or move the frontend with `E2E_FRONTEND_PORT=3200 npm run test:e2e`. It runs each test at laptop and phone size. The first time, run `npx playwright install chromium`.
+- **End-to-end tests** are in `e2e/`. Playwright starts the backend itself, on a fresh PostgreSQL in Docker (in-memory H2 when Docker is not running), and builds and starts the frontend on port 3000; it stops if 8080 or 3000 is already taken, so stop your own servers first, or move the frontend with `E2E_FRONTEND_PORT=3200 npm run test:e2e`. It runs each test at laptop and phone size. The first time, run `npx playwright install chromium`.
 
 Add both kinds for your use case. Every pull request into `main` runs them.
 
