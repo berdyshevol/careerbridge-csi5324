@@ -21,14 +21,11 @@ public class TestDatabaseFallback implements EnvironmentPostProcessor {
 
     static final String H2_URL = "jdbc:h2:mem:careerbridge-test;DB_CLOSE_DELAY=-1";
 
-    // Every test context asks; without Docker each failed probe would cost seconds again
-    private static Boolean dockerAvailable;
-
     private final Log log;
     private final BooleanSupplier docker;
 
     public TestDatabaseFallback(DeferredLogFactory logFactory) {
-        this(logFactory.getLog(TestDatabaseFallback.class), TestDatabaseFallback::isDockerAvailable);
+        this(logFactory.getLog(TestDatabaseFallback.class), DockerClientFactory.instance()::isDockerAvailable);
     }
 
     TestDatabaseFallback(Log log, BooleanSupplier docker) {
@@ -38,9 +35,10 @@ public class TestDatabaseFallback implements EnvironmentPostProcessor {
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-        // A URL set by hand is not the Testcontainers one and is left alone
+        // A URL set by hand is not the Testcontainers one and is left alone. In CI a missing Docker
+        // must fail the run: a green run on H2 would merge and deploy without checking PostgreSQL
         String url = environment.getProperty("spring.datasource.url", "");
-        if (!url.startsWith("jdbc:tc:") || docker.getAsBoolean()) {
+        if (!url.startsWith("jdbc:tc:") || "true".equals(environment.getProperty("CI")) || docker.getAsBoolean()) {
             return;
         }
         log.warn("Docker is not running, so the tests use an in-memory H2 database. "
@@ -49,12 +47,5 @@ public class TestDatabaseFallback implements EnvironmentPostProcessor {
                 "spring.datasource.url", H2_URL,
                 "spring.datasource.username", "sa",
                 "spring.datasource.password", "")));
-    }
-
-    private static synchronized boolean isDockerAvailable() {
-        if (dockerAvailable == null) {
-            dockerAvailable = DockerClientFactory.instance().isDockerAvailable();
-        }
-        return dockerAvailable;
     }
 }

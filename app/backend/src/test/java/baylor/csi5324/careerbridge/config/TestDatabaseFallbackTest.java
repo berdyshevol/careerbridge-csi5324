@@ -35,6 +35,15 @@ class TestDatabaseFallbackTest {
     }
 
     @Test
+    void inCiAMissingDockerFailsTheRunInsteadOfFallingBack() {
+        MockEnvironment environment = withUrl(TESTCONTAINERS_URL).withProperty("CI", "true");
+
+        fallback(() -> false).postProcessEnvironment(environment, null);
+
+        assertEquals(TESTCONTAINERS_URL, environment.getProperty("spring.datasource.url"));
+    }
+
+    @Test
     void aDatabaseSetByHandIsLeftAloneWithoutAskingForDocker() {
         MockEnvironment environment = withUrl("jdbc:postgresql://localhost/careerbridge");
 

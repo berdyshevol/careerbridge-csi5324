@@ -21,8 +21,8 @@ they did not check the database a deployment would use.
   fresh PostgreSQL in Docker through the Testcontainers JDBC URL in
   `src/test/resources/config/application.properties`. They never touch the Neon database.
 - When Docker is not running, the same tests use an in-memory H2 database instead and log a
-  warning (`TestDatabaseFallback` in the test sources; amended 2026-10-28). CI and Deploy have
-  Docker, so every merge and every deploy is still checked on PostgreSQL.
+  warning (`TestDatabaseFallback` in the test sources; amended 2026-10-28). Not in CI (`CI=true`):
+  there a missing Docker fails the run, so every merge and every deploy is checked on PostgreSQL.
 - Hibernate keeps creating and updating the tables (`ddl-auto=update`). Sample data loads only
   into an empty database.
 
