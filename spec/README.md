@@ -15,7 +15,8 @@ topic here before reading or adding text.
 | [requirements.md](requirements.md) | FRs and NFRs per use case, clarifications, traceability matrix | Checking what the system must do | Testable requirements with IDs; not step flows | 3 |
 | [use-cases.md](use-cases.md) | Use-case diagram, the fully-dressed use cases, subfunctions | Building or naming a ticket for a use case | Steps and extensions; not operations | 4.1, 4.2 |
 | [ssd-and-contracts.md](ssd-and-contracts.md) | System sequence diagrams and operation contracts | Naming a service method | Pre/postconditions of operations; not UI | 4.3 |
-| [ui-drafts.md](ui-drafts.md) | Wireframes | Designing a screen | Screen sketches; not styling (ADR-0004) | 4.4 |
+| [ui-drafts.md](ui-drafts.md) | Wireframes; the catalog of screens by role, each with its ID, address and use cases | Designing, building or changing a screen | Which screens exist and what they hold; not styling (ADR-0004) | 4.4 |
+| [screens/](screens/README.md) | One mockup per screen ID, at phone, tablet and laptop width, with its picture | Building or changing a screen | How a screen looks; changed with its page (ADR-0011) | — |
 | [domain-model.md](domain-model.md) | Conceptual classes, attributes, associations | Naming an entity or a field | What the data means; not tables or methods | 5 |
 | [design.md](design.md) | Design sequence diagrams (SD-n) and the design class diagram | Drawing an SD or the DCD | Mermaid diagrams from the code, one row each in §7.1 | 6, 7 |
 | [architecture.md](architecture.md) | Parts, layers, data, tests, deployment | Changing how the system is built | How it is built; decisions go in adr/ | 8 |
