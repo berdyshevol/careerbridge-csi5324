@@ -133,8 +133,7 @@ than a few lines, run step e once more on those lines only.
 
 **g. Screens.** If anything under `app/frontend/src/app/` or `app/frontend/src/components/`
 changed, run the `screen-review` skill, which also compares the page with its mockup, and fix its
-"must fix" findings. For each "should fix" you leave, offer a ticket (in the use case's epic, or
-`Process ·`) and list it in the pull request. Otherwise tick it as not applicable.
+"must fix" findings. Otherwise tick it as not applicable.
 
 **h. Pull request.** Commit, push and open it; the push runs the tests (the pre-push hook).
 
@@ -153,13 +152,6 @@ left open, and:
   mockup and why, screen-review's verdict and where the screenshots are, when step g ran.
 
 Then report the link and anything left for a person to decide.
-
-## Asking the person
-
-Ask only what the specification, the mockups and the code cannot answer. At most three questions
-at a time, numbered, each one plain sentence that names the choice and its options ("On a phone,
-are the filters folded behind a button, or all shown?"). Say what you will do with each answer.
-Write the questions in the person's language; keep file paths and IDs out of the question itself.
 
 ## When it stays red
 
