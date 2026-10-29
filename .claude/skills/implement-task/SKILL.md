@@ -34,8 +34,10 @@ piece of UC-NN?"
 - No key: search the use case's epic and open tickets for this work. Found: ask "Is this
   SCRUM-NN?". Not found: offer to create it — a Story in the active sprint, its parent the epic
   (`UC-NN <name>`; none outside a use case), summary `UC-NN · <what>` (`Process · <what>` outside a
-  use case), a `Covers: FR-…` line from `spec/requirements.md`, and a `Screen: <screen-id>, …` line
-  when the work shows anything to a user (step 4). Create it only on a yes; on a no, stop.
+  use case), a `Covers: FR-…` line from `spec/requirements.md`, and, when the work shows anything to a user
+  (step 4), a `Screen: <screen-id>, …` line and a `Mockups:` line linking each screen's picture
+  and HTML (`https://github.com/berdyshevol/careerbridge-csi5324/blob/main/spec/screens/<id>.jpg` and `….html`), so the screen opens from Jira. Create it only on a yes; on
+  a no, stop.
 - Assign the ticket to the person if nobody has it. Do not change its status: the `Jira` workflow
   moves it when the pull request opens and merges (ADR-0008).
 
@@ -48,21 +50,29 @@ this step only for backend-only or tooling work, and say so.
    the ticket's `Screen:` line, by screen ID, by address, or by use case (its "Use cases" column;
    one use case often has several screens, for several roles). A screen described in words: name
    the candidates and ask which one is meant.
-2. **No screen in the catalog: stop.** Say: "There is no screen for <what> in the catalog. It
+2. **Screens of one page agree.** Screens that share an address (the visitor's and the
+   applicant's `/jobs`) are one page. Compare their mockups: apart from the role's navigation and
+   what only that role may see, they must match. Where they differ, ask which is right and fix the
+   other mockup in this pull request.
+3. **No screen in the catalog: stop.** Say: "There is no screen for <what> in the catalog. It
    needs an ID, a mockup `spec/screens/<id>.html` and a row in `spec/ui-drafts.md` first, agreed
    with the team." Do not invent a layout. Go on only if adding that screen is itself the request.
-3. **Read each screen:** its catalog row (address, use cases, what it holds, where it leads), the
+4. **Read each screen:** its catalog row (address, use cases, what it holds, where it leads), the
    mockup `spec/screens/<id>.html` (blocks, order, wording and navigation at each width), its
    picture `<id>.jpg`, and the current page and the components it imports. The current page is
    not a reference: where it differs from the mockup, it is rebuilt to match.
-4. **Map the mockup to code:** for each block of the mockup, the `/styleguide` block or
+5. **Map the mockup to code:** for each block of the mockup, the `/styleguide` block or
    `src/components/` component that draws it. A block with none becomes a new component and a
    `/styleguide` entry in this pull request. The mockup's `cb.css` classes are never copied into
    the code.
-5. **The role's header, navigation and phone dock** are shared by all its screens
+6. **The role's header, navigation and phone dock** are shared by all its screens
    (`src/app/layout.tsx`). If they do not match the mockup yet, say so and ask whether to build them
    in this ticket or a separate `Process ·` one; never draw a copy inside one page.
-6. **A change that differs from the mockup**, asked for by the person: change the mockup in the
+7. **Build the mockup and the `Covers:` line, nothing more.** Every block on the page is one the
+   mockup draws (every "When …" state included). Something more — a count, a filter, a link, a
+   date — goes into the specification and the mockup first, agreed with the team, in the same pull
+   request; never only into the code.
+8. **A change that differs from the mockup**, asked for by the person: change the mockup in the
    same pull request (edit `<id>.html`, then `cd app/frontend && npm run mockups -- <id>`), and the
    catalog row if the address, role, use cases or hand-offs change. A change to the navigation or
    to another role's screens needs the team's agreement first: ask.
@@ -123,7 +133,8 @@ than a few lines, run step e once more on those lines only.
 
 **g. Screens.** If anything under `app/frontend/src/app/` or `app/frontend/src/components/`
 changed, run the `screen-review` skill, which also compares the page with its mockup, and fix its
-"must fix" findings. Otherwise tick it as not applicable.
+"must fix" findings. For each "should fix" you leave, offer a ticket (in the use case's epic, or
+`Process ·`) and list it in the pull request. Otherwise tick it as not applicable.
 
 **h. Pull request.** Commit, push and open it; the push runs the tests (the pre-push hook).
 
@@ -142,6 +153,13 @@ left open, and:
   mockup and why, screen-review's verdict and where the screenshots are, when step g ran.
 
 Then report the link and anything left for a person to decide.
+
+## Asking the person
+
+Ask only what the specification, the mockups and the code cannot answer. At most three questions
+at a time, numbered, each one plain sentence that names the choice and its options ("On a phone,
+are the filters folded behind a button, or all shown?"). Say what you will do with each answer.
+Write the questions in the person's language; keep file paths and IDs out of the question itself.
 
 ## When it stays red
 
