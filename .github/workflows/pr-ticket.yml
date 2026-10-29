@@ -4,7 +4,6 @@ name: Ticket
 # leaves the board behind the code.
 on:
   pull_request:
-    branches: [main]
     types: [opened, edited, reopened, synchronize]
 
 permissions: {}

@@ -4,8 +4,9 @@ name: Jira
 # anyone changing statuses by hand. Done here rather than by a Jira automation rule, which the
 # free plan limits per month.
 on:
+  # Into any branch: a pull request stacked on another one reaches main only through that one's
+  # pull request, which moves just its own ticket
   pull_request:
-    branches: [main]
     # edited: a title fixed after the Ticket check failed still moves the ticket
     types: [opened, reopened, edited, closed]
 
