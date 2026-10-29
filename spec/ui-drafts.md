@@ -80,11 +80,11 @@ match its mockup, and a screen that is not listed here is added before it is cod
    header, and every recruiter screen shows only that organization's data (UC-09 special
    requirements, A16, BR-15).
 9. **The phone dock holds at most four entries.** Rare actions live in the account menu.
-10. **Images only where they mean something.** Organization logos on postings and in the
-   recruiter's organization switcher (UC-08, technology variation 3a), with the organization's
-   initials when none was uploaded; one illustration on the visitor's front page; small
-   illustrations in empty states. Working screens have none. Images come under a free license
-   (Unsplash, unDraw), are recolored to the theme and are served from `app/frontend/public/`.
+10. **No images.** No organization logos or initials and no illustrations: the specification lets
+   an organization upload a logo (UC-08, technology variation 3a) but shows it nowhere.
+11. **Every state the specification names is drawn.** Besides the main state, a mockup shows each
+   extension's message or dialog as a separate block marked "When …", with the wording of the use
+   case.
 
 **Navigation**
 
@@ -100,7 +100,7 @@ match its mockup, and a screen that is not listed here is added before it is cod
 
 | ID | Address | Screen | Use cases | Holds and leads to |
 | --- | --- | --- | --- | --- |
-| [`visitor-home`](screens/visitor-home.html) | `/` | Front page | UC-01, UC-02, UC-08 | Search box, the newest published postings, and two ways in: "Looking for a job" (UC-02) and "Hiring" (UC-08). |
+| [`visitor-home`](screens/visitor-home.html) | `/` | Front page | UC-01, UC-02, UC-08 | Search box (keywords and location) and two ways in: "Looking for a job" (UC-02) and "Hiring" (UC-08). |
 | [`visitor-jobs`](screens/visitor-jobs.html) | `/jobs` | Job board | UC-01 | Keywords, location, organization and employment type; results newest first; the empty texts of extensions 2a and 2b; the criteria kept after a failure (\*a). |
 | [`visitor-posting`](screens/visitor-posting.html) | `/jobs/{id}` | Posting | UC-01, UC-04 1a | Every detail of the posting. Apply leads to Log In or Register and back to this posting. |
 | [`visitor-register`](screens/visitor-register.html) | `/register` | Register as applicant | UC-02 | Name, email, password with the policy shown. Done: the Profile with an invitation to add a resume. Link "Hiring? Register your organization" (1a). |

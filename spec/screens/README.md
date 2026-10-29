@@ -27,12 +27,13 @@ page that draws a screen is the Next.js page of its address: `/applications/{id}
 - **Does not fix:** the code. Pages are built from the theme and the blocks on `/styleguide`, not
   from `cb.css`. A block in the mockup that `/styleguide` lacks becomes a component in
   `src/components/` and an entry on `/styleguide` first.
-- **Shows one state.** A mockup draws one example, such as an application at Offer. The other
-  states and the extensions are listed for that screen in [ui-drafts.md](../ui-drafts.md); a
-  screen draws them with the same blocks.
+- **Shows every state.** A mockup draws the main state with one example, such as an application
+  at Offer, and each extension's message or dialog as a separate block marked "When …", worded as
+  in the use case.
 - **Names and dates are examples.** Real data comes from the backend.
-- **Nothing beyond the specification.** A mockup draws what a use case step, an FR, a business rule
-  or an assumption asks for. Something more is added to the specification first.
+- **Exactly the specification.** Every block of a mockup traces to a use case step or extension,
+  an FR, a business rule or an assumption, and every state they name is drawn. Something more is
+  added to the specification first.
 
 ## Changing a screen
 

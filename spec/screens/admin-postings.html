@@ -34,7 +34,7 @@
     <main class="main">
       <div class="stack s">
         <h1 class="h1">Posting approvals</h1>
-        <p class="muted">Oldest first. Nothing is public until you approve it.</p>
+        <p class="muted">Oldest first.</p>
       </div>
 
       <div class="cols side-l">
@@ -52,15 +52,24 @@
 
         <section class="stack only-l" aria-label="Chosen posting">
           <div class="row between wrap" style="background: var(--b1); border: 1px solid var(--b3); border-radius: 16px; padding: 12px 16px">
-            <span class="sm">Brazos Health · <b>Active</b> organization · submitted by Sam Ortiz</span>
+            <span class="sm">Brazos Health · <b>Active</b> organization</span>
             <div class="row"><a class="btn sm danger" href="#">Reject</a><a class="btn sm" href="#">Return with comments</a><a class="btn sm pri" href="#">Approve</a></div>
           </div>
+          <section class="card tight">
+            <p class="eyebrow">When the deadline passed while the posting was waiting</p>
+            <section class="alert err"><span>The application deadline has passed. The posting was returned to the recruiters for a new deadline.</span></section>
+          </section>
+          <section class="card tight">
+            <p class="eyebrow">When the organization or the submitting recruiter is no longer active</p>
+            <section class="alert err"><span>Cannot publish: Brazos Health is no longer active. The posting stays pending.</span></section>
+          </section>
+          <section class="card tight">
+            <p class="eyebrow">When another administrator already decided the posting</p>
+            <section class="alert"><span>Another administrator already decided this posting. Status: <b>Published</b>.</span></section>
+          </section>
           <p class="eyebrow">As the public will see it</p>
           <article class="canvas white">
-            <div class="row top">
-              <span class="olog lg c2" aria-hidden="true">BH</span>
-              <div class="stack xs"><p class="muted">Brazos Health</p><h2 class="h1">Medical Records Clerk</h2></div>
-            </div>
+            <div class="stack xs"><p class="muted">Brazos Health</p><h2 class="h1">Medical Records Clerk</h2></div>
             <div class="row wrap" style="gap: 8px"><span class="badge">On-site</span><span class="badge">Full-time</span><span class="badge">1 opening</span><span class="badge out">Apply by November 30</span></div>
             <section class="stack s"><h3 class="h2">About the role</h3><p>Keep patient records complete and private across our two Waco clinics. You will file, scan and answer record requests from patients and insurers.</p></section>
             <section class="stack s"><h3 class="h2">Requirements</h3><ul class="stack xs" style="list-style: disc; padding-left: 20px"><li>High school diploma</li><li>One year of office or clinic work</li><li>Careful with confidential information</li></ul></section>
@@ -68,15 +77,23 @@
         </section>
       </div>
 
+      <section class="dlg only-l" style="max-width: 460px" aria-label="Return dialog">
+        <p class="eyebrow">Dialog after Return with comments</p>
+        <h2 class="h2">Return Medical Records Clerk for changes?</h2>
+        <label class="field"><span>Comments for the recruiters</span><span class="input area"></span><span class="hint">Required.</span></label>
+        <div class="row" style="justify-content: flex-end"><a class="btn" href="#">Cancel</a><a class="btn dark" href="#">Return with comments</a></div>
+      </section>
+
+      <section class="dlg only-l" style="max-width: 460px" aria-label="Reject dialog">
+        <p class="eyebrow">Dialog after Reject</p>
+        <h2 class="h2">Reject Medical Records Clerk?</h2>
+        <label class="field"><span>Reason</span><span class="input area"></span></label>
+        <div class="row" style="justify-content: flex-end"><a class="btn" href="#">Cancel</a><a class="btn danger" href="#">Reject posting</a></div>
+      </section>
+
       <section class="card" aria-label="Empty queue">
-        <p class="eyebrow">Empty state</p>
-        <div class="row top wrap">
-          <div class="illus s" style="width: 150px">Illustration · unDraw, theme green</div>
-          <div class="stack s minw0" style="flex: 1 1 200px">
-            <p class="h3">No postings awaiting approval.</p>
-            <a class="link sm" href="#">Back to approvals</a>
-          </div>
-        </div>
+        <p class="eyebrow">When the queue is empty</p>
+        <p class="h3">No postings awaiting approval.</p>
       </section>
     </main>
   </div>
@@ -112,7 +129,7 @@
     <main class="main">
       <div class="stack s">
         <h1 class="h1">Posting approvals</h1>
-        <p class="muted">Oldest first. Nothing is public until you approve it.</p>
+        <p class="muted">Oldest first.</p>
       </div>
 
       <div class="cols side-l">
@@ -130,15 +147,24 @@
 
         <section class="stack only-l" aria-label="Chosen posting">
           <div class="row between wrap" style="background: var(--b1); border: 1px solid var(--b3); border-radius: 16px; padding: 12px 16px">
-            <span class="sm">Brazos Health · <b>Active</b> organization · submitted by Sam Ortiz</span>
+            <span class="sm">Brazos Health · <b>Active</b> organization</span>
             <div class="row"><a class="btn sm danger" href="#">Reject</a><a class="btn sm" href="#">Return with comments</a><a class="btn sm pri" href="#">Approve</a></div>
           </div>
+          <section class="card tight">
+            <p class="eyebrow">When the deadline passed while the posting was waiting</p>
+            <section class="alert err"><span>The application deadline has passed. The posting was returned to the recruiters for a new deadline.</span></section>
+          </section>
+          <section class="card tight">
+            <p class="eyebrow">When the organization or the submitting recruiter is no longer active</p>
+            <section class="alert err"><span>Cannot publish: Brazos Health is no longer active. The posting stays pending.</span></section>
+          </section>
+          <section class="card tight">
+            <p class="eyebrow">When another administrator already decided the posting</p>
+            <section class="alert"><span>Another administrator already decided this posting. Status: <b>Published</b>.</span></section>
+          </section>
           <p class="eyebrow">As the public will see it</p>
           <article class="canvas white">
-            <div class="row top">
-              <span class="olog lg c2" aria-hidden="true">BH</span>
-              <div class="stack xs"><p class="muted">Brazos Health</p><h2 class="h1">Medical Records Clerk</h2></div>
-            </div>
+            <div class="stack xs"><p class="muted">Brazos Health</p><h2 class="h1">Medical Records Clerk</h2></div>
             <div class="row wrap" style="gap: 8px"><span class="badge">On-site</span><span class="badge">Full-time</span><span class="badge">1 opening</span><span class="badge out">Apply by November 30</span></div>
             <section class="stack s"><h3 class="h2">About the role</h3><p>Keep patient records complete and private across our two Waco clinics. You will file, scan and answer record requests from patients and insurers.</p></section>
             <section class="stack s"><h3 class="h2">Requirements</h3><ul class="stack xs" style="list-style: disc; padding-left: 20px"><li>High school diploma</li><li>One year of office or clinic work</li><li>Careful with confidential information</li></ul></section>
@@ -146,15 +172,23 @@
         </section>
       </div>
 
+      <section class="dlg only-l" style="max-width: 460px" aria-label="Return dialog">
+        <p class="eyebrow">Dialog after Return with comments</p>
+        <h2 class="h2">Return Medical Records Clerk for changes?</h2>
+        <label class="field"><span>Comments for the recruiters</span><span class="input area"></span><span class="hint">Required.</span></label>
+        <div class="row" style="justify-content: flex-end"><a class="btn" href="#">Cancel</a><a class="btn dark" href="#">Return with comments</a></div>
+      </section>
+
+      <section class="dlg only-l" style="max-width: 460px" aria-label="Reject dialog">
+        <p class="eyebrow">Dialog after Reject</p>
+        <h2 class="h2">Reject Medical Records Clerk?</h2>
+        <label class="field"><span>Reason</span><span class="input area"></span></label>
+        <div class="row" style="justify-content: flex-end"><a class="btn" href="#">Cancel</a><a class="btn danger" href="#">Reject posting</a></div>
+      </section>
+
       <section class="card" aria-label="Empty queue">
-        <p class="eyebrow">Empty state</p>
-        <div class="row top wrap">
-          <div class="illus s" style="width: 150px">Illustration · unDraw, theme green</div>
-          <div class="stack s minw0" style="flex: 1 1 200px">
-            <p class="h3">No postings awaiting approval.</p>
-            <a class="link sm" href="#">Back to approvals</a>
-          </div>
-        </div>
+        <p class="eyebrow">When the queue is empty</p>
+        <p class="h3">No postings awaiting approval.</p>
       </section>
     </main>
   </div>
@@ -190,7 +224,7 @@
     <main class="main">
       <div class="stack s">
         <h1 class="h1">Posting approvals</h1>
-        <p class="muted">Oldest first. Nothing is public until you approve it.</p>
+        <p class="muted">Oldest first.</p>
       </div>
 
       <div class="cols side-l">
@@ -208,15 +242,24 @@
 
         <section class="stack only-l" aria-label="Chosen posting">
           <div class="row between wrap" style="background: var(--b1); border: 1px solid var(--b3); border-radius: 16px; padding: 12px 16px">
-            <span class="sm">Brazos Health · <b>Active</b> organization · submitted by Sam Ortiz</span>
+            <span class="sm">Brazos Health · <b>Active</b> organization</span>
             <div class="row"><a class="btn sm danger" href="#">Reject</a><a class="btn sm" href="#">Return with comments</a><a class="btn sm pri" href="#">Approve</a></div>
           </div>
+          <section class="card tight">
+            <p class="eyebrow">When the deadline passed while the posting was waiting</p>
+            <section class="alert err"><span>The application deadline has passed. The posting was returned to the recruiters for a new deadline.</span></section>
+          </section>
+          <section class="card tight">
+            <p class="eyebrow">When the organization or the submitting recruiter is no longer active</p>
+            <section class="alert err"><span>Cannot publish: Brazos Health is no longer active. The posting stays pending.</span></section>
+          </section>
+          <section class="card tight">
+            <p class="eyebrow">When another administrator already decided the posting</p>
+            <section class="alert"><span>Another administrator already decided this posting. Status: <b>Published</b>.</span></section>
+          </section>
           <p class="eyebrow">As the public will see it</p>
           <article class="canvas white">
-            <div class="row top">
-              <span class="olog lg c2" aria-hidden="true">BH</span>
-              <div class="stack xs"><p class="muted">Brazos Health</p><h2 class="h1">Medical Records Clerk</h2></div>
-            </div>
+            <div class="stack xs"><p class="muted">Brazos Health</p><h2 class="h1">Medical Records Clerk</h2></div>
             <div class="row wrap" style="gap: 8px"><span class="badge">On-site</span><span class="badge">Full-time</span><span class="badge">1 opening</span><span class="badge out">Apply by November 30</span></div>
             <section class="stack s"><h3 class="h2">About the role</h3><p>Keep patient records complete and private across our two Waco clinics. You will file, scan and answer record requests from patients and insurers.</p></section>
             <section class="stack s"><h3 class="h2">Requirements</h3><ul class="stack xs" style="list-style: disc; padding-left: 20px"><li>High school diploma</li><li>One year of office or clinic work</li><li>Careful with confidential information</li></ul></section>
@@ -224,15 +267,23 @@
         </section>
       </div>
 
+      <section class="dlg only-l" style="max-width: 460px" aria-label="Return dialog">
+        <p class="eyebrow">Dialog after Return with comments</p>
+        <h2 class="h2">Return Medical Records Clerk for changes?</h2>
+        <label class="field"><span>Comments for the recruiters</span><span class="input area"></span><span class="hint">Required.</span></label>
+        <div class="row" style="justify-content: flex-end"><a class="btn" href="#">Cancel</a><a class="btn dark" href="#">Return with comments</a></div>
+      </section>
+
+      <section class="dlg only-l" style="max-width: 460px" aria-label="Reject dialog">
+        <p class="eyebrow">Dialog after Reject</p>
+        <h2 class="h2">Reject Medical Records Clerk?</h2>
+        <label class="field"><span>Reason</span><span class="input area"></span></label>
+        <div class="row" style="justify-content: flex-end"><a class="btn" href="#">Cancel</a><a class="btn danger" href="#">Reject posting</a></div>
+      </section>
+
       <section class="card" aria-label="Empty queue">
-        <p class="eyebrow">Empty state</p>
-        <div class="row top wrap">
-          <div class="illus s" style="width: 150px">Illustration · unDraw, theme green</div>
-          <div class="stack s minw0" style="flex: 1 1 200px">
-            <p class="h3">No postings awaiting approval.</p>
-            <a class="link sm" href="#">Back to approvals</a>
-          </div>
-        </div>
+        <p class="eyebrow">When the queue is empty</p>
+        <p class="h3">No postings awaiting approval.</p>
       </section>
     </main>
   </div>
