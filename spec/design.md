@@ -200,13 +200,102 @@ sequenceDiagram
         PS->>AR: save(applicant)
         AR-->>PS: Applicant
         PS->>RR: delete(previous)
-        Note over RR: the previous Resume, if any, is gone (BR-6);<br/>application snapshots are copies, unchanged (A6)
+        Note over RR: the previous Resume, if any, is gone (BR-6),<br/>application snapshots are copies, unchanged (A6)
         PS-->>PC: Resume
         PC-->>AP: 201 ResumeResponse {fileName, uploadDate}
     end
 ```
 
 **Figure 29: SD-10 Upload a resume (UC-03)**
+
+### UC-04 Apply for Job
+
+SD-3 keeps the number it had in Deliverable 3. It shows startApplication, which presents the
+application summary, and submitApplication (CO-04.1). The logged-in Applicant is the subject of the
+session token (ADR-0010). Only the Applicant role reaches `/api/postings/{postingId}/application`:
+a visitor who is not logged in is answered 401 and a Recruiter or Administrator 403 (extensions 1a,
+1b). A posting that does not exist is 404.
+
+startApplication only reads. A missing resume (extension 2a) or 5 active applications (2b) comes
+back as a refusal inside the answer, not as an error, so the screen shows it beside the summary.
+
+submitApplication checks, in this order: the posting is Published and its deadline day is not over
+in the organization's time zone (4a, BR-10); a resume is on file (2a, BR-6); the applicant has never
+applied to this posting, in any stage, withdrawn included (4c, A5); and the applicant has fewer than
+5 active applications (4b, BR-4). Each refusal is an ApplicationRefusedException with a reason
+written for the applicant, which the controller answers with 409. Only then does the service create
+the Application. It gets the date applied in the organization's time zone, a Resume Snapshot that
+copies the file's content, so a later resume changes nothing (A6), and the first status history
+entry, Applied. The unique constraint on applicant and posting turns a double click into the 4c
+refusal. The answer carries the new count of active applications for step 7.
+
+Not built yet: the confirmation of step 6 (no Notification is created) and the limit of 5 under
+submissions at the same moment to different postings, which the count alone does not hold.
+
+```mermaid
+sequenceDiagram
+    actor AP as Applicant
+    participant AC as Application<br/>Controller
+    participant AS as Application<br/>Service
+    participant JR as JobPosting<br/>Repository
+    participant UR as Applicant<br/>Repository
+    participant AR as Application<br/>Repository
+
+    AP->>AC: GET /api/postings/{postingId}/application<br/>(bearer token)
+    AC->>AS: startApplication(postingId, email)
+    AS->>JR: findById(postingId)
+    JR-->>AS: JobPosting
+    AS->>UR: findByEmailIgnoreCase(email)
+    UR-->>AS: Applicant, with its Resume if any
+    AS->>AR: findByApplicantAndApplicationStatusIn(applicant, ACTIVE)
+    AR-->>AS: active Applications
+    AS->>AS: refusal = NO_RESUME if no resume (ext. 2a),<br/>LIMIT_REACHED if 5 active (ext. 2b), else none
+    AS-->>AC: ApplicationStart
+    AC-->>AP: 200 ApplicationStartResponse {posting, applicant,<br/>resume, activeApplications, activeApplicationCount,<br/>applicationLimit, refusal}
+
+    AP->>AC: POST /api/postings/{postingId}/application<br/>(bearer token)
+    AC->>AS: submitApplication(postingId, email)
+    AS->>JR: findById(postingId)
+    JR-->>AS: JobPosting
+    AS->>AS: posting.isOpen(now): Published, before 23:59<br/>of the deadline in the organization's zone
+    break posting closed (ext. 4a)
+        AS-->>AC: ApplicationRefusedException(POSTING_CLOSED)
+        AC-->>AP: 409 {reason, message}, nothing saved
+    end
+    AS->>UR: findByEmailIgnoreCase(email)
+    UR-->>AS: Applicant, with its Resume if any
+    break no resume on file (ext. 2a)
+        AS-->>AC: ApplicationRefusedException(NO_RESUME)
+        AC-->>AP: 409 {reason, message}, nothing saved
+    end
+    AS->>AR: existsByApplicantAndJobPosting(applicant, posting)
+    AR-->>AS: applied before?
+    break applied before, withdrawn included (ext. 4c, A5)
+        AS-->>AC: ApplicationRefusedException(ALREADY_APPLIED)
+        AC-->>AP: 409 {reason, message}, nothing saved
+    end
+    AS->>AR: countActiveByApplicant(applicant)
+    AR-->>AS: active
+    break 5 active applications (ext. 4b, BR-4)
+        AS-->>AC: ApplicationRefusedException(LIMIT_REACHED)
+        AC-->>AP: 409 {reason, message}, nothing saved
+    end
+    create participant A as :Application
+    AS->>A: new Application(applicant, posting,<br/>ResumeSnapshot.of(resume), dateApplied)
+    Note over A: applicationStatus Applied, statusHistory gains<br/>Applied with dateApplied, the snapshot copies<br/>the file's content (A6)
+    AS->>AR: saveAndFlush(application)
+    alt same posting submitted at the same moment (ext. 4c)
+        AR-->>AS: DataIntegrityViolationException
+        AS-->>AC: ApplicationRefusedException(ALREADY_APPLIED)
+        AC-->>AP: 409 {reason, message}, nothing saved
+    else saved
+        AR-->>AS: Application
+        AS-->>AC: SubmittedApplication(application, active + 1)
+        AC-->>AP: 201 ApplicationResponse {applicationId,<br/>applicationStatus, activeApplicationCount}
+    end
+```
+
+**Figure 30: SD-3 Apply for a job (UC-04)**
 
 ## 7. Design Class Diagram (DCD)
 
@@ -221,6 +310,7 @@ the DCD must contain each of them.
 | Diagram | Controller method | Service method | Repository calls |
 | --- | --- | --- | --- |
 | SD-1 | `JobPostingController.searchPostings`; `PublicPosting.of` | `JobPostingService.searchPostings`; `JobPosting.isOpen` | `JobPostingRepository.findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDescJobPostIdDesc` |
+| SD-3 | `ApplicationController.startApplication`, `submitApplication` | `ApplicationService.startApplication`, `submitApplication`; `JobPosting.isOpen`; `ResumeSnapshot.of` | `JobPostingRepository.findById`; `ApplicantRepository.findByEmailIgnoreCase`; `ApplicationRepository.findByApplicantAndApplicationStatusIn`, `existsByApplicantAndJobPosting`, `countActiveByApplicant`, `saveAndFlush` |
 | SD-8 | `RegistrationController.register` | `RegistrationService.register`; `LogInService.startSession` | `UserRepository.findByEmailIgnoreCase`, `saveAndFlush` |
 | SD-9 | `ApplicantProfileController.viewProfile`, `updateProfile` | `ApplicantProfileService.viewProfile`, `updateProfile` | `ApplicantRepository.findByEmailIgnoreCase`, `save` |
 | SD-10 | `ApplicantProfileController.uploadResume` | `ApplicantProfileService.uploadResume` | `ApplicantRepository.findByEmailIgnoreCase`, `save`; `ResumeRepository.save`, `delete` |
