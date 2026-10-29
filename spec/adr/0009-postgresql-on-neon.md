@@ -20,12 +20,16 @@ they did not check the database a deployment would use.
 - JUnit tests, and the backend the Playwright tests start (`./mvnw spring-boot:test-run`), use a
   fresh PostgreSQL in Docker through the Testcontainers JDBC URL in
   `src/test/resources/config/application.properties`. They never touch the Neon database.
+- When Docker is not running, the same tests use an in-memory H2 database instead and log a
+  warning (`TestDatabaseFallback` in the test sources; amended 2026-10-28). Not in CI (`CI=true`):
+  there a missing Docker fails the run, so every merge and every deploy is checked on PostgreSQL.
 - Hibernate keeps creating and updating the tables (`ddl-auto=update`). Sample data loads only
   into an empty database.
 
 ## Consequences
 
-- Running the tests needs Docker. GitHub's runners have it.
+- The tests run without Docker, but only a run with Docker checks PostgreSQL. GitHub's runners
+  have it, so a difference between H2 and PostgreSQL shows up in the pull request at the latest.
 - A member without `.env` works on H2 as before; H2 and PostgreSQL can differ, and only the tests
   catch that.
 - A change to an entity that `update` cannot apply (a new required column on a table with rows)

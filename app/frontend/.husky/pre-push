@@ -25,6 +25,10 @@ if [ "$changed" = 0 ]; then
 fi
 
 set -e
+if ! docker info >/dev/null 2>&1; then
+  echo "pre-push: Docker is not running, so JUnit and Playwright use H2; CI checks PostgreSQL (ADR-0009)"
+fi
+
 echo "pre-push: backend tests (JUnit)"
 (cd "$root/app/backend" && ./mvnw -q -B test)
 
