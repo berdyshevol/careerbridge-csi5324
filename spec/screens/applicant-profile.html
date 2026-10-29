@@ -36,7 +36,6 @@
     <main class="main">
       <div class="stack s">
         <h1 class="h1">Profile and resume</h1>
-        <p class="muted">Recruiters see these details with every application you send.</p>
       </div>
       <div class="cols side">
         <section class="card" aria-label="Profile details">
@@ -45,7 +44,7 @@
             <label class="field"><span>First name</span><span class="input"><input value="Maya" aria-label="First name"></span></label>
             <label class="field"><span>Last name</span><span class="input"><input value="Patel" aria-label="Last name"></span></label>
             <label class="field"><span>Email</span><span class="input ph">maya.patel@example.com</span><span class="hint">Your log-in. It cannot be changed here.</span></label>
-            <label class="field"><span>Phone</span><span class="input" style="border-color: var(--err)"><input value="254 555 01x7" aria-label="Phone"></span><span class="hint" style="color: var(--err)">Digits, spaces, +, ( ) and - only.</span></label>
+            <label class="field"><span>Phone</span><span class="input" style="border-color: var(--err)"><input value="254 555 01x7" aria-label="Phone"></span><span class="hint" style="color: var(--err)">The phone number is malformed.</span></label>
             <label class="field"><span>Location</span><span class="input"><input value="Waco, TX" aria-label="Location"></span></label>
             <label class="field"><span>Headline</span><span class="input"><input value="Data analyst, healthcare and finance" aria-label="Headline"></span></label>
           </div>
@@ -58,13 +57,24 @@
         <aside class="stack">
           <section class="card" aria-label="Resume on file">
             <h2 class="h2">Resume on file</h2>
-            <div class="file"><span class="ext">PDF</span><div class="stack xs minw0"><p class="sm b">Maya_Patel_Resume.pdf</p><p class="xs muted">Uploaded October 12</p></div></div>
-            <div class="drop">Drop a new file here or <a class="link" href="#">choose a file</a><br>PDF or DOCX, up to 5 MB. It replaces the one above.</div>
+            <div class="file"><div class="stack xs minw0"><p class="sm b">Maya_Patel_Resume.pdf</p><p class="xs muted">Uploaded October 12</p></div></div>
+            <div class="drop"><a class="link" href="#">Choose a file</a><br>PDF or DOCX, up to 5 MB. It replaces the one above.</div>
             <p class="hint">Applications you already sent keep the resume they were sent with.</p>
           </section>
+          <p class="eyebrow">When the file is not a PDF or DOCX, or is larger than 5 MB</p>
           <section class="alert err">
             <span><b>photo.png was not uploaded.</b> Use a PDF or DOCX file of 5 MB or less. Your current resume is still on file.</span>
           </section>
+          <p class="eyebrow">When the details are saved</p>
+          <section class="alert"><span>Profile saved.</span></section>
+          <p class="eyebrow">When no resume is on file</p>
+          <section class="card" aria-label="No resume on file">
+            <h2 class="h2">Resume on file</h2>
+            <p class="muted">No resume on file.</p>
+            <div class="drop"><a class="link" href="#">Choose a file</a><br>PDF or DOCX, up to 5 MB.</div>
+          </section>
+          <p class="eyebrow">When the system fails</p>
+          <section class="alert err"><span>Something went wrong. Details saved before the error are kept, and your previous resume is still on file.</span></section>
         </aside>
       </div>
     </main>
@@ -104,7 +114,6 @@
     <main class="main">
       <div class="stack s">
         <h1 class="h1">Profile and resume</h1>
-        <p class="muted">Recruiters see these details with every application you send.</p>
       </div>
       <div class="cols side">
         <section class="card" aria-label="Profile details">
@@ -113,7 +122,7 @@
             <label class="field"><span>First name</span><span class="input"><input value="Maya" aria-label="First name"></span></label>
             <label class="field"><span>Last name</span><span class="input"><input value="Patel" aria-label="Last name"></span></label>
             <label class="field"><span>Email</span><span class="input ph">maya.patel@example.com</span><span class="hint">Your log-in. It cannot be changed here.</span></label>
-            <label class="field"><span>Phone</span><span class="input" style="border-color: var(--err)"><input value="254 555 01x7" aria-label="Phone"></span><span class="hint" style="color: var(--err)">Digits, spaces, +, ( ) and - only.</span></label>
+            <label class="field"><span>Phone</span><span class="input" style="border-color: var(--err)"><input value="254 555 01x7" aria-label="Phone"></span><span class="hint" style="color: var(--err)">The phone number is malformed.</span></label>
             <label class="field"><span>Location</span><span class="input"><input value="Waco, TX" aria-label="Location"></span></label>
             <label class="field"><span>Headline</span><span class="input"><input value="Data analyst, healthcare and finance" aria-label="Headline"></span></label>
           </div>
@@ -126,13 +135,24 @@
         <aside class="stack">
           <section class="card" aria-label="Resume on file">
             <h2 class="h2">Resume on file</h2>
-            <div class="file"><span class="ext">PDF</span><div class="stack xs minw0"><p class="sm b">Maya_Patel_Resume.pdf</p><p class="xs muted">Uploaded October 12</p></div></div>
-            <div class="drop">Drop a new file here or <a class="link" href="#">choose a file</a><br>PDF or DOCX, up to 5 MB. It replaces the one above.</div>
+            <div class="file"><div class="stack xs minw0"><p class="sm b">Maya_Patel_Resume.pdf</p><p class="xs muted">Uploaded October 12</p></div></div>
+            <div class="drop"><a class="link" href="#">Choose a file</a><br>PDF or DOCX, up to 5 MB. It replaces the one above.</div>
             <p class="hint">Applications you already sent keep the resume they were sent with.</p>
           </section>
+          <p class="eyebrow">When the file is not a PDF or DOCX, or is larger than 5 MB</p>
           <section class="alert err">
             <span><b>photo.png was not uploaded.</b> Use a PDF or DOCX file of 5 MB or less. Your current resume is still on file.</span>
           </section>
+          <p class="eyebrow">When the details are saved</p>
+          <section class="alert"><span>Profile saved.</span></section>
+          <p class="eyebrow">When no resume is on file</p>
+          <section class="card" aria-label="No resume on file">
+            <h2 class="h2">Resume on file</h2>
+            <p class="muted">No resume on file.</p>
+            <div class="drop"><a class="link" href="#">Choose a file</a><br>PDF or DOCX, up to 5 MB.</div>
+          </section>
+          <p class="eyebrow">When the system fails</p>
+          <section class="alert err"><span>Something went wrong. Details saved before the error are kept, and your previous resume is still on file.</span></section>
         </aside>
       </div>
     </main>
@@ -172,7 +192,6 @@
     <main class="main">
       <div class="stack s">
         <h1 class="h1">Profile and resume</h1>
-        <p class="muted">Recruiters see these details with every application you send.</p>
       </div>
       <div class="cols side">
         <section class="card" aria-label="Profile details">
@@ -181,7 +200,7 @@
             <label class="field"><span>First name</span><span class="input"><input value="Maya" aria-label="First name"></span></label>
             <label class="field"><span>Last name</span><span class="input"><input value="Patel" aria-label="Last name"></span></label>
             <label class="field"><span>Email</span><span class="input ph">maya.patel@example.com</span><span class="hint">Your log-in. It cannot be changed here.</span></label>
-            <label class="field"><span>Phone</span><span class="input" style="border-color: var(--err)"><input value="254 555 01x7" aria-label="Phone"></span><span class="hint" style="color: var(--err)">Digits, spaces, +, ( ) and - only.</span></label>
+            <label class="field"><span>Phone</span><span class="input" style="border-color: var(--err)"><input value="254 555 01x7" aria-label="Phone"></span><span class="hint" style="color: var(--err)">The phone number is malformed.</span></label>
             <label class="field"><span>Location</span><span class="input"><input value="Waco, TX" aria-label="Location"></span></label>
             <label class="field"><span>Headline</span><span class="input"><input value="Data analyst, healthcare and finance" aria-label="Headline"></span></label>
           </div>
@@ -194,13 +213,24 @@
         <aside class="stack">
           <section class="card" aria-label="Resume on file">
             <h2 class="h2">Resume on file</h2>
-            <div class="file"><span class="ext">PDF</span><div class="stack xs minw0"><p class="sm b">Maya_Patel_Resume.pdf</p><p class="xs muted">Uploaded October 12</p></div></div>
-            <div class="drop">Drop a new file here or <a class="link" href="#">choose a file</a><br>PDF or DOCX, up to 5 MB. It replaces the one above.</div>
+            <div class="file"><div class="stack xs minw0"><p class="sm b">Maya_Patel_Resume.pdf</p><p class="xs muted">Uploaded October 12</p></div></div>
+            <div class="drop"><a class="link" href="#">Choose a file</a><br>PDF or DOCX, up to 5 MB. It replaces the one above.</div>
             <p class="hint">Applications you already sent keep the resume they were sent with.</p>
           </section>
+          <p class="eyebrow">When the file is not a PDF or DOCX, or is larger than 5 MB</p>
           <section class="alert err">
             <span><b>photo.png was not uploaded.</b> Use a PDF or DOCX file of 5 MB or less. Your current resume is still on file.</span>
           </section>
+          <p class="eyebrow">When the details are saved</p>
+          <section class="alert"><span>Profile saved.</span></section>
+          <p class="eyebrow">When no resume is on file</p>
+          <section class="card" aria-label="No resume on file">
+            <h2 class="h2">Resume on file</h2>
+            <p class="muted">No resume on file.</p>
+            <div class="drop"><a class="link" href="#">Choose a file</a><br>PDF or DOCX, up to 5 MB.</div>
+          </section>
+          <p class="eyebrow">When the system fails</p>
+          <section class="alert err"><span>Something went wrong. Details saved before the error are kept, and your previous resume is still on file.</span></section>
         </aside>
       </div>
     </main>

@@ -15,7 +15,7 @@
 <div class="dev" style="width: 390px">
   <header class="hdr"><div class="hdr-in">
     <a class="logo" href="#">CareerBridge</a>
-    <a class="orgsw" href="#" aria-label="Acting for Brazos Health. Switch organization"><span class="olog c2" aria-hidden="true">BH</span><span class="orgname">Brazos Health</span><span class="muted" aria-hidden="true">▾</span></a>
+    <a class="orgsw" href="#" aria-label="Acting for Brazos Health. Switch organization"><span class="orgname">Brazos Health</span><span class="muted" aria-hidden="true">▾</span></a>
     <span class="grow"></span>
     <span class="who"><b>Sam Ortiz</b><span>Recruiter</span></span>
     <a class="avatar" href="#" aria-label="Account menu for Sam Ortiz">SO</a>
@@ -44,35 +44,43 @@
         <span><b>Returned by the administrator.</b> “Add the salary range, and say how many days are on site.” Change the posting and submit it again.</span>
       </section>
 
-      <div class="cols side">
-        <section class="card" aria-label="Posting details">
-          <label class="field"><span>Title</span><span class="input"><input value="Nurse Scheduler" aria-label="Title"></span></label>
-          <div class="cols t2">
-            <div class="field"><span>Location</span>
-              <div class="row wrap" style="gap: 8px">
-                <span class="badge out">On-site</span><span class="badge sec">Hybrid</span><span class="badge out">Remote</span>
-              </div>
+      <section class="card" aria-label="Posting details">
+        <label class="field"><span>Title</span><span class="input"><input value="Nurse Scheduler" aria-label="Title"></span></label>
+        <div class="cols t2">
+          <div class="field"><span>Location</span>
+            <div class="row wrap" style="gap: 8px">
+              <span class="badge out">On-site</span><span class="badge sec">Hybrid</span><span class="badge out">Remote</span>
             </div>
-            <label class="field"><span>Employment type</span><span class="input sel">Full-time</span></label>
-            <label class="field"><span>Salary range, optional</span><span class="input" style="border-color: var(--pri)"><input value="52,000 – 60,000 USD per year" aria-label="Salary range"></span></label>
-            <label class="field"><span>Application deadline</span><span class="input"><input value="November 27, 2026" aria-label="Application deadline"></span><span class="hint">Between 1 and 90 days from today.</span></label>
-            <label class="field"><span>Openings</span><span class="input"><input value="1" aria-label="Openings"></span></label>
           </div>
-          <label class="field"><span>Description</span>
-            <span class="input area" style="min-height: 150px; flex-direction: column; gap: 8px"><span class="row xs muted" style="gap: 14px"><b>B</b><span>Heading</span><span>• List</span></span><span>Plan shifts for 40 nurses across two clinics. On site Monday to Wednesday, from home Thursday and Friday.</span></span>
-          </label>
-          <label class="field"><span>Requirements</span><span class="input area">Two years of scheduling in a clinic or hospital. Comfortable with rostering software.</span></label>
-          <div class="row wrap" style="justify-content: flex-end"><a class="btn" href="#">Save draft</a><a class="btn pri" href="#">Submit for approval</a></div>
-        </section>
+          <label class="field"><span>Employment type</span><span class="input sel">Full-time</span></label>
+          <label class="field"><span>Salary range, optional</span><span class="input" style="border-color: var(--pri)"><input value="52,000 – 60,000 USD per year" aria-label="Salary range"></span></label>
+          <label class="field"><span>Application deadline</span><span class="input"><input value="November 27, 2026" aria-label="Application deadline"></span><span class="hint">Between 1 and 90 days from today.</span></label>
+          <label class="field"><span>Openings</span><span class="input"><input value="1" aria-label="Openings"></span></label>
+        </div>
+        <label class="field"><span>Description</span>
+          <span class="input area" style="min-height: 150px; flex-direction: column; gap: 8px"><span class="row xs muted" style="gap: 14px"><b>B</b><span>Heading</span><span>• List</span></span><span>Plan shifts for 40 nurses across two clinics. On site Monday to Wednesday, from home Thursday and Friday.</span></span>
+        </label>
+        <label class="field"><span>Requirements</span><span class="input area">Two years of scheduling in a clinic or hospital. Comfortable with rostering software.</span></label>
+        <div class="row wrap" style="justify-content: flex-end"><a class="btn" href="#">Save draft</a><a class="btn pri" href="#">Submit for approval</a></div>
+      </section>
 
-        <aside class="stack">
-          <section class="card tight">
-            <h2 class="h3">New posting</h2>
-            <p class="sm muted">A new posting opens empty, or from an earlier one: <a class="link" href="#">Start from an earlier posting</a>. Everything is copied except the deadline.</p>
-          </section>
-          <p class="xs muted">Saved 20 seconds ago. If you are logged out, log back in within 24 hours to recover it.</p>
-        </aside>
-      </div>
+      <section class="card" aria-label="Missing or invalid field">
+        <p class="eyebrow">When a required field is missing or invalid</p>
+        <label class="field"><span>Title</span><span class="input" style="border-color: var(--err)"><input value="" aria-label="Title"></span><span class="hint" style="color: var(--err)">The title is required.</span></label>
+      </section>
+
+      <section class="card" aria-label="Deadline out of range">
+        <p class="eyebrow">When the deadline is in the past, less than 1 day or more than 90 days away</p>
+        <label class="field"><span>Application deadline</span><span class="input" style="border-color: var(--err)"><input value="March 1, 2027" aria-label="Application deadline"></span><span class="hint" style="color: var(--err)">The deadline must be between 1 and 90 days away.</span></label>
+      </section>
+
+      <section class="card" aria-label="Choose organization">
+        <p class="eyebrow">When starting a new posting with several memberships</p>
+        <h2 class="h3">Which organization is this posting for?</h2>
+        <p class="check radio"><i class="on" aria-hidden="true"></i><span>Brazos Health</span></p>
+        <p class="check radio"><i aria-hidden="true"></i><span>Central Texas Clinics</span></p>
+        <div class="row wrap" style="justify-content: flex-end"><a class="btn" href="#">Continue</a></div>
+      </section>
     </main>
   </div>
   <footer class="ftr"><a href="#">About CareerBridge</a></footer>
@@ -88,7 +96,7 @@
 <div class="dev" style="width: 820px">
   <header class="hdr"><div class="hdr-in">
     <a class="logo" href="#">CareerBridge</a>
-    <a class="orgsw" href="#" aria-label="Acting for Brazos Health. Switch organization"><span class="olog c2" aria-hidden="true">BH</span><span class="orgname">Brazos Health</span><span class="muted" aria-hidden="true">▾</span></a>
+    <a class="orgsw" href="#" aria-label="Acting for Brazos Health. Switch organization"><span class="orgname">Brazos Health</span><span class="muted" aria-hidden="true">▾</span></a>
     <span class="grow"></span>
     <span class="who"><b>Sam Ortiz</b><span>Recruiter</span></span>
     <a class="avatar" href="#" aria-label="Account menu for Sam Ortiz">SO</a>
@@ -117,35 +125,43 @@
         <span><b>Returned by the administrator.</b> “Add the salary range, and say how many days are on site.” Change the posting and submit it again.</span>
       </section>
 
-      <div class="cols side">
-        <section class="card" aria-label="Posting details">
-          <label class="field"><span>Title</span><span class="input"><input value="Nurse Scheduler" aria-label="Title"></span></label>
-          <div class="cols t2">
-            <div class="field"><span>Location</span>
-              <div class="row wrap" style="gap: 8px">
-                <span class="badge out">On-site</span><span class="badge sec">Hybrid</span><span class="badge out">Remote</span>
-              </div>
+      <section class="card" aria-label="Posting details">
+        <label class="field"><span>Title</span><span class="input"><input value="Nurse Scheduler" aria-label="Title"></span></label>
+        <div class="cols t2">
+          <div class="field"><span>Location</span>
+            <div class="row wrap" style="gap: 8px">
+              <span class="badge out">On-site</span><span class="badge sec">Hybrid</span><span class="badge out">Remote</span>
             </div>
-            <label class="field"><span>Employment type</span><span class="input sel">Full-time</span></label>
-            <label class="field"><span>Salary range, optional</span><span class="input" style="border-color: var(--pri)"><input value="52,000 – 60,000 USD per year" aria-label="Salary range"></span></label>
-            <label class="field"><span>Application deadline</span><span class="input"><input value="November 27, 2026" aria-label="Application deadline"></span><span class="hint">Between 1 and 90 days from today.</span></label>
-            <label class="field"><span>Openings</span><span class="input"><input value="1" aria-label="Openings"></span></label>
           </div>
-          <label class="field"><span>Description</span>
-            <span class="input area" style="min-height: 150px; flex-direction: column; gap: 8px"><span class="row xs muted" style="gap: 14px"><b>B</b><span>Heading</span><span>• List</span></span><span>Plan shifts for 40 nurses across two clinics. On site Monday to Wednesday, from home Thursday and Friday.</span></span>
-          </label>
-          <label class="field"><span>Requirements</span><span class="input area">Two years of scheduling in a clinic or hospital. Comfortable with rostering software.</span></label>
-          <div class="row wrap" style="justify-content: flex-end"><a class="btn" href="#">Save draft</a><a class="btn pri" href="#">Submit for approval</a></div>
-        </section>
+          <label class="field"><span>Employment type</span><span class="input sel">Full-time</span></label>
+          <label class="field"><span>Salary range, optional</span><span class="input" style="border-color: var(--pri)"><input value="52,000 – 60,000 USD per year" aria-label="Salary range"></span></label>
+          <label class="field"><span>Application deadline</span><span class="input"><input value="November 27, 2026" aria-label="Application deadline"></span><span class="hint">Between 1 and 90 days from today.</span></label>
+          <label class="field"><span>Openings</span><span class="input"><input value="1" aria-label="Openings"></span></label>
+        </div>
+        <label class="field"><span>Description</span>
+          <span class="input area" style="min-height: 150px; flex-direction: column; gap: 8px"><span class="row xs muted" style="gap: 14px"><b>B</b><span>Heading</span><span>• List</span></span><span>Plan shifts for 40 nurses across two clinics. On site Monday to Wednesday, from home Thursday and Friday.</span></span>
+        </label>
+        <label class="field"><span>Requirements</span><span class="input area">Two years of scheduling in a clinic or hospital. Comfortable with rostering software.</span></label>
+        <div class="row wrap" style="justify-content: flex-end"><a class="btn" href="#">Save draft</a><a class="btn pri" href="#">Submit for approval</a></div>
+      </section>
 
-        <aside class="stack">
-          <section class="card tight">
-            <h2 class="h3">New posting</h2>
-            <p class="sm muted">A new posting opens empty, or from an earlier one: <a class="link" href="#">Start from an earlier posting</a>. Everything is copied except the deadline.</p>
-          </section>
-          <p class="xs muted">Saved 20 seconds ago. If you are logged out, log back in within 24 hours to recover it.</p>
-        </aside>
-      </div>
+      <section class="card" aria-label="Missing or invalid field">
+        <p class="eyebrow">When a required field is missing or invalid</p>
+        <label class="field"><span>Title</span><span class="input" style="border-color: var(--err)"><input value="" aria-label="Title"></span><span class="hint" style="color: var(--err)">The title is required.</span></label>
+      </section>
+
+      <section class="card" aria-label="Deadline out of range">
+        <p class="eyebrow">When the deadline is in the past, less than 1 day or more than 90 days away</p>
+        <label class="field"><span>Application deadline</span><span class="input" style="border-color: var(--err)"><input value="March 1, 2027" aria-label="Application deadline"></span><span class="hint" style="color: var(--err)">The deadline must be between 1 and 90 days away.</span></label>
+      </section>
+
+      <section class="card" aria-label="Choose organization">
+        <p class="eyebrow">When starting a new posting with several memberships</p>
+        <h2 class="h3">Which organization is this posting for?</h2>
+        <p class="check radio"><i class="on" aria-hidden="true"></i><span>Brazos Health</span></p>
+        <p class="check radio"><i aria-hidden="true"></i><span>Central Texas Clinics</span></p>
+        <div class="row wrap" style="justify-content: flex-end"><a class="btn" href="#">Continue</a></div>
+      </section>
     </main>
   </div>
   <footer class="ftr"><a href="#">About CareerBridge</a></footer>
@@ -161,7 +177,7 @@
 <div class="dev" style="width: 1440px">
   <header class="hdr"><div class="hdr-in">
     <a class="logo" href="#">CareerBridge</a>
-    <a class="orgsw" href="#" aria-label="Acting for Brazos Health. Switch organization"><span class="olog c2" aria-hidden="true">BH</span><span class="orgname">Brazos Health</span><span class="muted" aria-hidden="true">▾</span></a>
+    <a class="orgsw" href="#" aria-label="Acting for Brazos Health. Switch organization"><span class="orgname">Brazos Health</span><span class="muted" aria-hidden="true">▾</span></a>
     <span class="grow"></span>
     <span class="who"><b>Sam Ortiz</b><span>Recruiter</span></span>
     <a class="avatar" href="#" aria-label="Account menu for Sam Ortiz">SO</a>
@@ -190,35 +206,43 @@
         <span><b>Returned by the administrator.</b> “Add the salary range, and say how many days are on site.” Change the posting and submit it again.</span>
       </section>
 
-      <div class="cols side">
-        <section class="card" aria-label="Posting details">
-          <label class="field"><span>Title</span><span class="input"><input value="Nurse Scheduler" aria-label="Title"></span></label>
-          <div class="cols t2">
-            <div class="field"><span>Location</span>
-              <div class="row wrap" style="gap: 8px">
-                <span class="badge out">On-site</span><span class="badge sec">Hybrid</span><span class="badge out">Remote</span>
-              </div>
+      <section class="card" aria-label="Posting details">
+        <label class="field"><span>Title</span><span class="input"><input value="Nurse Scheduler" aria-label="Title"></span></label>
+        <div class="cols t2">
+          <div class="field"><span>Location</span>
+            <div class="row wrap" style="gap: 8px">
+              <span class="badge out">On-site</span><span class="badge sec">Hybrid</span><span class="badge out">Remote</span>
             </div>
-            <label class="field"><span>Employment type</span><span class="input sel">Full-time</span></label>
-            <label class="field"><span>Salary range, optional</span><span class="input" style="border-color: var(--pri)"><input value="52,000 – 60,000 USD per year" aria-label="Salary range"></span></label>
-            <label class="field"><span>Application deadline</span><span class="input"><input value="November 27, 2026" aria-label="Application deadline"></span><span class="hint">Between 1 and 90 days from today.</span></label>
-            <label class="field"><span>Openings</span><span class="input"><input value="1" aria-label="Openings"></span></label>
           </div>
-          <label class="field"><span>Description</span>
-            <span class="input area" style="min-height: 150px; flex-direction: column; gap: 8px"><span class="row xs muted" style="gap: 14px"><b>B</b><span>Heading</span><span>• List</span></span><span>Plan shifts for 40 nurses across two clinics. On site Monday to Wednesday, from home Thursday and Friday.</span></span>
-          </label>
-          <label class="field"><span>Requirements</span><span class="input area">Two years of scheduling in a clinic or hospital. Comfortable with rostering software.</span></label>
-          <div class="row wrap" style="justify-content: flex-end"><a class="btn" href="#">Save draft</a><a class="btn pri" href="#">Submit for approval</a></div>
-        </section>
+          <label class="field"><span>Employment type</span><span class="input sel">Full-time</span></label>
+          <label class="field"><span>Salary range, optional</span><span class="input" style="border-color: var(--pri)"><input value="52,000 – 60,000 USD per year" aria-label="Salary range"></span></label>
+          <label class="field"><span>Application deadline</span><span class="input"><input value="November 27, 2026" aria-label="Application deadline"></span><span class="hint">Between 1 and 90 days from today.</span></label>
+          <label class="field"><span>Openings</span><span class="input"><input value="1" aria-label="Openings"></span></label>
+        </div>
+        <label class="field"><span>Description</span>
+          <span class="input area" style="min-height: 150px; flex-direction: column; gap: 8px"><span class="row xs muted" style="gap: 14px"><b>B</b><span>Heading</span><span>• List</span></span><span>Plan shifts for 40 nurses across two clinics. On site Monday to Wednesday, from home Thursday and Friday.</span></span>
+        </label>
+        <label class="field"><span>Requirements</span><span class="input area">Two years of scheduling in a clinic or hospital. Comfortable with rostering software.</span></label>
+        <div class="row wrap" style="justify-content: flex-end"><a class="btn" href="#">Save draft</a><a class="btn pri" href="#">Submit for approval</a></div>
+      </section>
 
-        <aside class="stack">
-          <section class="card tight">
-            <h2 class="h3">New posting</h2>
-            <p class="sm muted">A new posting opens empty, or from an earlier one: <a class="link" href="#">Start from an earlier posting</a>. Everything is copied except the deadline.</p>
-          </section>
-          <p class="xs muted">Saved 20 seconds ago. If you are logged out, log back in within 24 hours to recover it.</p>
-        </aside>
-      </div>
+      <section class="card" aria-label="Missing or invalid field">
+        <p class="eyebrow">When a required field is missing or invalid</p>
+        <label class="field"><span>Title</span><span class="input" style="border-color: var(--err)"><input value="" aria-label="Title"></span><span class="hint" style="color: var(--err)">The title is required.</span></label>
+      </section>
+
+      <section class="card" aria-label="Deadline out of range">
+        <p class="eyebrow">When the deadline is in the past, less than 1 day or more than 90 days away</p>
+        <label class="field"><span>Application deadline</span><span class="input" style="border-color: var(--err)"><input value="March 1, 2027" aria-label="Application deadline"></span><span class="hint" style="color: var(--err)">The deadline must be between 1 and 90 days away.</span></label>
+      </section>
+
+      <section class="card" aria-label="Choose organization">
+        <p class="eyebrow">When starting a new posting with several memberships</p>
+        <h2 class="h3">Which organization is this posting for?</h2>
+        <p class="check radio"><i class="on" aria-hidden="true"></i><span>Brazos Health</span></p>
+        <p class="check radio"><i aria-hidden="true"></i><span>Central Texas Clinics</span></p>
+        <div class="row wrap" style="justify-content: flex-end"><a class="btn" href="#">Continue</a></div>
+      </section>
     </main>
   </div>
   <footer class="ftr"><a href="#">About CareerBridge</a></footer>

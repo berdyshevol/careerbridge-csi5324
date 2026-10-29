@@ -135,7 +135,6 @@
 .file { display: flex; align-items: center; gap: 12px; border: 1px solid var(--b3); border-radius: 12px; padding: 12px 14px; background: var(--b1); }
 .file .ext { width: 38px; height: 46px; border-radius: 6px; background: var(--err-bg); color: var(--err); font-size: 11px; font-weight: 700; display: grid; place-items: center; flex: none; }
 .drop { border: 1.5px dashed var(--b3); border-radius: 12px; padding: 18px; text-align: center; font-size: 14px; color: var(--muted); background: var(--b2); }
-.orgname { display: none; }
 .doc { border: 1px solid var(--b3); border-radius: 12px; background: var(--b1); padding: 22px; display: flex; flex-direction: column; gap: 10px; }
 .doc i { display: block; height: 8px; border-radius: 4px; background: var(--b2); }
 .doc i.h { height: 14px; width: 45%; background: var(--b3); }
@@ -153,7 +152,6 @@
 @container dev (min-width: 600px) {
   .hdr-in { padding: 0 24px; gap: 14px; }
   .who { display: block; }
-  .orgname { display: inline; }
   .qrow { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
   .shell { padding: 24px 24px 32px; }
   .nav-tiles { display: grid; grid-template-columns: repeat(var(--tiles, 4), minmax(0, 1fr)); gap: 12px; }

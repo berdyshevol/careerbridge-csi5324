@@ -40,75 +40,58 @@
       </div>
 
       <section class="card" aria-label="Search criteria">
-        <div class="hide-t stack">
-          <label class="input"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input type="search" value="analyst" aria-label="Keywords"></label>
-          <div class="row"><a class="btn grow" href="#">Filters</a><a class="btn pri grow" href="#">Search</a></div>
+        <div class="cols t2 l3" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr))">
+          <label class="field"><span>Keywords</span><span class="input"><input type="search" value="analyst" aria-label="Keywords"></span></label>
+          <label class="field"><span>Location</span><span class="input sel ph">Any location</span></label>
+          <label class="field"><span>Organization</span><span class="input sel ph">All organizations</span></label>
+          <label class="field"><span>Employment type</span><span class="input sel">Full-time</span></label>
         </div>
-        <div class="only-t">
-          <div class="cols t2 l3" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr))">
-            <label class="field"><span>Keywords</span><span class="input"><input type="search" value="analyst" aria-label="Keywords"></span></label>
-            <label class="field"><span>Location</span><span class="input sel ph">Any location</span></label>
-            <label class="field"><span>Organization</span><span class="input sel ph">All organizations</span></label>
-            <label class="field"><span>Employment type</span><span class="input sel">Full-time</span></label>
-          </div>
-          <div class="row" style="justify-content: flex-end; margin-top: 14px"><a class="btn ghost" href="#">Clear</a><a class="btn pri" href="#">Search</a></div>
-        </div>
+        <div class="row" style="justify-content: flex-end; margin-top: 14px"><a class="btn pri" href="#">Search</a></div>
       </section>
 
       <ul class="cols l2">
         <li class="card tight">
-          <div class="row top">
-            <span class="olog c2" aria-hidden="true">BH</span>
-            <div class="stack xs grow">
-              <a class="b" href="#">Data Analyst</a>
-              <p class="muted sm">Brazos Health · On-site · Full-time</p>
-              <p class="xs muted">Apply by November 14</p>
-            </div>
+          <div class="stack xs">
+            <a class="b" href="#">Data Analyst</a>
+            <p class="muted sm">Brazos Health · On-site · Full-time</p>
+            <p class="xs muted">Apply by November 14</p>
           </div>
         </li>
         <li class="card tight">
-          <div class="row top">
-            <span class="olog c3" aria-hidden="true">RC</span>
-            <div class="stack xs grow">
-              <a class="b" href="#">Credit Risk Analyst</a>
-              <p class="muted sm">Riverbend Credit Union · Remote · Full-time</p>
-              <p class="xs muted">Apply by November 20</p>
-            </div>
+          <div class="stack xs">
+            <a class="b" href="#">Credit Risk Analyst</a>
+            <p class="muted sm">Riverbend Credit Union · Remote · Full-time</p>
+            <p class="xs muted">Apply by November 20</p>
           </div>
         </li>
         <li class="card tight">
-          <div class="row top">
-            <span class="olog c5" aria-hidden="true">BA</span>
-            <div class="stack xs grow">
-              <a class="b" href="#">Product Analyst</a>
-              <p class="muted sm">Bluebonnet Analytics · Hybrid · Full-time</p>
-              <p class="xs muted">Apply by November 9</p>
-            </div>
+          <div class="stack xs">
+            <a class="b" href="#">Product Analyst</a>
+            <p class="muted sm">Bluebonnet Analytics · Hybrid · Full-time</p>
+            <p class="xs muted">Apply by November 9</p>
           </div>
         </li>
         <li class="card tight">
-          <div class="row top">
-            <span class="olog none" aria-hidden="true">WF</span>
-            <div class="stack xs grow">
-              <a class="b" href="#">Logistics Analyst</a>
-              <p class="muted sm">Waco Freight Co. · On-site · Full-time</p>
-              <p class="xs muted">Apply by December 1</p>
-            </div>
+          <div class="stack xs">
+            <a class="b" href="#">Logistics Analyst</a>
+            <p class="muted sm">Waco Freight Co. · On-site · Full-time</p>
+            <p class="xs muted">Apply by December 1</p>
           </div>
         </li>
       </ul>
 
       <section class="card" aria-label="When nothing matches">
         <p class="eyebrow">Empty state, shown instead of the list</p>
-        <div class="row top wrap">
-          <div class="illus s" style="width: 150px">Illustration · unDraw, theme green</div>
-          <div class="stack s minw0" style="flex: 1 1 200px">
-            <p class="h3">No matching postings.</p>
-            <p class="sm muted">Try fewer words, or clear the location and type.</p>
-            <a class="link sm" href="#">Clear the search</a>
-          </div>
-        </div>
+        <p class="h3">No matching postings.</p>
       </section>
+
+      <section class="card" aria-label="When no posting is open">
+        <p class="eyebrow">When no posting is open and no criteria were given, shown instead of the list</p>
+        <p class="h3">No open positions right now.</p>
+      </section>
+
+      <p class="eyebrow">When the search fails; the criteria stay filled in</p>
+      <section class="alert err" role="alert"><span>The search failed. Your criteria are kept; select Search to try again.</span></section>
     </main>
   </div>
   <footer class="ftr"><a href="#">About CareerBridge</a></footer>
@@ -150,75 +133,58 @@
       </div>
 
       <section class="card" aria-label="Search criteria">
-        <div class="hide-t stack">
-          <label class="input"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input type="search" value="analyst" aria-label="Keywords"></label>
-          <div class="row"><a class="btn grow" href="#">Filters</a><a class="btn pri grow" href="#">Search</a></div>
+        <div class="cols t2 l3" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr))">
+          <label class="field"><span>Keywords</span><span class="input"><input type="search" value="analyst" aria-label="Keywords"></span></label>
+          <label class="field"><span>Location</span><span class="input sel ph">Any location</span></label>
+          <label class="field"><span>Organization</span><span class="input sel ph">All organizations</span></label>
+          <label class="field"><span>Employment type</span><span class="input sel">Full-time</span></label>
         </div>
-        <div class="only-t">
-          <div class="cols t2 l3" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr))">
-            <label class="field"><span>Keywords</span><span class="input"><input type="search" value="analyst" aria-label="Keywords"></span></label>
-            <label class="field"><span>Location</span><span class="input sel ph">Any location</span></label>
-            <label class="field"><span>Organization</span><span class="input sel ph">All organizations</span></label>
-            <label class="field"><span>Employment type</span><span class="input sel">Full-time</span></label>
-          </div>
-          <div class="row" style="justify-content: flex-end; margin-top: 14px"><a class="btn ghost" href="#">Clear</a><a class="btn pri" href="#">Search</a></div>
-        </div>
+        <div class="row" style="justify-content: flex-end; margin-top: 14px"><a class="btn pri" href="#">Search</a></div>
       </section>
 
       <ul class="cols l2">
         <li class="card tight">
-          <div class="row top">
-            <span class="olog c2" aria-hidden="true">BH</span>
-            <div class="stack xs grow">
-              <a class="b" href="#">Data Analyst</a>
-              <p class="muted sm">Brazos Health · On-site · Full-time</p>
-              <p class="xs muted">Apply by November 14</p>
-            </div>
+          <div class="stack xs">
+            <a class="b" href="#">Data Analyst</a>
+            <p class="muted sm">Brazos Health · On-site · Full-time</p>
+            <p class="xs muted">Apply by November 14</p>
           </div>
         </li>
         <li class="card tight">
-          <div class="row top">
-            <span class="olog c3" aria-hidden="true">RC</span>
-            <div class="stack xs grow">
-              <a class="b" href="#">Credit Risk Analyst</a>
-              <p class="muted sm">Riverbend Credit Union · Remote · Full-time</p>
-              <p class="xs muted">Apply by November 20</p>
-            </div>
+          <div class="stack xs">
+            <a class="b" href="#">Credit Risk Analyst</a>
+            <p class="muted sm">Riverbend Credit Union · Remote · Full-time</p>
+            <p class="xs muted">Apply by November 20</p>
           </div>
         </li>
         <li class="card tight">
-          <div class="row top">
-            <span class="olog c5" aria-hidden="true">BA</span>
-            <div class="stack xs grow">
-              <a class="b" href="#">Product Analyst</a>
-              <p class="muted sm">Bluebonnet Analytics · Hybrid · Full-time</p>
-              <p class="xs muted">Apply by November 9</p>
-            </div>
+          <div class="stack xs">
+            <a class="b" href="#">Product Analyst</a>
+            <p class="muted sm">Bluebonnet Analytics · Hybrid · Full-time</p>
+            <p class="xs muted">Apply by November 9</p>
           </div>
         </li>
         <li class="card tight">
-          <div class="row top">
-            <span class="olog none" aria-hidden="true">WF</span>
-            <div class="stack xs grow">
-              <a class="b" href="#">Logistics Analyst</a>
-              <p class="muted sm">Waco Freight Co. · On-site · Full-time</p>
-              <p class="xs muted">Apply by December 1</p>
-            </div>
+          <div class="stack xs">
+            <a class="b" href="#">Logistics Analyst</a>
+            <p class="muted sm">Waco Freight Co. · On-site · Full-time</p>
+            <p class="xs muted">Apply by December 1</p>
           </div>
         </li>
       </ul>
 
       <section class="card" aria-label="When nothing matches">
         <p class="eyebrow">Empty state, shown instead of the list</p>
-        <div class="row top wrap">
-          <div class="illus s" style="width: 150px">Illustration · unDraw, theme green</div>
-          <div class="stack s minw0" style="flex: 1 1 200px">
-            <p class="h3">No matching postings.</p>
-            <p class="sm muted">Try fewer words, or clear the location and type.</p>
-            <a class="link sm" href="#">Clear the search</a>
-          </div>
-        </div>
+        <p class="h3">No matching postings.</p>
       </section>
+
+      <section class="card" aria-label="When no posting is open">
+        <p class="eyebrow">When no posting is open and no criteria were given, shown instead of the list</p>
+        <p class="h3">No open positions right now.</p>
+      </section>
+
+      <p class="eyebrow">When the search fails; the criteria stay filled in</p>
+      <section class="alert err" role="alert"><span>The search failed. Your criteria are kept; select Search to try again.</span></section>
     </main>
   </div>
   <footer class="ftr"><a href="#">About CareerBridge</a></footer>
@@ -260,75 +226,58 @@
       </div>
 
       <section class="card" aria-label="Search criteria">
-        <div class="hide-t stack">
-          <label class="input"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input type="search" value="analyst" aria-label="Keywords"></label>
-          <div class="row"><a class="btn grow" href="#">Filters</a><a class="btn pri grow" href="#">Search</a></div>
+        <div class="cols t2 l3" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr))">
+          <label class="field"><span>Keywords</span><span class="input"><input type="search" value="analyst" aria-label="Keywords"></span></label>
+          <label class="field"><span>Location</span><span class="input sel ph">Any location</span></label>
+          <label class="field"><span>Organization</span><span class="input sel ph">All organizations</span></label>
+          <label class="field"><span>Employment type</span><span class="input sel">Full-time</span></label>
         </div>
-        <div class="only-t">
-          <div class="cols t2 l3" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr))">
-            <label class="field"><span>Keywords</span><span class="input"><input type="search" value="analyst" aria-label="Keywords"></span></label>
-            <label class="field"><span>Location</span><span class="input sel ph">Any location</span></label>
-            <label class="field"><span>Organization</span><span class="input sel ph">All organizations</span></label>
-            <label class="field"><span>Employment type</span><span class="input sel">Full-time</span></label>
-          </div>
-          <div class="row" style="justify-content: flex-end; margin-top: 14px"><a class="btn ghost" href="#">Clear</a><a class="btn pri" href="#">Search</a></div>
-        </div>
+        <div class="row" style="justify-content: flex-end; margin-top: 14px"><a class="btn pri" href="#">Search</a></div>
       </section>
 
       <ul class="cols l2">
         <li class="card tight">
-          <div class="row top">
-            <span class="olog c2" aria-hidden="true">BH</span>
-            <div class="stack xs grow">
-              <a class="b" href="#">Data Analyst</a>
-              <p class="muted sm">Brazos Health · On-site · Full-time</p>
-              <p class="xs muted">Apply by November 14</p>
-            </div>
+          <div class="stack xs">
+            <a class="b" href="#">Data Analyst</a>
+            <p class="muted sm">Brazos Health · On-site · Full-time</p>
+            <p class="xs muted">Apply by November 14</p>
           </div>
         </li>
         <li class="card tight">
-          <div class="row top">
-            <span class="olog c3" aria-hidden="true">RC</span>
-            <div class="stack xs grow">
-              <a class="b" href="#">Credit Risk Analyst</a>
-              <p class="muted sm">Riverbend Credit Union · Remote · Full-time</p>
-              <p class="xs muted">Apply by November 20</p>
-            </div>
+          <div class="stack xs">
+            <a class="b" href="#">Credit Risk Analyst</a>
+            <p class="muted sm">Riverbend Credit Union · Remote · Full-time</p>
+            <p class="xs muted">Apply by November 20</p>
           </div>
         </li>
         <li class="card tight">
-          <div class="row top">
-            <span class="olog c5" aria-hidden="true">BA</span>
-            <div class="stack xs grow">
-              <a class="b" href="#">Product Analyst</a>
-              <p class="muted sm">Bluebonnet Analytics · Hybrid · Full-time</p>
-              <p class="xs muted">Apply by November 9</p>
-            </div>
+          <div class="stack xs">
+            <a class="b" href="#">Product Analyst</a>
+            <p class="muted sm">Bluebonnet Analytics · Hybrid · Full-time</p>
+            <p class="xs muted">Apply by November 9</p>
           </div>
         </li>
         <li class="card tight">
-          <div class="row top">
-            <span class="olog none" aria-hidden="true">WF</span>
-            <div class="stack xs grow">
-              <a class="b" href="#">Logistics Analyst</a>
-              <p class="muted sm">Waco Freight Co. · On-site · Full-time</p>
-              <p class="xs muted">Apply by December 1</p>
-            </div>
+          <div class="stack xs">
+            <a class="b" href="#">Logistics Analyst</a>
+            <p class="muted sm">Waco Freight Co. · On-site · Full-time</p>
+            <p class="xs muted">Apply by December 1</p>
           </div>
         </li>
       </ul>
 
       <section class="card" aria-label="When nothing matches">
         <p class="eyebrow">Empty state, shown instead of the list</p>
-        <div class="row top wrap">
-          <div class="illus s" style="width: 150px">Illustration · unDraw, theme green</div>
-          <div class="stack s minw0" style="flex: 1 1 200px">
-            <p class="h3">No matching postings.</p>
-            <p class="sm muted">Try fewer words, or clear the location and type.</p>
-            <a class="link sm" href="#">Clear the search</a>
-          </div>
-        </div>
+        <p class="h3">No matching postings.</p>
       </section>
+
+      <section class="card" aria-label="When no posting is open">
+        <p class="eyebrow">When no posting is open and no criteria were given, shown instead of the list</p>
+        <p class="h3">No open positions right now.</p>
+      </section>
+
+      <p class="eyebrow">When the search fails; the criteria stay filled in</p>
+      <section class="alert err" role="alert"><span>The search failed. Your criteria are kept; select Search to try again.</span></section>
     </main>
   </div>
   <footer class="ftr"><a href="#">About CareerBridge</a></footer>
