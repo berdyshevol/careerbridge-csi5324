@@ -31,6 +31,8 @@ page that draws a screen is the Next.js page of its address: `/applications/{id}
   states and the extensions are listed for that screen in [ui-drafts.md](../ui-drafts.md); a
   screen draws them with the same blocks.
 - **Names and dates are examples.** Real data comes from the backend.
+- **Nothing beyond the specification.** A mockup draws what a use case step, an FR, a business rule
+  or an assumption asks for. Something more is added to the specification first.
 
 ## Changing a screen
 

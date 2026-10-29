@@ -26,7 +26,10 @@ a person and Claude can both open from the repository.
    added: an ID, a mockup and a catalog row, agreed with the team.
 4. **The mockup changes with the page.** A pull request that changes a screen on purpose changes
    its mockup and redraws its picture (`npm run mockups -- <id>`) in the same pull request.
-5. **Claude follows the same path.** The `implement-task` skill finds the screens of the use case
+5. **A mockup shows only what the specification asks for**: no dashboard, count, badge or
+   reminder that no use case step, FR, business rule or assumption names. A feature the team wants
+   later goes into the specification first, then into the mockup.
+6. **Claude follows the same path.** The `implement-task` skill finds the screens of the use case
    or address it is given in the catalog and reads their mockups before planning; `screen-review`
    compares the page's screenshots with the mockup.
 
