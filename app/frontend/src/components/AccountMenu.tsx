@@ -18,9 +18,14 @@ export default function AccountMenu({ user }: { user: SessionUser | null }) {
       }
     };
     return (
-      <Link href={`/login${next}`} onClick={withSearch} className="btn btn-ghost">
-        Log in
-      </Link>
+      <div className="flex items-center gap-2">
+        <Link href={`/login${next}`} onClick={withSearch} className="btn btn-ghost">
+          Log in
+        </Link>
+        <Link href="/register" className="btn">
+          Register
+        </Link>
+      </div>
     );
   }
 

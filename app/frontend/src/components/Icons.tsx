@@ -35,14 +35,6 @@ export function SearchIcon(props: IconProps) {
   );
 }
 
-export function OfferIcon(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="M3 7l9 6 9-6" />
-    </Icon>
-  );
-}
 
 export function ProfileIcon(props: IconProps) {
   return (
@@ -50,6 +42,32 @@ export function ProfileIcon(props: IconProps) {
       <rect x="4" y="3" width="16" height="18" rx="2" />
       <circle cx="12" cy="9" r="2.5" />
       <path d="M8 17c.8-2 2.2-3 4-3s3.200 1 4 3" />
+    </Icon>
+  );
+}
+
+export function HomeIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
+    </Icon>
+  );
+}
+
+export function ApplicationsIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <path d="M8 8h8M8 12h8M8 16h5" />
+    </Icon>
+  );
+}
+
+export function PostingsIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="7" width="18" height="13" rx="2" />
+      <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18" />
     </Icon>
   );
 }

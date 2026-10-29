@@ -3,7 +3,6 @@ import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import Link from "next/link";
 import AccountMenu from "@/components/AccountMenu";
 import DeskNav from "@/components/DeskNav";
-import { SearchIcon } from "@/components/Icons";
 import { serverSession } from "@/lib/serverSession";
 import "./globals.css";
 
@@ -16,13 +15,8 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  // Reading the cookie renders every page per request; the header has to show who is logged in
+  // Reading the cookie renders every page per request; the header and navigation follow the role
   const session = await serverSession();
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
 
   return (
     <html lang="en" data-theme="careerbridge" className={`${figtree.variable} ${bricolage.variable}`}>
@@ -32,42 +26,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <Link href="/" className="font-display text-xl font-semibold">
               CareerBridge
             </Link>
-            <form action="/jobs" className="hidden max-w-lg grow lg:block">
-              <label className="input w-full bg-base-200">
-                <SearchIcon className="size-4 text-muted" />
-                <span className="sr-only">Search job postings</span>
-                <input
-                  type="search"
-                  name="keyword"
-                  placeholder="Search by title, description or requirements"
-                />
-              </label>
-            </form>
             <div className="grow" />
-            <span className="hidden text-muted md:inline">{today}</span>
-            <Link href="/jobs" aria-label="Search job postings" className="btn btn-square btn-ghost lg:hidden">
-              <SearchIcon />
-            </Link>
             <AccountMenu user={session?.user ?? null} />
           </div>
         </header>
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row lg:px-8">
-          <DeskNav />
+          <DeskNav role={session?.user.role ?? null} />
           <main className="min-w-0 flex-1">{children}</main>
         </div>
         <footer className="mx-auto flex max-w-7xl flex-wrap gap-x-6 gap-y-2 px-4 pb-24 text-sm text-muted md:pb-8 lg:px-8">
-          <Link href="/register" className="link-hover link">
-            Register as applicant
-          </Link>
-          <Link href="/recruiter/register" className="link-hover link">
-            Register as recruiter
-          </Link>
-          <Link href="/recruiter/postings/new" className="link-hover link">
-            Post a job
-          </Link>
-          <Link href="/admin/postings" className="link-hover link">
-            Approve postings
-          </Link>
           <Link href="/about" className="link-hover link">
             About CareerBridge
           </Link>
