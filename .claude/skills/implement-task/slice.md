@@ -6,6 +6,8 @@
 - [ ] JUnit for the service, Vitest for the page and `lib/api.ts`, and a Playwright test for the
       slice's flow, all against the real backend.
 - [ ] Each FR, step and extension in its `Covers:` line is built and tested.
+- [ ] Each page of its `Screen:` line matches its mockup in `spec/screens/`; a deliberate
+      difference is drawn in the mockup in this pull request.
 - [ ] screen-review has run and its "must fix" findings are fixed.
 - [ ] No sample data or stand-in reaches the screen for what this slice builds. A stand-in is
       allowed only for something another use case owns (log in, for one), marked `STAND-IN` with

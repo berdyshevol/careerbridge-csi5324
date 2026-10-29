@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administrator · Request review  /admin/requests/{id}</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="cb.css">
+<style>body{margin:0}</style>
+</head>
+<body>
+<div class="board">
+<div class="devwrap">
+<p class="devlabel">Phone · 390 px</p>
+<div class="dev" style="width: 390px">
+  <header class="hdr"><div class="hdr-in">
+    <a class="logo" href="#">CareerBridge</a>
+    <span class="grow"></span>
+    <span class="who"><b>Dana Brooks</b><span>Administrator</span></span>
+    <a class="avatar" href="#" aria-label="Account menu for Dana Brooks">DB</a>
+  </div></header>
+  <div class="shell">
+    <nav class="nav-side" aria-label="Administrator navigation">
+      <p class="cap">Administration</p>
+      <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Home</a>
+      <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>Posting approvals<span class="cnt">4</span></a>
+      <a class="on" href="#" aria-current="page"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c1-3.5 3.5-5 6.5-5s5.5 1.5 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c2 .6 3.2 2.2 3.5 5"></path></svg>Recruiter requests<span class="cnt">3</span></a>
+    </nav>
+    <nav class="nav-tiles" aria-label="Administrator navigation" style="--tiles: 3">
+      <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Home</a>
+      <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>Posting approvals<span class="cnt">4</span></a>
+      <a class="on" href="#" aria-current="page"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c1-3.5 3.5-5 6.5-5s5.5 1.5 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c2 .6 3.2 2.2 3.5 5"></path></svg>Recruiter requests<span class="cnt">3</span></a>
+    </nav>
+    <main class="main">
+      <a class="link sm" href="#">← Requests · 2 of 3</a>
+      <div class="stack s">
+        <div class="row wrap" style="gap: 10px"><h1 class="h1">Lee Huang</h1><span class="badge out">New recruiter, new organization</span></div>
+        <p class="muted">Waco Freight Co. · sent October 28, 16:40 · email verified</p>
+      </div>
+
+      <section class="alert warn">
+        <span><b>Flagged for review.</b> The work email lee.huang@gmail.com does not match the organization's website, wacofreight.example.</span>
+      </section>
+
+      <div class="cols side">
+        <div class="stack l">
+          <div class="cols t2">
+            <section class="card">
+              <h2 class="h2">Requester</h2>
+              <dl class="kv">
+                <dt>Name</dt><dd>Lee Huang</dd>
+                <dt>Work email</dt><dd>lee.huang@gmail.com</dd>
+                <dt>Phone</dt><dd>(254) 555-0182</dd>
+                <dt>Job title</dt><dd>HR manager</dd>
+                <dt>Memberships</dt><dd class="muted">None yet</dd>
+              </dl>
+            </section>
+            <section class="card">
+              <div class="row"><span class="olog none" aria-hidden="true">WF</span><h2 class="h2">Waco Freight Co.</h2></div>
+              <dl class="kv">
+                <dt>Website</dt><dd><a class="link" href="#">wacofreight.example ↗</a></dd>
+                <dt>Industry</dt><dd>Logistics</dd>
+                <dt>Headquarters</dt><dd>Waco, TX</dd>
+                <dt>Size</dt><dd>51–200 people</dd>
+              </dl>
+              <p class="sm">Regional trucking and warehousing for central Texas since 1998.</p>
+            </section>
+          </div>
+          <section class="card">
+            <h2 class="h2">Why they are asking</h2>
+            <p>“I run hiring for our Waco warehouse and drivers. Our company email is being moved to a new provider this month, so I used my personal address.”</p>
+          </section>
+        </div>
+
+        <aside class="stack">
+          <section class="card" aria-label="Decision">
+            <h2 class="h2">Your decision</h2>
+            <a class="btn pri block" href="#">Approve</a>
+            <label class="field"><span>Message to Lee</span><span class="input area">Please write from your wacofreight.example address once it works, or send a letter from the company on its letterhead.</span></label>
+            <div class="row wrap"><a class="btn grow" href="#">Ask for information</a><a class="btn danger grow" href="#">Deny</a></div>
+            <p class="xs muted">Denying needs a reason, and Lee receives it. Asking keeps the request waiting, marked “Information requested”.</p>
+          </section>
+          <section class="card tight">
+            <p class="eyebrow">If the organization already exists</p>
+            <p class="sm">The page shows the existing one and offers “Approve membership in Waco Freight Co. instead”. The duplicate record is discarded.</p>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <footer class="ftr"><a href="#">About CareerBridge</a></footer>
+  <nav class="dock" aria-label="Administrator navigation">
+    <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Home</a>
+    <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>Postings<span class="dot" aria-label="4 waiting"></span></a>
+    <a class="on" href="#" aria-current="page"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c1-3.5 3.5-5 6.5-5s5.5 1.5 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c2 .6 3.2 2.2 3.5 5"></path></svg>Requests<span class="dot" aria-label="3 waiting"></span></a>
+  </nav>
+</div>
+</div>
+<div class="devwrap">
+<p class="devlabel">Tablet · 820 px</p>
+<div class="dev" style="width: 820px">
+  <header class="hdr"><div class="hdr-in">
+    <a class="logo" href="#">CareerBridge</a>
+    <span class="grow"></span>
+    <span class="who"><b>Dana Brooks</b><span>Administrator</span></span>
+    <a class="avatar" href="#" aria-label="Account menu for Dana Brooks">DB</a>
+  </div></header>
+  <div class="shell">
+    <nav class="nav-side" aria-label="Administrator navigation">
+      <p class="cap">Administration</p>
+      <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Home</a>
+      <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>Posting approvals<span class="cnt">4</span></a>
+      <a class="on" href="#" aria-current="page"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c1-3.5 3.5-5 6.5-5s5.5 1.5 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c2 .6 3.2 2.2 3.5 5"></path></svg>Recruiter requests<span class="cnt">3</span></a>
+    </nav>
+    <nav class="nav-tiles" aria-label="Administrator navigation" style="--tiles: 3">
+      <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Home</a>
+      <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>Posting approvals<span class="cnt">4</span></a>
+      <a class="on" href="#" aria-current="page"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c1-3.5 3.5-5 6.5-5s5.5 1.5 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c2 .6 3.2 2.2 3.5 5"></path></svg>Recruiter requests<span class="cnt">3</span></a>
+    </nav>
+    <main class="main">
+      <a class="link sm" href="#">← Requests · 2 of 3</a>
+      <div class="stack s">
+        <div class="row wrap" style="gap: 10px"><h1 class="h1">Lee Huang</h1><span class="badge out">New recruiter, new organization</span></div>
+        <p class="muted">Waco Freight Co. · sent October 28, 16:40 · email verified</p>
+      </div>
+
+      <section class="alert warn">
+        <span><b>Flagged for review.</b> The work email lee.huang@gmail.com does not match the organization's website, wacofreight.example.</span>
+      </section>
+
+      <div class="cols side">
+        <div class="stack l">
+          <div class="cols t2">
+            <section class="card">
+              <h2 class="h2">Requester</h2>
+              <dl class="kv">
+                <dt>Name</dt><dd>Lee Huang</dd>
+                <dt>Work email</dt><dd>lee.huang@gmail.com</dd>
+                <dt>Phone</dt><dd>(254) 555-0182</dd>
+                <dt>Job title</dt><dd>HR manager</dd>
+                <dt>Memberships</dt><dd class="muted">None yet</dd>
+              </dl>
+            </section>
+            <section class="card">
+              <div class="row"><span class="olog none" aria-hidden="true">WF</span><h2 class="h2">Waco Freight Co.</h2></div>
+              <dl class="kv">
+                <dt>Website</dt><dd><a class="link" href="#">wacofreight.example ↗</a></dd>
+                <dt>Industry</dt><dd>Logistics</dd>
+                <dt>Headquarters</dt><dd>Waco, TX</dd>
+                <dt>Size</dt><dd>51–200 people</dd>
+              </dl>
+              <p class="sm">Regional trucking and warehousing for central Texas since 1998.</p>
+            </section>
+          </div>
+          <section class="card">
+            <h2 class="h2">Why they are asking</h2>
+            <p>“I run hiring for our Waco warehouse and drivers. Our company email is being moved to a new provider this month, so I used my personal address.”</p>
+          </section>
+        </div>
+
+        <aside class="stack">
+          <section class="card" aria-label="Decision">
+            <h2 class="h2">Your decision</h2>
+            <a class="btn pri block" href="#">Approve</a>
+            <label class="field"><span>Message to Lee</span><span class="input area">Please write from your wacofreight.example address once it works, or send a letter from the company on its letterhead.</span></label>
+            <div class="row wrap"><a class="btn grow" href="#">Ask for information</a><a class="btn danger grow" href="#">Deny</a></div>
+            <p class="xs muted">Denying needs a reason, and Lee receives it. Asking keeps the request waiting, marked “Information requested”.</p>
+          </section>
+          <section class="card tight">
+            <p class="eyebrow">If the organization already exists</p>
+            <p class="sm">The page shows the existing one and offers “Approve membership in Waco Freight Co. instead”. The duplicate record is discarded.</p>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <footer class="ftr"><a href="#">About CareerBridge</a></footer>
+  <nav class="dock" aria-label="Administrator navigation">
+    <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Home</a>
+    <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>Postings<span class="dot" aria-label="4 waiting"></span></a>
+    <a class="on" href="#" aria-current="page"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c1-3.5 3.5-5 6.5-5s5.5 1.5 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c2 .6 3.2 2.2 3.5 5"></path></svg>Requests<span class="dot" aria-label="3 waiting"></span></a>
+  </nav>
+</div>
+</div>
+<div class="devwrap">
+<p class="devlabel">Laptop · 1440 px</p>
+<div class="dev" style="width: 1440px">
+  <header class="hdr"><div class="hdr-in">
+    <a class="logo" href="#">CareerBridge</a>
+    <span class="grow"></span>
+    <span class="who"><b>Dana Brooks</b><span>Administrator</span></span>
+    <a class="avatar" href="#" aria-label="Account menu for Dana Brooks">DB</a>
+  </div></header>
+  <div class="shell">
+    <nav class="nav-side" aria-label="Administrator navigation">
+      <p class="cap">Administration</p>
+      <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Home</a>
+      <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>Posting approvals<span class="cnt">4</span></a>
+      <a class="on" href="#" aria-current="page"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c1-3.5 3.5-5 6.5-5s5.5 1.5 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c2 .6 3.2 2.2 3.5 5"></path></svg>Recruiter requests<span class="cnt">3</span></a>
+    </nav>
+    <nav class="nav-tiles" aria-label="Administrator navigation" style="--tiles: 3">
+      <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Home</a>
+      <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>Posting approvals<span class="cnt">4</span></a>
+      <a class="on" href="#" aria-current="page"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c1-3.5 3.5-5 6.5-5s5.5 1.5 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c2 .6 3.2 2.2 3.5 5"></path></svg>Recruiter requests<span class="cnt">3</span></a>
+    </nav>
+    <main class="main">
+      <a class="link sm" href="#">← Requests · 2 of 3</a>
+      <div class="stack s">
+        <div class="row wrap" style="gap: 10px"><h1 class="h1">Lee Huang</h1><span class="badge out">New recruiter, new organization</span></div>
+        <p class="muted">Waco Freight Co. · sent October 28, 16:40 · email verified</p>
+      </div>
+
+      <section class="alert warn">
+        <span><b>Flagged for review.</b> The work email lee.huang@gmail.com does not match the organization's website, wacofreight.example.</span>
+      </section>
+
+      <div class="cols side">
+        <div class="stack l">
+          <div class="cols t2">
+            <section class="card">
+              <h2 class="h2">Requester</h2>
+              <dl class="kv">
+                <dt>Name</dt><dd>Lee Huang</dd>
+                <dt>Work email</dt><dd>lee.huang@gmail.com</dd>
+                <dt>Phone</dt><dd>(254) 555-0182</dd>
+                <dt>Job title</dt><dd>HR manager</dd>
+                <dt>Memberships</dt><dd class="muted">None yet</dd>
+              </dl>
+            </section>
+            <section class="card">
+              <div class="row"><span class="olog none" aria-hidden="true">WF</span><h2 class="h2">Waco Freight Co.</h2></div>
+              <dl class="kv">
+                <dt>Website</dt><dd><a class="link" href="#">wacofreight.example ↗</a></dd>
+                <dt>Industry</dt><dd>Logistics</dd>
+                <dt>Headquarters</dt><dd>Waco, TX</dd>
+                <dt>Size</dt><dd>51–200 people</dd>
+              </dl>
+              <p class="sm">Regional trucking and warehousing for central Texas since 1998.</p>
+            </section>
+          </div>
+          <section class="card">
+            <h2 class="h2">Why they are asking</h2>
+            <p>“I run hiring for our Waco warehouse and drivers. Our company email is being moved to a new provider this month, so I used my personal address.”</p>
+          </section>
+        </div>
+
+        <aside class="stack">
+          <section class="card" aria-label="Decision">
+            <h2 class="h2">Your decision</h2>
+            <a class="btn pri block" href="#">Approve</a>
+            <label class="field"><span>Message to Lee</span><span class="input area">Please write from your wacofreight.example address once it works, or send a letter from the company on its letterhead.</span></label>
+            <div class="row wrap"><a class="btn grow" href="#">Ask for information</a><a class="btn danger grow" href="#">Deny</a></div>
+            <p class="xs muted">Denying needs a reason, and Lee receives it. Asking keeps the request waiting, marked “Information requested”.</p>
+          </section>
+          <section class="card tight">
+            <p class="eyebrow">If the organization already exists</p>
+            <p class="sm">The page shows the existing one and offers “Approve membership in Waco Freight Co. instead”. The duplicate record is discarded.</p>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <footer class="ftr"><a href="#">About CareerBridge</a></footer>
+  <nav class="dock" aria-label="Administrator navigation">
+    <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>Home</a>
+    <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>Postings<span class="dot" aria-label="4 waiting"></span></a>
+    <a class="on" href="#" aria-current="page"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c1-3.5 3.5-5 6.5-5s5.5 1.5 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c2 .6 3.2 2.2 3.5 5"></path></svg>Requests<span class="dot" aria-label="3 waiting"></span></a>
+  </nav>
+</div>
+</div>
+</div>
+</body>
+</html>

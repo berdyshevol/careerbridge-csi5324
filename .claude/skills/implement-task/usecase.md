@@ -6,8 +6,10 @@ person who owns the use case edits and approves them, because the course grades 
 theirs. No code and no pull request here.
 
 1. **Read** the use case in `spec/use-cases.md`, its FRs in `spec/requirements.md`, its SSD and
-   contracts in `spec/ssd-and-contracts.md`, the entities in `spec/domain-model.md`, and the code
-   that already exists for it.
+   contracts in `spec/ssd-and-contracts.md`, the entities in `spec/domain-model.md`, its screens in
+   the catalog ("Screens by role" in `spec/ui-drafts.md`) with their mockups in `spec/screens/`, and
+   the code that already exists for it. A step the user sees that has no screen in the catalog is a
+   gap: list it in the draft and say a screen must be added before that slice.
 2. **Read the epic** `UC-NN <name>` in Jira and every ticket under it, with their `Covers:` lines.
    What is Done or In Progress is not sliced again.
 3. **Draft the slices**, in this order:
@@ -22,8 +24,8 @@ theirs. No code and no pull request here.
    Recruiter — are not sliced here. Name the existing ticket, or propose one `Process · <what>`
    ticket, and list it under `Depends on:`.
 5. **Show the draft** as a table: summary `UC-NN · <what>`, `Covers: FR-…; steps…; ext…`,
-   `Depends on: …`, and hours. Ask the person to change, merge or drop slices. Wait for their OK.
+   `Screen: <screen-id>, …`, `Depends on: …`, and hours. Ask the person to change, merge or drop slices. Wait for their OK.
 6. **Before creating, search the epic again**, in case someone else sliced it meanwhile. Then
-   create each approved slice: a Story in the active sprint, parent the epic, the `Covers:` and
-   `Depends on:` lines in its description, unassigned.
+   create each approved slice: a Story in the active sprint, parent the epic, the `Covers:`,
+   `Screen:` and `Depends on:` lines in its description, unassigned.
 7. **Offer to start slice 1.** On a yes, take its ticket through the pipeline in `SKILL.md`.

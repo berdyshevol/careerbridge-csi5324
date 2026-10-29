@@ -34,12 +34,40 @@ piece of UC-NN?"
 - No key: search the use case's epic and open tickets for this work. Found: ask "Is this
   SCRUM-NN?". Not found: offer to create it — a Story in the active sprint, its parent the epic
   (`UC-NN <name>`; none outside a use case), summary `UC-NN · <what>` (`Process · <what>` outside a
-  use case), and a `Covers: FR-…` line from `spec/requirements.md`. Create it only on a yes; on a
-  no, stop.
+  use case), a `Covers: FR-…` line from `spec/requirements.md`, and a `Screen: <screen-id>, …` line
+  when the work shows anything to a user (step 4). Create it only on a yes; on a no, stop.
 - Assign the ticket to the person if nobody has it. Do not change its status: the `Jira` workflow
   moves it when the pull request opens and merges (ADR-0008).
 
-## 4. Pipeline
+## 4. Screens
+
+Work that adds or changes anything a user sees is built to its screen's mockup (ADR-0011). Skip
+this step only for backend-only or tooling work, and say so.
+
+1. **Find the screens** in the catalog, the "Screens by role" tables of `spec/ui-drafts.md`: by
+   the ticket's `Screen:` line, by screen ID, by address, or by use case (its "Use cases" column;
+   one use case often has several screens, for several roles). A screen described in words: name
+   the candidates and ask which one is meant.
+2. **No screen in the catalog: stop.** Say: "There is no screen for <what> in the catalog. It
+   needs an ID, a mockup `spec/screens/<id>.html` and a row in `spec/ui-drafts.md` first, agreed
+   with the team." Do not invent a layout. Go on only if adding that screen is itself the request.
+3. **Read each screen:** its catalog row (address, use cases, what it holds, where it leads), the
+   mockup `spec/screens/<id>.html` (blocks, order, wording and navigation at each width), its
+   picture `<id>.jpg`, and the current page and the components it imports. The current page is
+   not a reference: where it differs from the mockup, it is rebuilt to match.
+4. **Map the mockup to code:** for each block of the mockup, the `/styleguide` block or
+   `src/components/` component that draws it. A block with none becomes a new component and a
+   `/styleguide` entry in this pull request. The mockup's `cb.css` classes are never copied into
+   the code.
+5. **The role's header, navigation and phone dock** are shared by all its screens
+   (`src/app/layout.tsx`). If they do not match the mockup yet, say so and ask whether to build them
+   in this ticket or a separate `Process ·` one; never draw a copy inside one page.
+6. **A change that differs from the mockup**, asked for by the person: change the mockup in the
+   same pull request (edit `<id>.html`, then `cd app/frontend && npm run mockups -- <id>`), and the
+   catalog row if the address, role, use cases or hand-offs change. A change to the navigation or
+   to another role's screens needs the team's agreement first: ask.
+
+## 5. Pipeline
 
 Copy this checklist into your reply and tick it as you go. Do not skip a box; write why when one
 does not apply.
@@ -65,8 +93,9 @@ git checkout -b <name>/SCRUM-NN-<short-slug>
 `<name>` is the person's prefix on their other branches (`git branch -a`); keep the key in capitals
 so Jira links the branch. Resuming earlier work: check out its branch instead.
 
-**b. Plan.** Files to change, tests to add, FRs covered. For a slice, show the plan and wait for
-an OK. For a task, write it in one line and go on.
+**b. Plan.** Files to change, tests to add, FRs covered, and for each screen the block-to-component
+map of step 4. For a slice, show the plan and wait for an OK. For a task, write it in one line and
+go on.
 
 **c. Implement.** Only what the ticket asks for, with the tests `CLAUDE.md` requires.
 
@@ -93,8 +122,8 @@ nothing, or a review that finds no defect, ends the loop. Findings you leave go 
 than a few lines, run step e once more on those lines only.
 
 **g. Screens.** If anything under `app/frontend/src/app/` or `app/frontend/src/components/`
-changed, run the `screen-review` skill and fix its "must fix" findings. Otherwise tick it as not
-applicable.
+changed, run the `screen-review` skill, which also compares the page with its mockup, and fix its
+"must fix" findings. Otherwise tick it as not applicable.
 
 **h. Pull request.** Commit, push and open it; the push runs the tests (the pre-push hook).
 
@@ -109,7 +138,8 @@ left open, and:
   of `Tests run`, `Failures` and `Errors` in `app/backend/target/surefire-reports/*.txt`; Vitest
   and Playwright are the totals the push printed; a suite that did not run is "not run" with the
   reason.
-- `## Screens` — screen-review's verdict and where the screenshots are, when step g ran.
+- `## Screens` — each screen ID, whether the page matches its mockup or what was changed in the
+  mockup and why, screen-review's verdict and where the screenshots are, when step g ran.
 
 Then report the link and anything left for a person to decide.
 
