@@ -37,7 +37,7 @@ Deploying is a button: on GitHub open **Actions → Deploy → Run workflow** (b
 - **Frontend:** <https://careerbridge-csi5324.vercel.app> (Vercel, project `careerbridge-csi5324`, root `app/frontend`).
 - **Backend:** <https://careerbridge-api-et18.onrender.com/api/postings> (Render, service `careerbridge-api`, root `app/backend`, built from the `Dockerfile` there). Its database is the Neon branch `main`, set in Render's environment as `DATABASE_URL`, `DATABASE_USERNAME` and `DATABASE_PASSWORD`.
 
-The frontend finds the backend through `NEXT_PUBLIC_API_URL`; the backend allows the frontend addresses listed in `careerbridge.frontend-origins` (`application.properties`). Render's free plan sleeps when idle; the `Keep backend awake` workflow pings the backend every 10 minutes so visitors do not wait for it to wake up.
+The frontend finds the backend through `NEXT_PUBLIC_API_URL`; the backend allows the frontend addresses listed in `careerbridge.frontend-origins` (`application.properties`). Render's free plan puts the backend to sleep after 15 minutes without requests, and the next request waits about a minute; before a demo, open the site a minute or two early.
 
 **Looking at a branch before it is merged:** Actions → Preview → Run workflow, leave "Use workflow from" on `main`, type your branch name. Oleg approves the run, and in a couple of minutes the link to a temporary copy of the frontend appears on your pull request.
 
