@@ -27,5 +27,6 @@ theirs. No code and no pull request here.
    `Screen: <screen-id>, …`, `Depends on: …`, and hours. Ask the person to change, merge or drop slices. Wait for their OK.
 6. **Before creating, search the epic again**, in case someone else sliced it meanwhile. Then
    create each approved slice: a Story in the active sprint, parent the epic, the `Covers:`,
-   `Screen:` and `Depends on:` lines in its description, unassigned.
+   `Screen:`, `Mockups:` (links to each screen's picture and HTML, `https://github.com/berdyshevol/careerbridge-csi5324/blob/main/spec/screens/<id>.jpg`) and `Depends on:`
+   lines in its description, unassigned.
 7. **Offer to start slice 1.** On a yes, take its ticket through the pipeline in `SKILL.md`.
