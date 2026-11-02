@@ -44,7 +44,8 @@ describe("home page", () => {
       render(await HomePage());
 
       expect(screen.getByText("Open jobs from every organization")).toBeInTheDocument();
-      expect(screen.getByRole("heading", { level: 1, name: "Find a job and apply." })).toBeInTheDocument();
+      // The mockup's front-page title is larger than any other page's, at every width
+      expect(screen.getByRole("heading", { level: 1, name: "Find a job and apply." })).toHaveClass("text-4xl");
 
       const search = screen.getByRole("form", { name: "Search job postings" });
       expect(search).toHaveAttribute("action", "/jobs");

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AccountMenu from "@/components/AccountMenu";
 import ActionRow from "@/components/ActionRow";
 import ApplicationRow from "@/components/ApplicationRow";
 import ApplyPanel, { ApplyAction } from "@/components/ApplyPanel";
@@ -15,6 +16,7 @@ import SlotMeter from "@/components/SlotMeter";
 import { StageBadge, StageProgress } from "@/components/StageBadge";
 import { formatDate, type JobPosting } from "@/lib/api";
 import { APPLICATION_LIMIT, STAGES, applications, offer } from "@/lib/sampleDesk";
+import type { SessionUser } from "@/lib/session";
 
 // Every block here is the real component, so this page cannot drift from the
 // screens (ADR-0004, rule 6).
@@ -32,6 +34,14 @@ const samplePosting: JobPosting = {
   applicationDeadline: "2026-12-31",
   postStatus: "PUBLISHED",
   organization: { organizationId: 1, name: applications[1].organizationName },
+};
+
+const sampleUser: SessionUser = {
+  firstName: "Jordan",
+  lastName: "Lee",
+  email: "jordan.lee@example.com",
+  phone: null,
+  role: "APPLICANT",
 };
 
 const colors = [
@@ -99,12 +109,19 @@ export default function StyleguidePage() {
       </Section>
 
       <Section title="Page">
-        <Block title="Page title" use="<PageTitle eyebrow? context? subtitle?>…</PageTitle> — one per screen; context is a plain line naming what the title belongs to">
+        <Block title="Page title" use="<PageTitle eyebrow? context? subtitle? hero?>…</PageTitle> — one per screen; context is a plain line naming what the title belongs to; hero only on the visitor's front page">
           <div className="flex flex-col gap-4">
             <PageTitle eyebrow="An eyebrow" subtitle="A line under the title.">
               The title of the screen
             </PageTitle>
             <PageTitle context="The organization">A posting&apos;s title</PageTitle>
+            <PageTitle hero eyebrow="The front page">A hero title</PageTitle>
+          </div>
+        </Block>
+        <Block title="Account menu" use="<AccountMenu user={…} /> — in the header of src/app/layout.tsx only: Log in and Register for a visitor; the name, role and avatar for a logged-in user, with Log out behind the avatar">
+          <div className="flex flex-wrap items-center gap-8">
+            <AccountMenu user={null} />
+            <AccountMenu user={sampleUser} />
           </div>
         </Block>
         <Block title="Content card" use='<article className="card border border-base-300 bg-base-100"><div className="card-body gap-5">…</div></article>'>
@@ -182,8 +199,8 @@ export default function StyleguidePage() {
       </Section>
 
       <Section title="Blocks">
-        <Block title="Posting card" use="<PostingCard posting={…} /> — in a ul with grid gap-3 md:grid-cols-2">
-          <ul className="grid gap-3 md:grid-cols-2">
+        <Block title="Posting card" use="<PostingCard posting={…} /> — in a ul with grid gap-3 lg:grid-cols-2">
+          <ul className="grid gap-3 lg:grid-cols-2">
             <PostingCard posting={samplePosting} />
           </ul>
         </Block>

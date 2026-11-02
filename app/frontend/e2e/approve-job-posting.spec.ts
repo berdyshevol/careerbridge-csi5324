@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ACCOUNTS, logIn } from "./accounts";
+import { ACCOUNTS, logIn, logOut } from "./accounts";
 
 // UC-11 and UC-12 together: the recruiter logs in and submits a posting, the
 // administrator logs in (ADR-0010) and approves it, and it reaches the job board.
@@ -16,7 +16,7 @@ test("an approved posting appears on the job board", async ({ page }, testInfo) 
   await page.getByRole("button", { name: "Submit for approval" }).click();
   await expect(page.getByText("Submitted for administrator review!")).toBeVisible();
 
-  await page.getByRole("button", { name: "Log out" }).click();
+  await logOut(page);
   await expect(page.getByRole("link", { name: "Log in", exact: true })).toBeVisible();
   await logIn(page, ACCOUNTS.administrator, "/admin/postings");
 

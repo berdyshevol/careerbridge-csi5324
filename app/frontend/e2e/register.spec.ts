@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { logIn } from "./accounts";
+import { logIn, logOut } from "./accounts";
 
 // UC-02 Register as Applicant, as Given / When / Then
 
@@ -16,7 +16,7 @@ test("given a visitor, when they register, then they are logged in on their prof
 
   await expect(page.getByText("Add your resume here to apply for jobs")).toBeVisible();
 
-  await page.getByRole("button", { name: "Log out" }).click();
+  await logOut(page);
   await expect(page.getByRole("link", { name: "Log in", exact: true })).toBeVisible();
   await logIn(page, { email: email.toUpperCase(), password: "Sunrise-2026x" });
   await expect(page.getByLabel("Pat Kim, Applicant")).toBeVisible();
