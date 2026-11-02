@@ -9,28 +9,28 @@ test("given a logged-in applicant, when they open their profile, then it shows t
 
   await page.goto("/profile");
 
-  await expect(page.getByRole("heading", { name: "Profile & resume" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Profile and resume" })).toBeVisible();
   await expect(page.getByLabel("First name")).toHaveValue("Jordan");
   await expect(page.getByLabel("Last name")).toHaveValue("Lee");
-  await expect(page.getByLabel("Email address")).toHaveValue(ACCOUNTS.applicant.email);
-  await expect(page.getByLabel("Phone number")).toHaveValue("(254) 555-0142");
+  await expect(page.getByLabel("Email")).toHaveValue(ACCOUNTS.applicant.email);
+  await expect(page.getByLabel("Phone")).toHaveValue("(254) 555-0142");
   // The demo applicant's resume on file; the tests that upload one register an applicant of their own
   await expect(page.getByText("Jordan_Lee_Resume.pdf")).toBeVisible();
-  await expect(page.getByText(/No resume on file yet/)).toHaveCount(0);
+  await expect(page.getByText("No resume on file.")).toHaveCount(0);
 });
 
 test("given a new applicant, when they change their phone and headline and save, then both are still there after a reload", async ({ page }, testInfo) => {
   await registerNewApplicant(page, "profile", testInfo.project.name);
 
-  await page.getByLabel("Phone number").fill("(254) 555-0199");
+  await page.getByLabel("Phone").fill("(254) 555-0199");
   await page.getByLabel("Headline").fill("Data analyst");
   await page.getByLabel("First name").fill("Patricia");
-  await page.getByRole("button", { name: "Save changes" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "Profile saved" })).toBeVisible();
+  await page.getByRole("button", { name: "Save details" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Profile saved." })).toBeVisible();
   await expect(page.getByLabel("Patricia Kim, Applicant")).toBeVisible();
 
   await page.reload();
-  await expect(page.getByLabel("Phone number")).toHaveValue("(254) 555-0199");
+  await expect(page.getByLabel("Phone")).toHaveValue("(254) 555-0199");
   await expect(page.getByLabel("Headline")).toHaveValue("Data analyst");
   await expect(page.getByLabel("First name")).toHaveValue("Patricia");
 });
@@ -39,49 +39,51 @@ test("given a logged-in applicant, when they save a malformed phone number, then
   await logIn(page, ACCOUNTS.applicant);
   await page.goto("/profile");
 
-  await page.getByLabel("Phone number").fill("call me maybe");
-  await page.getByRole("button", { name: "Save changes" }).click();
+  await page.getByLabel("Phone").fill("call me maybe");
+  await page.getByRole("button", { name: "Save details" }).click();
 
-  await expect(page.getByLabel("Phone number")).toHaveAccessibleDescription("Enter a phone number like (254) 555-0142.");
-  await expect(page.getByLabel("Phone number")).toBeFocused();
-  await expect(page.getByText("Profile saved")).toHaveCount(0);
+  await expect(page.getByLabel("Phone")).toHaveAccessibleDescription("Enter a phone number like (254) 555-0142.");
+  await expect(page.getByLabel("Phone")).toBeFocused();
+  await expect(page.getByText("Profile saved.")).toHaveCount(0);
 
   await page.reload();
-  await expect(page.getByLabel("Phone number")).toHaveValue("(254) 555-0142");
+  await expect(page.getByLabel("Phone")).toHaveValue("(254) 555-0142");
 });
 
-test("given a new applicant, when they upload a PDF resume, then its name and upload date are still there after a reload", async ({ page }, testInfo) => {
+test("given a new applicant, when they choose a PDF resume, then it is uploaded and its name and date are still there after a reload", async ({ page }, testInfo) => {
   await registerNewApplicant(page, "resume", testInfo.project.name);
-  await expect(page.getByText(/No resume on file yet/)).toBeVisible();
+  await expect(page.getByText("No resume on file.")).toBeVisible();
 
-  await page.getByLabel("Choose your resume").setInputFiles(path.join(__dirname, "fixtures", "Pat_Kim_Resume.pdf"));
-  await page.getByRole("button", { name: "Upload resume" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "Resume uploaded" })).toBeVisible();
+  await page.getByLabel("Choose a file").setInputFiles(path.join(__dirname, "fixtures", "Pat_Kim_Resume.pdf"));
+  await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
 
   await page.reload();
   await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
   // The date the backend recorded, which is today
   const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   await expect(page.getByText(`Uploaded ${today}`)).toBeVisible();
-  await expect(page.getByText(/No resume on file yet/)).toHaveCount(0);
+  await expect(page.getByText("No resume on file.")).toHaveCount(0);
+  await expect(page.getByText("Applications you already sent keep the resume they were sent with.")).toBeVisible();
 });
 
-test("given an applicant with a resume, when they upload a text file, then the field says why and the resume stays on file", async ({ page }, testInfo) => {
+test("given an applicant with a resume, when they choose a text file, then it is refused and the resume stays on file", async ({ page }, testInfo) => {
   await registerNewApplicant(page, "refused", testInfo.project.name);
-  await page.getByLabel("Choose your resume").setInputFiles(path.join(__dirname, "fixtures", "Pat_Kim_Resume.pdf"));
-  await page.getByRole("button", { name: "Upload resume" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "Resume uploaded" })).toBeVisible();
+  await page.getByLabel("Choose a file").setInputFiles(path.join(__dirname, "fixtures", "Pat_Kim_Resume.pdf"));
+  await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
 
-  await page.getByLabel("Replace your resume").setInputFiles({
+  await page.getByLabel("Choose a file").setInputFiles({
     name: "notes.txt",
     mimeType: "text/plain",
     buffer: Buffer.from("Pat Kim, data analyst"),
   });
-  await page.getByRole("button", { name: "Upload resume" }).click();
 
-  await expect(page.getByLabel("Replace your resume")).toHaveAccessibleDescription(
-    "The file is not a PDF or DOCX. Choose a PDF or DOCX file of at most 5 MB.",
+  const refusal =
+    "notes.txt was not uploaded. Use a PDF or DOCX file of 5 MB or less. Your current resume is still on file.";
+  await expect(page.getByText("notes.txt was not uploaded.")).toBeVisible();
+  await expect(page.getByLabel("Choose a file")).toHaveAccessibleDescription(
+    `PDF or DOCX, up to 5 MB. It replaces the one above. ${refusal}`,
   );
+  await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
   await page.reload();
   await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
 });

@@ -49,9 +49,8 @@ test("given a new applicant without a resume, when they apply, then they are sen
 
   await page.getByRole("link", { name: "Upload one in Profile & resume" }).click();
   await expect(page).toHaveURL(/\/profile$/);
-  await page.getByLabel("Choose your resume").setInputFiles(path.join(__dirname, "fixtures", "Pat_Kim_Resume.pdf"));
-  await page.getByRole("button", { name: "Upload resume" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "Resume uploaded" })).toBeVisible();
+  await page.getByLabel("Choose a file").setInputFiles(path.join(__dirname, "fixtures", "Pat_Kim_Resume.pdf"));
+  await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
 
   await page.goto("/jobs/1/apply");
   await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
