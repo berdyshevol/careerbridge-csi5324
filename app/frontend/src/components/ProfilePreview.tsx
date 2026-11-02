@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import EmptyState from "@/components/EmptyState";
+import FileDrop from "@/components/FileDrop";
 import FormField, { TextAreaField } from "@/components/FormField";
 import PageTitle from "@/components/PageTitle";
 import {
@@ -21,6 +21,9 @@ import {
 import { readSession, saveSession } from "@/lib/session";
 import { useEndSession } from "@/lib/useEndSession";
 
+const FAILURE =
+  "Something went wrong. Details saved before the error are kept, and your previous resume is still on file.";
+
 function detailsOf(profile: Profile): ProfileDetails {
   return Object.fromEntries(PROFILE_FIELDS.map((field) => [field, profile[field] ?? ""])) as ProfileDetails;
 }
@@ -33,16 +36,12 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
   const [details, setDetails] = useState(() => detailsOf(onFile));
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<ProfileField, string>>>({});
   const [saved, setSaved] = useState(false);
-  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-
   const [resume, setResume] = useState(onFile.resume);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileRefusal, setFileRefusal] = useState("");
-  const [uploaded, setUploaded] = useState(false);
-  const [uploadError, setUploadError] = useState("");
+  const [refusedFile, setRefusedFile] = useState("");
   const [uploading, setUploading] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null);
+  // One message for a failure while saving or uploading (extension *a)
+  const [failure, setFailure] = useState("");
 
   // A screen reader hears the first reason: focus moves to the first field the backend refused
   useEffect(() => {
@@ -52,34 +51,25 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
     }
   }, [fieldErrors]);
 
-  function handleResumeChange(event: ChangeEvent<HTMLInputElement>) {
-    setSelectedFile(event.target.files?.[0] ?? null);
-    setFileRefusal("");
-    setUploaded(false);
-    setUploadError("");
-  }
-
-  // The backend checks the type and size (extension 6a), so its reason is the only one the applicant sees
-  async function handleUpload(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!selectedFile) return;
+  // Choosing a file uploads it at once. The backend checks the type and size (extension 6a); the
+  // screen names the refused file and states the accepted types and size, as the mockup words it.
+  async function handleResume(file: File) {
+    if (uploading) return;
+    setRefusedFile("");
+    setFailure("");
+    setSaved(false);
     setUploading(true);
     try {
-      setResume(await uploadResume(token, selectedFile));
-      setUploaded(true);
-      setSelectedFile(null);
-      if (fileInput.current) {
-        fileInput.current.value = "";
-      }
+      setResume(await uploadResume(token, file));
     } catch (err) {
       if (err instanceof ResumeRefused) {
-        setFileRefusal(err.message);
-        fileInput.current?.focus();
+        setRefusedFile(file.name);
+        document.getElementById("resume-file")?.focus();
       } else if (err instanceof SessionEnded) {
         endSession();
-        setUploadError("Your session has ended. Log in again to upload your resume.");
+        setFailure("Your session has ended. Log in again to upload your resume.");
       } else {
-        setUploadError("Unable to upload the resume. Your current resume is kept. Please try again.");
+        setFailure(FAILURE);
       }
     } finally {
       setUploading(false);
@@ -90,7 +80,7 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
     event.preventDefault();
     setFieldErrors({});
     setSaved(false);
-    setError("");
+    setFailure("");
     setSaving(true);
     try {
       const profile = await updateProfile(token, details);
@@ -108,9 +98,9 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
         setFieldErrors(err.fieldErrors);
       } else if (err instanceof SessionEnded) {
         endSession();
-        setError("Your session has ended. Log in again to save your profile.");
+        setFailure("Your session has ended. Log in again to save your profile.");
       } else {
-        setError("Unable to save the profile. Please try again.");
+        setFailure(FAILURE);
       }
     } finally {
       setSaving(false);
@@ -131,114 +121,99 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
   }
 
   return (
-    <div className="w-full space-y-6">
-      <PageTitle
-        eyebrow="Applicant account"
-        subtitle="Review your information and the resume you apply with."
-      >
-        Profile & resume
-      </PageTitle>
+    <div className="flex w-full flex-col gap-5">
+      <PageTitle>Profile and resume</PageTitle>
 
-      <section className="card border border-base-300 bg-base-100">
-        <div className="card-body">
-          <h2 className="font-display text-xl font-semibold">Personal information</h2>
-
-          <form onSubmit={handleSave} className="mt-5 space-y-5" noValidate>
-            {error && (
-              <div role="alert" className="alert alert-error">
-                <span>{error}</span>
-              </div>
-            )}
-
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
+        <form
+          onSubmit={handleSave}
+          aria-labelledby="details-heading"
+          className="card min-w-0 flex-1 border border-base-300 bg-base-100"
+          noValidate
+        >
+          <div className="card-body gap-4">
+            <h2 id="details-heading" className="text-lg font-semibold">
+              Details
+            </h2>
             <div className="grid gap-4 md:grid-cols-2">
               <FormField label="First name" autoComplete="given-name" required {...fieldProps("firstName")} />
               <FormField label="Last name" autoComplete="family-name" required {...fieldProps("lastName")} />
               <FormField
                 id="profile-email"
-                label="Email address"
+                label="Email"
                 type="email"
                 value={onFile.email}
-                hint="You log in with this address, so it cannot be changed here."
+                hint="Your log-in. It cannot be changed here."
                 readOnly
               />
-              <FormField
-                label="Phone number"
-                type="tel"
-                autoComplete="tel"
-                hint="Optional, for example (254) 555-0142."
-                {...fieldProps("phone")}
-              />
-              <FormField label="Location" autoComplete="address-level2" hint="Optional, for example Waco, TX." {...fieldProps("location")} />
-              <FormField label="Headline" hint="Optional, for example Data analyst." {...fieldProps("headline")} />
+              <FormField label="Phone" type="tel" autoComplete="tel" {...fieldProps("phone")} />
+              <FormField label="Location" autoComplete="address-level2" {...fieldProps("location")} />
+              <FormField label="Headline" {...fieldProps("headline")} />
             </div>
             <TextAreaField label="Skills" {...fieldProps("skills")} />
             <TextAreaField label="Education" {...fieldProps("education")} />
             <TextAreaField label="Work experience" {...fieldProps("workExperience")} />
-
-            <div className="flex flex-wrap items-center gap-4 border-t border-base-300 pt-5">
+            <div className="flex justify-end">
               <button type="submit" className="btn btn-primary" disabled={saving}>
-                {saving ? "Saving..." : "Save changes"}
+                {saving ? "Saving..." : "Save details"}
               </button>
-              {saved && (
-                <p role="status" className="text-sm text-success">
-                  Profile saved
+            </div>
+          </div>
+        </form>
+
+        <aside className="flex flex-col gap-4 lg:w-80 lg:shrink-0">
+          <section aria-labelledby="resume-heading" className="card border border-base-300 bg-base-100">
+            <div className="card-body gap-3">
+              <h2 id="resume-heading" className="text-lg font-semibold">
+                Resume on file
+              </h2>
+              {/* Step 7: a screen reader hears the new resume's name and date */}
+              <div aria-live="polite">
+                {resume ? (
+                  <div className="rounded-xl border border-base-300 px-4 py-3">
+                    <p className="break-words text-sm font-semibold">{resume.fileName}</p>
+                    <p className="text-xs text-muted">Uploaded {formatUtcDay(resume.uploadDate)}</p>
+                  </div>
+                ) : (
+                  // UC-02 step 3: a new applicant lands here and is asked for a resume
+                  <p className="text-muted">No resume on file.</p>
+                )}
+              </div>
+              <FileDrop
+                id="resume-file"
+                accept=".pdf,.docx"
+                hint={resume ? "PDF or DOCX, up to 5 MB. It replaces the one above." : "PDF or DOCX, up to 5 MB."}
+                errorId={refusedFile ? "resume-file-refusal" : undefined}
+                onFile={handleResume}
+              />
+              {resume && (
+                <p className="text-sm text-muted">
+                  Applications you already sent keep the resume they were sent with.
                 </p>
               )}
             </div>
-          </form>
-        </div>
-      </section>
+          </section>
 
-      <section className="card border border-base-300 bg-base-100">
-        <div className="card-body">
-          <h2 className="font-display text-xl font-semibold">Your resume</h2>
-          <p className="mt-2 text-muted">
-            You keep one resume on your profile, and a new upload replaces it.
-          </p>
-
-          {resume ? (
-            <div className="mt-5 rounded-xl border border-base-300 bg-base-200 p-4">
-              <p className="font-semibold">{resume.fileName}</p>
-              <p className="mt-1 text-sm text-muted">Uploaded {formatUtcDay(resume.uploadDate)}</p>
-            </div>
-          ) : (
-            // UC-02 step 3: a new applicant lands here and is asked for a resume
-            <div className="mt-5">
-              <EmptyState>No resume on file yet. Add your resume here to apply for jobs.</EmptyState>
+          {refusedFile && (
+            <div id="resume-file-refusal" className="alert alert-error">
+              <span>
+                <b>{refusedFile} was not uploaded.</b> Use a PDF or DOCX file of 5 MB or less. Your current
+                resume is still on file.
+              </span>
             </div>
           )}
-
-          <form onSubmit={handleUpload} className="mt-5 space-y-5" noValidate>
-            {uploadError && (
-              <div role="alert" className="alert alert-error">
-                <span>{uploadError}</span>
-              </div>
-            )}
-
-            <FormField
-              id="resume-file"
-              type="file"
-              label={resume ? "Replace your resume" : "Choose your resume"}
-              accept=".pdf,.docx"
-              hint="PDF or DOCX, at most 5 MB."
-              error={fileRefusal || undefined}
-              inputRef={fileInput}
-              onChange={handleResumeChange}
-            />
-
-            <div className="flex flex-wrap items-center gap-4">
-              <button type="submit" className="btn" disabled={!selectedFile || uploading}>
-                {uploading ? "Uploading..." : "Upload resume"}
-              </button>
-              {uploaded && (
-                <p role="status" className="text-sm text-success">
-                  Resume uploaded
-                </p>
-              )}
+          {saved && (
+            <div role="status" className="alert alert-success">
+              <span>Profile saved.</span>
             </div>
-          </form>
-        </div>
-      </section>
+          )}
+          {failure && (
+            <div role="alert" className="alert alert-error">
+              <span>{failure}</span>
+            </div>
+          )}
+        </aside>
+      </div>
     </div>
   );
 }

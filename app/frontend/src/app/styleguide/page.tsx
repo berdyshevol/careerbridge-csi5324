@@ -5,6 +5,7 @@ import ApplicationRow from "@/components/ApplicationRow";
 import ApplyPanel, { ApplyAction } from "@/components/ApplyPanel";
 import BackendDown from "@/components/BackendDown";
 import EmptyState from "@/components/EmptyState";
+import FileDrop from "@/components/FileDrop";
 import FormField, { SelectField, TextAreaField } from "@/components/FormField";
 import OfferPanel from "@/components/OfferPanel";
 import PageTitle from "@/components/PageTitle";
@@ -292,12 +293,16 @@ export default function StyleguidePage() {
             </SelectField>
           </div>
         </Block>
-        <Block title="Field with a hint or a refusal" use="<FormField> (or <TextAreaField> for several lines, type='file' for a file) from src/components: label, input, then the hint, or the backend's reason in text-error with aria-invalid">
+        <Block title="Field with a hint or a refusal" use="<FormField> (or <TextAreaField> for several lines) from src/components: label, input, then the hint, or the backend's reason in text-error with aria-invalid">
           <div className="flex flex-col gap-4">
             <FormField id="sg-hint" label="Password" type="password" hint="At least 10 characters, including a letter and a number." readOnly />
             <FormField id="sg-error" label="Full name" defaultValue="Pat" error="Enter your first and last name." readOnly />
             <TextAreaField id="sg-textarea" label="Skills" defaultValue="SQL, Python" readOnly />
-            <FormField id="sg-file" type="file" label="Choose your resume" accept=".pdf,.docx" hint="PDF or DOCX, at most 5 MB." />
+          </div>
+        </Block>
+        <Block title="Choose a file" use="<FileDrop id hint accept errorId? onFile /> — a file input whose whole box is its label; choosing a file acts at once; errorId ties a refusal drawn elsewhere to the input">
+          <div className="md:w-80">
+            <FileDrop id="sg-file" accept=".pdf,.docx" hint="PDF or DOCX, up to 5 MB." />
           </div>
         </Block>
         <Block title="Checkbox" use='<input type="checkbox" className="checkbox checkbox-primary" /> inside a label with the text'>

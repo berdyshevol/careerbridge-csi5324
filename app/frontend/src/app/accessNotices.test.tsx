@@ -150,7 +150,7 @@ describe("pages that need a log-in", () => {
 
     expect(viewProfile).toHaveBeenCalledWith("t");
     expect(screen.getByLabelText("First name")).toHaveValue("Jordan");
-    expect(screen.getByText(/No resume on file yet/)).toBeInTheDocument();
+    expect(screen.getByText("No resume on file.")).toBeInTheDocument();
   });
 
   it("ends a session the backend refused on the profile", async () => {

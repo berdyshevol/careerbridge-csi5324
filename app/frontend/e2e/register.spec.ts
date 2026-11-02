@@ -14,7 +14,7 @@ test("given a visitor, when they register, then they are logged in on their prof
   await expect(page).toHaveURL(/\/profile$/);
   await expect(page.getByLabel("Pat Kim, Applicant")).toBeVisible();
 
-  await expect(page.getByText("Add your resume here to apply for jobs")).toBeVisible();
+  await expect(page.getByText("No resume on file.")).toBeVisible();
 
   await logOut(page);
   await expect(page.getByRole("link", { name: "Log in", exact: true })).toBeVisible();
