@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { ProfileRefused, ResumeRefused, SessionEnded, updateProfile, uploadResume, type Profile } from "@/lib/api";
 import { clearSession, readSession, saveSession } from "@/lib/session";
 import ProfilePreview from "./ProfilePreview";
@@ -26,6 +26,7 @@ const jordan: Profile = {
 };
 
 const FAILURE = "Something went wrong. Details saved before the error are kept, and your previous resume is still on file.";
+const UPLOAD_FAILURE = "Something went wrong. Your previous resume is still on file.";
 
 function show(profile: Profile = jordan) {
   render(<ProfilePreview profile={profile} token="t" />);
@@ -86,7 +87,8 @@ describe("ProfilePreview", () => {
     fireEvent.change(screen.getByLabelText("Headline"), { target: { value: "Data analyst" } });
     fireEvent.click(screen.getByRole("button", { name: "Save details" }));
 
-    expect(await screen.findByRole("status")).toHaveTextContent("Profile saved.");
+    // Beside Save details, so a phone shows it where the applicant pressed
+    expect(await within(screen.getByRole("form", { name: "Details" })).findByRole("status")).toHaveTextContent("Profile saved.");
     expect(updateProfile).toHaveBeenCalledWith("t", {
       firstName: "Jordan",
       lastName: "Lee",
@@ -146,7 +148,7 @@ describe("ProfilePreview", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Save details" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(FAILURE);
+    expect(await within(screen.getByRole("form", { name: "Details" })).findByRole("alert")).toHaveTextContent(FAILURE);
   });
 
   describe("uploading a resume (UC-03 steps 5–7)", () => {
@@ -255,7 +257,9 @@ describe("ProfilePreview", () => {
 
       choose(pdf);
 
-      expect(await screen.findByRole("alert")).toHaveTextContent("Your session has ended");
+      expect(await within(screen.getByRole("complementary")).findByRole("alert")).toHaveTextContent(
+        "Your session has ended. Log in again to upload your resume.",
+      );
       expect(refresh).toHaveBeenCalled();
     });
 
@@ -265,7 +269,9 @@ describe("ProfilePreview", () => {
 
       choose(pdf);
 
-      expect(await screen.findByRole("alert")).toHaveTextContent(FAILURE);
+      // Under the Resume card, where the applicant chose the file, not beside Save details
+      expect(await within(screen.getByRole("complementary")).findByRole("alert")).toHaveTextContent(UPLOAD_FAILURE);
+      expect(within(screen.getByRole("form", { name: "Details" })).queryByRole("alert")).not.toBeInTheDocument();
       expect(screen.getByText("Jordan_Lee_CV.pdf")).toBeInTheDocument();
     });
   });

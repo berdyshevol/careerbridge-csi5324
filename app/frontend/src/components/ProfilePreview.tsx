@@ -23,6 +23,7 @@ import { useEndSession } from "@/lib/useEndSession";
 
 const FAILURE =
   "Something went wrong. Details saved before the error are kept, and your previous resume is still on file.";
+const UPLOAD_FAILURE = "Something went wrong. Your previous resume is still on file.";
 
 function detailsOf(profile: Profile): ProfileDetails {
   return Object.fromEntries(PROFILE_FIELDS.map((field) => [field, profile[field] ?? ""])) as ProfileDetails;
@@ -48,8 +49,9 @@ export default function ProfilePreview({
   const [resume, setResume] = useState(onFile.resume);
   const [refusedFile, setRefusedFile] = useState("");
   const [uploading, setUploading] = useState(false);
-  // One message for a failure while saving or uploading (extension *a)
+  // Extension *a, each shown beside the action that failed, so a phone shows it where the applicant is
   const [failure, setFailure] = useState("");
+  const [uploadFailure, setUploadFailure] = useState("");
 
   // A screen reader hears the first reason: focus moves to the first field the backend refused
   useEffect(() => {
@@ -65,6 +67,7 @@ export default function ProfilePreview({
     if (uploading) return;
     setRefusedFile("");
     setFailure("");
+    setUploadFailure("");
     setSaved(false);
     setUploading(true);
     try {
@@ -81,9 +84,9 @@ export default function ProfilePreview({
         document.getElementById("resume-file")?.focus();
       } else if (err instanceof SessionEnded) {
         endSession();
-        setFailure("Your session has ended. Log in again to upload your resume.");
+        setUploadFailure("Your session has ended. Log in again to upload your resume.");
       } else {
-        setFailure(FAILURE);
+        setUploadFailure(UPLOAD_FAILURE);
       }
     } finally {
       setUploading(false);
@@ -96,6 +99,7 @@ export default function ProfilePreview({
     setSaved(false);
     setFailure("");
     setRefusedFile("");
+    setUploadFailure("");
     setSaving(true);
     try {
       const profile = await updateProfile(token, details);
@@ -168,6 +172,17 @@ export default function ProfilePreview({
             <TextAreaField label="Skills" {...fieldProps("skills")} />
             <TextAreaField label="Education" {...fieldProps("education")} />
             <TextAreaField label="Work experience" {...fieldProps("workExperience")} />
+            {/* Beside the button, so a phone shows the outcome where the applicant just pressed */}
+            {saved && (
+              <div role="status" className="alert alert-soft alert-success">
+                <span>Profile saved.</span>
+              </div>
+            )}
+            {failure && (
+              <div role="alert" className="alert alert-soft alert-error">
+                <span>{failure}</span>
+              </div>
+            )}
             <div className="flex justify-end">
               <button type="submit" className="btn btn-primary" disabled={saving}>
                 {saving ? "Saving..." : "Save details"}
@@ -223,14 +238,9 @@ export default function ProfilePreview({
               </span>
             </div>
           )}
-          {saved && (
-            <div role="status" className="alert alert-soft alert-success">
-              <span>Profile saved.</span>
-            </div>
-          )}
-          {failure && (
+          {uploadFailure && (
             <div role="alert" className="alert alert-soft alert-error">
-              <span>{failure}</span>
+              <span>{uploadFailure}</span>
             </div>
           )}
         </aside>
