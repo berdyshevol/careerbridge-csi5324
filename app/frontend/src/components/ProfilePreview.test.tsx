@@ -86,9 +86,8 @@ describe("ProfilePreview", () => {
     fireEvent.change(screen.getByLabelText("Headline"), { target: { value: "Data analyst" } });
     fireEvent.click(screen.getByRole("button", { name: "Save details" }));
 
-    expect(await screen.findByRole("status")).toHaveTextContent("Profile saved.");
     // Beside Save details, so a phone shows it where the applicant pressed
-    expect(within(screen.getByRole("form", { name: "Details" })).getByRole("status")).toHaveTextContent("Profile saved.");
+    expect(await within(screen.getByRole("form", { name: "Details" })).findByRole("status")).toHaveTextContent("Profile saved.");
     expect(updateProfile).toHaveBeenCalledWith("t", {
       firstName: "Jordan",
       lastName: "Lee",
@@ -148,8 +147,7 @@ describe("ProfilePreview", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Save details" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(FAILURE);
-    expect(within(screen.getByRole("form", { name: "Details" })).getByRole("alert")).toHaveTextContent(FAILURE);
+    expect(await within(screen.getByRole("form", { name: "Details" })).findByRole("alert")).toHaveTextContent(FAILURE);
   });
 
   describe("uploading a resume (UC-03 steps 5–7)", () => {
