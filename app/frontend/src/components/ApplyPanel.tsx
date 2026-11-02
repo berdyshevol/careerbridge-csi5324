@@ -5,8 +5,13 @@ export type Reader = "visitor" | "applicant" | "staff";
 
 type Props = { jobPostId: number; reader: Reader; open: boolean };
 
-// The Apply button, or what replaces it
-export function ApplyAction({ jobPostId, reader, open, side = false }: Props & { side?: boolean }) {
+// The Apply button, or what replaces it. registerClassName: the visitor's "New here?" line
+export function ApplyAction({
+  jobPostId,
+  reader,
+  open,
+  registerClassName = "text-sm",
+}: Props & { registerClassName?: string }) {
   if (!open) {
     return (
       <p role="status" className="alert alert-warning">
@@ -37,7 +42,7 @@ export function ApplyAction({ jobPostId, reader, open, side = false }: Props & {
       <Link href={`/login${next}`} className="btn btn-primary btn-block">
         Log in to apply
       </Link>
-      <p className={side ? "text-sm" : "text-center text-sm text-muted"}>
+      <p className={registerClassName}>
         New here?{" "}
         <Link href={`/register${next}`} className="link link-primary font-semibold no-underline hover:underline">
           Register as an applicant
@@ -54,7 +59,7 @@ export default function ApplyPanel({ side = false, ...props }: Props & { side?: 
     return (
       <section aria-label="Apply" className="card border border-base-300 bg-base-100">
         <div className="card-body gap-3 p-5">
-          <ApplyAction {...props} />
+          <ApplyAction {...props} registerClassName="text-center text-sm text-muted" />
         </div>
       </section>
     );
@@ -67,7 +72,7 @@ export default function ApplyPanel({ side = false, ...props }: Props & { side?: 
           Log in with an applicant account. You come back to this posting after you log in.
         </p>
       )}
-      <ApplyAction {...props} side />
+      <ApplyAction {...props} />
     </section>
   );
 }

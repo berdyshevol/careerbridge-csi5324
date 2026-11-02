@@ -11,17 +11,17 @@ const chip = "rounded-lg px-2.5 py-1 text-sm font-semibold";
 
 // Every detail of one posting (FR-UC04.9). action: what the reader can do about it, under the chips
 export default function PostingDetails({ posting, action }: { posting: JobPosting; action?: React.ReactNode }) {
-  const openings = posting.numberOfOpenings;
+  const openings = `${posting.numberOfOpenings} ${posting.numberOfOpenings === 1 ? "opening" : "openings"}`;
   return (
     <article className="flex min-w-0 flex-col gap-5 lg:rounded-2xl lg:border lg:border-base-300 lg:bg-base-100 lg:p-8">
       <PageTitle context={posting.organization.name}>{posting.title}</PageTitle>
 
       <ul aria-label="Posting facts" className="flex flex-wrap gap-2">
-        <li className={`${chip} bg-base-200`}>{posting.location}</li>
-        <li className={`${chip} bg-base-200`}>{posting.employmentType}</li>
-        <li className={`${chip} bg-base-200`}>
-          {openings} {openings === 1 ? "opening" : "openings"}
-        </li>
+        {[posting.location, posting.employmentType, openings].map((fact) => (
+          <li key={fact} className={`${chip} bg-base-200`}>
+            {fact}
+          </li>
+        ))}
         <li className={`${chip} border border-base-300 text-muted`}>
           Apply by {formatDate(posting.applicationDeadline)}
         </li>
