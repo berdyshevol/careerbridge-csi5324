@@ -3,7 +3,7 @@ import ApplicationRow from "@/components/ApplicationRow";
 import ApplyPanel, { ApplyAction } from "@/components/ApplyPanel";
 import BackendDown from "@/components/BackendDown";
 import EmptyState from "@/components/EmptyState";
-import FormField, { TextAreaField } from "@/components/FormField";
+import FormField, { SelectField, TextAreaField } from "@/components/FormField";
 import OfferPanel from "@/components/OfferPanel";
 import PageTitle from "@/components/PageTitle";
 import Placeholder from "@/components/Placeholder";
@@ -232,10 +232,13 @@ export default function StyleguidePage() {
             </div>
           </div>
         </Block>
-        <Block title="Empty state" use="<EmptyState action?>…</EmptyState>">
-          <EmptyState action={{ href: "/jobs", label: "See all open jobs" }}>
-            No applications yet.
-          </EmptyState>
+        <Block title="Empty state" use="<EmptyState action? card?>…</EmptyState> — card when it stands in place of a list of cards">
+          <div className="flex flex-col gap-3">
+            <EmptyState action={{ href: "/jobs", label: "See all open jobs" }}>
+              No applications yet.
+            </EmptyState>
+            <EmptyState card>No matching postings.</EmptyState>
+          </div>
         </Block>
         <Block title="Backend not answering" use="<BackendDown /> — when a fetch in src/lib/api.ts throws or times out">
           <div className="flex flex-col gap-3">
@@ -268,8 +271,12 @@ export default function StyleguidePage() {
             </select>
           </div>
         </Block>
-        <Block title="Field with a hint or a refusal" use="<FormField> (or <TextAreaField> for several lines, type='file' for a file) from src/components: label, input, then the hint, or the backend's reason in text-error with aria-invalid">
+        <Block title="Field with a hint or a refusal" use="<FormField> (or <TextAreaField> for several lines, <SelectField> for a list, type='file' for a file) from src/components: label, input, then the hint, or the backend's reason in text-error with aria-invalid">
           <div className="flex flex-col gap-4">
+            <SelectField id="sg-select" label="Employment type" defaultValue="">
+              <option value="">Any type</option>
+              <option value="Full-time">Full-time</option>
+            </SelectField>
             <FormField id="sg-hint" label="Password" type="password" hint="At least 10 characters, including a letter and a number." readOnly />
             <FormField id="sg-error" label="Full name" defaultValue="Pat" error="Enter your first and last name." readOnly />
             <TextAreaField id="sg-textarea" label="Skills" defaultValue="SQL, Python" readOnly />

@@ -38,7 +38,7 @@ test("filters narrow the list and survive a visit to a posting", async ({ page }
 test("the keyword finds postings by title", async ({ page }) => {
   await page.goto("/jobs");
 
-  await page.getByRole("main").getByRole("searchbox", { name: "Search job postings" }).fill("analyst");
+  await page.getByRole("main").getByRole("searchbox", { name: "Keywords" }).fill("analyst");
   await page.getByRole("button", { name: "Search" }).click();
 
   await expect(page).toHaveURL(/\/jobs\?keyword=analyst$/);
@@ -47,26 +47,24 @@ test("the keyword finds postings by title", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Backend Developer" })).toHaveCount(0);
 });
 
-test("the organization filter finds postings by part of its name", async ({ page }) => {
+test("the organization is chosen from the organizations with open postings", async ({ page }) => {
   await page.goto("/jobs");
 
-  await page.getByRole("main").getByRole("searchbox", { name: "Organization" }).fill("waco");
+  await page.getByRole("main").getByRole("combobox", { name: "Organization" }).selectOption("Waco Health Partners");
   await page.getByRole("button", { name: "Search" }).click();
 
-  await expect(page).toHaveURL(/\/jobs\?organization=waco$/);
+  await expect(page).toHaveURL(/\/jobs\?organization=Waco\+Health\+Partners$/);
   await expect(page.getByRole("link", { name: "Data Analyst Intern" })).toBeVisible();
   await expect(page.getByRole("link", { name: "IT Support Specialist" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Backend Developer" })).toHaveCount(0);
 });
 
-test("criteria that match nothing say so and offer to clear the filters", async ({ page }) => {
-  await page.goto("/jobs?organization=nobody");
+test("criteria that match nothing say so and stay in the form (2b)", async ({ page }) => {
+  await page.goto("/jobs?keyword=astronaut");
 
   await expect(page.getByText("No matching postings.")).toBeVisible();
-  await page.getByRole("link", { name: "Clear the filters" }).click();
-
-  await expect(page).toHaveURL(/\/jobs$/);
-  await expect(page.getByRole("link", { name: "Backend Developer" })).toBeVisible();
+  await expect(page.getByRole("main").getByRole("searchbox", { name: "Keywords" })).toHaveValue("astronaut");
+  await expect(page.getByRole("link", { name: "Backend Developer" })).toHaveCount(0);
 });
 
 test("a posting opens with its details, and a visitor logs in to apply and comes back to it (UC-04 1a)", async ({ page }) => {
