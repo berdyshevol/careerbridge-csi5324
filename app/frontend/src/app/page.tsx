@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ActionRow from "@/components/ActionRow";
 import BackendDown from "@/components/BackendDown";
+import FormField from "@/components/FormField";
 import PageTitle from "@/components/PageTitle";
 import PostingCard from "@/components/PostingCard";
 import { searchPostings, type JobPosting } from "@/lib/api";
@@ -42,12 +43,7 @@ function VisitorHome() {
       <form action="/jobs" aria-label="Search job postings" className="card border border-base-300 bg-base-100">
         <div className="card-body gap-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <label htmlFor="keyword" className="font-medium">
-                Keywords
-              </label>
-              <input id="keyword" name="keyword" type="search" className="input w-full" />
-            </div>
+            <FormField id="keyword" name="keyword" type="search" label="Keywords" />
             <div className="flex flex-col gap-2">
               <label htmlFor="location" className="font-medium">
                 Location
