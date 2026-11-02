@@ -260,23 +260,16 @@ export default function StyleguidePage() {
             <input id="sg-name" type="text" className="input w-full" placeholder="Legal name" />
           </div>
         </Block>
-        <Block title="Select" use='<select className="select w-full" /> with a label; a fixed list of values lives in src/lib/postingOptions.ts'>
-          <div className="flex flex-col gap-2 md:w-80">
-            <label htmlFor="sg-location" className="font-medium">
-              Location
-            </label>
-            <select id="sg-location" className="select w-full" defaultValue="">
+        <Block title="Select" use='<SelectField id label> with its options, from src/components/FormField; a fixed list of values lives in src/lib/postingOptions.ts'>
+          <div className="md:w-80">
+            <SelectField id="sg-location" label="Location" defaultValue="">
               <option value="">Any location</option>
               <option value="Remote">Remote</option>
-            </select>
+            </SelectField>
           </div>
         </Block>
-        <Block title="Field with a hint or a refusal" use="<FormField> (or <TextAreaField> for several lines, <SelectField> for a list, type='file' for a file) from src/components: label, input, then the hint, or the backend's reason in text-error with aria-invalid">
+        <Block title="Field with a hint or a refusal" use="<FormField> (or <TextAreaField> for several lines, type='file' for a file) from src/components: label, input, then the hint, or the backend's reason in text-error with aria-invalid">
           <div className="flex flex-col gap-4">
-            <SelectField id="sg-select" label="Employment type" defaultValue="">
-              <option value="">Any type</option>
-              <option value="Full-time">Full-time</option>
-            </SelectField>
             <FormField id="sg-hint" label="Password" type="password" hint="At least 10 characters, including a letter and a number." readOnly />
             <FormField id="sg-error" label="Full name" defaultValue="Pat" error="Enter your first and last name." readOnly />
             <TextAreaField id="sg-textarea" label="Skills" defaultValue="SQL, Python" readOnly />

@@ -27,6 +27,7 @@ export default async function JobsPage({
     redirect(`/jobs${search}`);
   }
 
+  const session = serverSession();
   let postings: JobPosting[] | null = null;
   let open: JobPosting[] = [];
   try {
@@ -44,17 +45,11 @@ export default async function JobsPage({
     organizations.push(criteria.organization);
   }
 
-  const session = await serverSession();
+  const loggedIn = Boolean(await session);
 
   return (
     <div className="flex flex-col gap-5">
-      <PageTitle
-        subtitle={
-          session
-            ? "Every organization's open postings, newest first."
-            : "Every organization's open postings, newest first. No account needed."
-        }
-      >
+      <PageTitle subtitle={`Every organization's open postings, newest first.${loggedIn ? "" : " No account needed."}`}>
         Open job postings
       </PageTitle>
 
