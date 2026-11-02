@@ -111,7 +111,7 @@ export default async function JobsPage({
       ) : postings.length === 0 ? (
         <EmptyState card>{search ? "No matching postings." : "No open positions right now."}</EmptyState>
       ) : (
-        <ul className="grid gap-3 md:grid-cols-2">
+        <ul className="grid gap-3 lg:grid-cols-2">
           {postings.map((posting) => (
             <PostingCard key={posting.jobPostId} posting={posting} search={search} />
           ))}

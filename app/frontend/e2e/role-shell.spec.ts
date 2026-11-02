@@ -23,6 +23,16 @@ test("given a logged-in applicant, when they open the job board, then the naviga
   await expect(page.getByText("Posting approvals")).toHaveCount(0);
 });
 
+test("given a logged-in applicant, when they look at the header, then Log out waits in the account menu behind the avatar", async ({ page }) => {
+  await logIn(page, ACCOUNTS.applicant, "/");
+
+  await expect(page.getByRole("button", { name: "Log out" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Account menu for Jordan Lee, Applicant" }).click();
+  await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Log out" })).toHaveCount(0);
+});
+
 test("given a logged-in administrator, when they open the approvals, then the navigation holds only the administrator's entries", async ({ page }) => {
   await logIn(page, ACCOUNTS.administrator, "/admin/postings");
 

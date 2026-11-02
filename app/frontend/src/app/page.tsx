@@ -1,7 +1,7 @@
 import Link from "next/link";
 import ActionRow from "@/components/ActionRow";
 import BackendDown from "@/components/BackendDown";
-import FormField from "@/components/FormField";
+import FormField, { SelectField } from "@/components/FormField";
 import PageTitle from "@/components/PageTitle";
 import PostingCard from "@/components/PostingCard";
 import { searchPostings, type JobPosting } from "@/lib/api";
@@ -33,6 +33,7 @@ function VisitorHome() {
   return (
     <div className="flex flex-col gap-5">
       <PageTitle
+        hero
         eyebrow="Open jobs from every organization"
         subtitle="Search without an account. Register when you are ready to apply."
       >
@@ -44,19 +45,14 @@ function VisitorHome() {
         <div className="card-body gap-4">
           <div className="grid gap-4 md:grid-cols-2">
             <FormField id="keyword" name="keyword" type="search" label="Keywords" />
-            <div className="flex flex-col gap-2">
-              <label htmlFor="location" className="font-medium">
-                Location
-              </label>
-              <select id="location" name="location" defaultValue="" className="select w-full">
-                <option value="">Any location</option>
-                {LOCATIONS.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <SelectField id="location" name="location" label="Location" defaultValue="">
+              <option value="">Any location</option>
+              {LOCATIONS.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </SelectField>
           </div>
           <button type="submit" className="btn btn-primary w-full">
             Search jobs

@@ -156,6 +156,16 @@ describe("JobsPage", () => {
     expect(screen.getByText("Apply by Dec 15, 2026")).toBeInTheDocument();
   });
 
+  it("lists the results in one column, two only on a laptop, as the mockup does", async () => {
+    vi.mocked(searchPostings).mockResolvedValue([internship]);
+
+    await openJobBoard({});
+
+    const results = screen.getByRole("link", { name: "Data Analyst Intern" }).closest("ul");
+    expect(results).toHaveClass("lg:grid-cols-2");
+    expect(results).not.toHaveClass("md:grid-cols-2");
+  });
+
   it("tells a visitor that no account is needed", async () => {
     vi.mocked(searchPostings).mockResolvedValue([internship]);
 

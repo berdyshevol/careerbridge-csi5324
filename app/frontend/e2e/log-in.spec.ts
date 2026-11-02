@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ACCOUNTS, logIn } from "./accounts";
+import { ACCOUNTS, logIn, logOut } from "./accounts";
 
 // Log In (spec/use-cases.md, ADR-0010), as Given / When / Then
 
@@ -30,7 +30,7 @@ test("given a logged-in recruiter, when they log out, then the header offers to 
   await logIn(page, ACCOUNTS.recruiter);
   await expect(page.getByLabel("Riley Chen, Recruiter")).toBeVisible();
 
-  await page.getByRole("button", { name: "Log out" }).click();
+  await logOut(page);
 
   await expect(page.getByRole("link", { name: "Log in", exact: true })).toBeVisible();
   await page.reload();

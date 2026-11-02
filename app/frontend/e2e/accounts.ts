@@ -13,7 +13,13 @@ export async function logIn(page: Page, account: { email: string; password: stri
   await page.getByLabel("Email").fill(account.email);
   await page.getByLabel("Password").fill(account.password);
   await page.getByRole("button", { name: "Log in" }).click();
-  await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Account menu for / })).toBeVisible();
+}
+
+// Log out sits in the account menu behind the avatar
+export async function logOut(page: Page) {
+  await page.getByRole("button", { name: /^Account menu for / }).click();
+  await page.getByRole("button", { name: "Log out" }).click();
 }
 
 // For tests that call the backend directly, as the frontend does after logging in
