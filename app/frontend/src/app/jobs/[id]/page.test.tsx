@@ -96,6 +96,7 @@ describe("PostingPage", () => {
       expect(link).toHaveAttribute("href", "/register?next=%2Fjobs%2F3");
     }
     expect(applyLinks("Log in to apply")).toHaveLength(2);
+    expect(applyLinks("Register as an applicant")).toHaveLength(2);
     expect(screen.getByRole("heading", { name: "Apply for this job" })).toBeInTheDocument();
     expect(applyLinks("Apply")).toHaveLength(0);
   });
@@ -104,7 +105,9 @@ describe("PostingPage", () => {
     loggedInAs(role);
     await openPosting();
 
-    for (const status of screen.getAllByRole("status")) {
+    const statuses = screen.getAllByRole("status");
+    expect(statuses).toHaveLength(2);
+    for (const status of statuses) {
       expect(status).toHaveTextContent("Only applicant accounts can apply.");
     }
     expect(applyLinks("Apply")).toHaveLength(0);
