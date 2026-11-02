@@ -1,9 +1,10 @@
-import BackendDown from "@/components/BackendDown";
 import EmptyState from "@/components/EmptyState";
+import FormField, { SelectField } from "@/components/FormField";
 import PageTitle from "@/components/PageTitle";
 import PostingCard from "@/components/PostingCard";
 import { searchCriteria, searchPostings, searchQuery, type JobPosting, type PageQuery } from "@/lib/api";
 import { EMPLOYMENT_TYPES, LOCATIONS } from "@/lib/postingOptions";
+import { serverSession } from "@/lib/serverSession";
 import { redirect } from "next/navigation";
 
 export default async function JobsPage({
@@ -26,78 +27,89 @@ export default async function JobsPage({
     redirect(`/jobs${search}`);
   }
 
+  const session = serverSession();
   let postings: JobPosting[] | null = null;
+  let open: JobPosting[] = [];
   try {
-    postings = await searchPostings(criteria);
+    // The organization list offers every organization with an open posting, not only those the criteria left
+    const [found, all] = await Promise.all([searchPostings(criteria), search ? searchPostings() : null]);
+    // The backend matches part of the name, so "Acme" would also bring "Acme Labs"; the list chooses one organization
+    const organization = criteria.organization?.trim().toLowerCase();
+    postings = organization
+      ? found.filter((posting) => posting.organization.name.toLowerCase() === organization)
+      : found;
+    open = all ?? found;
   } catch {
     postings = null;
   }
 
+  const organizations = [...new Set(open.map((posting) => posting.organization.name))].sort();
+  // A shared link or a failed search keeps an organization the list does not hold
+  if (criteria.organization && !organizations.includes(criteria.organization)) {
+    organizations.push(criteria.organization);
+  }
+
+  const loggedIn = Boolean(await session);
+
   return (
     <div className="flex flex-col gap-5">
-      <PageTitle>Open job postings</PageTitle>
+      <PageTitle subtitle={`Every organization's open postings, newest first.${loggedIn ? "" : " No account needed."}`}>
+        Open job postings
+      </PageTitle>
 
-      <form action="/jobs" className="grid gap-2 md:grid-cols-2 xl:grid-cols-[1fr_11rem_11rem_11rem_auto]">
-        <label htmlFor="keyword" className="sr-only">
-          Search job postings
-        </label>
-        <input
-          id="keyword"
-          name="keyword"
-          type="search"
-          defaultValue={criteria.keyword ?? ""}
-          placeholder="Title, description or requirements"
-          className="input w-full"
-        />
-        <label htmlFor="location" className="sr-only">
-          Location
-        </label>
-        <select id="location" name="location" defaultValue={criteria.location ?? ""} className="select w-full">
-          <option value="">Any location</option>
-          {LOCATIONS.map((value) => (
-            <option key={value} value={value}>
-              {value}
-            </option>
-          ))}
-        </select>
-        <label htmlFor="organization" className="sr-only">
-          Organization
-        </label>
-        <input
-          id="organization"
-          name="organization"
-          type="search"
-          defaultValue={criteria.organization ?? ""}
-          placeholder="Organization"
-          className="input w-full"
-        />
-        <label htmlFor="employmentType" className="sr-only">
-          Employment type
-        </label>
-        <select
-          id="employmentType"
-          name="employmentType"
-          defaultValue={criteria.employmentType ?? ""}
-          className="select w-full"
-        >
-          <option value="">Any type</option>
-          {EMPLOYMENT_TYPES.map((value) => (
-            <option key={value} value={value}>
-              {value}
-            </option>
-          ))}
-        </select>
-        <button type="submit" className="btn btn-primary md:col-span-2 xl:col-span-1">
-          Search
-        </button>
+      <form action="/jobs" aria-label="Search criteria" className="card border border-base-300 bg-base-100">
+        <div className="card-body gap-4 p-5">
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+            <FormField id="keyword" name="keyword" type="search" label="Keywords" defaultValue={criteria.keyword ?? ""} />
+            <SelectField id="location" name="location" label="Location" defaultValue={criteria.location ?? ""}>
+              <option value="">Any location</option>
+              {LOCATIONS.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField
+              id="organization"
+              name="organization"
+              label="Organization"
+              defaultValue={criteria.organization ?? ""}
+            >
+              <option value="">All organizations</option>
+              {organizations.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField
+              id="employmentType"
+              name="employmentType"
+              label="Employment type"
+              defaultValue={criteria.employmentType ?? ""}
+            >
+              <option value="">Any type</option>
+              {EMPLOYMENT_TYPES.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </SelectField>
+          </div>
+          <div className="flex justify-end">
+            <button type="submit" className="btn btn-primary">
+              Search
+            </button>
+          </div>
+        </div>
       </form>
 
       {postings === null ? (
-        <BackendDown />
-      ) : postings.length === 0 && search === "" ? (
-        <EmptyState>No open positions right now.</EmptyState>
+        <div role="alert" className="alert alert-error">
+          <span>The search failed. Your criteria are kept; select Search to try again.</span>
+        </div>
       ) : postings.length === 0 ? (
-        <EmptyState action={{ href: "/jobs", label: "Clear the filters" }}>No matching postings.</EmptyState>
+        <EmptyState card>{search ? "No matching postings." : "No open positions right now."}</EmptyState>
       ) : (
         <ul className="grid gap-3 md:grid-cols-2">
           {postings.map((posting) => (

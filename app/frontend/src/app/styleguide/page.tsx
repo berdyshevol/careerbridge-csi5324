@@ -4,7 +4,7 @@ import ApplicationRow from "@/components/ApplicationRow";
 import ApplyPanel, { ApplyAction } from "@/components/ApplyPanel";
 import BackendDown from "@/components/BackendDown";
 import EmptyState from "@/components/EmptyState";
-import FormField, { TextAreaField } from "@/components/FormField";
+import FormField, { SelectField, TextAreaField } from "@/components/FormField";
 import OfferPanel from "@/components/OfferPanel";
 import PageTitle from "@/components/PageTitle";
 import Placeholder from "@/components/Placeholder";
@@ -239,12 +239,15 @@ export default function StyleguidePage() {
             </div>
           </div>
         </Block>
-        <Block title="Empty state" use="<EmptyState action?>…</EmptyState>">
-          <EmptyState action={{ href: "/jobs", label: "See all open jobs" }}>
-            No applications yet.
-          </EmptyState>
+        <Block title="Empty state" use="<EmptyState action? card?>…</EmptyState> — card when it stands in place of a list of cards">
+          <div className="flex flex-col gap-3">
+            <EmptyState action={{ href: "/jobs", label: "See all open jobs" }}>
+              No applications yet.
+            </EmptyState>
+            <EmptyState card>No matching postings.</EmptyState>
+          </div>
         </Block>
-        <Block title="Backend not answering" use="<BackendDown /> — when a fetch in src/lib/api.ts throws or times out">
+        <Block title="Backend not answering" use="<BackendDown /> — when a fetch in src/lib/api.ts throws or times out; the job board's search instead says it failed (alert-error, UC-01 *a)">
           <div className="flex flex-col gap-3">
             <BackendDown retry={false} local={false} />
             <BackendDown retry={false} local />
@@ -264,15 +267,12 @@ export default function StyleguidePage() {
             <input id="sg-name" type="text" className="input w-full" placeholder="Legal name" />
           </div>
         </Block>
-        <Block title="Select" use='<select className="select w-full" /> with a label; a fixed list of values lives in src/lib/postingOptions.ts'>
-          <div className="flex flex-col gap-2 md:w-80">
-            <label htmlFor="sg-location" className="font-medium">
-              Location
-            </label>
-            <select id="sg-location" className="select w-full" defaultValue="">
+        <Block title="Select" use='<SelectField id label> with its options, from src/components/FormField; a fixed list of values lives in src/lib/postingOptions.ts'>
+          <div className="md:w-80">
+            <SelectField id="sg-location" label="Location" defaultValue="">
               <option value="">Any location</option>
               <option value="Remote">Remote</option>
-            </select>
+            </SelectField>
           </div>
         </Block>
         <Block title="Field with a hint or a refusal" use="<FormField> (or <TextAreaField> for several lines, type='file' for a file) from src/components: label, input, then the hint, or the backend's reason in text-error with aria-invalid">

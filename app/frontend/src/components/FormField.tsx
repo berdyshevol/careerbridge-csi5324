@@ -57,6 +57,26 @@ export function TextAreaField({
   );
 }
 
+// The same for a choice from a list
+export function SelectField({
+  id,
+  label,
+  error,
+  hint,
+  children,
+  ...select
+}: FieldProps & Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "id" | "className">) {
+  return (
+    <Field id={id} label={label} error={error} hint={hint}>
+      {(described) => (
+        <select id={id} className={`select w-full ${error ? "select-error" : ""}`} {...described} {...select}>
+          {children}
+        </select>
+      )}
+    </Field>
+  );
+}
+
 function Field({
   id,
   label,
