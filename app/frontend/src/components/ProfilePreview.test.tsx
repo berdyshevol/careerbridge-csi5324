@@ -4,7 +4,8 @@ import { clearSession, readSession, saveSession } from "@/lib/session";
 import ProfilePreview from "./ProfilePreview";
 
 const refresh = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
+const push = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push }) }));
 vi.mock("@/lib/api", async (importActual) => ({
   ...(await importActual<typeof import("@/lib/api")>()),
   updateProfile: vi.fn(),
@@ -35,6 +36,7 @@ describe("ProfilePreview", () => {
     vi.mocked(updateProfile).mockReset();
     vi.mocked(uploadResume).mockReset();
     refresh.mockReset();
+    push.mockReset();
     clearSession();
   });
 
@@ -175,6 +177,42 @@ describe("ProfilePreview", () => {
 
       expect(await screen.findByText("Jordan_Lee_2026.pdf")).toBeInTheDocument();
       expect(screen.queryByText("No resume on file.")).not.toBeInTheDocument();
+      expect(push).not.toHaveBeenCalled();
+    });
+
+    describe("coming from an application (UC-04 extensions 2a and 3a)", () => {
+      function showFrom(next: string) {
+        render(<ProfilePreview profile={{ ...jordan, resume: null }} token="t" next={next} />);
+      }
+
+      it("returns to the Apply page after the upload", async () => {
+        vi.mocked(uploadResume).mockResolvedValue({ fileName: "Jordan_Lee_2026.pdf", uploadDate: "2026-10-27T14:05:00" });
+        showFrom("/jobs/7/apply");
+
+        choose(pdf);
+
+        await vi.waitFor(() => expect(push).toHaveBeenCalledWith("/jobs/7/apply"));
+      });
+
+      it("stays here when next names another site", async () => {
+        vi.mocked(uploadResume).mockResolvedValue({ fileName: "Jordan_Lee_2026.pdf", uploadDate: "2026-10-27T14:05:00" });
+        showFrom("//evil.example/jobs/7/apply");
+
+        choose(pdf);
+
+        expect(await screen.findByText("Jordan_Lee_2026.pdf")).toBeInTheDocument();
+        expect(push).not.toHaveBeenCalled();
+      });
+
+      it("stays here when the file is refused", async () => {
+        vi.mocked(uploadResume).mockRejectedValue(new ResumeRefused("The file is not a PDF or DOCX."));
+        showFrom("/jobs/7/apply");
+
+        choose(new File(["notes"], "notes.txt", { type: "text/plain" }));
+
+        expect(await screen.findByRole("alert")).toHaveTextContent("notes.txt was not uploaded.");
+        expect(push).not.toHaveBeenCalled();
+      });
     });
 
     it("names the refused file, states the accepted types and size, ties it to the field and keeps the resume on file (extension 6a)", async () => {

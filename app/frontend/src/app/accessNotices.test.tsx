@@ -76,7 +76,7 @@ describe("pages that need a log-in", () => {
     render(await ApplyPage({ params: Promise.resolve({ id: "2" }) }));
 
     expect(screen.getByRole("status")).toHaveTextContent("A resume is required to apply");
-    expect(screen.getByRole("link", { name: "Upload one in Profile & resume" })).toHaveAttribute("href", "/profile");
+    expect(screen.getByRole("link", { name: "Upload one in Profile & resume" })).toHaveAttribute("href", "/profile?next=%2Fjobs%2F2%2Fapply");
     expect(screen.queryByRole("button", { name: "Submit application" })).not.toBeInTheDocument();
   });
 
@@ -128,7 +128,7 @@ describe("pages that need a log-in", () => {
 
   it("shows the profile only to an applicant", async () => {
     vi.mocked(serverSession).mockResolvedValue(as("ADMINISTRATOR"));
-    render(await ProfilePage());
+    render(await ProfilePage({ searchParams: Promise.resolve({}) }));
     expect(screen.getByRole("heading", { name: "Applicants only" })).toBeInTheDocument();
   });
 
@@ -146,7 +146,7 @@ describe("pages that need a log-in", () => {
       workExperience: null,
       resume: null,
     });
-    render(await ProfilePage());
+    render(await ProfilePage({ searchParams: Promise.resolve({}) }));
 
     expect(viewProfile).toHaveBeenCalledWith("t");
     expect(screen.getByLabelText("First name")).toHaveValue("Jordan");
@@ -156,9 +156,19 @@ describe("pages that need a log-in", () => {
   it("ends a session the backend refused on the profile", async () => {
     vi.mocked(serverSession).mockResolvedValue(as("APPLICANT"));
     vi.mocked(viewProfile).mockRejectedValue(new SessionEnded());
-    render(await ProfilePage());
+    render(await ProfilePage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByRole("heading", { name: "Your session has ended" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Log in/ })).toHaveAttribute("href", "/login?next=%2Fprofile");
+  });
+
+  it("keeps the Apply page to return to through a log-in on the profile (UC-04 2a)", async () => {
+    vi.mocked(serverSession).mockResolvedValue(null);
+    render(await ProfilePage({ searchParams: Promise.resolve({ next: "/jobs/2/apply" }) }));
+
+    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute(
+      "href",
+      `/login?next=${encodeURIComponent("/profile?next=%2Fjobs%2F2%2Fapply")}`,
+    );
   });
 });

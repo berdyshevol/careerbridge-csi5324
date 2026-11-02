@@ -165,7 +165,16 @@ describe("ApplyForm", () => {
     render(<ApplyForm posting={posting} session={{ token: "applicant-token", user: jordan }} desk={{ ...desk, resume: null, refusal: "NO_RESUME" }} />);
 
     expect(screen.getByRole("status")).toHaveTextContent("A resume is required");
-    expect(screen.getByRole("link", { name: "Upload a resume" })).toHaveAttribute("href", "/profile");
+    // Extension 2a: the profile brings the applicant back to this Apply page after the upload
+    const back = "/profile?next=%2Fjobs%2F2%2Fapply";
+    expect(screen.getByRole("link", { name: "Upload a resume" })).toHaveAttribute("href", back);
+    expect(screen.getByRole("link", { name: "Upload one in Profile & resume" })).toHaveAttribute("href", back);
+  });
+
+  it("brings the applicant back here after replacing the resume (extension 3a)", () => {
+    render(<ApplyForm posting={posting} session={{ token: "applicant-token", user: jordan }} desk={desk} />);
+
+    expect(screen.getByRole("link", { name: "Replace resume" })).toHaveAttribute("href", "/profile?next=%2Fjobs%2F2%2Fapply");
   });
 
   it("lists the active applications when the limit is reached (FR-UC04.7)", () => {
