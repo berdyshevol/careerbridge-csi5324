@@ -30,10 +30,19 @@ describe("AccountMenu", () => {
     expect(screen.getByRole("link", { name: "Register" })).toHaveAttribute("href", "/register");
   });
 
-  it("does not send the log-in page back to itself", () => {
+  it("offers only Register on the log-in page (mockup visitor-login)", () => {
     pathname = "/login";
     render(<AccountMenu user={null} />);
-    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/login");
+    expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Register" })).toHaveAttribute("href", "/register");
+    pathname = "/jobs/3";
+  });
+
+  it("offers only Log in on the register page (mockup visitor-register)", () => {
+    pathname = "/register";
+    render(<AccountMenu user={null} />);
+    expect(screen.queryByRole("link", { name: "Register" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Log in" })).toBeInTheDocument();
     pathname = "/jobs/3";
   });
 

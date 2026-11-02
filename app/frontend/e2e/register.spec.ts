@@ -37,14 +37,19 @@ test("given a one-word name and a weak password, when a visitor registers, then 
   await expect(page).toHaveURL(/\/register$/);
 });
 
-test("given an email that already has an account, when a visitor registers with it, then they are sent to log in", async ({ page }) => {
-  await page.goto("/register");
+test("given an email that already has an account, when a visitor registers with it, then the email field offers to log in instead", async ({ page }) => {
+  await page.goto("/register?next=%2Fjobs");
+  // The register page's header offers only Log in (mockup visitor-register)
+  await expect(page.getByRole("banner").getByRole("link", { name: "Register", exact: true })).toHaveCount(0);
   await page.getByLabel("Full name").fill("Sam Rivera");
   await page.getByLabel("Email").fill("sam.rivera@example.com");
   await page.getByLabel("Password").fill("Sunrise-2026x");
   await page.getByRole("button", { name: "Create account" }).click();
 
-  await expect(page.getByRole("main").getByRole("alert")).toContainText("An account already exists");
-  await page.getByRole("link", { name: "Go to log in" }).click();
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByLabel("Email")).toHaveAccessibleDescription(
+    "An account already exists for this email. Log in instead",
+  );
+  await expect(page.getByLabel("Email")).toBeFocused();
+  await page.getByRole("main").getByRole("link", { name: "Log in instead" }).click();
+  await expect(page).toHaveURL(/\/login\?next=%2Fjobs$/);
 });

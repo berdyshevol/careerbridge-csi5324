@@ -10,7 +10,7 @@ export default function AccountMenu({ user }: { user: SessionUser | null }) {
   const pathname = usePathname();
 
   if (!user) {
-    const next = pathname && pathname !== "/login" ? `?next=${encodeURIComponent(pathname)}` : "";
+    const next = pathname ? `?next=${encodeURIComponent(pathname)}` : "";
     // The search too, read at the click: useSearchParams would need a Suspense boundary around the header
     const withSearch = (event: React.MouseEvent) => {
       if (next && window.location.search) {
@@ -19,13 +19,18 @@ export default function AccountMenu({ user }: { user: SessionUser | null }) {
       }
     };
     return (
+      // The log-in and register pages offer only the other one (mockups visitor-login, visitor-register)
       <div className="flex items-center gap-2">
-        <Link href={`/login${next}`} onClick={withSearch} className="btn btn-ghost btn-sm">
-          Log in
-        </Link>
-        <Link href="/register" className="btn btn-sm border-base-300 bg-base-100">
-          Register
-        </Link>
+        {pathname !== "/login" && (
+          <Link href={`/login${next}`} onClick={withSearch} className="btn btn-ghost btn-sm">
+            Log in
+          </Link>
+        )}
+        {pathname !== "/register" && (
+          <Link href="/register" className="btn btn-sm border-base-300 bg-base-100">
+            Register
+          </Link>
+        )}
       </div>
     );
   }

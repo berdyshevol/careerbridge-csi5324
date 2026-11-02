@@ -1,7 +1,8 @@
 type FieldProps = {
   id: string;
   label: string;
-  error?: string;
+  // A node, so a refusal can hold its way out (UC-02 extension 2b: log in instead)
+  error?: React.ReactNode;
   hint?: string;
 };
 
@@ -26,7 +27,7 @@ export default function FormField({
 }
 
 // A file input has its own daisyUI class
-function inputClass(type: string | undefined, error: string | undefined) {
+function inputClass(type: string | undefined, error: React.ReactNode) {
   const base = type === "file" ? "file-input" : "input";
   return `${base} w-full ${error ? `${base}-error` : ""}`;
 }

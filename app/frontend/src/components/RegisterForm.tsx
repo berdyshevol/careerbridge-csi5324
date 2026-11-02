@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 import { AlreadyRegistered, register, RegistrationRefused } from "@/lib/api";
 import { safeNext, saveSession } from "@/lib/session";
 import FormField from "./FormField";
-import PageTitle from "./PageTitle";
 
 type Field = "fullName" | "email" | "password";
 
@@ -14,8 +13,7 @@ type Field = "fullName" | "email" | "password";
 export default function RegisterForm({ next }: { next?: string }) {
   const router = useRouter();
   const [values, setValues] = useState<Record<Field, string>>({ fullName: "", email: "", password: "" });
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<Field, string>>>({});
-  const [alreadyRegistered, setAlreadyRegistered] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<Field, string | React.ReactElement>>>({});
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const inputs = useRef<Partial<Record<Field, HTMLInputElement | null>>>({});
@@ -31,7 +29,6 @@ export default function RegisterForm({ next }: { next?: string }) {
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setFieldErrors({});
-    setAlreadyRegistered("");
     setError("");
     setSubmitting(true);
     try {
@@ -43,7 +40,17 @@ export default function RegisterForm({ next }: { next?: string }) {
       if (err instanceof RegistrationRefused) {
         setFieldErrors(err.fieldErrors);
       } else if (err instanceof AlreadyRegistered) {
-        setAlreadyRegistered(err.message);
+        // The mockup's wording, not the backend's, so the way out can be a link
+        setFieldErrors({
+          email: (
+            <>
+              An account already exists for this email.{" "}
+              <Link href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"} className="link font-semibold">
+                Log in instead
+              </Link>
+            </>
+          ),
+        });
       } else {
         setError("Unable to create the account. Please try again.");
       }
@@ -71,45 +78,23 @@ export default function RegisterForm({ next }: { next?: string }) {
   }
 
   return (
-    <section className="card mx-auto max-w-md border border-base-300 bg-base-100">
-      <form onSubmit={handleSubmit} className="card-body gap-4" noValidate>
-        <PageTitle subtitle="Create an applicant account to apply for jobs.">Register as an applicant</PageTitle>
-
-        {alreadyRegistered && (
-          <div role="alert" className="alert alert-warning">
-            <span>
-              {alreadyRegistered}{" "}
-              <Link href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"} className="link link-primary">
-                Go to log in
-              </Link>
-            </span>
-          </div>
-        )}
-        {error && (
-          <div role="alert" className="alert alert-error">
-            <span>{error}</span>
-          </div>
-        )}
-
-        {field("fullName", "Full name", "text", "name")}
-        {field("email", "Email", "email", "email")}
-        {field("password", "Password", "password", "new-password", "At least 10 characters, including a letter and a number.")}
-
-        <div className="flex flex-col-reverse gap-3 border-t border-base-300 pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <Link href="/recruiter/register" className="link link-primary">
-            Recruiting for an organization?
-          </Link>
-          <button type="submit" className="btn btn-primary" disabled={submitting}>
+    <>
+      {/* UC-02 extension *a */}
+      {error && (
+        <div role="alert" className="alert alert-error">
+          <span>{error}</span>
+        </div>
+      )}
+      <form onSubmit={handleSubmit} aria-label="Registration" className="card border border-base-300 bg-base-100" noValidate>
+        <div className="card-body gap-4">
+          {field("fullName", "Full name", "text", "name")}
+          {field("email", "Email", "email", "email")}
+          {field("password", "Password", "password", "new-password", "At least 10 characters, with a letter and a number.")}
+          <button type="submit" className="btn btn-primary w-full" disabled={submitting}>
             Create account
           </button>
         </div>
-        <p className="text-sm text-muted">
-          Already have an account?{" "}
-          <Link href="/login" className="link link-primary">
-            Log in
-          </Link>
-        </p>
       </form>
-    </section>
+    </>
   );
 }
