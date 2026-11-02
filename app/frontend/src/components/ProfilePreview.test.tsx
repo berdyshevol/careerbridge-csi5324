@@ -184,12 +184,31 @@ describe("ProfilePreview", () => {
       choose(new File(["notes"], "notes.txt", { type: "text/plain" }));
 
       const refusal = "notes.txt was not uploaded. Use a PDF or DOCX file of 5 MB or less. Your current resume is still on file.";
-      await screen.findByText("notes.txt was not uploaded.");
+      expect(await screen.findByRole("alert")).toHaveTextContent(refusal);
       const input = screen.getByLabelText("Choose a file");
       expect(input).toHaveAccessibleDescription(`PDF or DOCX, up to 5 MB. It replaces the one above. ${refusal}`);
       expect(input).toHaveAttribute("aria-invalid", "true");
       expect(input).toHaveFocus();
       expect(screen.getByText("Jordan_Lee_CV.pdf")).toBeInTheDocument();
+
+      // A later save clears the old refusal
+      vi.mocked(updateProfile).mockResolvedValue(jordan);
+      fireEvent.click(screen.getByRole("button", { name: "Save details" }));
+      await screen.findByRole("status");
+      expect(screen.queryByText("notes.txt was not uploaded.")).not.toBeInTheDocument();
+      expect(screen.getByLabelText("Choose a file")).not.toHaveAttribute("aria-invalid");
+    });
+
+    it("says it is uploading until the backend answers", async () => {
+      let answer: (resume: { fileName: string; uploadDate: string }) => void = () => {};
+      vi.mocked(uploadResume).mockReturnValue(new Promise((resolve) => (answer = resolve)));
+      show();
+
+      choose(pdf);
+
+      expect(screen.getByLabelText("Choose a file")).toHaveAccessibleDescription("Uploading...");
+      answer({ fileName: "Jordan_Lee_2026.pdf", uploadDate: "2026-10-27T14:05:00" });
+      expect(await screen.findByText("Jordan_Lee_2026.pdf")).toBeInTheDocument();
     });
 
     it("ends a session the backend refused", async () => {

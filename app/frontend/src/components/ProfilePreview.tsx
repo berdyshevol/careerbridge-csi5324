@@ -81,6 +81,7 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
     setFieldErrors({});
     setSaved(false);
     setFailure("");
+    setRefusedFile("");
     setSaving(true);
     try {
       const profile = await updateProfile(token, details);
@@ -182,7 +183,13 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
               <FileDrop
                 id="resume-file"
                 accept=".pdf,.docx"
-                hint={resume ? "PDF or DOCX, up to 5 MB. It replaces the one above." : "PDF or DOCX, up to 5 MB."}
+                hint={
+                  uploading
+                    ? "Uploading..."
+                    : resume
+                      ? "PDF or DOCX, up to 5 MB. It replaces the one above."
+                      : "PDF or DOCX, up to 5 MB."
+                }
                 errorId={refusedFile ? "resume-file-refusal" : undefined}
                 onFile={handleResume}
               />
@@ -195,7 +202,7 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
           </section>
 
           {refusedFile && (
-            <div id="resume-file-refusal" className="alert alert-soft alert-error">
+            <div id="resume-file-refusal" role="alert" className="alert alert-soft alert-error">
               <span>
                 <b>{refusedFile} was not uploaded.</b> Use a PDF or DOCX file of 5 MB or less. Your current
                 resume is still on file.
