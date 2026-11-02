@@ -168,6 +168,17 @@ export default function ProfilePreview({
             <TextAreaField label="Skills" {...fieldProps("skills")} />
             <TextAreaField label="Education" {...fieldProps("education")} />
             <TextAreaField label="Work experience" {...fieldProps("workExperience")} />
+            {/* Beside the button, so a phone shows the outcome where the applicant just pressed */}
+            {saved && (
+              <div role="status" className="alert alert-soft alert-success">
+                <span>Profile saved.</span>
+              </div>
+            )}
+            {failure && (
+              <div role="alert" className="alert alert-soft alert-error">
+                <span>{failure}</span>
+              </div>
+            )}
             <div className="flex justify-end">
               <button type="submit" className="btn btn-primary" disabled={saving}>
                 {saving ? "Saving..." : "Save details"}
@@ -221,16 +232,6 @@ export default function ProfilePreview({
                 <b>{refusedFile} was not uploaded.</b> Use a PDF or DOCX file of 5 MB or less. Your current
                 resume is still on file.
               </span>
-            </div>
-          )}
-          {saved && (
-            <div role="status" className="alert alert-soft alert-success">
-              <span>Profile saved.</span>
-            </div>
-          )}
-          {failure && (
-            <div role="alert" className="alert alert-soft alert-error">
-              <span>{failure}</span>
             </div>
           )}
         </aside>

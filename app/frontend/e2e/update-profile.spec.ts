@@ -26,7 +26,9 @@ test("given a new applicant, when they change their phone and headline and save,
   await page.getByLabel("Headline").fill("Data analyst");
   await page.getByLabel("First name").fill("Patricia");
   await page.getByRole("button", { name: "Save details" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "Profile saved." })).toBeVisible();
+  // In the Details card beside the button, so a phone shows it without scrolling to it
+  const saved = page.getByRole("form", { name: "Details" }).getByRole("status").filter({ hasText: "Profile saved." });
+  await expect(saved).toBeInViewport();
   await expect(page.getByLabel("Patricia Kim, Applicant")).toBeVisible();
 
   await page.reload();

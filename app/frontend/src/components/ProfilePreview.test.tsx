@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { ProfileRefused, ResumeRefused, SessionEnded, updateProfile, uploadResume, type Profile } from "@/lib/api";
 import { clearSession, readSession, saveSession } from "@/lib/session";
 import ProfilePreview from "./ProfilePreview";
@@ -87,6 +87,8 @@ describe("ProfilePreview", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save details" }));
 
     expect(await screen.findByRole("status")).toHaveTextContent("Profile saved.");
+    // Beside Save details, so a phone shows it where the applicant pressed
+    expect(within(screen.getByRole("form", { name: "Details" })).getByRole("status")).toHaveTextContent("Profile saved.");
     expect(updateProfile).toHaveBeenCalledWith("t", {
       firstName: "Jordan",
       lastName: "Lee",
@@ -147,6 +149,7 @@ describe("ProfilePreview", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save details" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(FAILURE);
+    expect(within(screen.getByRole("form", { name: "Details" })).getByRole("alert")).toHaveTextContent(FAILURE);
   });
 
   describe("uploading a resume (UC-03 steps 5–7)", () => {
