@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ApplyPanel, { ApplyAction, type Reader } from "@/components/ApplyPanel";
 import BackendDown from "@/components/BackendDown";
-import PageTitle from "@/components/PageTitle";
+import PostingDetails from "@/components/PostingDetails";
 import {
-  formatDate,
   isOpen,
   searchCriteria,
   searchQuery,
@@ -11,6 +11,7 @@ import {
   type JobPosting,
   type PageQuery,
 } from "@/lib/api";
+import { serverSession } from "@/lib/serverSession";
 
 export default async function PostingPage({
   params,
@@ -30,67 +31,39 @@ export default async function PostingPage({
   if (!posting) {
     notFound();
   }
-  const open = isOpen(posting);
+
+  const session = await serverSession();
+  const reader: Reader = !session ? "visitor" : session.user.role === "APPLICANT" ? "applicant" : "staff";
+  const apply = { jobPostId: posting.jobPostId, reader, open: isOpen(posting) };
 
   return (
-    <article className="card border border-base-300 bg-base-100">
-      <div className="card-body gap-5">
-        <Link
-          href={`/jobs${searchQuery(searchCriteria(await searchParams))}`}
-          className="link link-primary font-semibold"
-        >
-          All jobs
-        </Link>
+    <div className="flex flex-col gap-5">
+      <Link
+        href={`/jobs${searchQuery(searchCriteria(await searchParams))}`}
+        className="link link-primary self-start text-sm font-semibold no-underline hover:underline"
+      >
+        <span aria-hidden="true">← </span>Back to results
+      </Link>
 
-        <PageTitle
-          subtitle={`${posting.organization.name} · ${posting.location} · ${posting.employmentType}`}
-        >
-          {posting.title}
-        </PageTitle>
-
-        {!open && (
-          <div role="status" className="alert alert-warning">
-            This posting is no longer accepting applications.
+      {reader === "applicant" ? (
+        <PostingDetails posting={posting} action={<ApplyAction {...apply} />} />
+      ) : (
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+          <div className="min-w-0 flex-1">
+            <PostingDetails
+              posting={posting}
+              action={
+                <div className="lg:hidden">
+                  <ApplyPanel {...apply} />
+                </div>
+              }
+            />
           </div>
-        )}
-
-        <section>
-          <h2 className="text-lg font-semibold">Description</h2>
-          <p className="mt-1">{posting.description}</p>
-        </section>
-
-        <section>
-          <h2 className="text-lg font-semibold">Requirements</h2>
-          <p className="mt-1">{posting.jobRequirements}</p>
-        </section>
-
-        <dl className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <div>
-            <dt className="text-sm text-muted">Salary range</dt>
-            <dd className="font-medium">{posting.salaryRange ?? "Not stated"}</dd>
-          </div>
-          <div>
-            <dt className="text-sm text-muted">Openings</dt>
-            <dd className="font-medium">{posting.numberOfOpenings}</dd>
-          </div>
-          <div>
-            <dt className="text-sm text-muted">Posted</dt>
-            <dd className="font-medium">{formatDate(posting.datePosted)}</dd>
-          </div>
-          <div>
-            <dt className="text-sm text-muted">Apply by</dt>
-            <dd className="font-medium">{formatDate(posting.applicationDeadline)}</dd>
-          </div>
-        </dl>
-
-        {open && (
-          <div>
-            <Link href={`/jobs/${posting.jobPostId}/apply`} className="btn btn-primary">
-              Apply
-            </Link>
-          </div>
-        )}
-      </div>
-    </article>
+          <aside className="hidden lg:flex lg:w-80 lg:shrink-0 lg:flex-col">
+            <ApplyPanel {...apply} side />
+          </aside>
+        </div>
+      )}
+    </div>
   );
 }
