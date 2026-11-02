@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { formatUtcDay, type Resume } from "@/lib/api";
+import { withNext } from "@/lib/session";
 
 // The side-column card of the resume on file (CO-03.1); children add what the screen says about it.
-// profileHref lets a screen ask the profile to send the applicant back after the upload.
+// returnTo is the page the profile sends the applicant back to after the upload.
 export default function ResumeOnFile({
   resume,
-  profileHref = "/profile",
+  returnTo,
   children,
 }: {
   resume: Resume | null;
-  profileHref?: string;
+  returnTo?: string;
   children?: React.ReactNode;
 }) {
   return (
@@ -25,7 +26,7 @@ export default function ResumeOnFile({
         <p className="text-muted">No resume yet.</p>
       )}
       <div className="grow" />
-      <Link href={profileHref} className="link link-primary pt-2 font-semibold no-underline hover:underline">
+      <Link href={withNext("/profile", returnTo)} className="link link-primary pt-2 font-semibold no-underline hover:underline">
         {resume ? "Replace resume" : "Upload a resume"}
       </Link>
     </section>

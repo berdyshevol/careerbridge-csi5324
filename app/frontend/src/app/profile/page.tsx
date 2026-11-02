@@ -3,11 +3,12 @@ import BackendDown from "@/components/BackendDown";
 import ProfilePreview from "@/components/ProfilePreview";
 import { queryValue, SessionEnded, viewProfile, type PageQuery, type Profile } from "@/lib/api";
 import { serverSession } from "@/lib/serverSession";
+import { withNext } from "@/lib/session";
 
 export default async function ProfilePage({ searchParams }: { searchParams: Promise<PageQuery> }) {
   // UC-04 2a and 3a: the Apply page names itself in next, and the upload returns there
   const next = queryValue((await searchParams).next);
-  const here = next ? `/profile?next=${encodeURIComponent(next)}` : "/profile";
+  const here = withNext("/profile", next);
 
   const session = await serverSession();
   if (!session) {

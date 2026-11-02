@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ApplicationRefused, formatDate, SessionEnded, submitApplication, type JobPosting } from "@/lib/api";
 import { checkApplication, type Desk } from "@/lib/apply";
 import { APPLICATION_LIMIT } from "@/lib/sampleDesk";
-import type { Session } from "@/lib/session";
+import { withNext, type Session } from "@/lib/session";
 import { useEndSession } from "@/lib/useEndSession";
 import PageTitle from "./PageTitle";
 import ResumeOnFile from "./ResumeOnFile";
@@ -25,7 +25,7 @@ export default function ApplyForm({ posting, session, desk }: { posting: JobPost
 
   const check = checkApplication(posting, desk);
   // UC-04 2a and 3a: after the upload the profile brings the applicant back to this page
-  const resumeHref = `/profile?next=${encodeURIComponent(`/jobs/${posting.jobPostId}/apply`)}`;
+  const here = `/jobs/${posting.jobPostId}/apply`;
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -68,7 +68,7 @@ export default function ApplyForm({ posting, session, desk }: { posting: JobPost
             <p className="text-sm text-muted">Apply by {formatDate(posting.applicationDeadline)}</p>
           </div>
 
-          {check.kind !== "ok" && <Blocked check={check} resumeHref={resumeHref} />}
+          {check.kind !== "ok" && <Blocked check={check} resumeHref={withNext("/profile", here)} />}
           {error && (
             <div role="alert" className="alert alert-error">
               <span>{error}</span>
@@ -129,7 +129,7 @@ export default function ApplyForm({ posting, session, desk }: { posting: JobPost
       </article>
 
       <aside className="flex flex-col gap-4 lg:w-80 lg:shrink-0">
-        <ResumeOnFile resume={desk.resume} profileHref={resumeHref}>
+        <ResumeOnFile resume={desk.resume} returnTo={here}>
           <p className="pt-2 text-sm text-muted">
             A copy as it is now goes with this application; later changes do not affect it.
           </p>

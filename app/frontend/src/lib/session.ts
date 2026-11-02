@@ -91,6 +91,10 @@ export function safeNext(next: string | undefined, role: Role): string {
   return sameSitePath(next) ?? home;
 }
 
+export function withNext(path: string, next?: string): string {
+  return next ? `${path}?next=${encodeURIComponent(next)}` : path;
+}
+
 // The page of this site that next names, or null for any other. Compared after the browser's own
 // parsing, which reads "/\evil.example" as another site.
 export function sameSitePath(next: string | undefined): string | null {
