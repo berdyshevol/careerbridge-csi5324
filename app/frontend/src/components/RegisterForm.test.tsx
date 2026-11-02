@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { AlreadyRegistered, register, RegistrationRefused } from "@/lib/api";
 import { clearSession, readSession } from "@/lib/session";
 import RegisterForm from "./RegisterForm";
@@ -60,28 +60,44 @@ describe("RegisterForm", () => {
       "The password needs at least 10 characters, including a letter and a number.",
     );
     expect(screen.getByLabelText("Email")).not.toHaveAttribute("aria-invalid");
-    expect(screen.getByLabelText("Full name")).toHaveFocus();
+    await waitFor(() => expect(screen.getByLabelText("Full name")).toHaveFocus());
     expect(readSession()).toBeNull();
   });
 
-  it("suggests logging in for an email that already has an account (extension 2b)", async () => {
+  it("says under the email that an account exists and offers to log in instead (extension 2b)", async () => {
     vi.mocked(register).mockRejectedValue(
       new AlreadyRegistered("An account already exists for this email address. Log in instead."),
     );
-    render(<RegisterForm />);
+    render(<RegisterForm next="/jobs/3/apply" />);
 
     fill("Sam Rivera", "sam.rivera@example.com", "Sunrise-2026x");
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("An account already exists");
-    expect(screen.getByRole("link", { name: "Go to log in" })).toHaveAttribute("href", "/login");
+    expect(await screen.findByText(/An account already exists for this email\./)).toBeInTheDocument();
+    expect(screen.getByLabelText("Email")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("Email")).toHaveAccessibleDescription(
+      "An account already exists for this email. Log in instead",
+    );
+    expect(screen.getByRole("link", { name: "Log in instead" })).toHaveAttribute(
+      "href",
+      "/login?next=%2Fjobs%2F3%2Fapply",
+    );
+    await waitFor(() => expect(screen.getByLabelText("Email")).toHaveFocus());
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("points a recruiter to recruiter registration (extension 1a)", () => {
+  it("states the password policy under the password (extension 2c)", () => {
     render(<RegisterForm />);
-    expect(screen.getByRole("link", { name: "Recruiting for an organization?" })).toHaveAttribute(
-      "href",
-      "/recruiter/register",
+    expect(screen.getByLabelText("Password")).toHaveAccessibleDescription(
+      "At least 10 characters, with a letter and a number.",
     );
+  });
+
+  it("holds only the three fields and a button that spans the card", () => {
+    render(<RegisterForm />);
+    const form = screen.getByRole("form", { name: "Registration" });
+    expect(form.querySelectorAll("input")).toHaveLength(3);
+    expect(screen.getByRole("button", { name: "Create account" })).toHaveClass("w-full");
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
   it("does not show a server error report", async () => {

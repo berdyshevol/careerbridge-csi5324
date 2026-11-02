@@ -10,22 +10,34 @@ export default function AccountMenu({ user }: { user: SessionUser | null }) {
   const pathname = usePathname();
 
   if (!user) {
-    const next = pathname && pathname !== "/login" ? `?next=${encodeURIComponent(pathname)}` : "";
+    // From /register the visitor goes where registering would have taken them, not back to /register,
+    // which sends a logged-in user to the profile
+    const onRegister = pathname === "/register";
+    const next = pathname && !onRegister ? `?next=${encodeURIComponent(pathname)}` : "";
     // The search too, read at the click: useSearchParams would need a Suspense boundary around the header
     const withSearch = (event: React.MouseEvent) => {
-      if (next && window.location.search) {
-        event.preventDefault();
-        router.push(`/login?next=${encodeURIComponent(pathname + window.location.search)}`);
+      if (!window.location.search) {
+        return;
       }
+      event.preventDefault();
+      const target = onRegister
+        ? new URLSearchParams(window.location.search).get("next")
+        : pathname + window.location.search;
+      router.push(target ? `/login?next=${encodeURIComponent(target)}` : "/login");
     };
     return (
+      // The log-in and register pages offer only the other one (mockups visitor-login, visitor-register)
       <div className="flex items-center gap-2">
-        <Link href={`/login${next}`} onClick={withSearch} className="btn btn-ghost btn-sm">
-          Log in
-        </Link>
-        <Link href="/register" className="btn btn-sm border-base-300 bg-base-100">
-          Register
-        </Link>
+        {pathname !== "/login" && (
+          <Link href={`/login${next}`} onClick={withSearch} className="btn btn-ghost btn-sm">
+            Log in
+          </Link>
+        )}
+        {pathname !== "/register" && (
+          <Link href="/register" className="btn btn-sm border-base-300 bg-base-100">
+            Register
+          </Link>
+        )}
       </div>
     );
   }

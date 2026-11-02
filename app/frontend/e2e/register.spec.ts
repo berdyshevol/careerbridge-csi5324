@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { logIn, logOut } from "./accounts";
+import { ACCOUNTS, logIn, logOut } from "./accounts";
 
 // UC-02 Register as Applicant, as Given / When / Then
 
@@ -37,14 +37,31 @@ test("given a one-word name and a weak password, when a visitor registers, then 
   await expect(page).toHaveURL(/\/register$/);
 });
 
-test("given an email that already has an account, when a visitor registers with it, then they are sent to log in", async ({ page }) => {
-  await page.goto("/register");
+test("given an email that already has an account, when a visitor registers with it, then the email field offers to log in instead", async ({ page }) => {
+  await page.goto("/register?next=%2Fjobs");
+  // The register page's header offers only Log in (mockup visitor-register)
+  await expect(page.getByRole("banner").getByRole("link", { name: "Register", exact: true })).toHaveCount(0);
   await page.getByLabel("Full name").fill("Sam Rivera");
   await page.getByLabel("Email").fill("sam.rivera@example.com");
   await page.getByLabel("Password").fill("Sunrise-2026x");
   await page.getByRole("button", { name: "Create account" }).click();
 
-  await expect(page.getByRole("main").getByRole("alert")).toContainText("An account already exists");
-  await page.getByRole("link", { name: "Go to log in" }).click();
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByLabel("Email")).toHaveAccessibleDescription(
+    "An account already exists for this email. Log in instead",
+  );
+  await expect(page.getByLabel("Email")).toBeFocused();
+  await page.getByRole("main").getByRole("link", { name: "Log in instead" }).click();
+  await expect(page).toHaveURL(/\/login\?next=%2Fjobs$/);
+});
+
+test("given a visitor who came to register from a posting, when they log in from the header instead, then they come back to that page", async ({ page }) => {
+  await page.goto("/register?next=%2Fjobs");
+  await page.getByRole("banner").getByRole("link", { name: "Log in", exact: true }).click();
+  await expect(page).toHaveURL(/\/login\?next=%2Fjobs$/);
+
+  await page.getByLabel("Email").fill(ACCOUNTS.applicant.email);
+  await page.getByLabel("Password").fill(ACCOUNTS.applicant.password);
+  await page.getByRole("button", { name: "Log in" }).click();
+
+  await expect(page).toHaveURL(/\/jobs$/);
 });

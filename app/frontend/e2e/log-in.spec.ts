@@ -23,7 +23,9 @@ test("given a wrong password, when someone logs in, then the backend's reason is
   await page.getByRole("button", { name: "Log in" }).click();
 
   await expect(page.getByRole("main").getByRole("alert")).toHaveText("The email or password is incorrect.");
-  await expect(page.getByRole("link", { name: "Log in", exact: true })).toBeVisible();
+  // The log-in page's header offers only Register (mockup visitor-login)
+  await expect(page.getByRole("banner").getByRole("link", { name: "Register", exact: true })).toBeVisible();
+  await expect(page.getByRole("banner").getByRole("link", { name: "Log in", exact: true })).toHaveCount(0);
 });
 
 test("given a logged-in recruiter, when they log out, then the header offers to log in again", async ({ page }) => {
