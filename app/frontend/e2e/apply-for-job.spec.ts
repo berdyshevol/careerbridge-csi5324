@@ -1,6 +1,6 @@
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { ACCOUNTS, logIn, registerNewApplicant, tokenOf } from "./accounts";
+import { ACCOUNTS, logIn, registerNewApplicant } from "./accounts";
 
 // UC-04 Apply for Job, against the sample postings in jobs.csv and the demo
 // applicant Jordan Lee (three active applications and a resume on file, from SampleDataLoader).
@@ -68,24 +68,6 @@ test("a posting already applied to cannot be applied to again", async ({ page })
 
   await expect(page.getByRole("status")).toContainText("You already applied to this posting");
   await expect(page.getByRole("button", { name: "Submit application" })).toHaveCount(0);
-});
-
-test("the desk counts the same applications as the backend", async ({ page, request }) => {
-  const headers = await tokenOf(request, ACCOUNTS.applicant);
-  await logIn(page, ACCOUNTS.applicant);
-  // Retried: the other device may submit an application between the two reads
-  await expect(async () => {
-    const applications: { applicationStatus: string }[] = await (
-      await request.get("http://localhost:8080/api/applicant/applications", { headers })
-    ).json();
-    const active = applications.filter((a) =>
-      ["APPLIED", "SCREENING", "INTERVIEW", "OFFER"].includes(a.applicationStatus),
-    ).length;
-
-    await page.goto("/");
-
-    await expect(page.getByText(`${active} of 5 active`, { exact: true })).toBeVisible({ timeout: 2000 });
-  }).toPass();
 });
 
 // UC-01 extensions 6a and 6c, as Given / When / Then

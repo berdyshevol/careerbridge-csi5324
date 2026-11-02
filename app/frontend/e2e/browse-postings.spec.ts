@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { ACCOUNTS, logIn } from "./accounts";
 
 // UC-01 Search Job Postings, against the sample data in jobs.csv.
 
@@ -86,9 +87,37 @@ test("a closed posting still opens but no longer offers to apply", async ({ page
   await expect(page.getByRole("link", { name: "Apply" })).toHaveCount(0);
 });
 
-test("the desk shows recently published postings from the backend", async ({ page }) => {
+// The front page and the applicant's home (visitor-home, applicant-home), as Given / When / Then
+
+test("given a visitor on the front page, when they search by keyword and location, then the job board shows the matches", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1, name: "Find a job and apply." })).toBeVisible();
+
+  const search = page.getByRole("form", { name: "Search job postings" });
+  await search.getByRole("searchbox", { name: "Keywords" }).fill("analyst");
+  await search.getByRole("combobox", { name: "Location" }).selectOption("On-site");
+  await search.getByRole("button", { name: "Search jobs" }).click();
+
+  await expect(page).toHaveURL(/\/jobs\?keyword=analyst&location=On-site$/);
+  await expect(page.getByRole("link", { name: "Data Analyst Intern" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Backend Developer" })).toHaveCount(0);
+});
+
+test("given a visitor on the front page, when they look for a way in, then it leads applicants and employers to register", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.getByRole("heading", { name: "Recently published" })).toBeVisible();
-  await expect(page.getByText("is not answering")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Register your organization" })).toHaveAttribute("href", "/recruiter/register");
+  await page.getByRole("link", { name: "Register as an applicant" }).click();
+  await expect(page).toHaveURL(/\/register$/);
+});
+
+test("given a logged-in applicant, when they open the home page, then Find jobs leads to the job board", async ({ page }) => {
+  await logIn(page, ACCOUNTS.applicant, "/");
+  await expect(page.getByRole("heading", { level: 1, name: "Welcome" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Open applications" })).toHaveAttribute("href", "/applications");
+  await expect(page.getByRole("link", { name: "Open profile" })).toHaveAttribute("href", "/profile");
+
+  await page.getByRole("main").getByRole("link", { name: "Find jobs" }).click();
+  await expect(page).toHaveURL(/\/jobs$/);
+  await expect(page.getByRole("heading", { name: "Open job postings" })).toBeVisible();
 });
