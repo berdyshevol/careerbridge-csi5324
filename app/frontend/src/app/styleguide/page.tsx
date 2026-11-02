@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ApplicationRow from "@/components/ApplicationRow";
+import ApplyPanel, { ApplyAction } from "@/components/ApplyPanel";
 import BackendDown from "@/components/BackendDown";
 import EmptyState from "@/components/EmptyState";
 import FormField, { TextAreaField } from "@/components/FormField";
@@ -7,6 +8,7 @@ import OfferPanel from "@/components/OfferPanel";
 import PageTitle from "@/components/PageTitle";
 import Placeholder from "@/components/Placeholder";
 import PostingCard from "@/components/PostingCard";
+import PostingDetails from "@/components/PostingDetails";
 import ResumeOnFile from "@/components/ResumeOnFile";
 import SlotMeter from "@/components/SlotMeter";
 import { StageBadge, StageProgress } from "@/components/StageBadge";
@@ -19,8 +21,8 @@ import { APPLICATION_LIMIT, STAGES, applications, offer } from "@/lib/sampleDesk
 const samplePosting: JobPosting = {
   jobPostId: 3,
   title: applications[1].title,
-  description: "",
-  jobRequirements: "",
+  description: "What the job is, in the recruiter's words.\nEach line is a paragraph.",
+  jobRequirements: "Each line is a requirement\nSQL",
   location: applications[1].location,
   employmentType: applications[1].employmentType,
   salaryRange: null,
@@ -96,10 +98,13 @@ export default function StyleguidePage() {
       </Section>
 
       <Section title="Page">
-        <Block title="Page title" use="<PageTitle eyebrow? subtitle?>…</PageTitle> — one per screen">
-          <PageTitle eyebrow="An eyebrow" subtitle="A line under the title.">
-            The title of the screen
-          </PageTitle>
+        <Block title="Page title" use="<PageTitle eyebrow? context? subtitle?>…</PageTitle> — one per screen; context is a plain line naming what the title belongs to">
+          <div className="flex flex-col gap-4">
+            <PageTitle eyebrow="An eyebrow" subtitle="A line under the title.">
+              The title of the screen
+            </PageTitle>
+            <PageTitle context="The organization">A posting&apos;s title</PageTitle>
+          </div>
         </Block>
         <Block title="Content card" use='<article className="card border border-base-300 bg-base-100"><div className="card-body gap-5">…</div></article>'>
           <article className="card border border-base-300 bg-base-100">
@@ -180,6 +185,17 @@ export default function StyleguidePage() {
           <ul className="grid gap-3 md:grid-cols-2">
             <PostingCard posting={samplePosting} />
           </ul>
+        </Block>
+        <Block title="Posting details" use="<PostingDetails posting={…} action={…} /> — every detail of one posting; a white card only on laptops; action sits under the chips">
+          <PostingDetails posting={samplePosting} action={<ApplyAction jobPostId={3} reader="applicant" open />} />
+        </Block>
+        <Block title="Apply panel" use='<ApplyPanel jobPostId reader open side? /> — for a visitor, recruiter or administrator: a card under the chips (lg:hidden), side in an aside on laptops; <ApplyAction> alone for an applicant'>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <ApplyPanel jobPostId={3} reader="visitor" open />
+            <ApplyPanel jobPostId={3} reader="visitor" open side />
+            <ApplyPanel jobPostId={3} reader="staff" open side />
+            <ApplyPanel jobPostId={3} reader="visitor" open={false} side />
+          </div>
         </Block>
         <Block title="Application row" use="<ApplicationRow application={…} /> — in a ul with flex flex-col gap-3">
           <ul className="flex flex-col gap-3">

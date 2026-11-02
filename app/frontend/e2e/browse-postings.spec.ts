@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { ACCOUNTS, logIn } from "./accounts";
 
 // UC-01 Search Job Postings, against the sample data in jobs.csv.
 
@@ -28,7 +29,7 @@ test("filters narrow the list and survive a visit to a posting", async ({ page }
   await expect(page.getByRole("link", { name: "IT Support Specialist" })).toHaveCount(0);
 
   await page.getByRole("link", { name: "Data Analyst Intern" }).click();
-  await page.getByRole("link", { name: "All jobs" }).click();
+  await page.getByRole("link", { name: "Back to results" }).click();
 
   await expect(main.getByRole("combobox", { name: "Location" })).toHaveValue("On-site");
   await expect(page.getByRole("link", { name: "IT Support Specialist" })).toHaveCount(0);
@@ -68,13 +69,33 @@ test("criteria that match nothing say so and offer to clear the filters", async 
   await expect(page.getByRole("link", { name: "Backend Developer" })).toBeVisible();
 });
 
-test("a posting opens with its details and a way to apply", async ({ page }) => {
+test("a posting opens with its details, and a visitor logs in to apply and comes back to it (UC-04 1a)", async ({ page }) => {
   await page.goto("/jobs");
   await page.getByRole("link", { name: "Backend Developer" }).click();
 
   await expect(page.getByRole("heading", { level: 1, name: "Backend Developer" })).toBeVisible();
+  await expect(page.getByText("Brazos Analytics")).toBeVisible();
+  await expect(page.getByText("1 opening", { exact: true })).toBeVisible();
   await expect(page.getByText("Java, Spring Boot, PostgreSQL")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Apply" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Register as an applicant" })).toBeVisible();
+
+  await page.getByRole("link", { name: "Log in to apply" }).click();
+  await expect(page).toHaveURL(/\/login\?next=%2Fjobs%2F3$/);
+  await page.getByLabel("Email").fill(ACCOUNTS.applicant.email);
+  await page.getByLabel("Password").fill(ACCOUNTS.applicant.password);
+  await page.getByRole("button", { name: "Log in" }).click();
+
+  await expect(page).toHaveURL(/\/jobs\/3$/);
+  await expect(page.getByRole("link", { name: "Apply", exact: true })).toHaveAttribute("href", "/jobs/3/apply");
+});
+
+test("a recruiter reading a posting is told only applicant accounts can apply (UC-04 1b)", async ({ page }) => {
+  await logIn(page, ACCOUNTS.recruiter);
+  await page.goto("/jobs/3");
+
+  await expect(page.getByRole("heading", { level: 1, name: "Backend Developer" })).toBeVisible();
+  await expect(page.getByRole("status")).toHaveText("Only applicant accounts can apply.");
+  await expect(page.getByRole("link", { name: "apply" })).toHaveCount(0);
 });
 
 test("a closed posting still opens but no longer offers to apply", async ({ page }) => {
@@ -83,7 +104,8 @@ test("a closed posting still opens but no longer offers to apply", async ({ page
 
   await expect(page.getByRole("heading", { level: 1, name: "QA Engineer" })).toBeVisible();
   await expect(page.getByRole("status")).toHaveText("This posting is no longer accepting applications.");
-  await expect(page.getByRole("link", { name: "Apply" })).toHaveCount(0);
+  // Neither Apply nor Log in to apply
+  await expect(page.getByRole("link", { name: "apply" })).toHaveCount(0);
 });
 
 test("the desk shows recently published postings from the backend", async ({ page }) => {
