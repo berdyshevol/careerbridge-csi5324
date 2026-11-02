@@ -42,7 +42,19 @@ describe("AccountMenu", () => {
     pathname = "/register";
     render(<AccountMenu user={null} />);
     expect(screen.queryByRole("link", { name: "Register" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Log in" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/login");
+    pathname = "/jobs/3";
+  });
+
+  it("sends a visitor from the register page to log in with the page they came to apply from", () => {
+    pathname = "/register";
+    window.history.pushState({}, "", "/register?next=%2Fjobs%2F3%2Fapply");
+    render(<AccountMenu user={null} />);
+
+    fireEvent.click(screen.getByRole("link", { name: "Log in" }));
+
+    expect(push).toHaveBeenCalledWith("/login?next=%2Fjobs%2F3%2Fapply");
+    window.history.pushState({}, "", "/");
     pathname = "/jobs/3";
   });
 

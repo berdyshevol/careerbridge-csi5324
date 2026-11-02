@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { logIn, logOut } from "./accounts";
+import { ACCOUNTS, logIn, logOut } from "./accounts";
 
 // UC-02 Register as Applicant, as Given / When / Then
 
@@ -52,4 +52,16 @@ test("given an email that already has an account, when a visitor registers with 
   await expect(page.getByLabel("Email")).toBeFocused();
   await page.getByRole("main").getByRole("link", { name: "Log in instead" }).click();
   await expect(page).toHaveURL(/\/login\?next=%2Fjobs$/);
+});
+
+test("given a visitor who came to register from a posting, when they log in from the header instead, then they come back to that page", async ({ page }) => {
+  await page.goto("/register?next=%2Fjobs");
+  await page.getByRole("banner").getByRole("link", { name: "Log in", exact: true }).click();
+  await expect(page).toHaveURL(/\/login\?next=%2Fjobs$/);
+
+  await page.getByLabel("Email").fill(ACCOUNTS.applicant.email);
+  await page.getByLabel("Password").fill(ACCOUNTS.applicant.password);
+  await page.getByRole("button", { name: "Log in" }).click();
+
+  await expect(page).toHaveURL(/\/jobs$/);
 });
