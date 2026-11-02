@@ -39,8 +39,9 @@ test("an applicant can cancel, then reviews, confirms and submits an application
   await expect(page.getByRole("link", { name: "Track application status" })).toBeVisible();
 });
 
-// Extension 2a and FR-UC03.3: the resume that goes with the application is the one on file
-test("given a new applicant without a resume, when they apply, then they are sent to upload one and can apply after", async ({ page }, testInfo) => {
+// Extension 2a and FR-UC04.6: the upload brings the applicant back to the same Apply page, and the
+// resume that goes with the application is the one on file (FR-UC03.3)
+test("given a new applicant without a resume, when they apply, then they upload one and come back to the same Apply page", async ({ page }, testInfo) => {
   await registerNewApplicant(page, "apply", testInfo.project.name);
 
   await page.goto("/jobs/1/apply");
@@ -48,12 +49,12 @@ test("given a new applicant without a resume, when they apply, then they are sen
   await expect(page.getByRole("button", { name: "Submit application" })).toHaveCount(0);
 
   await page.getByRole("link", { name: "Upload one in Profile & resume" }).click();
-  await expect(page).toHaveURL(/\/profile$/);
+  await expect(page).toHaveURL(/\/profile\?next=/);
   await page.getByLabel("Choose a file").setInputFiles(path.join(__dirname, "fixtures", "Pat_Kim_Resume.pdf"));
-  await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
 
-  await page.goto("/jobs/1/apply");
+  await expect(page).toHaveURL(/\/jobs\/1\/apply$/);
   await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
+  await expect(page.getByText("A resume is required to apply")).toHaveCount(0);
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Submit application" }).click();
 

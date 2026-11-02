@@ -1,4 +1,4 @@
-import { clearSession, parseSession, readSession, safeNext, saveSession, type Session } from "./session";
+import { clearSession, parseSession, readSession, safeNext, sameSitePath, saveSession, type Session } from "./session";
 
 const session: Session = {
   token: "a.b.c",
@@ -47,5 +47,14 @@ describe("session", () => {
     expect(safeNext("https://evil.example", "ADMINISTRATOR")).toBe("/admin/postings");
     expect(safeNext(undefined, "RECRUITER")).toBe("/recruiter/postings/new");
     expect(safeNext("/login", "APPLICANT")).toBe("/");
+  });
+
+  it("names no page when next is not a page of this site", () => {
+    expect(sameSitePath("/jobs/3/apply")).toBe("/jobs/3/apply");
+    expect(sameSitePath("//evil.example/jobs/3/apply")).toBeNull();
+    expect(sameSitePath("/\\evil.example")).toBeNull();
+    expect(sameSitePath("https://evil.example")).toBeNull();
+    expect(sameSitePath("/login")).toBeNull();
+    expect(sameSitePath(undefined)).toBeNull();
   });
 });

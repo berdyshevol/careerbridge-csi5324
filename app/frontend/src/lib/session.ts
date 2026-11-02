@@ -86,13 +86,18 @@ function writeCookie(value: string, maxAge: number) {
 }
 
 // Only a page of this site, so a crafted link cannot send the user elsewhere after logging in.
-// Compared after the browser's own parsing, which reads "/\evil.example" as another site.
 export function safeNext(next: string | undefined, role: Role): string {
   const home = role === "ADMINISTRATOR" ? "/admin/postings" : role === "RECRUITER" ? "/recruiter/postings/new" : "/";
+  return sameSitePath(next) ?? home;
+}
+
+// The page of this site that next names, or null for any other. Compared after the browser's own
+// parsing, which reads "/\evil.example" as another site.
+export function sameSitePath(next: string | undefined): string | null {
   if (!next || !next.startsWith("/") || /[\\\u0000-\u001f]/.test(next)) {
-    return home;
+    return null;
   }
   const here = window.location.origin;
   const url = new URL(next, here);
-  return url.origin === here && !url.pathname.startsWith("/login") ? url.pathname + url.search + url.hash : home;
+  return url.origin === here && !url.pathname.startsWith("/login") ? url.pathname + url.search + url.hash : null;
 }

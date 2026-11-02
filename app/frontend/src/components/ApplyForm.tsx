@@ -24,6 +24,8 @@ export default function ApplyForm({ posting, session, desk }: { posting: JobPost
   }
 
   const check = checkApplication(posting, desk);
+  // UC-04 2a and 3a: after the upload the profile brings the applicant back to this page
+  const resumeHref = `/profile?next=${encodeURIComponent(`/jobs/${posting.jobPostId}/apply`)}`;
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -66,7 +68,7 @@ export default function ApplyForm({ posting, session, desk }: { posting: JobPost
             <p className="text-sm text-muted">Apply by {formatDate(posting.applicationDeadline)}</p>
           </div>
 
-          {check.kind !== "ok" && <Blocked check={check} />}
+          {check.kind !== "ok" && <Blocked check={check} resumeHref={resumeHref} />}
           {error && (
             <div role="alert" className="alert alert-error">
               <span>{error}</span>
@@ -127,7 +129,7 @@ export default function ApplyForm({ posting, session, desk }: { posting: JobPost
       </article>
 
       <aside className="flex flex-col gap-4 lg:w-80 lg:shrink-0">
-        <ResumeOnFile resume={desk.resume}>
+        <ResumeOnFile resume={desk.resume} profileHref={resumeHref}>
           <p className="pt-2 text-sm text-muted">
             A copy as it is now goes with this application; later changes do not affect it.
           </p>
@@ -139,7 +141,13 @@ export default function ApplyForm({ posting, session, desk }: { posting: JobPost
   );
 }
 
-function Blocked({ check }: { check: Exclude<ReturnType<typeof checkApplication>, { kind: "ok" }> }) {
+function Blocked({
+  check,
+  resumeHref,
+}: {
+  check: Exclude<ReturnType<typeof checkApplication>, { kind: "ok" }>;
+  resumeHref: string;
+}) {
   switch (check.kind) {
     case "closed":
       return (
@@ -157,7 +165,7 @@ function Blocked({ check }: { check: Exclude<ReturnType<typeof checkApplication>
         <div role="status" className="alert alert-warning">
           <span>
             A resume is required to apply.{" "}
-            <Link href="/profile" className="link">
+            <Link href={resumeHref} className="link">
               Upload one in Profile &amp; resume
             </Link>
             , then come back to this posting.

@@ -18,7 +18,7 @@ import {
   type ProfileDetails,
   type ProfileField,
 } from "@/lib/api";
-import { readSession, saveSession } from "@/lib/session";
+import { readSession, sameSitePath, saveSession } from "@/lib/session";
 import { useEndSession } from "@/lib/useEndSession";
 
 const FAILURE =
@@ -30,7 +30,15 @@ function detailsOf(profile: Profile): ProfileDetails {
 
 // UC-03 for the logged-in Applicant: the details and resume on file come from the backend (CO-03.1),
 // the details are saved there (CO-03.2) and a new resume replaces the one on file (CO-03.3)
-export default function ProfilePreview({ profile: onFile, token }: { profile: Profile; token: string }) {
+export default function ProfilePreview({
+  profile: onFile,
+  token,
+  next,
+}: {
+  profile: Profile;
+  token: string;
+  next?: string;
+}) {
   const router = useRouter();
   const endSession = useEndSession();
   const [details, setDetails] = useState(() => detailsOf(onFile));
@@ -61,6 +69,12 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
     setUploading(true);
     try {
       setResume(await uploadResume(token, file));
+      // UC-04 2a and 3a: back to the application the applicant came from. Another site in next
+      // is ignored and the applicant stays here, as without one.
+      const back = sameSitePath(next);
+      if (back) {
+        router.push(back);
+      }
     } catch (err) {
       if (err instanceof ResumeRefused) {
         setRefusedFile(file.name);
