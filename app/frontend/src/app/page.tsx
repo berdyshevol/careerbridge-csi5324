@@ -1,23 +1,23 @@
 import Link from "next/link";
-import ApplicationRow from "@/components/ApplicationRow";
+import ActionRow from "@/components/ActionRow";
 import BackendDown from "@/components/BackendDown";
-import OfferPanel from "@/components/OfferPanel";
+import FormField from "@/components/FormField";
 import PageTitle from "@/components/PageTitle";
 import PostingCard from "@/components/PostingCard";
-import ResumeOnFile from "@/components/ResumeOnFile";
-import SlotMeter from "@/components/SlotMeter";
-import EmptyState from "@/components/EmptyState";
-import EndSession from "@/components/EndSession";
-import { searchPostings, SessionEnded, viewApplications, viewProfile } from "@/lib/api";
-import { APPLICATION_LIMIT, offer } from "@/lib/sampleDesk";
+import { searchPostings, type JobPosting } from "@/lib/api";
+import { LOCATIONS } from "@/lib/postingOptions";
 import { serverSession } from "@/lib/serverSession";
 
-function longDate(isoDate: string): string {
-  return new Date(`${isoDate}T00:00:00`).toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
+// `/` is one address with a page per role: visitor-home and applicant-home in spec/ui-drafts.md
+export default async function HomePage() {
+  const session = await serverSession();
+  if (!session) {
+    return <VisitorHome />;
+  }
+  if (session.user.role === "APPLICANT") {
+    return <ApplicantHome />;
+  }
+  return <StaffHome firstName={session.user.firstName} postings={await openPostings()} />;
 }
 
 // null: the backend is down, and the section says so
@@ -29,117 +29,132 @@ async function openPostings() {
   }
 }
 
-async function deskOf(token: string) {
-  try {
-    const [applications, profile] = await Promise.all([viewApplications(token), viewProfile(token)]);
-    return { applications: applications.active, resume: profile.resume };
-  } catch (err) {
-    return err instanceof SessionEnded ? ("ended" as const) : ("down" as const);
-  }
+function VisitorHome() {
+  return (
+    <div className="flex flex-col gap-5">
+      <PageTitle
+        eyebrow="Open jobs from every organization"
+        subtitle="Search without an account. Register when you are ready to apply."
+      >
+        Find a job and apply.
+      </PageTitle>
+
+      {/* The job board takes the same criteria and drops the ones left empty from the address */}
+      <form action="/jobs" aria-label="Search job postings" className="card border border-base-300 bg-base-100">
+        <div className="card-body gap-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormField id="keyword" name="keyword" type="search" label="Keywords" />
+            <div className="flex flex-col gap-2">
+              <label htmlFor="location" className="font-medium">
+                Location
+              </label>
+              <select id="location" name="location" defaultValue="" className="select w-full">
+                <option value="">Any location</option>
+                {LOCATIONS.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <button type="submit" className="btn btn-primary w-full">
+            Search jobs
+          </button>
+        </div>
+      </form>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <WayIn
+          title="Looking for a job?"
+          href="/register"
+          action="Register as an applicant"
+        >
+          Create an account, add your resume and keep up to 5 applications going at once.
+        </WayIn>
+        <WayIn title="Hiring?" href="/recruiter/register" action="Register your organization">
+          Register yourself and your organization. An administrator approves new employers.
+        </WayIn>
+      </div>
+    </div>
+  );
 }
 
-// The offer is sample data (see src/lib/sampleDesk.ts).
-export default async function DeskPage() {
-  const session = await serverSession();
-  // The desk is the logged-in Applicant's; anyone else sees the job board part only
-  const applicant = session?.user.role === "APPLICANT" ? session : null;
-  const [postings, desk] = await Promise.all([
-    openPostings(),
-    applicant ? deskOf(applicant.token) : ("none" as const),
-  ]);
-  const loaded = typeof desk === "object" ? desk : null;
-  const applications = loaded?.applications ?? null;
-  const sessionEnded = desk === "ended";
-
+function WayIn({
+  title,
+  href,
+  action,
+  children,
+}: {
+  title: string;
+  href: string;
+  action: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-6">
-      {/* On phones and tablets this wrapper disappears and its sections are
-          ordered around the side column; on laptops it is the white canvas. */}
-      <div className="contents min-w-0 lg:flex lg:flex-1 lg:flex-col lg:gap-6 lg:rounded-2xl lg:border lg:border-base-300 lg:bg-base-100 lg:p-8">
-        <div className="order-1">
-          {session ? (
-            <PageTitle subtitle={applicant ? "Here is where your applications stand." : "Here are the job postings open now."}>
-              Welcome back, {session.user.firstName}
-            </PageTitle>
-          ) : (
-            <PageTitle subtitle="Find a job and apply in a few steps.">Welcome to CareerBridge</PageTitle>
-          )}
-        </div>
-
-        {/* A recruiter or administrator is logged in already: no applicant section, no log-in prompt */}
-        {(!session || applicant) && (
-        <section className="order-3 flex flex-col gap-3">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-lg font-semibold">Your applications</h2>
-            {applications && (
-              <span className="text-muted">
-                {applications.length} of {APPLICATION_LIMIT} active
-              </span>
-            )}
-          </div>
-          {sessionEnded && <EndSession />}
-          {!applicant || sessionEnded ? (
-            <EmptyState action={{ href: "/login", label: sessionEnded ? "Log in again" : "Log in as an applicant" }}>
-              {sessionEnded ? "Your session has ended." : "Your applications appear here once you log in."}
-            </EmptyState>
-          ) : applications === null ? (
-            <BackendDown />
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {applications.map((application) => (
-                <ApplicationRow key={application.applicationId} application={application} />
-              ))}
-            </ul>
-          )}
-        </section>
-        )}
-
-        <section className="order-4 flex flex-col gap-3">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-lg font-semibold">Recently published</h2>
-            <Link href="/jobs" className="link link-primary font-semibold no-underline hover:underline">
-              See all open jobs
-            </Link>
-          </div>
-          {postings === null ? (
-            <BackendDown />
-          ) : (
-            <ul className="grid gap-3 md:grid-cols-2">
-              {postings.slice(0, 2).map((posting) => (
-                <PostingCard key={posting.jobPostId} posting={posting} />
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {applicant && (
-          <p className="order-5 text-sm text-muted">
-            The offer is sample data until UC-07 is implemented.
-          </p>
-        )}
+    <section className="card border border-base-300 bg-base-100">
+      <div className="card-body gap-2">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        <p className="text-muted">{children}</p>
+        <Link href={href} className="link link-primary font-semibold no-underline hover:underline">
+          {action}
+        </Link>
       </div>
+    </section>
+  );
+}
 
-      {applicant && (
-      <aside className="order-2 flex flex-col gap-4 lg:order-none lg:w-80 lg:shrink-0">
-        <OfferPanel
-          title={offer.title}
-          organizationName={offer.organizationName}
-          respondBy={longDate(offer.expirationDate)}
+function ApplicantHome() {
+  return (
+    <div className="flex flex-col gap-5 lg:rounded-2xl lg:border lg:border-base-300 lg:bg-base-100 lg:p-8">
+      <PageTitle>Welcome</PageTitle>
+      <ul className="flex flex-col gap-3">
+        <ActionRow
+          title="Find jobs"
+          description="Search the open job postings and apply."
+          href="/jobs"
+          action="Find jobs"
+          primary
         />
+        <ActionRow
+          title="My applications"
+          description="Follow your applications, withdraw one or answer an offer."
+          href="/applications"
+          action="Open applications"
+        />
+        <ActionRow
+          title="Profile and resume"
+          description="Keep your details and resume up to date."
+          href="/profile"
+          action="Open profile"
+        />
+      </ul>
+    </div>
+  );
+}
 
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-1 lg:gap-4">
-          {applications && (
-            <SlotMeter
-              used={applications.length}
-              total={APPLICATION_LIMIT}
-              caption="A slot frees up when you withdraw an application or it reaches a final stage."
-            />
-          )}
-
-          {loaded && <ResumeOnFile resume={loaded.resume} />}
+// Recruiters and administrators keep this until their own homes (recruiter-home, admin-home) are built
+function StaffHome({ firstName, postings }: { firstName: string; postings: JobPosting[] | null }) {
+  return (
+    <div className="flex flex-col gap-5 lg:rounded-2xl lg:border lg:border-base-300 lg:bg-base-100 lg:p-8">
+      <PageTitle subtitle="Here are the job postings open now.">Welcome back, {firstName}</PageTitle>
+      <section className="flex flex-col gap-3">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-lg font-semibold">Recently published</h2>
+          <Link href="/jobs" className="link link-primary font-semibold no-underline hover:underline">
+            See all open jobs
+          </Link>
         </div>
-      </aside>
-      )}
+        {postings === null ? (
+          <BackendDown />
+        ) : (
+          <ul className="grid gap-3 md:grid-cols-2">
+            {postings.slice(0, 2).map((posting) => (
+              <PostingCard key={posting.jobPostId} posting={posting} />
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

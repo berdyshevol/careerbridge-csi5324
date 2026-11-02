@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ActionRow from "@/components/ActionRow";
 import ApplicationRow from "@/components/ApplicationRow";
 import ApplyPanel, { ApplyAction } from "@/components/ApplyPanel";
 import BackendDown from "@/components/BackendDown";
@@ -202,6 +203,12 @@ export default function StyleguidePage() {
             {applications.map((application) => (
               <ApplicationRow key={application.applicationId} application={application} />
             ))}
+          </ul>
+        </Block>
+        <Block title="Action row" use="<ActionRow title description href action primary? /> — a role's actions on its home, in a ul with flex flex-col gap-3; primary on one only">
+          <ul className="flex flex-col gap-3">
+            <ActionRow title="The main action" description="What it is for, in one line." href="/styleguide" action="Do it" primary />
+            <ActionRow title="Another action" description="What it is for, in one line." href="/styleguide" action="Open it" />
           </ul>
         </Block>
         <Block title="Offer panel" use="<OfferPanel title organizationName respondBy /> — the only warning-colored panel on a screen">
