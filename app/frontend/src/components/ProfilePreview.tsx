@@ -195,7 +195,7 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
           </section>
 
           {refusedFile && (
-            <div id="resume-file-refusal" className="alert alert-error">
+            <div id="resume-file-refusal" className="alert alert-soft alert-error">
               <span>
                 <b>{refusedFile} was not uploaded.</b> Use a PDF or DOCX file of 5 MB or less. Your current
                 resume is still on file.
@@ -203,12 +203,12 @@ export default function ProfilePreview({ profile: onFile, token }: { profile: Pr
             </div>
           )}
           {saved && (
-            <div role="status" className="alert alert-success">
+            <div role="status" className="alert alert-soft alert-success">
               <span>Profile saved.</span>
             </div>
           )}
           {failure && (
-            <div role="alert" className="alert alert-error">
+            <div role="alert" className="alert alert-soft alert-error">
               <span>{failure}</span>
             </div>
           )}

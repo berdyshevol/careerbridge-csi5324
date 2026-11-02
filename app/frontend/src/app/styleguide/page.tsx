@@ -257,6 +257,18 @@ export default function StyleguidePage() {
             </div>
           </div>
         </Block>
+        <Block title="Tinted messages" use='alert alert-soft alert-success for a confirmation, alert alert-soft alert-error for a refusal or failure — where the mockup draws a tinted message, as on /profile'>
+          <div className="flex flex-col gap-3">
+            <div role="status" className="alert alert-soft alert-success">
+              <span>Profile saved.</span>
+            </div>
+            <div role="alert" className="alert alert-soft alert-error">
+              <span>
+                <b>photo.png was not uploaded.</b> Use a PDF or DOCX file of 5 MB or less.
+              </span>
+            </div>
+          </div>
+        </Block>
         <Block title="Empty state" use="<EmptyState action? card?>…</EmptyState> — card when it stands in place of a list of cards">
           <div className="flex flex-col gap-3">
             <EmptyState action={{ href: "/jobs", label: "See all open jobs" }}>
