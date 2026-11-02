@@ -33,7 +33,11 @@ export default async function JobsPage({
   try {
     // The organization list offers every organization with an open posting, not only those the criteria left
     const [found, all] = await Promise.all([searchPostings(criteria), search ? searchPostings() : null]);
-    postings = found;
+    // The backend matches part of the name, so "Acme" would also bring "Acme Labs"; the list chooses one organization
+    const organization = criteria.organization?.trim().toLowerCase();
+    postings = organization
+      ? found.filter((posting) => posting.organization.name.toLowerCase() === organization)
+      : found;
     open = all ?? found;
   } catch {
     postings = null;

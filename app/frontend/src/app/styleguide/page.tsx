@@ -240,7 +240,7 @@ export default function StyleguidePage() {
             <EmptyState card>No matching postings.</EmptyState>
           </div>
         </Block>
-        <Block title="Backend not answering" use="<BackendDown /> — when a fetch in src/lib/api.ts throws or times out">
+        <Block title="Backend not answering" use="<BackendDown /> — when a fetch in src/lib/api.ts throws or times out; the job board's search instead says it failed (alert-error, UC-01 *a)">
           <div className="flex flex-col gap-3">
             <BackendDown retry={false} local={false} />
             <BackendDown retry={false} local />

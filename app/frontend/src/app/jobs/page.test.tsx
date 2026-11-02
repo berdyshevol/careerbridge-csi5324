@@ -131,6 +131,21 @@ describe("JobsPage", () => {
     expect(organizationOptions()).toEqual(["All organizations", "Brazos Analytics", "Waco Health Partners"]);
   });
 
+  it("shows only the chosen organization, not another whose name contains it", async () => {
+    const labs: JobPosting = {
+      ...backend,
+      jobPostId: 9,
+      title: "Lab Technician",
+      organization: { organizationId: 9, name: "Brazos Analytics Labs" },
+    };
+    vi.mocked(searchPostings).mockResolvedValue([backend, labs]);
+
+    await openJobBoard({ organization: "Brazos Analytics" });
+
+    expect(screen.getByRole("link", { name: "Backend Developer" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Lab Technician" })).not.toBeInTheDocument();
+  });
+
   it("shows each result's title, organization, location, type and deadline", async () => {
     vi.mocked(searchPostings).mockResolvedValue([internship]);
 
