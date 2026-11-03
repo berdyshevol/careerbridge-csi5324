@@ -1,0 +1,16 @@
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import BackToResults from "@/components/BackToResults";
+import EmptyState from "@/components/EmptyState";
+
+// A not-found page gets no searchParams, so it reads the address to lead back to the same search.
+// Without this file Next.js draws its own 404, whose inline style paints the body white.
+export default function PostingNotFound() {
+  return (
+    <div className="flex flex-col gap-5">
+      <BackToResults query={Object.fromEntries(useSearchParams())} />
+      <EmptyState card>This posting could not be found.</EmptyState>
+    </div>
+  );
+}

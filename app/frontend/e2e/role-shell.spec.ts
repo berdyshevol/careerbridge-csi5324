@@ -23,6 +23,15 @@ test("given a logged-in applicant, when they open the job board, then the naviga
   await expect(page.getByText("Posting approvals")).toHaveCount(0);
 });
 
+test("given a logged-in applicant on a phone, when they open the job board, then the dock marks Jobs by colour alone, with no bar under it", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "the dock shows only at phone width");
+  await logIn(page, ACCOUNTS.applicant, "/jobs");
+
+  const current = page.locator(visibleNavigation).getByRole("link", { name: "Jobs" });
+  await expect(current).toHaveAttribute("aria-current", "page");
+  expect(await current.evaluate((link) => getComputedStyle(link, "::after").display)).toBe("none");
+});
+
 test("given a logged-in applicant, when they look at the header, then Log out waits in the account menu behind the avatar", async ({ page }) => {
   await logIn(page, ACCOUNTS.applicant, "/");
 

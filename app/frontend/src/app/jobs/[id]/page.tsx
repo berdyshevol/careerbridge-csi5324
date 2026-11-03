@@ -1,16 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import ApplyPanel, { ApplyAction, type Reader } from "@/components/ApplyPanel";
+import BackToResults from "@/components/BackToResults";
 import BackendDown from "@/components/BackendDown";
 import PostingDetails from "@/components/PostingDetails";
-import {
-  isOpen,
-  searchCriteria,
-  searchQuery,
-  viewPosting,
-  type JobPosting,
-  type PageQuery,
-} from "@/lib/api";
+import { isOpen, viewPosting, type JobPosting, type PageQuery } from "@/lib/api";
 import { serverSession } from "@/lib/serverSession";
 
 export default async function PostingPage({
@@ -38,12 +31,7 @@ export default async function PostingPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <Link
-        href={`/jobs${searchQuery(searchCriteria(await searchParams))}`}
-        className="link link-primary self-start text-sm font-semibold no-underline hover:underline"
-      >
-        <span aria-hidden="true">← </span>Back to results
-      </Link>
+      <BackToResults query={await searchParams} />
 
       {reader === "applicant" ? (
         <PostingDetails posting={posting} action={<ApplyAction {...apply} />} />
