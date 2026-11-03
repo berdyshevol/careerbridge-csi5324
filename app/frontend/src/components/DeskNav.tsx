@@ -94,8 +94,8 @@ export default function DeskNav({ role }: { role: Role | null }) {
             key={href}
             href={href}
             aria-current={isCurrent(href) ? "page" : undefined}
-            // Not daisyUI's dock-active: it draws a bar the mockup does not have
-            className={isCurrent(href) ? "font-semibold text-primary" : "text-muted"}
+            // daisyUI draws a bar under the dock entry with aria-current; the mockup marks it by colour and weight only
+            className={`after:hidden ${isCurrent(href) ? "font-semibold text-primary" : "text-muted"}`}
           >
             <Icon />
             <span className="dock-label">{shortLabel}</span>

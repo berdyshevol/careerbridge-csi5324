@@ -31,14 +31,14 @@ describe("DeskNav", () => {
     expect(within(sideColumn()).getByRole("link", { name: "Home" })).not.toHaveAttribute("aria-current");
   });
 
-  it("marks the current dock entry by colour and weight, without daisyUI's bar", () => {
+  // jsdom has no daisyUI CSS, so whether the bar shows is checked in e2e/role-shell.spec.ts
+  it("marks the current dock entry by colour and weight", () => {
     render(<DeskNav role="APPLICANT" />);
     const dock = screen.getAllByRole("navigation", { name: "Navigation" })[2];
     const current = within(dock).getByRole("link", { name: "Jobs" });
 
     expect(current).toHaveAttribute("aria-current", "page");
     expect(current).toHaveClass("text-primary", "font-semibold");
-    expect(current).not.toHaveClass("dock-active");
   });
 
   it("gives an administrator only the administrator's entries", () => {
