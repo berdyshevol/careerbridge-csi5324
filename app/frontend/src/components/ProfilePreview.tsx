@@ -63,7 +63,7 @@ export default function ProfilePreview({
   }, [fieldErrors]);
 
   // On a phone the alert under the Resume card can fall below the screen or behind the dock;
-  // its scroll margin keeps it above the dock
+  // its scroll-mb-24 is the dock clearance of pb-24 in layout.tsx and keeps it above the dock
   useEffect(() => {
     resumeAlert.current?.scrollIntoView({ block: "nearest" });
   }, [refusedFile, uploadFailure]);
