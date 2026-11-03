@@ -152,6 +152,17 @@ describe("ProfilePreview", () => {
     expect(await within(screen.getByRole("form", { name: "Details" })).findByRole("alert")).toHaveTextContent(FAILURE);
   });
 
+  it("does not speak of a resume on file when the save fails and there is none (extension *a)", async () => {
+    vi.mocked(updateProfile).mockRejectedValue(new Error("Backend answered 500"));
+    show({ ...jordan, resume: null });
+
+    fireEvent.click(screen.getByRole("button", { name: "Save details" }));
+
+    expect(await within(screen.getByRole("form", { name: "Details" })).findByRole("alert")).toHaveTextContent(
+      /^Something went wrong\. Details saved before the error are kept\.$/,
+    );
+  });
+
   describe("uploading a resume (UC-03 steps 5–7)", () => {
     const pdf = new File(["%PDF-1.4"], "Jordan_Lee_2026.pdf", { type: "application/pdf" });
 

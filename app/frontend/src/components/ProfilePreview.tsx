@@ -126,7 +126,7 @@ export default function ProfilePreview({
         endSession();
         setFailure("Your session has ended. Log in again to save your profile.");
       } else {
-        setFailure(FAILURE);
+        setFailure(resume ? FAILURE : "Something went wrong. Details saved before the error are kept.");
       }
     } finally {
       setSaving(false);
