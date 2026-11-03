@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import FileDrop from "@/components/FileDrop";
 import FormField, { TextAreaField } from "@/components/FormField";
@@ -52,6 +52,7 @@ export default function ProfilePreview({
   // Extension *a, each shown beside the action that failed, so a phone shows it where the applicant is
   const [failure, setFailure] = useState("");
   const [uploadFailure, setUploadFailure] = useState("");
+  const resumeAlert = useRef<HTMLDivElement>(null);
 
   // A screen reader hears the first reason: focus moves to the first field the backend refused
   useEffect(() => {
@@ -60,6 +61,12 @@ export default function ProfilePreview({
       document.getElementById(`profile-${first}`)?.focus();
     }
   }, [fieldErrors]);
+
+  // On a phone the alert under the Resume card can fall below the screen or behind the dock;
+  // its scroll margin keeps it above the dock
+  useEffect(() => {
+    resumeAlert.current?.scrollIntoView({ block: "nearest" });
+  }, [refusedFile, uploadFailure]);
 
   // Choosing a file uploads it at once. The backend checks the type and size (extension 6a); the
   // screen names the refused file and states the accepted types and size, as the mockup words it.
@@ -86,7 +93,7 @@ export default function ProfilePreview({
         endSession();
         setUploadFailure("Your session has ended. Log in again to upload your resume.");
       } else {
-        setUploadFailure(UPLOAD_FAILURE);
+        setUploadFailure(resume ? UPLOAD_FAILURE : "Something went wrong.");
       }
     } finally {
       setUploading(false);
@@ -231,15 +238,20 @@ export default function ProfilePreview({
           </section>
 
           {refusedFile && (
-            <div id="resume-file-refusal" role="alert" className="alert alert-soft alert-error">
+            <div
+              ref={resumeAlert}
+              id="resume-file-refusal"
+              role="alert"
+              className="alert alert-soft alert-error scroll-mb-24"
+            >
               <span>
-                <b>{refusedFile} was not uploaded.</b> Use a PDF or DOCX file of 5 MB or less. Your current
-                resume is still on file.
+                <b>{refusedFile} was not uploaded.</b> Use a PDF or DOCX file of 5 MB or less.
+                {resume && " Your current resume is still on file."}
               </span>
             </div>
           )}
           {uploadFailure && (
-            <div role="alert" className="alert alert-soft alert-error">
+            <div ref={resumeAlert} role="alert" className="alert alert-soft alert-error scroll-mb-24">
               <span>{uploadFailure}</span>
             </div>
           )}

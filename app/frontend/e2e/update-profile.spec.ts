@@ -86,6 +86,18 @@ test("given an applicant with a resume, when they choose a text file, then it is
     `PDF or DOCX, up to 5 MB. It replaces the one above. ${refusal}`,
   );
   await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
+
+  if (testInfo.project.name === "phone") {
+    // The whole message is on the screen and above the dock, without the applicant scrolling to it
+    const alert = page.getByRole("alert").filter({ hasText: "notes.txt was not uploaded." });
+    await expect(alert).toBeInViewport({ ratio: 1 });
+    const dock = await page.getByRole("navigation", { name: "Navigation" }).boundingBox();
+    await expect.poll(async () => {
+      const box = await alert.boundingBox();
+      return box!.y + box!.height;
+    }).toBeLessThanOrEqual(dock!.y);
+  }
+
   await page.reload();
   await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
 });
