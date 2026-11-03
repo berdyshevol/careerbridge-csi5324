@@ -106,6 +106,26 @@ test("a closed posting still opens but no longer offers to apply", async ({ page
   await expect(page.getByRole("link", { name: "apply" })).toHaveCount(0);
 });
 
+for (const reader of ["visitor", "applicant"] as const) {
+  test(`a posting that does not exist answers 404 to the ${reader} in the site's own page`, async ({ page }) => {
+    if (reader === "applicant") {
+      await logIn(page, ACCOUNTS.applicant);
+    }
+
+    const answer = await page.goto("/jobs/999999?keyword=analyst");
+
+    expect(answer?.status()).toBe(404);
+    await expect(page.getByText("This posting could not be found.")).toBeVisible();
+    // Next.js's own 404 paints the body white; the shell keeps the theme's background
+    const background = await page.locator("body").evaluate((body) => getComputedStyle(body).backgroundColor);
+    expect(background).not.toBe("rgb(255, 255, 255)");
+
+    await page.getByRole("link", { name: "Back to results" }).click();
+    await expect(page).toHaveURL(/\/jobs\?keyword=analyst$/);
+    await expect(page.getByRole("link", { name: "Data Analyst Intern" })).toBeVisible();
+  });
+}
+
 // The front page and the applicant's home (visitor-home, applicant-home), as Given / When / Then
 
 test("given a visitor on the front page, when they search by keyword and location, then the job board shows the matches", async ({ page }) => {

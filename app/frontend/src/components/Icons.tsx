@@ -39,9 +39,8 @@ export function SearchIcon(props: IconProps) {
 export function ProfileIcon(props: IconProps) {
   return (
     <Icon {...props}>
-      <rect x="4" y="3" width="16" height="18" rx="2" />
-      <circle cx="12" cy="9" r="2.5" />
-      <path d="M8 17c.8-2 2.2-3 4-3s3.200 1 4 3" />
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" />
     </Icon>
   );
 }
