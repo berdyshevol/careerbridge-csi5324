@@ -38,6 +38,7 @@ describe("ProfilePreview", () => {
     vi.mocked(uploadResume).mockReset();
     refresh.mockReset();
     push.mockReset();
+    vi.mocked(Element.prototype.scrollIntoView).mockClear();
     clearSession();
   });
 
@@ -151,6 +152,17 @@ describe("ProfilePreview", () => {
     expect(await within(screen.getByRole("form", { name: "Details" })).findByRole("alert")).toHaveTextContent(FAILURE);
   });
 
+  it("does not speak of a resume on file when the save fails and there is none (extension *a)", async () => {
+    vi.mocked(updateProfile).mockRejectedValue(new Error("Backend answered 500"));
+    show({ ...jordan, resume: null });
+
+    fireEvent.click(screen.getByRole("button", { name: "Save details" }));
+
+    expect(await within(screen.getByRole("form", { name: "Details" })).findByRole("alert")).toHaveTextContent(
+      /^Something went wrong\. Details saved before the error are kept\.$/,
+    );
+  });
+
   describe("uploading a resume (UC-03 steps 5–7)", () => {
     const pdf = new File(["%PDF-1.4"], "Jordan_Lee_2026.pdf", { type: "application/pdf" });
 
@@ -230,6 +242,8 @@ describe("ProfilePreview", () => {
       expect(input).toHaveAttribute("aria-invalid", "true");
       expect(input).toHaveFocus();
       expect(screen.getByText("Jordan_Lee_CV.pdf")).toBeInTheDocument();
+      // On a phone the alert is brought out from under the dock
+      expect(screen.getByRole("alert").scrollIntoView).toHaveBeenCalledWith({ block: "nearest" });
 
       // A later save clears the old refusal
       vi.mocked(updateProfile).mockResolvedValue(jordan);
@@ -237,6 +251,17 @@ describe("ProfilePreview", () => {
       await screen.findByRole("status");
       expect(screen.queryByText("notes.txt was not uploaded.")).not.toBeInTheDocument();
       expect(screen.getByLabelText("Choose a file")).not.toHaveAttribute("aria-invalid");
+    });
+
+    it("does not speak of a resume on file when there is none (extension 6a)", async () => {
+      vi.mocked(uploadResume).mockRejectedValue(new ResumeRefused("The file is not a PDF or DOCX."));
+      show({ ...jordan, resume: null });
+
+      choose(new File(["notes"], "notes.txt", { type: "text/plain" }));
+
+      const refusal = "notes.txt was not uploaded. Use a PDF or DOCX file of 5 MB or less.";
+      expect(await screen.findByRole("alert")).toHaveTextContent(new RegExp(`^${refusal}$`));
+      expect(screen.getByLabelText("Choose a file")).toHaveAccessibleDescription(`PDF or DOCX, up to 5 MB. ${refusal}`);
     });
 
     it("says it is uploading until the backend answers", async () => {
@@ -273,6 +298,18 @@ describe("ProfilePreview", () => {
       expect(await within(screen.getByRole("complementary")).findByRole("alert")).toHaveTextContent(UPLOAD_FAILURE);
       expect(within(screen.getByRole("form", { name: "Details" })).queryByRole("alert")).not.toBeInTheDocument();
       expect(screen.getByText("Jordan_Lee_CV.pdf")).toBeInTheDocument();
+      expect(screen.getByRole("alert").scrollIntoView).toHaveBeenCalledWith({ block: "nearest" });
+    });
+
+    it("says only that the upload failed when no resume is on file (extension *a)", async () => {
+      vi.mocked(uploadResume).mockRejectedValue(new Error("Backend answered 500"));
+      show({ ...jordan, resume: null });
+
+      choose(pdf);
+
+      expect(await within(screen.getByRole("complementary")).findByRole("alert")).toHaveTextContent(
+        /^Something went wrong\.$/,
+      );
     });
   });
 });
