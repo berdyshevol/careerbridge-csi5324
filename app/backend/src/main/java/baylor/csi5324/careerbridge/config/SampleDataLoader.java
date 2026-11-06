@@ -4,10 +4,13 @@ import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
+import baylor.csi5324.careerbridge.model.Interview;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.Offer;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
+import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,10 +69,45 @@ public class SampleDataLoader implements CommandLineRunner {
                 throw new IllegalStateException(APPLICATIONS_FILE + " names a posting that is not in "
                         + JOBS_FILE + ": " + record.get("jobTitle"));
             }
-            Application application = new Application(applicant, posting,
-                    SAMPLE_RESUME, LocalDate.parse(record.get("dateApplied")));
-            application.setApplicationStatus(ApplicationStatus.valueOf(record.get("applicationStatus")));
+            LocalDate dateApplied = LocalDate.parse(record.get("dateApplied"));
+            ApplicationStatus status = ApplicationStatus.valueOf(record.get("applicationStatus"));
+            Application application = new Application(applicant, posting, SAMPLE_RESUME, dateApplied);
+            populateSampleStageDetails(application, dateApplied, status);
             applicationRepository.save(application);
+        }
+    }
+
+    private static void populateSampleStageDetails(Application application, LocalDate dateApplied,
+                                                   ApplicationStatus status) {
+        application.setApplicationStatus(status);
+        if (status == ApplicationStatus.SCREENING
+                || status == ApplicationStatus.INTERVIEW
+                || status == ApplicationStatus.OFFER) {
+            application.getStatusHistory().add(
+                    new StatusHistoryEntry(ApplicationStatus.SCREENING, dateApplied.plusDays(3)));
+        }
+        if (status == ApplicationStatus.INTERVIEW || status == ApplicationStatus.OFFER) {
+            application.getStatusHistory().add(
+                    new StatusHistoryEntry(ApplicationStatus.INTERVIEW, dateApplied.plusDays(8)));
+            application.getInterviews().add(new Interview(
+                    LocalDateTime.of(dateApplied.plusDays(10), java.time.LocalTime.of(14, 0)),
+                    status == ApplicationStatus.OFFER ? "On-site" : "Video call",
+                    status == ApplicationStatus.OFFER
+                            ? "Waco Health Partners, Clinic A"
+                            : "Video link sent by email",
+                    status == ApplicationStatus.OFFER ? "Passed" : null,
+                    "Internal recruiter notes"));
+        }
+        if (status == ApplicationStatus.OFFER) {
+            LocalDate extendedOn = dateApplied.plusDays(14);
+            application.getStatusHistory().add(
+                    new StatusHistoryEntry(ApplicationStatus.OFFER, extendedOn));
+            application.setOffer(new Offer(
+                    extendedOn,
+                    LocalDate.of(2026, 12, 10),
+                    LocalDate.of(2027, 1, 11),
+                    "$25 per hour",
+                    "Part-time, 20 hours per week on-site at Clinic A. Flexible schedule around class hours."));
         }
     }
 

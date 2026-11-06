@@ -1,5 +1,14 @@
-import Placeholder from "@/components/Placeholder";
+import ApplicationsTracker from "@/components/ApplicationsTracker";
 
-export default function ApplicationsPage() {
-  return <Placeholder useCase="UC-05 Track Application Status" owner="Rabeya" />;
+export default async function ApplicationsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ applicationId?: string }>;
+}) {
+  const params = searchParams ? await searchParams : undefined;
+  const parsedId = params?.applicationId ? Number(params.applicationId) : undefined;
+  const initialApplicationId =
+    parsedId !== undefined && Number.isFinite(parsedId) ? parsedId : undefined;
+
+  return <ApplicationsTracker initialApplicationId={initialApplicationId} />;
 }

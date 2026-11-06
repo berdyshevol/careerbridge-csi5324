@@ -1,24 +1,48 @@
+import { formatStage } from "@/lib/api";
 import { STAGES, type Stage } from "@/lib/sampleDesk";
 
-const chipStyle: Record<Stage, string> = {
+export type AnyStage =
+  | Stage
+  | "Hired"
+  | "Rejected"
+  | "Withdrawn"
+  | "Offer Declined"
+  | "APPLIED"
+  | "SCREENING"
+  | "INTERVIEW"
+  | "OFFER"
+  | "HIRED"
+  | "REJECTED"
+  | "WITHDRAWN"
+  | "OFFER_DECLINED";
+
+const chipStyle: Record<string, string> = {
   Applied: "bg-base-200 text-base-content",
   Screening: "bg-secondary text-secondary-content",
   Interview: "bg-secondary text-secondary-content",
   Offer: "bg-warning text-warning-content",
+  Hired: "bg-primary text-primary-content",
+  Rejected: "bg-base-200 text-base-content",
+  Withdrawn: "bg-base-200 text-base-content",
+  "Offer Declined": "bg-base-200 text-base-content",
 };
 
-export function StageBadge({ stage, className = "" }: { stage: Stage; className?: string }) {
+export function StageBadge({ stage, className = "" }: { stage: AnyStage; className?: string }) {
+  const label = formatStage(stage);
+  const style = chipStyle[label] ?? "bg-base-200 text-base-content";
   return (
     <span
-      className={`rounded-lg px-2.5 py-1 text-center text-sm font-semibold ${chipStyle[stage]} ${className}`}
+      className={`rounded-lg px-2.5 py-1 text-center text-sm font-semibold ${style} ${className}`}
     >
-      {stage}
+      {label}
     </span>
   );
 }
 
-export function StageProgress({ stage, className = "" }: { stage: Stage; className?: string }) {
-  const stageNumber = STAGES.indexOf(stage) + 1;
+export function StageProgress({ stage, className = "" }: { stage: AnyStage; className?: string }) {
+  const label = formatStage(stage);
+  const stageIndex = STAGES.indexOf(label as Stage);
+  const stageNumber = label === "Hired" ? STAGES.length : stageIndex >= 0 ? stageIndex + 1 : 0;
   return (
     <div
       role="img"

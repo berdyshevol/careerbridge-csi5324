@@ -46,7 +46,10 @@ class ReadsChangeNothingTest {
                         || info.getMethodsCondition().getMethods().contains(RequestMethod.GET))
                 .flatMap(info -> info.getPatternValues().stream())
                 .filter(pattern -> pattern.startsWith("/api/"))
-                .map(pattern -> pattern.replaceAll("\\{[^}]+}", "1"))
+                // Sample application 1 holds an offer; sample application 2 is at Interview (withdrawable)
+                .map(pattern -> pattern.endsWith("/withdrawal")
+                        ? pattern.replaceAll("\\{[^}]+}", "2")
+                        : pattern.replaceAll("\\{[^}]+}", "1"))
                 .toList();
         assertFalse(reads.isEmpty());
 

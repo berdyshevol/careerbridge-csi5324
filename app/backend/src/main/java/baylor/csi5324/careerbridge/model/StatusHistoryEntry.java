@@ -17,12 +17,20 @@ public class StatusHistoryEntry {
     @Column(name = "entry_date", nullable = false)
     private LocalDate date;
 
+    @Column(length = 2000)
+    private String reason;
+
     public StatusHistoryEntry() {
     }
 
     public StatusHistoryEntry(ApplicationStatus status, LocalDate date) {
+        this(status, date, null);
+    }
+
+    public StatusHistoryEntry(ApplicationStatus status, LocalDate date, String reason) {
         this.status = status;
         this.date = date;
+        this.reason = reason;
     }
 
     public ApplicationStatus getStatus() {
@@ -31,5 +39,9 @@ public class StatusHistoryEntry {
 
     public LocalDate getDate() {
         return date;
+    }
+
+    public String getReason() {
+        return reason;
     }
 }

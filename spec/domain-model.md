@@ -24,18 +24,18 @@ Figure 25; classes and associations that are not in the figure are listed in sec
 | Resume | resumeId, file Name, file Type, file Size, upload Date |
 | Application | applicationId, dateApplied, applicationStatus, rejectionReason, withdrawnAt |
 | Resume Snapshot | file Name, file Type, file Size |
-| Status History Entry | status, date |
+| Status History Entry | status, date, reason |
 | Organization Membership | status, membershipId, requested at, approved at |
 | Organization | organizationId, name, organization Status, website, description |
-| Job Posting | jobPostId, title, description, location, applicationDeadline, postStatus, date posted, numberOfOpenings, salaryRange, approvalStatus, approvedBy, approvedAt, reviewComment, employmentType, jobRequirements |
-| Offer | offerId, dateExtended, expirationDate, status, responseDate, salary |
-| Interview | interviewId, scheduledTime, outcome, notes |
+| Job Posting | jobPostId, title, description, location, applicationDeadline, postStatus, date posted, numberOfOpenings, salaryRange, approvalStatus, approvedBy, approvedAt, reviewComment, closeReason, closedAt, employmentType, jobRequirements |
+| Offer | offerId, dateExtended, expirationDate, startDate, salary, terms, status, responseDate |
+| Interview | interviewId, scheduledTime, format, location, outcome, notes |
 | Notification | notificationId, type, message, sentAt, status |
 
 - **Resume Snapshot** is the copy of the resume kept with an application as it was at submission
   (A6). The operation contracts call it the Application's _resumeSnapshot_.
-- **Status History Entry** is one stage an application reached, with the date. The operation
-  contracts call the entries of an application its _statusHistory_.
+- **Status History Entry** is one stage an application reached, with the date and optional reason.
+  The operation contracts call the entries of an application its _statusHistory_.
 
 ### 5.2 Generalization
 
@@ -62,8 +62,9 @@ Multiplicities are read as "one A is linked to … B".
 
 ### 5.4 Differences from Figure 25
 
-The figure was drawn for Iteration 1 and has not been redrawn. The text above corrects it in six
-places: five needed for UC-04 Apply for Job and one for UC-12 Approve Job Posting:
+The figure was drawn for Iteration 1 and has not been redrawn. The text above corrects it in seven
+places: five needed for UC-04 Apply for Job, one for UC-12 Approve Job Posting, and one for
+UC-05/UC-06/UC-07:
 
 | # | Figure 25 | Current model | Why |
 | --- | --- | --- | --- |
@@ -71,8 +72,9 @@ places: five needed for UC-04 Apply for Job and one for UC-12 Approve Job Postin
 | 2 | Resume 1 — 1 Application | Removed; Application 1 — 1 Resume Snapshot instead | An applicant has one resume and many applications, so 1 — 1 cannot hold. The application must not follow later changes to the resume (A6), so it keeps a copy, not a link to the resume on file. |
 | 3 | Applicant 1 — 1 Resume | Applicant 1 — 0..1 Resume | UC-02 postcondition: "An empty applicant profile with no resume has been created". UC-04 extension 2a handles an applicant with no resume. |
 | 4 | Application has the attribute resumeSnapshot | Class Resume Snapshot (file Name, file Type, file Size) | The copy has its own data ("available as a PDF or DOCX, in the format the applicant uploaded"), so it is a class, not a simple attribute. |
-| 5 | Application has the attribute statusHistory | Class Status History Entry (status, date) | The history has one entry per stage, each with its own date, so it is a class, not a simple attribute. |
-| 6 | Job Posting has no review comment; approvedBy and approvedAt suggest an approval only | Job Posting has reviewComment; approvedBy and approvedAt record the Administrator who made any decision (approve, return or reject) and when | UC-12 requires comments to return or reject a posting (extensions 5a, 5b), and logs every decision with who decided and when (Special Requirements). |
+| 5 | Application has the attribute statusHistory | Class Status History Entry (status, date, reason) | The history has one entry per stage, each with its own date and optional reason (CO-06.2, CO-07.3), so it is a class, not a simple attribute. |
+| 6 | Job Posting has no review comment; approvedBy and approvedAt suggest an approval only | Job Posting has reviewComment; approvedBy and approvedAt record the Administrator who made any decision (approve, return or reject) and when; closeReason and closedAt record when a posting is closed (such as when all openings are filled) | UC-12 requires comments to return or reject a posting (extensions 5a, 5b), and logs every decision with who decided and when (Special Requirements); UC-07 extension 6c closes a filled posting via Close Job Posting. |
+| 7 | Offer has no startDate or terms; Interview has no format or location | Offer has startDate and terms; Interview has format and location | CO-07.1 returns offer start date and terms; FR-UC05.3 and CO-05.2 show recorded interview format and location while hiding outcomes and notes (BR-12). |
 
 Two more things in the figure are not carried into the text:
 
@@ -83,8 +85,8 @@ Two more things in the figure are not carried into the text:
 
 ### 5.5 Known gaps, for later use cases
 
-A review of the model against the whole specification found these. They do not affect UC-04 and
-are left for the iteration that implements the use cases named.
+A review of the model against the whole specification found these. They do not affect UC-04,
+UC-05, UC-06 or UC-07 and are left for the iteration that implements the use cases named.
 
 | Class | Gap | Where it comes from |
 | --- | --- | --- |
@@ -92,10 +94,10 @@ are left for the iteration that implements the use cases named.
 | Recruiter | No job title | UC-08 step 3 |
 | Organization | No industry, headquarters location, size, time zone | UC-08 step 3; A11 |
 | Organization Membership | No role, justification, denial reason, review flag; no link to the deciding Administrator | CO-09.1; UC-10; A17 |
-| Job Posting | approvedBy is an attribute, not an association to Administrator; approvalStatus repeats postStatus; no submission date, close reason, closing time | CO-12.1; UC-12; Close Job Posting |
-| Offer | No start date, other terms, offer letter | UC-15 postconditions; CO-07.1 |
-| Interview | No format, location, interviewers; the limit of two rounds (A13) is not in the multiplicity | FR-UC14.7; CO-14.4 |
-| Status History Entry | No note or reason, no link to the Recruiter who made the change | CO-14.2, CO-14.3, CO-06.2, CO-07.3 |
+| Job Posting | approvedBy is an attribute, not an association to Administrator; approvalStatus repeats postStatus; no submission date | CO-12.1; UC-12 |
+| Offer | No offer letter | UC-15 postconditions |
+| Interview | No interviewers; the limit of two rounds (A13) is not in the multiplicity | FR-UC14.7; CO-14.4 |
+| Status History Entry | No link to the Recruiter who made the change | CO-14.2, CO-14.3 |
 
 Wording elsewhere in the specification that still follows the figure and should be aligned with
 5.3 when those use cases are implemented:

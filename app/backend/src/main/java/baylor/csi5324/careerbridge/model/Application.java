@@ -1,5 +1,6 @@
 package baylor.csi5324.careerbridge.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -12,6 +13,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -59,6 +63,15 @@ public class Application {
     @OrderColumn
     private List<StatusHistoryEntry> statusHistory = new ArrayList<>();
 
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "offer_id")
+    private Offer offer;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "application_id")
+    @OrderBy("scheduledTime ASC")
+    private List<Interview> interviews = new ArrayList<>();
+
     public Application() {
     }
 
@@ -69,6 +82,23 @@ public class Application {
         this.resumeSnapshot = resumeSnapshot;
         this.dateApplied = dateApplied;
         statusHistory.add(new StatusHistoryEntry(ApplicationStatus.APPLIED, dateApplied));
+    }
+
+    public boolean isActive() {
+        return ApplicationStatus.ACTIVE.contains(applicationStatus);
+    }
+
+    // At the Offer stage the applicant declines through UC-07 instead (BR-8)
+    public boolean canWithdraw() {
+        return applicationStatus == ApplicationStatus.APPLIED
+                || applicationStatus == ApplicationStatus.SCREENING
+                || applicationStatus == ApplicationStatus.INTERVIEW;
+    }
+
+    public LocalDate getLastUpdatedDate() {
+        return statusHistory.isEmpty()
+                ? dateApplied
+                : statusHistory.get(statusHistory.size() - 1).getDate();
     }
 
     public Long getApplicationId() {
@@ -117,5 +147,17 @@ public class Application {
 
     public List<StatusHistoryEntry> getStatusHistory() {
         return statusHistory;
+    }
+
+    public Offer getOffer() {
+        return offer;
+    }
+
+    public void setOffer(Offer offer) {
+        this.offer = offer;
+    }
+
+    public List<Interview> getInterviews() {
+        return interviews;
     }
 }

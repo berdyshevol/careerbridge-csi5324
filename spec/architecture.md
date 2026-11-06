@@ -57,6 +57,12 @@ UC-04 Apply for Job is implemented end to end: `ApplyForm` → `lib/api.ts` → 
 and UC-03 exist, the applicant is the sample applicant and the resume comes with the request; the
 confirmation Notification of CO-04.1 comes with the Notification Service.
 
+UC-05 Track Application Status, UC-06 Withdraw Application, and UC-07 Respond to Job Offer are
+implemented end to end: `ApplicationsTracker` (`/applications`) and `OfferResponseView` (`/offers`)
+→ `lib/api.ts` → `ApplicationController` (`/api/applications/**`) → `ApplicationService`
+(`viewApplications`, `viewApplication`, `requestWithdrawal`, `withdrawApplication`, `viewOffer`,
+`acceptOffer`, `declineOffer`) → `ApplicationRepository` and `JobPostingRepository` → H2.
+
 UC-01 Browse Job Postings is implemented end to end: page → `lib/api.ts` → `JobPostingController`
 (`/api/postings`) → `JobPostingService` (`searchPostings`, `viewPosting`) → `JobPostingRepository` → H2.
 

@@ -1,12 +1,20 @@
 import {
+  acceptOffer,
+  ApplicationRefused,
   BACKEND_TIMEOUT_MS,
   createPosting,
+  declineOffer,
   formatDate,
+  formatStage,
   isOpen,
   PostingRejected,
+  requestWithdrawal,
   searchPostings,
   submitApplication,
-  ApplicationRefused,
+  viewApplication,
+  viewApplications,
+  viewOffer,
+  withdrawApplication,
   type JobPosting,
   type NewPosting,
 } from "./api";
@@ -51,6 +59,14 @@ describe("isOpen", () => {
 describe("formatDate", () => {
   it("shows the calendar day that was stored, whatever the time zone", () => {
     expect(formatDate("2026-12-20")).toBe("Dec 20, 2026");
+  });
+});
+
+describe("formatStage", () => {
+  it("formats backend enum codes into display stage names", () => {
+    expect(formatStage("APPLIED")).toBe("Applied");
+    expect(formatStage("OFFER_DECLINED")).toBe("Offer Declined");
+    expect(formatStage("HIRED")).toBe("Hired");
   });
 });
 
@@ -168,5 +184,91 @@ describe("submitApplication", () => {
     const refused = await submitApplication(2, resume).catch((error) => error);
     expect(refused).toBeInstanceOf(ApplicationRefused);
     expect(refused.message).toBe("You already applied to this posting.");
+  });
+});
+
+describe("UC-05, UC-06 and UC-07 API operations", () => {
+  it("fetches applications and application details (CO-05.1, CO-05.2)", async () => {
+    const list = { applications: [], activeApplicationCount: 0 };
+    const fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: () => Promise.resolve(list),
+    });
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(viewApplications()).resolves.toEqual(list);
+    expect(fetch.mock.calls[0][0]).toContain("/api/applications");
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        headers: new Headers(),
+      }),
+    );
+    await expect(viewApplication(99)).resolves.toBeNull();
+  });
+
+  it("requests and submits a withdrawal (CO-06.1, CO-06.2)", async () => {
+    const preview = {
+      applicationId: 2,
+      postingId: 3,
+      title: "Backend Developer",
+      organizationName: "Brazos Analytics",
+      applicationStatus: "INTERVIEW",
+      warning: "Withdrawal is final.",
+    };
+    const fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: () => Promise.resolve(preview),
+    });
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(requestWithdrawal(2)).resolves.toEqual(preview);
+
+    await withdrawApplication(2, "Accepted another offer");
+    expect(fetch.mock.calls[1][0]).toContain("/api/applications/2/withdraw");
+    expect(JSON.parse(fetch.mock.calls[1][1].body)).toEqual({ reason: "Accepted another offer" });
+  });
+
+  it("views, accepts and declines a job offer (CO-07.1, CO-07.2, CO-07.3)", async () => {
+    const offer = {
+      offerId: 1,
+      applicationId: 1,
+      postingId: 4,
+      title: "IT Support Specialist",
+      organizationName: "Waco Health Partners",
+      location: "On-site",
+      employmentType: "Part-time",
+      applicationStatus: "OFFER",
+      dateExtended: "2026-10-06",
+      expirationDate: "2026-12-10",
+      startDate: "2027-01-11",
+      salary: "$25 per hour",
+      terms: "20 hours per week",
+      status: "EXTENDED",
+      responseDate: null,
+      open: true,
+    };
+    const fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: () => Promise.resolve(offer),
+    });
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(viewOffer(1)).resolves.toEqual(offer);
+    await acceptOffer(1, { expectedSalary: "$25 per hour", expectedExpirationDate: "2026-12-10" });
+    expect(fetch.mock.calls[1][0]).toContain("/api/applications/1/offer/accept");
+
+    await declineOffer(1, "No longer interested");
+    expect(fetch.mock.calls[2][0]).toContain("/api/applications/1/offer/decline");
+    expect(JSON.parse(fetch.mock.calls[2][1].body)).toEqual({ reason: "No longer interested" });
   });
 });

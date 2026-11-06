@@ -55,6 +55,10 @@ public class JobPosting {
     @Column(length = 2000)
     private String reviewComment;
 
+    private String closeReason;
+
+    private LocalDateTime closedAt;
+
     public JobPosting() {
     }
 
@@ -186,5 +190,21 @@ public class JobPosting {
 
     public void setReviewComment(String reviewComment) {
         this.reviewComment = reviewComment;
+    }
+
+    public String getCloseReason() {
+        return closeReason;
+    }
+
+    public void setCloseReason(String closeReason) {
+        this.closeReason = closeReason;
+    }
+
+    public LocalDateTime getClosedAt() {
+        return closedAt;
+    }
+
+    public void setClosedAt(LocalDateTime closedAt) {
+        this.closedAt = closedAt;
     }
 }
