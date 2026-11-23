@@ -3,6 +3,7 @@ package baylor.csi5324.careerbridge.controller;
 import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
+import baylor.csi5324.careerbridge.model.OrganizationStatus;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.service.InvalidPostingException;
 import baylor.csi5324.careerbridge.service.PostingNotFoundException;
@@ -115,7 +116,7 @@ class JobPostingControllerTest {
 
     private static JobPosting approvedPosting() {
         Organization organization = new Organization("Brazos Analytics");
-        organization.setOrganizationStatus("ACTIVE");
+        organization.setOrganizationStatus(OrganizationStatus.ACTIVE);
         JobPosting posting = new JobPosting();
         posting.setOrganization(organization);
         posting.setTitle("Backend Developer");

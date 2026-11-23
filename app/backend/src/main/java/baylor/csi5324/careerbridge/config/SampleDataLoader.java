@@ -6,6 +6,7 @@ import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
+import baylor.csi5324.careerbridge.model.OrganizationStatus;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.Resume;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
@@ -123,7 +124,11 @@ public class SampleDataLoader implements CommandLineRunner {
     private JobPosting toJobPosting(Map<String, String> record) {
         String organizationName = record.get("organizationName");
         Organization organization = organizationRepository.findByName(organizationName)
-                .orElseGet(() -> organizationRepository.save(new Organization(organizationName)));
+                .orElseGet(() -> {
+                    Organization sample = new Organization(organizationName);
+                    sample.setOrganizationStatus(OrganizationStatus.ACTIVE);
+                    return organizationRepository.save(sample);
+                });
 
         JobPosting posting = new JobPosting();
         posting.setOrganization(organization);

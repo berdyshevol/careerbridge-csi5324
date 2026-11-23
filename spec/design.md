@@ -297,6 +297,210 @@ sequenceDiagram
 
 **Figure 30: SD-3 Apply for a job (UC-04)**
 
+### UC-08 Register Recruiter and Organization
+
+Registration creates the Recruiter as Pending Approval, the Organization as Pending Approval unless
+the name already belongs to a registered one (extension 4c), and an Organization Membership as
+Awaiting Verification, then asks for email verification. Only a verified request reaches the
+Administrator's queue.
+
+The service checks every field first, with the same rules as UC-02 for the name, email and password
+plus a job title and the organization's legal name and website (4a). An email already registered is
+refused (4b); for an approved recruiter the reason points to UC-09. A registered organization is one
+whose normalized legal name (lower case, punctuation and suffixes such as "Inc." and "Co." dropped)
+or website domain matches the new one (FR-UC08.3); the visitor is offered membership in it and, on
+accepting, sends the registration again with its `joinOrganizationId` (4c). A work email outside the
+organization's website domain is accepted but flagged for the Administrator (4d, A17). The emailed
+link holds a random token; only its SHA-256 hash is stored, and it expires after 24 hours (6a).
+NotificationService stands in for the Notification Service: it saves each Notification as Pending
+and logs it (7a). Without a mail service, a demonstration or the test database
+(`careerbridge.demo.verification-links`, or an in-memory database) hands the link back in the answer.
+
+```mermaid
+sequenceDiagram
+    actor V as Visitor
+    participant RC as RecruiterRegistration<br/>Controller
+    participant RS as RecruiterRegistration<br/>Service
+    participant UR as UserRepository
+    participant OR as OrganizationRepository
+    participant MR as OrganizationMembership<br/>Repository
+    participant NS as NotificationService
+    participant R as :Recruiter
+    participant M as :OrganizationMembership
+
+    V->>RC: POST /api/recruiters<br/>{fullName, jobTitle, email, phone, password,<br/>organization | joinOrganizationId}
+    RC->>RS: submitRecruiterRegistration(recruiterData,<br/>organizationData, joinOrganizationId)
+    RS->>RS: validate fields (AccountRules, OrganizationRules)
+    alt invalid fields (ext. 4a)
+        RS-->>RC: RegistrationRefusedException(fieldErrors)
+        RC-->>V: 400 {field: reason}, nothing saved
+    else fields valid
+        RS->>UR: findByEmailIgnoreCase(email)
+        alt email already registered (ext. 4b)
+            RS-->>RC: AlreadyRegisteredException
+            RC-->>V: 409 {reason: EMAIL_REGISTERED, message}
+        else new email
+            opt new organization
+                RS->>OR: findAll()
+                alt duplicates a registered organization (ext. 4c)
+                    RS-->>RC: OrganizationAlreadyRegisteredException(organization)
+                    RC-->>V: 409 {reason: ORGANIZATION_REGISTERED, organization}
+                end
+            end
+            RS->>R: new Recruiter(), accountStatus PENDING_APPROVAL,<br/>emailVerified false, startVerification(hash, +24 h)
+            RS->>UR: saveAndFlush(recruiter)
+            opt new organization
+                RS->>OR: save(organization PENDING_APPROVAL)
+            end
+            RS->>M: new(recruiter, organization, AWAITING_VERIFICATION,<br/>requestType, now); setReviewFlag(..) (ext. 4d)
+            RS->>MR: save(membership)
+            RS->>NS: notify(recruiter, EMAIL_VERIFICATION, link)
+            RS-->>RC: RecruiterRegistration(membership, link?)
+            RC-->>V: 201 {email, organizationName, joinsExistingOrganization, verificationLink?}
+        end
+    end
+```
+
+**Figure 31: SD-11 Register a recruiter and organization (UC-08)**
+
+```mermaid
+sequenceDiagram
+    actor V as Visitor
+    participant RC as RecruiterRegistration<br/>Controller
+    participant RS as RecruiterRegistration<br/>Service
+    participant RR as RecruiterRepository
+    participant MR as OrganizationMembership<br/>Repository
+    participant NS as NotificationService
+
+    V->>RC: POST /api/recruiters/verification {token}
+    RC->>RS: verifyRecruiterEmail(token)
+    RS->>RR: findByVerificationTokenHash(sha256(token))
+    alt no such token: never sent or already used
+        RS-->>RC: VerificationLinkException(expired=false)
+        RC-->>V: 404 {expired: false, message}
+    else expired (ext. 6a)
+        RS-->>RC: VerificationLinkException(expired=true)
+        RC-->>V: 410 {expired: true, message}
+    else valid
+        RS->>RS: recruiter.markEmailVerified()
+        RS->>MR: findByRecruiterAndStatus(recruiter, AWAITING_VERIFICATION)
+        loop each membership
+            RS->>RS: membership.setStatus(PENDING)
+            RS->>NS: notifyAdministrators(NEW_RECRUITER_REQUEST, ..)
+        end
+        RC-->>V: 200 {email}
+    end
+```
+
+**Figure 32: SD-12 Verify a recruiter's email (UC-08)**
+
+### UC-09 Join Additional Organization
+
+Searching organizations is a read of OrganizationRepository and changes nothing
+(`GET /api/organizations?query=`, no role; only registered organizations, matched on name and
+website). The request is refused if the recruiter is already a member (extension 6a) or has a
+request pending (6b); both are MembershipConflictException (409) with the existing status. A
+denied or cancelled request does not block a new one. The recruiter's row is locked while the
+request is checked, so two requests sent at once are checked one after the other. CO-09.1's
+preconditions are checked too: the account is Active and has at least one Active membership.
+Extension 3a sends the new organization's details instead of an id; it is created Pending Approval
+after the same duplicate check as UC-08. A pending request can be cancelled (\*a).
+
+```mermaid
+sequenceDiagram
+    actor R as Recruiter
+    participant MC as RecruiterMembership<br/>Controller
+    participant MS as MembershipService
+    participant RR as RecruiterRepository
+    participant OR as OrganizationRepository
+    participant MR as OrganizationMembership<br/>Repository
+    participant NS as NotificationService
+    participant M as :OrganizationMembership
+
+    R->>MC: POST /api/recruiter/memberships<br/>{organizationId, role, justification}
+    MC->>MS: submitMembershipRequest(email, organizationId, role, justification)
+    MS->>RR: lockByEmail(email)
+    MS->>MR: findByRecruiterAndStatus(recruiter, ACTIVE)
+    alt not approved, or no Active membership
+        MS-->>MC: RecruiterNotApprovedException
+        MC-->>R: 403 reason
+    else approved
+        MS->>OR: findById(organizationId), registered only
+        alt missing role, justification or organization
+            MS-->>MC: MembershipRequestRefusedException(fieldErrors)
+            MC-->>R: 400 {field: reason}
+        else valid
+            MS->>MR: findByRecruiterOrderByRequestedAtAscMembershipIdAsc(recruiter)
+            alt already a member (ext. 6a)
+                MS-->>MC: MembershipConflictException(ACTIVE)
+                MC-->>R: 409 {status: ACTIVE, statusLabel, message}
+            else request already open (ext. 6b)
+                MS-->>MC: MembershipConflictException(PENDING …)
+                MC-->>R: 409 {status, statusLabel, message}
+            else
+                    MS->>M: new(recruiter, organization, PENDING,<br/>ADDITIONAL_ORGANIZATION, now)
+                MS->>MR: save(membership)
+                MS->>NS: notifyAdministrators(MEMBERSHIP_REQUEST, ..)
+                MS->>NS: notify(recruiter, REQUEST_CONFIRMATION, ..)
+                MC-->>R: 201 MembershipResponse {status: PENDING}
+            end
+        end
+    end
+```
+
+**Figure 33: SD-13 Ask to join another organization (UC-09)**
+
+### UC-10 Approve Recruiter/Organization Request
+
+Only the Administrator role reaches `/api/admin/**`. Approval activates the membership and, for a
+first request, the recruiter's account and the new organization. If the new organization
+duplicates a registered one (extension 5c) it is deleted and the membership points to the
+existing one. A request already decided or cancelled is MembershipConflictException (409;
+extension 6a). The request's row is locked, so a second Administrator waits and then finds it
+decided. Denying (5a) and asking for information (5b) need a note, which the requester receives;
+an account or organization created only for a denied request becomes Inactive. Every decision
+records who decided and when (NFR-UC10.1).
+
+```mermaid
+sequenceDiagram
+    actor A as Administrator
+    participant AC as AdminMembershipRequest<br/>Controller
+    participant AS as MembershipApproval<br/>Service
+    participant MR as OrganizationMembership<br/>Repository
+    participant OR as OrganizationRepository
+    participant NS as NotificationService
+
+    A->>AC: POST /api/admin/requests/{requestId}/approve
+    AC->>AS: approveRequest(requestId, administrator)
+    AS->>MR: lockById(requestId)
+    alt not found
+        AS-->>AC: MembershipNotFoundException
+        AC-->>A: 404 reason
+    else decided or cancelled (ext. 6a)
+        AS-->>AC: MembershipConflictException(status)
+        AC-->>A: 409 {status, statusLabel, "This request is now …. Nothing was changed."}
+    else Pending or Information Requested
+        opt organization is Pending Approval
+            AS->>OR: findAll()
+            alt duplicates a registered organization (ext. 5c)
+                AS->>MR: findByOrganization(duplicate)
+                AS->>AS: each membership.setOrganization(registered)
+                AS->>OR: delete(duplicate)
+            else new organization
+                AS->>AS: organization.setOrganizationStatus(ACTIVE)
+            end
+        end
+        opt recruiter is Pending Approval (first request)
+            AS->>AS: recruiter.setAccountStatus(ACTIVE)
+        end
+        AS->>AS: membership.approve(administrator, now)
+        AS->>NS: notify(recruiter, REQUEST_APPROVED, ..)
+        AC-->>A: 200 MembershipResponse {status: ACTIVE}
+    end
+```
+
+**Figure 34: SD-14 Approve a recruiter or organization request (UC-10)**
+
 ## 7. Design Class Diagram (DCD)
 
 Not written yet. Iteration 2 adds the design class diagram, consistent with the sequence diagrams
@@ -314,3 +518,7 @@ the DCD must contain each of them.
 | SD-8 | `RegistrationController.register` | `RegistrationService.register`; `LogInService.startSession` | `UserRepository.findByEmailIgnoreCase`, `saveAndFlush` |
 | SD-9 | `ApplicantProfileController.viewProfile`, `updateProfile` | `ApplicantProfileService.viewProfile`, `updateProfile` | `ApplicantRepository.findByEmailIgnoreCase`, `save` |
 | SD-10 | `ApplicantProfileController.uploadResume` | `ApplicantProfileService.uploadResume` | `ApplicantRepository.findByEmailIgnoreCase`, `save`; `ResumeRepository.save`, `delete` |
+| SD-11 | `RecruiterRegistrationController.submitRecruiterRegistration` | `RecruiterRegistrationService.submitRecruiterRegistration`; `OrganizationRules.rejectDuplicate`; `NotificationService.notify` | `UserRepository.findByEmailIgnoreCase`; `RecruiterRepository.saveAndFlush`; `OrganizationRepository.findAll`, `findByName`, `save`; `OrganizationMembershipRepository.save` |
+| SD-12 | `RecruiterRegistrationController.verifyRecruiterEmail` | `RecruiterRegistrationService.verifyRecruiterEmail`; `NotificationService.notifyAdministrators` | `RecruiterRepository.findByVerificationTokenHash`; `OrganizationMembershipRepository.findByRecruiterAndStatus` |
+| SD-13 | `RecruiterMembershipController.submitMembershipRequest` | `MembershipService.submitMembershipRequest`; `NotificationService.notify`, `notifyAdministrators` | `RecruiterRepository.lockByEmail`; `OrganizationRepository.findById`; `OrganizationMembershipRepository.findByRecruiterAndStatus`, `findByRecruiterOrderByRequestedAtAscMembershipIdAsc`, `save` |
+| SD-14 | `AdminMembershipRequestController.approveRequest` | `MembershipApprovalService.approveRequest`; `NotificationService.notify` | `OrganizationMembershipRepository.lockById`, `findByOrganization`; `OrganizationRepository.findAll`, `delete` |

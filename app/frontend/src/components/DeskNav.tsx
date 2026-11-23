@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Role } from "@/lib/session";
-import { ApplicationsIcon, HomeIcon, PostingsIcon, ProfileIcon, SearchIcon, StatusIcon } from "./Icons";
+import { ApplicationsIcon, HomeIcon, OrganizationsIcon, PostingsIcon, ProfileIcon, RequestsIcon, SearchIcon, StatusIcon } from "./Icons";
 
 type NavItem = {
   href: string;
@@ -13,8 +13,7 @@ type NavItem = {
 };
 
 // Each role sees only its own entries ("Navigation" in spec/ui-drafts.md). An entry joins its list
-// when its page is built: the recruiter's Home and Organizations and the administrator's Home and
-// Recruiter requests are still missing. Until the recruiter's postings list exists, Postings opens
+// when its page is built: the recruiter's Home and the administrator's Home are still missing. Until the recruiter's postings list exists, Postings opens
 // the posting form, the only recruiter page there is.
 const navigation: Record<Role, { caption: string; items: NavItem[] }> = {
   APPLICANT: {
@@ -28,11 +27,17 @@ const navigation: Record<Role, { caption: string; items: NavItem[] }> = {
   },
   RECRUITER: {
     caption: "Recruiting",
-    items: [{ href: "/recruiter/postings/new", label: "Postings", shortLabel: "Postings", Icon: PostingsIcon }],
+    items: [
+      { href: "/recruiter/postings/new", label: "Postings", shortLabel: "Postings", Icon: PostingsIcon },
+      { href: "/recruiter/organizations", label: "Organizations", shortLabel: "Organizations", Icon: OrganizationsIcon },
+    ],
   },
   ADMINISTRATOR: {
     caption: "Administration",
-    items: [{ href: "/admin/postings", label: "Posting approvals", shortLabel: "Postings", Icon: StatusIcon }],
+    items: [
+      { href: "/admin/postings", label: "Posting approvals", shortLabel: "Postings", Icon: StatusIcon },
+      { href: "/admin/requests", label: "Recruiter requests", shortLabel: "Requests", Icon: RequestsIcon },
+    ],
   },
 };
 

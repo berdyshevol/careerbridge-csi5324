@@ -38,6 +38,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole(Role.ADMINISTRATOR.name())
                         .requestMatchers("/api/postings/*/application").hasRole(Role.APPLICANT.name())
                         .requestMatchers("/api/applicant/**").hasRole(Role.APPLICANT.name())
+                        // UC-09: the recruiter's own memberships
+                        .requestMatchers("/api/recruiter/**").hasRole(Role.RECRUITER.name())
                         // UC-11: creating and submitting a posting
                         .requestMatchers(HttpMethod.POST, "/api/postings", "/api/postings/*/submit")
                         .hasRole(Role.RECRUITER.name())

@@ -461,3 +461,332 @@ export function formatDate(isoDate: string): string {
 export function formatUtcDay(utcDateTime: string): string {
   return new Date(`${utcDateTime}Z`).toLocaleDateString("en-US", DATE_FORMAT);
 }
+
+// UC-08, UC-09, UC-10: recruiters, their organizations and the Administrator's approval of them
+
+// What a recruiter or the Administrator sees of an organization
+export type OrganizationSummary = {
+  organizationId: number;
+  name: string;
+  website: string | null;
+  industry: string | null;
+  headquarters: string | null;
+  size: string | null;
+  description: string | null;
+};
+
+// UC-08 step 3, and UC-09 extension 3a; only the name and the website are required
+export const ORGANIZATION_FIELDS = ["name", "website", "industry", "headquarters", "size", "description"] as const;
+export type OrganizationField = (typeof ORGANIZATION_FIELDS)[number];
+export type OrganizationDetails = Record<OrganizationField, string>;
+
+export const RECRUITER_FIELDS = ["fullName", "jobTitle", "email", "phone", "password"] as const;
+export type RecruiterField = (typeof RECRUITER_FIELDS)[number];
+export type RecruiterDetails = Record<RecruiterField, string>;
+
+// The backend names an organization's fields organization.<field>
+const REGISTRATION_FIELDS = [
+  ...RECRUITER_FIELDS,
+  ...ORGANIZATION_FIELDS.map((name) => `organization.${name}` as const),
+] as const;
+export type RegistrationField = (typeof REGISTRATION_FIELDS)[number];
+
+export type MembershipStatus =
+  | "AWAITING_VERIFICATION"
+  | "PENDING"
+  | "INFORMATION_REQUESTED"
+  | "ACTIVE"
+  | "DENIED"
+  | "CANCELLED";
+
+export type Membership = {
+  membershipId: number;
+  organization: OrganizationSummary;
+  status: MembershipStatus;
+  statusLabel: string;
+  role: string | null;
+  requestedAt: string;
+  approvedAt: string | null;
+  decisionNote: string | null;
+};
+
+export type RecruiterRegistration = {
+  email: string;
+  organizationName: string;
+  joinsExistingOrganization: boolean;
+  // Only where there is no mail service to carry it: a demonstration or the test database
+  verificationLink: string | null;
+};
+
+// UC-08 extension 4a: the backend's reason for each field it refused
+export class RecruiterRegistrationRefused extends Error {
+  constructor(readonly fieldErrors: Partial<Record<RegistrationField, string>>) {
+    super("The registration was refused");
+  }
+}
+
+// UC-08 extension 4c, UC-09 extension 3a: the organization is registered; the visitor may ask to join it
+export class OrganizationRegistered extends Error {
+  constructor(readonly organization: OrganizationSummary) {
+    super("This organization is already registered.");
+  }
+}
+
+// UC-09 6a and 6b, UC-10 6a: the membership already has this status, and nothing changed
+export class MembershipConflict extends Error {
+  constructor(
+    readonly status: MembershipStatus,
+    readonly statusLabel: string,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+// UC-08 extension 6a when expired; otherwise a link never sent or already used
+export class VerificationLinkRefused extends Error {
+  constructor(
+    readonly expired: boolean,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+async function jsonConflict(response: Response): Promise<Record<string, unknown> | null> {
+  if (response.status !== 409 || !response.headers.get("Content-Type")?.startsWith("application/json")) {
+    return null;
+  }
+  return response.json();
+}
+
+// 4b and 4c come back as a 409 that says which one it is
+async function registrationConflict(response: Response) {
+  const conflict = await jsonConflict(response);
+  if (conflict?.reason === "EMAIL_REGISTERED") {
+    throw new AlreadyRegistered(String(conflict.message));
+  }
+  if (conflict?.reason === "ORGANIZATION_REGISTERED") {
+    throw new OrganizationRegistered(conflict.organization as OrganizationSummary);
+  }
+  if (conflict && typeof conflict.status === "string") {
+    throw new MembershipConflict(
+      conflict.status as MembershipStatus,
+      String(conflict.statusLabel),
+      String(conflict.message),
+    );
+  }
+}
+
+// CO-08.1. joinOrganizationId instead of organization once the visitor accepted to join (4c).
+export async function submitRecruiterRegistration(
+  recruiter: RecruiterDetails,
+  organization: OrganizationDetails | null,
+  joinOrganizationId?: number,
+): Promise<RecruiterRegistration> {
+  const response = await backendFetch("/api/recruiters", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...recruiter, organization, joinOrganizationId: joinOrganizationId ?? null }),
+  });
+  const fieldErrors = await fieldRefusal(response, REGISTRATION_FIELDS);
+  if (fieldErrors) {
+    throw new RecruiterRegistrationRefused(fieldErrors);
+  }
+  await registrationConflict(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+async function verificationRefusal(response: Response) {
+  if (response.status === 404 || response.status === 410) {
+    const body = await response.json();
+    throw new VerificationLinkRefused(Boolean(body.expired), String(body.message));
+  }
+}
+
+// CO-08.2
+export async function verifyRecruiterEmail(token: string): Promise<void> {
+  const response = await backendFetch("/api/recruiters/verification", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  await verificationRefusal(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+}
+
+// UC-08 extension 6a: the answer holds the new link only where verificationLink would
+export async function requestNewVerificationLink(token: string): Promise<{ verificationLink?: string }> {
+  const response = await backendFetch("/api/recruiters/verification/new", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  await verificationRefusal(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+// UC-09 steps 2-3: a read of the registered organizations, by name or website
+export async function searchOrganizations(query: string): Promise<OrganizationSummary[]> {
+  const response = await backendFetch(`/api/organizations?query=${encodeURIComponent(query)}`);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function viewMemberships(token: string): Promise<Membership[]> {
+  const response = await backendFetch("/api/recruiter/memberships", { headers: bearer(token) });
+  endedSession(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+// UC-09 step 5 and extension 3a: the backend's reason for each field it refused
+export class MembershipRequestRefused extends Error {
+  constructor(readonly fieldErrors: Record<string, string>) {
+    super("The request was refused");
+  }
+}
+
+const MEMBERSHIP_REQUEST_FIELDS = [
+  "organizationId",
+  "role",
+  "justification",
+  ...ORGANIZATION_FIELDS.map((name) => `organization.${name}` as const),
+] as const;
+
+// CO-09.1: organizationId of a registered organization, or organization for a new one (3a)
+export async function submitMembershipRequest(
+  token: string,
+  request: { organizationId?: number; organization?: OrganizationDetails; role: string; justification: string },
+): Promise<Membership> {
+  const response = await backendFetch("/api/recruiter/memberships", {
+    method: "POST",
+    headers: { ...bearer(token), "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  endedSession(response);
+  const fieldErrors = await fieldRefusal(response, MEMBERSHIP_REQUEST_FIELDS);
+  if (fieldErrors) {
+    throw new MembershipRequestRefused(fieldErrors);
+  }
+  await registrationConflict(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+// UC-09 extension *a
+export async function cancelMembershipRequest(token: string, membershipId: number): Promise<Membership> {
+  const response = await backendFetch(`/api/recruiter/memberships/${membershipId}/cancel`, {
+    method: "POST",
+    headers: bearer(token),
+  });
+  endedSession(response);
+  await registrationConflict(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+export type RecruiterRequestType =
+  | "NEW_RECRUITER_NEW_ORGANIZATION"
+  | "NEW_RECRUITER_EXISTING_ORGANIZATION"
+  | "ADDITIONAL_ORGANIZATION"
+  | "ADDITIONAL_NEW_ORGANIZATION";
+
+// UC-10 step 2
+export type RecruiterRequestEntry = {
+  requestId: number;
+  requestType: RecruiterRequestType;
+  requestTypeLabel: string;
+  requesterName: string;
+  organizationName: string;
+  requestedAt: string;
+  status: MembershipStatus;
+  statusLabel: string;
+  reviewFlag: string | null;
+};
+
+// UC-10 step 4; duplicateOf is the registered organization a new one duplicates (5c)
+export type RecruiterRequestDetails = {
+  requestId: number;
+  requestType: RecruiterRequestType;
+  requestTypeLabel: string;
+  status: MembershipStatus;
+  statusLabel: string;
+  requestedAt: string;
+  reviewFlag: string | null;
+  requester: { name: string; email: string; jobTitle: string | null; phone: string | null };
+  memberships: Membership[];
+  organization: OrganizationSummary;
+  role: string | null;
+  justification: string | null;
+  decisionNote: string | null;
+  duplicateOf: OrganizationSummary | null;
+};
+
+export async function openRecruiterRequestQueue(token: string): Promise<RecruiterRequestEntry[]> {
+  const response = await backendFetch("/api/admin/requests", { headers: bearer(token) });
+  endedSession(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function selectRecruiterRequest(token: string, requestId: string): Promise<RecruiterRequestDetails | null> {
+  const response = await backendFetch(`/api/admin/requests/${encodeURIComponent(requestId)}`, { headers: bearer(token) });
+  endedSession(response);
+  if (response.status === 404 || response.status === 400) {
+    return null;
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+export type RequestDecision = "approve" | "deny" | "request-information";
+
+// CO-10.1, and extensions 5a and 5b, which need the note
+export async function decideRecruiterRequest(
+  token: string,
+  requestId: number,
+  decision: RequestDecision,
+  note = "",
+): Promise<Membership> {
+  const response = await backendFetch(`/api/admin/requests/${requestId}/${decision}`, {
+    method: "POST",
+    headers: { ...bearer(token), "Content-Type": "application/json" },
+    body: JSON.stringify({ note }),
+  });
+  endedSession(response);
+  const fieldErrors = await fieldRefusal(response, ["reason", "question"]);
+  if (fieldErrors) {
+    throw new Error(fieldErrors.reason ?? fieldErrors.question);
+  }
+  await registrationConflict(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+// An instant the backend sends with its zone, shown as the day it was where the user is
+export function formatInstantDay(instant: string): string {
+  return new Date(instant).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
