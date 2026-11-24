@@ -23,4 +23,12 @@ describe("SlotMeter", () => {
 
     expect(screen.getByText("A slot frees up later.")).toBeInTheDocument();
   });
+
+  it("shows a compact active count without segments when compact is set", () => {
+    render(<SlotMeter used={3} total={5} compact />);
+
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByText("of 5 active")).toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
 });

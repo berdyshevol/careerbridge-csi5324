@@ -315,35 +315,69 @@ describe("viewApplications", () => {
     location: "Hybrid",
     employmentType: "Full-time",
     applicationStatus: "APPLIED",
+    dateApplied: "2026-10-02",
+    lastStageChangeDate: "2026-10-02",
   };
 
   it("returns the active applications with their stage named as on the screen", async () => {
     const fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve([answer, { ...answer, applicationId: 2, postingId: 3, applicationStatus: "INTERVIEW" }]),
+      json: () =>
+        Promise.resolve({
+          applications: [
+            answer,
+            { ...answer, applicationId: 2, postingId: 3, applicationStatus: "INTERVIEW", lastStageChangeDate: "2026-10-05" },
+          ],
+          activeApplicationCount: 2,
+          applicationLimit: 5,
+        }),
     });
     vi.stubGlobal("fetch", fetch);
 
     const applications = await viewApplications("t");
 
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/applicant/applications"), expect.anything());
+    expect(applications.activeApplicationCount).toBe(2);
+    expect(applications.applicationLimit).toBe(5);
     expect(applications.active.map((a) => a.applicationStatus)).toEqual(["Applied", "Interview"]);
-    expect(applications.active[0]).toMatchObject({ applicationId: 3, postingId: 1, title: "Junior Software Engineer" });
+    expect(applications.all[1]).toMatchObject({
+      applicationId: 2,
+      postingId: 3,
+      applicationStatus: "Interview",
+      active: true,
+      dateApplied: "2026-10-02",
+      lastStageChangeDate: "2026-10-05",
+    });
   });
 
-  it("keeps an ended application out of the active ones but remembers its posting (A5)", async () => {
+  it("keeps an ended application in all and remembers its posting (A5)", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve([answer, { ...answer, applicationId: 4, postingId: 7, applicationStatus: "WITHDRAWN" }]),
+        json: () =>
+          Promise.resolve({
+            applications: [
+              answer,
+              { ...answer, applicationId: 4, postingId: 7, applicationStatus: "WITHDRAWN" },
+              { ...answer, applicationId: 5, postingId: 8, applicationStatus: "OFFER_DECLINED" },
+            ],
+            activeApplicationCount: 1,
+            applicationLimit: 5,
+          }),
       }),
     );
 
     const applications = await viewApplications("t");
 
+    expect(applications.activeApplicationCount).toBe(1);
     expect(applications.active.map((a) => a.postingId)).toEqual([1]);
-    expect(applications.appliedPostingIds).toEqual([1, 7]);
+    expect(applications.all.map((a) => [a.applicationStatus, a.active])).toEqual([
+      ["Applied", true],
+      ["Withdrawn", false],
+      ["Offer Declined", false],
+    ]);
+    expect(applications.appliedPostingIds).toEqual([1, 7, 8]);
   });
 
   it("fails when the backend does not answer well", async () => {

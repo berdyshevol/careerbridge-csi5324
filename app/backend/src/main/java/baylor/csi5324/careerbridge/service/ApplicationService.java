@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -89,10 +90,18 @@ public class ApplicationService {
         }
     }
 
-    // Ended applications too: the apply screen needs them, since a posting can be applied to once (A5)
+    // CO-05.1: active applications first, ended ones included since they still block reapplying (A5)
     @Transactional(readOnly = true)
-    public List<Application> viewApplications(String applicantEmail) {
-        return applicationRepository.findByApplicant(applicant(applicantEmail));
+    public ApplicantApplications viewApplications(String applicantEmail) {
+        List<Application> sorted = applicationRepository.findByApplicant(applicant(applicantEmail)).stream()
+                .sorted(Comparator
+                        .comparing((Application a) -> !a.isActive())
+                        .thenComparing(Application::getLastStageChangeDate, Comparator.reverseOrder())
+                        .thenComparing(Application::getDateApplied, Comparator.reverseOrder())
+                        .thenComparing(Application::getApplicationId, Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+        int activeCount = (int) sorted.stream().filter(Application::isActive).count();
+        return new ApplicantApplications(sorted, activeCount);
     }
 
     private Applicant applicant(String email) {

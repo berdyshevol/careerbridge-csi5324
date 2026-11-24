@@ -118,4 +118,15 @@ public class Application {
     public List<StatusHistoryEntry> getStatusHistory() {
         return statusHistory;
     }
+
+    public boolean isActive() {
+        return applicationStatus.isActive();
+    }
+
+    public LocalDate getLastStageChangeDate() {
+        if (statusHistory.isEmpty()) {
+            return dateApplied;
+        }
+        return statusHistory.get(statusHistory.size() - 1).getDate();
+    }
 }

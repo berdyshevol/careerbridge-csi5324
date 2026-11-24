@@ -60,7 +60,7 @@ describe("pages that need a log-in", () => {
 
   it("shows an applicant the resume the backend has on file, which goes with the application (FR-UC04.1)", async () => {
     vi.mocked(serverSession).mockResolvedValue(as("APPLICANT"));
-    vi.mocked(viewApplications).mockResolvedValue({ active: [], appliedPostingIds: [] });
+    vi.mocked(viewApplications).mockResolvedValue({ all: [], active: [], appliedPostingIds: [], activeApplicationCount: 0, applicationLimit: 5 });
     vi.mocked(startApplication).mockResolvedValue(started({ fileName: "Riley_Chen_CV.pdf", uploadDate: "2026-10-01T15:00:00" }));
     render(await ApplyPage({ params: Promise.resolve({ id: "2" }) }));
 
@@ -71,7 +71,7 @@ describe("pages that need a log-in", () => {
 
   it("refuses an applicant with no resume on file and links to the profile (extension 2a, FR-UC04.6)", async () => {
     vi.mocked(serverSession).mockResolvedValue(as("APPLICANT"));
-    vi.mocked(viewApplications).mockResolvedValue({ active: [], appliedPostingIds: [] });
+    vi.mocked(viewApplications).mockResolvedValue({ all: [], active: [], appliedPostingIds: [], activeApplicationCount: 0, applicationLimit: 5 });
     vi.mocked(startApplication).mockResolvedValue(started(null));
     render(await ApplyPage({ params: Promise.resolve({ id: "2" }) }));
 

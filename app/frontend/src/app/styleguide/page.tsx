@@ -16,7 +16,7 @@ import ResumeOnFile from "@/components/ResumeOnFile";
 import SlotMeter from "@/components/SlotMeter";
 import { StageBadge, StageProgress } from "@/components/StageBadge";
 import { formatDate, type JobPosting } from "@/lib/api";
-import { APPLICATION_LIMIT, STAGES, applications, offer } from "@/lib/sampleDesk";
+import { ALL_STAGES, APPLICATION_LIMIT, STAGES, applications, offer } from "@/lib/sampleDesk";
 import type { SessionUser } from "@/lib/session";
 
 // Every block here is the real component, so this page cannot drift from the
@@ -170,9 +170,9 @@ export default function StyleguidePage() {
       </Section>
 
       <Section title="Status">
-        <Block title="Stage badge" use="<StageBadge stage={…} /> — stages come from STAGES in src/lib/sampleDesk.ts">
+        <Block title="Stage badge" use="<StageBadge stage={…} onWarning? /> — stages come from ALL_STAGES in src/lib/sampleDesk.ts">
           <div className="flex flex-wrap gap-3">
-            {STAGES.map((stage) => (
+            {ALL_STAGES.map((stage) => (
               <StageBadge key={stage} stage={stage} />
             ))}
           </div>
@@ -184,11 +184,14 @@ export default function StyleguidePage() {
             ))}
           </div>
         </Block>
-        <Block title="Slot meter" use="<SlotMeter used={…} total={APPLICATION_LIMIT} caption? />">
+        <Block title="Slot meter" use="<SlotMeter used={…} total={APPLICATION_LIMIT} caption? compact? />">
           <div className="grid gap-3 md:grid-cols-3">
             <SlotMeter used={0} total={APPLICATION_LIMIT} />
             <SlotMeter used={3} total={APPLICATION_LIMIT} caption="With a caption." />
             <SlotMeter used={5} total={APPLICATION_LIMIT} />
+          </div>
+          <div className="mt-3">
+            <SlotMeter used={3} total={APPLICATION_LIMIT} compact className="sm:w-64" />
           </div>
         </Block>
         <Block title="Resume on file" use="<ResumeOnFile resume={…}>{what this screen says about it}</ResumeOnFile>">

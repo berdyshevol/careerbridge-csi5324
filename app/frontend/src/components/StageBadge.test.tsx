@@ -1,12 +1,18 @@
 import { render, screen } from "@testing-library/react";
-import { STAGES } from "@/lib/sampleDesk";
+import { ALL_STAGES, STAGES } from "@/lib/sampleDesk";
 import { StageBadge, StageProgress } from "./StageBadge";
 
 describe("StageBadge", () => {
-  it.each(STAGES)("renders the stage %s", (stage) => {
+  it.each(ALL_STAGES)("renders the stage %s", (stage) => {
     render(<StageBadge stage={stage} />);
 
     expect(screen.getByText(stage)).toBeInTheDocument();
+  });
+
+  it("uses the base-100 surface for an Offer badge on a warning row", () => {
+    render(<StageBadge stage="Offer" onWarning />);
+
+    expect(screen.getByText("Offer")).toHaveClass("bg-base-100", "text-warning-content");
   });
 });
 

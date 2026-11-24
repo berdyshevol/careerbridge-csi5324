@@ -1,18 +1,16 @@
 import { render, screen } from "@testing-library/react";
-import type { DeskApplication } from "@/lib/sampleDesk";
-import ApplicationRow from "./ApplicationRow";
+import ApplicationRow, { type ApplicationRowItem } from "./ApplicationRow";
 
-const base: DeskApplication = {
-  applicationId: 1,
-  postingId: 3,
+const base: ApplicationRowItem = {
+  applicationId: 12,
   title: "Backend Developer",
   organizationName: "Brazos Analytics",
-  location: "Remote",
-  employmentType: "Full-time",
   applicationStatus: "Interview",
+  dateApplied: "2026-10-06",
+  lastStageChangeDate: "2026-10-22",
 };
 
-function renderRow(application: DeskApplication) {
+function renderRow(application: ApplicationRowItem) {
   return render(
     <ul>
       <ApplicationRow application={application} />
@@ -21,23 +19,26 @@ function renderRow(application: DeskApplication) {
 }
 
 describe("ApplicationRow", () => {
-  it("shows the posting, the stage and how far along it is", () => {
+  it("shows the posting, organization, dates and current stage", () => {
     renderRow(base);
 
     expect(screen.getByText("Backend Developer")).toBeInTheDocument();
+    expect(screen.getByText(/Brazos Analytics · Applied Oct 6, 2026 · last change Oct 22, 2026/)).toBeInTheDocument();
     expect(screen.getByText("Interview")).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Stage 3 of 4" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View" })).toHaveAttribute("href", "/applications/12");
   });
 
-  it("links an application at the Offer stage to the offers screen", () => {
-    renderRow({ ...base, applicationStatus: "Offer" });
+  it("highlights an Offer row and offers Review offer linking to the application page", () => {
+    renderRow({ ...base, applicationId: 7, applicationStatus: "Offer" });
 
-    expect(screen.getByRole("link", { name: "Review" })).toHaveAttribute("href", "/offers");
+    expect(screen.getByRole("listitem")).toHaveClass("bg-warning");
+    expect(screen.getByRole("link", { name: "Review offer" })).toHaveAttribute("href", "/applications/7");
   });
 
-  it("links any other application to the tracking screen", () => {
-    renderRow({ ...base, applicationStatus: "Applied" });
+  it("renders closed stages with a View link to the application page", () => {
+    renderRow({ ...base, applicationId: 9, applicationStatus: "Rejected" });
 
-    expect(screen.getByRole("link", { name: "View" })).toHaveAttribute("href", "/applications");
+    expect(screen.getByText("Rejected")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View" })).toHaveAttribute("href", "/applications/9");
   });
 });
