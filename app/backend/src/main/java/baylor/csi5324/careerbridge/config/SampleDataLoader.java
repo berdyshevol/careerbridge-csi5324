@@ -73,10 +73,13 @@ public class SampleDataLoader implements CommandLineRunner {
                     applicantRepository.save(jordan);
                 }
                 for (Application application : applicationRepository.findByApplicant(jordan)) {
+                    ApplicationStatus status = application.getApplicationStatus();
                     if (application.getStatusHistory().size() <= 1
-                            && application.getApplicationStatus() != ApplicationStatus.APPLIED) {
+                            && (status == ApplicationStatus.SCREENING
+                                    || status == ApplicationStatus.INTERVIEW
+                                    || status == ApplicationStatus.OFFER)) {
                         seedStageHistoryAndInterviews(
-                                application, application.getDateApplied(), application.getApplicationStatus());
+                                application, application.getDateApplied(), status);
                         applicationRepository.save(application);
                     }
                 }

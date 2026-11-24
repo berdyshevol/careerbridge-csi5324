@@ -370,7 +370,7 @@ Figure 11 shows SSD-05, the system sequence diagram for the main success scenari
 
 **Postconditions:** None. This is a query operation.
 
-**Output:** If the application belongs to the logged-in Applicant, the system returns the Application's _applicationStatus_ and _statusHistory_ , its Interviews' _scheduledTime_ , its _rejectionReason_ when it is Rejected, and the actions currently available to the Applicant.
+**Output:** If the application belongs to the logged-in Applicant, the system returns the Application's _applicationStatus_ and _statusHistory_ , its Interviews' _roundNumber_, _scheduledTime_, _format_, and _location_ , its _rejectionReason_ when it is Rejected, and the actions currently available to the Applicant.
 
 If the application does not belong to the logged-in Applicant, no application information is returned.
 
