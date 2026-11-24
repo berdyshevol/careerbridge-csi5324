@@ -14,10 +14,13 @@ import { SessionEnded,
   viewApplications,
   updateProfile,
   viewProfile,
+  ApplicationActionRefused,
   ApplicationRefused,
   ProfileRefused,
   ResumeRefused,
+  requestWithdrawal,
   uploadResume,
+  withdrawApplication,
   type JobPosting,
   type NewPosting,
 } from "./api";
@@ -438,6 +441,72 @@ describe("viewApplication", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 404 }));
 
     expect(await viewApplication("t", "999")).toBeNull();
+  });
+});
+
+describe("requestWithdrawal and withdrawApplication", () => {
+  it("fetches withdrawal warning and confirms withdrawal with updated count", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            applicationId: 12,
+            title: "Backend Developer",
+            organizationName: "Brazos Analytics",
+            applicationStatus: "INTERVIEW",
+            warning: "Withdrawing this application is final.",
+            reasons: ["No longer interested"],
+          }),
+      }).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            activeApplicationCount: 1,
+            applicationLimit: 5,
+            application: {
+              applicationId: 12,
+              postingId: 3,
+              title: "Backend Developer",
+              organizationName: "Brazos Analytics",
+              location: "Remote",
+              employmentType: "Full-time",
+              applicationStatus: "WITHDRAWN",
+              dateApplied: "2026-09-29",
+              statusHistory: [{ status: "WITHDRAWN", date: "2026-10-10" }],
+              interviews: [],
+              rejectionReason: null,
+              rejectedAtStage: null,
+              rejectionDate: null,
+              withdrawnAt: "2026-10-10T15:00:00Z",
+              availableActions: [],
+            },
+          }),
+      }),
+    );
+
+    const prompt = await requestWithdrawal("t", 12);
+    expect(prompt.applicationStatus).toBe("Interview");
+
+    const result = await withdrawApplication("t", 12, "No longer interested");
+    expect(result.activeApplicationCount).toBe(1);
+    expect(result.application.applicationStatus).toBe("Withdrawn");
+  });
+
+  it("throws ApplicationActionRefused on 409 conflict", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 409,
+        json: () => Promise.resolve({ currentStage: "OFFER", message: "Use Decline instead." }),
+      }),
+    );
+
+    await expect(withdrawApplication("t", 12)).rejects.toBeInstanceOf(ApplicationActionRefused);
   });
 });
 

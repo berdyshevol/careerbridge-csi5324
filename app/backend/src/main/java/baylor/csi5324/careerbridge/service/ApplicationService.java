@@ -6,6 +6,7 @@ import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Resume;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
+import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
@@ -111,15 +112,85 @@ public class ApplicationService {
     // CO-05.2: ownership check reveals nothing and logs the attempt when another applicant asks (BR-15, ext *a)
     @Transactional(readOnly = true)
     public Application viewApplication(Long applicationId, String applicantEmail) {
+        Application application = ownedApplication(applicationId, applicant(applicantEmail));
+        application.getInterviews().size();
+        return application;
+    }
+
+    // CO-06.1: query-only preview of withdrawal warning before any state changes (FR-UC06.1, FR-UC06.2)
+    @Transactional(readOnly = true)
+    public WithdrawalPrompt requestWithdrawal(Long applicationId, String applicantEmail) {
+        Application application = ownedApplication(applicationId, applicant(applicantEmail));
+        requireWithdrawable(application);
+        return new WithdrawalPrompt(application, WithdrawalPrompt.WARNING, WithdrawalPrompt.REASONS);
+    }
+
+    // CO-06.2: transitions to Withdrawn, records date/reason, frees active slot, retains audit record (FR-UC06.4-6.6, 6.9)
+    public WithdrawnApplication withdrawApplication(Long applicationId, String applicantEmail, String reason) {
         Applicant applicant = applicant(applicantEmail);
+        Application application = ownedApplication(applicationId, applicant);
+        requireWithdrawable(application);
+
+        Instant now = clock.instant();
+        LocalDate withdrawnDate = LocalDate.ofInstant(now, application.getJobPosting().getOrganization().getZoneId());
+        String normalizedReason = normalizeReason(reason);
+
+        application.setApplicationStatus(ApplicationStatus.WITHDRAWN);
+        application.setWithdrawnAt(now);
+        application.getStatusHistory().add(new StatusHistoryEntry(
+                ApplicationStatus.WITHDRAWN, withdrawnDate, normalizedReason));
+        applicationRepository.saveAndFlush(application);
+        application.getInterviews().size();
+
+        int activeCount = (int) applicationRepository.countActiveByApplicant(applicant);
+        return new WithdrawnApplication(application, activeCount);
+    }
+
+    private Application ownedApplication(Long applicationId, Applicant applicant) {
         Application application = applicationRepository.findWithDetailsByApplicationId(applicationId)
                 .orElseThrow(() -> new ApplicationNotFoundException(applicationId));
         if (!application.getApplicant().getUserId().equals(applicant.getUserId())) {
             log.warn("Unauthorized attempt by applicant {} to view application {}", applicant.getUserId(), applicationId);
             throw new ApplicationNotFoundException(applicationId);
         }
-        application.getInterviews().size();
         return application;
+    }
+
+    private static void requireWithdrawable(Application application) {
+        if (application.isWithdrawable()) {
+            return;
+        }
+        ApplicationStatus stage = application.getApplicationStatus();
+        if (stage == ApplicationStatus.OFFER) {
+            throw new ApplicationActionRefusedException(
+                    stage, "This application is at the Offer stage. Use Decline on the offer instead.");
+        }
+        throw new ApplicationActionRefusedException(
+                stage, "This application is already " + stageLabel(stage) + " and can no longer be withdrawn.");
+    }
+
+    private static String normalizeReason(String reason) {
+        if (reason == null) {
+            return null;
+        }
+        String trimmed = reason.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        return trimmed.length() > 1000 ? trimmed.substring(0, 1000) : trimmed;
+    }
+
+    private static String stageLabel(ApplicationStatus status) {
+        return switch (status) {
+            case APPLIED -> "Applied";
+            case SCREENING -> "Screening";
+            case INTERVIEW -> "Interview";
+            case OFFER -> "Offer";
+            case HIRED -> "Hired";
+            case REJECTED -> "Rejected";
+            case WITHDRAWN -> "Withdrawn";
+            case OFFER_DECLINED -> "Offer Declined";
+        };
     }
 
     private Applicant applicant(String email) {

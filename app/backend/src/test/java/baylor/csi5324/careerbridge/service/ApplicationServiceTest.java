@@ -27,6 +27,7 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -365,6 +366,63 @@ class ApplicationServiceTest {
     @Test
     void refusesUnknownApplicationIdAsNotFound() {
         assertThrows(ApplicationNotFoundException.class, () -> applicationService.viewApplication(-99L, JORDAN));
+    }
+
+    @Test
+    void requestWithdrawalReturnsPostingStageAndFinalWarning() {
+        JobPosting posting = save("QA Engineer", PostStatus.PUBLISHED, today.plusDays(14));
+        Long id = applicationService.submitApplication(posting.getJobPostId(), JORDAN).application().getApplicationId();
+
+        WithdrawalPrompt prompt = applicationService.requestWithdrawal(id, JORDAN);
+
+        assertEquals("QA Engineer", prompt.application().getJobPosting().getTitle());
+        assertEquals(ApplicationStatus.APPLIED, prompt.application().getApplicationStatus());
+        assertTrue(prompt.warning().contains("final"));
+        assertTrue(prompt.warning().contains("cannot reapply"));
+        assertFalse(prompt.reasons().isEmpty());
+    }
+
+    @Test
+    void withdrawsActiveApplicationFreesSlotRetainsAuditRecordAndStillBlocksReapply() {
+        JobPosting posting = save("QA Engineer", PostStatus.PUBLISHED, today.plusDays(14));
+        Long id = applicationService.submitApplication(posting.getJobPostId(), JORDAN).application().getApplicationId();
+
+        WithdrawnApplication withdrawn = applicationService.withdrawApplication(id, JORDAN, "No longer interested");
+
+        assertEquals(ApplicationStatus.WITHDRAWN, withdrawn.application().getApplicationStatus());
+        assertEquals(0, withdrawn.activeApplicationCount());
+        assertTrue(withdrawn.application().getWithdrawnAt() != null);
+        var lastEntry = withdrawn.application().getStatusHistory()
+                .get(withdrawn.application().getStatusHistory().size() - 1);
+        assertEquals(ApplicationStatus.WITHDRAWN, lastEntry.getStatus());
+        assertEquals("No longer interested", lastEntry.getReason());
+        // Record remains stored for audit (FR-UC06.9) and still blocks reapplying (A5)
+        assertTrue(applicationRepository.findById(id).isPresent());
+        ApplicationRefusedException refused = assertThrows(ApplicationRefusedException.class,
+                () -> applicationService.submitApplication(posting.getJobPostId(), JORDAN));
+        assertEquals(ApplicationRefusal.ALREADY_APPLIED, refused.getReason());
+    }
+
+    @Test
+    void refusesWithdrawalAtOfferOrTerminalStagesWithoutChangingData() {
+        JobPosting offerPosting = save("Offer Role", PostStatus.PUBLISHED, today.plusDays(14));
+        Application offerApp = applicationService.submitApplication(offerPosting.getJobPostId(), JORDAN).application();
+        offerApp.setApplicationStatus(ApplicationStatus.OFFER);
+
+        JobPosting rejectedPosting = save("Rejected Role", PostStatus.PUBLISHED, today.plusDays(14));
+        Application rejectedApp = applicationService.submitApplication(rejectedPosting.getJobPostId(), JORDAN).application();
+        rejectedApp.setApplicationStatus(ApplicationStatus.REJECTED);
+        entityManager.flush();
+
+        ApplicationActionRefusedException offerRefused = assertThrows(ApplicationActionRefusedException.class,
+                () -> applicationService.withdrawApplication(offerApp.getApplicationId(), JORDAN, null));
+        assertEquals(ApplicationStatus.OFFER, offerRefused.getCurrentStage());
+        assertEquals(ApplicationStatus.OFFER, offerApp.getApplicationStatus());
+
+        ApplicationActionRefusedException terminalRefused = assertThrows(ApplicationActionRefusedException.class,
+                () -> applicationService.withdrawApplication(rejectedApp.getApplicationId(), JORDAN, null));
+        assertEquals(ApplicationStatus.REJECTED, terminalRefused.getCurrentStage());
+        assertEquals(ApplicationStatus.REJECTED, rejectedApp.getApplicationStatus());
     }
 
     private void upload(String email, String fileName, byte[] content) {
