@@ -10,6 +10,7 @@ import { SessionEnded,
   searchQuery,
   startApplication,
   submitApplication,
+  viewApplication,
   viewApplications,
   updateProfile,
   viewProfile,
@@ -384,6 +385,59 @@ describe("viewApplications", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
 
     await expect(viewApplications("t")).rejects.toThrow("500");
+  });
+});
+
+describe("viewApplication", () => {
+  it("returns mapped detail with stage history and interviews", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            applicationId: 12,
+            postingId: 3,
+            title: "Backend Developer",
+            organizationName: "Brazos Analytics",
+            location: "Remote",
+            employmentType: "Full-time",
+            applicationStatus: "INTERVIEW",
+            dateApplied: "2026-09-29",
+            statusHistory: [
+              { status: "APPLIED", date: "2026-09-29" },
+              { status: "INTERVIEW", date: "2026-10-08" },
+            ],
+            interviews: [
+              {
+                interviewId: 1,
+                roundNumber: 1,
+                scheduledTime: "2026-10-11T14:00:00",
+                format: "On-site",
+                location: "1200 Austin Ave, Waco",
+              },
+            ],
+            rejectionReason: null,
+            rejectedAtStage: null,
+            rejectionDate: null,
+            withdrawnAt: null,
+            availableActions: ["WITHDRAW"],
+          }),
+      }),
+    );
+
+    const detail = await viewApplication("t", "12");
+
+    expect(detail?.applicationStatus).toBe("Interview");
+    expect(detail?.statusHistory.map((e) => e.status)).toEqual(["Applied", "Interview"]);
+    expect(detail?.interviews[0].location).toBe("1200 Austin Ave, Waco");
+  });
+
+  it("returns null on 404 when the application is not found or belongs to another applicant", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 404 }));
+
+    expect(await viewApplication("t", "999")).toBeNull();
   });
 });
 

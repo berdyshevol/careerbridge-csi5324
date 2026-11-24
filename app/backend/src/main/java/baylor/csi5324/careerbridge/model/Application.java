@@ -1,5 +1,6 @@
 package baylor.csi5324.careerbridge.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -12,6 +13,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -59,6 +62,10 @@ public class Application {
     @OrderColumn
     private List<StatusHistoryEntry> statusHistory = new ArrayList<>();
 
+    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("roundNumber ASC, scheduledTime ASC")
+    private List<Interview> interviews = new ArrayList<>();
+
     public Application() {
     }
 
@@ -101,6 +108,37 @@ public class Application {
 
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
+    }
+
+    public ApplicationStatus getRejectedAtStage() {
+        for (int i = statusHistory.size() - 1; i >= 0; i--) {
+            if (statusHistory.get(i).getStatus() == ApplicationStatus.REJECTED) {
+                return i > 0 ? statusHistory.get(i - 1).getStatus() : null;
+            }
+        }
+        return null;
+    }
+
+    public LocalDate getRejectionDate() {
+        for (int i = statusHistory.size() - 1; i >= 0; i--) {
+            StatusHistoryEntry entry = statusHistory.get(i);
+            if (entry.getStatus() == ApplicationStatus.REJECTED) {
+                return entry.getDate();
+            }
+        }
+        return null;
+    }
+
+    public List<Interview> getInterviews() {
+        return interviews;
+    }
+
+    public List<String> availableActions() {
+        return switch (applicationStatus) {
+            case APPLIED, SCREENING, INTERVIEW -> List.of("WITHDRAW");
+            case OFFER -> List.of("ACCEPT_OFFER", "DECLINE_OFFER");
+            case HIRED, REJECTED, WITHDRAWN, OFFER_DECLINED -> List.of();
+        };
     }
 
     public Instant getWithdrawnAt() {

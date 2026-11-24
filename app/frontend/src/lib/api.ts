@@ -365,6 +365,76 @@ export async function viewApplications(token: string): Promise<Applications> {
   };
 }
 
+export type ApplicationAction = "WITHDRAW" | "ACCEPT_OFFER" | "DECLINE_OFFER";
+
+export type StatusHistoryEntry = {
+  status: ApplicationStage;
+  date: string;
+};
+
+export type InterviewSummary = {
+  interviewId: number;
+  roundNumber: number;
+  scheduledTime: string;
+  format: string;
+  location: string;
+};
+
+export type ApplicationDetail = {
+  applicationId: number;
+  postingId: number;
+  title: string;
+  organizationName: string;
+  location: string;
+  employmentType: string;
+  applicationStatus: ApplicationStage;
+  dateApplied: string;
+  statusHistory: StatusHistoryEntry[];
+  interviews: InterviewSummary[];
+  rejectionReason: string | null;
+  rejectedAtStage: ApplicationStage | null;
+  rejectionDate: string | null;
+  withdrawnAt: string | null;
+  availableActions: ApplicationAction[];
+};
+
+type RawApplicationDetail = Omit<
+  ApplicationDetail,
+  "applicationStatus" | "statusHistory" | "rejectedAtStage"
+> & {
+  applicationStatus: string;
+  statusHistory: { status: string; date: string }[];
+  rejectedAtStage: string | null;
+};
+
+// CO-05.2: returns null when the application does not exist or belongs to another applicant (BR-15)
+export async function viewApplication(
+  token: string,
+  applicationId: string,
+): Promise<ApplicationDetail | null> {
+  const response = await backendFetch(
+    `/api/applicant/applications/${encodeURIComponent(applicationId)}`,
+    { headers: bearer(token) },
+  );
+  endedSession(response);
+  if (response.status === 404 || response.status === 400) {
+    return null;
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  const raw: RawApplicationDetail = await response.json();
+  return {
+    ...raw,
+    applicationStatus: stageLabel(raw.applicationStatus),
+    statusHistory: raw.statusHistory.map((entry) => ({
+      status: stageLabel(entry.status),
+      date: entry.date,
+    })),
+    rejectedAtStage: raw.rejectedAtStage ? stageLabel(raw.rejectedAtStage) : null,
+  };
+}
+
 // CO-03.2 details, in the order the form shows them; all but the names may be left empty
 export const PROFILE_FIELDS = [
   "firstName",
@@ -525,5 +595,19 @@ export function formatDate(isoDate: string): string {
 
 // A moment the backend recorded by its UTC clock, shown as the day it was where the user is
 export function formatUtcDay(utcDateTime: string): string {
-  return new Date(`${utcDateTime}Z`).toLocaleDateString("en-US", DATE_FORMAT);
+  const normalized = utcDateTime.endsWith("Z") ? utcDateTime : `${utcDateTime}Z`;
+  return new Date(normalized).toLocaleDateString("en-US", DATE_FORMAT);
+}
+
+const DATE_TIME_FORMAT: Intl.DateTimeFormatOptions = {
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+};
+
+export function formatDateTime(isoDateTime: string): string {
+  return new Date(isoDateTime).toLocaleString("en-US", DATE_TIME_FORMAT);
 }

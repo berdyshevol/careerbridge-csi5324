@@ -59,3 +59,28 @@ test("given a recruiter, when they open Applications, then they are told only ap
   await expect(page.getByRole("heading", { name: "Applicants only" })).toBeVisible();
 });
 
+test("given an applicant with an interview, when they open its detail page, then they see stage history and interview details without outcomes", async ({ page }) => {
+  await logIn(page, ACCOUNTS.applicant, "/applications");
+
+  const backendRow = page.getByRole("listitem").filter({ hasText: "Backend Developer" });
+  await backendRow.getByRole("link", { name: "View" }).click();
+
+  await expect(page).toHaveURL(/\/applications\/\d+$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Backend Developer" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Stage history" })).toBeVisible();
+  await expect(page.getByText(/On-site, 1200 Austin Ave, Waco/)).toBeVisible();
+  // BR-12, A12: recruiter outcomes and internal notes are never shown
+  await expect(page.getByText("Passed")).toHaveCount(0);
+  await expect(page.getByText("Internal panel note")).toHaveCount(0);
+});
+
+test("given another applicant, when they open someone else's application URL, then they see not found and no details", async ({ page }) => {
+  await logIn(page, ACCOUNTS.applicant, "/applications");
+  const href = await page.getByRole("link", { name: "Review offer" }).getAttribute("href");
+  expect(href).toMatch(/^\/applications\/\d+$/);
+
+  await logIn(page, ACCOUNTS.secondApplicant, href!);
+  await expect(page.getByText("This application could not be found.")).toBeVisible();
+  await expect(page.getByText("IT Support Specialist")).toHaveCount(0);
+});
+

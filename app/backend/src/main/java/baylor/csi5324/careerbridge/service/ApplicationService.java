@@ -9,6 +9,8 @@ import baylor.csi5324.careerbridge.model.ResumeSnapshot;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +26,8 @@ import java.util.List;
 public class ApplicationService {
 
     public static final int APPLICATION_LIMIT = 5;
+
+    private static final Logger log = LoggerFactory.getLogger(ApplicationService.class);
 
     private final ApplicationRepository applicationRepository;
     private final ApplicantRepository applicantRepository;
@@ -102,6 +106,20 @@ public class ApplicationService {
                 .toList();
         int activeCount = (int) sorted.stream().filter(Application::isActive).count();
         return new ApplicantApplications(sorted, activeCount);
+    }
+
+    // CO-05.2: ownership check reveals nothing and logs the attempt when another applicant asks (BR-15, ext *a)
+    @Transactional(readOnly = true)
+    public Application viewApplication(Long applicationId, String applicantEmail) {
+        Applicant applicant = applicant(applicantEmail);
+        Application application = applicationRepository.findWithDetailsByApplicationId(applicationId)
+                .orElseThrow(() -> new ApplicationNotFoundException(applicationId));
+        if (!application.getApplicant().getUserId().equals(applicant.getUserId())) {
+            log.warn("Unauthorized attempt by applicant {} to view application {}", applicant.getUserId(), applicationId);
+            throw new ApplicationNotFoundException(applicationId);
+        }
+        application.getInterviews().size();
+        return application;
     }
 
     private Applicant applicant(String email) {

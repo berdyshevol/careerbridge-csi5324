@@ -4,6 +4,7 @@ import baylor.csi5324.careerbridge.config.SampleDataLoader;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
+import baylor.csi5324.careerbridge.model.Interview;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
@@ -326,6 +327,44 @@ class ApplicationServiceTest {
         assertEquals(today.plusDays(1), applications.get(1).getLastStageChangeDate());
         assertEquals("Closed Job", applications.get(2).getJobPosting().getTitle());
         assertEquals(today.plusDays(5), applications.get(2).getLastStageChangeDate());
+        assertEquals(ApplicationStatus.APPLIED, applications.get(2).getRejectedAtStage());
+        assertEquals(today.plusDays(5), applications.get(2).getRejectionDate());
+    }
+
+    @Test
+    void viewsOwnApplicationWithStageHistoryAndInterviews() {
+        JobPosting posting = save("Data Analyst", PostStatus.PUBLISHED, today.plusDays(14));
+        Application submitted = applicationService.submitApplication(posting.getJobPostId(), JORDAN).application();
+        submitted.setApplicationStatus(ApplicationStatus.INTERVIEW);
+        submitted.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.SCREENING, today.plusDays(2)));
+        submitted.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.INTERVIEW, today.plusDays(5)));
+        Interview interview = new Interview(submitted, 1, today.plusDays(7).atTime(14, 0), "On-site", "1200 Austin Ave");
+        interview.setOutcome("Passed");
+        interview.setNotes("Strong SQL");
+        submitted.getInterviews().add(interview);
+        entityManager.flush();
+        entityManager.clear();
+
+        Application loaded = applicationService.viewApplication(submitted.getApplicationId(), JORDAN);
+
+        assertEquals(3, loaded.getStatusHistory().size());
+        assertEquals(1, loaded.getInterviews().size());
+        assertEquals("On-site", loaded.getInterviews().get(0).getFormat());
+        assertEquals(java.util.List.of("WITHDRAW"), loaded.availableActions());
+    }
+
+    @Test
+    void refusesAnotherApplicantsApplicationAsNotFound() {
+        JobPosting posting = save("Private Role", PostStatus.PUBLISHED, today.plusDays(14));
+        Long id = applicationService.submitApplication(posting.getJobPostId(), JORDAN)
+                .application().getApplicationId();
+
+        assertThrows(ApplicationNotFoundException.class, () -> applicationService.viewApplication(id, SAM));
+    }
+
+    @Test
+    void refusesUnknownApplicationIdAsNotFound() {
+        assertThrows(ApplicationNotFoundException.class, () -> applicationService.viewApplication(-99L, JORDAN));
     }
 
     private void upload(String email, String fileName, byte[] content) {
