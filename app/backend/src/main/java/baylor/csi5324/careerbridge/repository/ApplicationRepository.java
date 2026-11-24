@@ -14,11 +14,11 @@ import java.util.List;
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
-    // Fetches the posting and its organization with each row; the response shows both
-    @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization"})
+    // Fetches the posting, its organization and stage history with each row; the list shows all three (CO-05.1)
+    @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization", "statusHistory"})
     List<Application> findByApplicant(Applicant applicant);
 
-    @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization"})
+    @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization", "statusHistory"})
     List<Application> findByApplicantAndApplicationStatusIn(Applicant applicant,
                                                             Collection<ApplicationStatus> statuses);
 

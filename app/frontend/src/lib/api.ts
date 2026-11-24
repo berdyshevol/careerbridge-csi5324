@@ -1,4 +1,4 @@
-import { STAGES, type DeskApplication } from "./sampleDesk";
+import { STAGES, type ApplicationStage, type DeskApplication, type Stage } from "./sampleDesk";
 import type { Session } from "./session";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -277,9 +277,55 @@ export async function submitApplication(token: string, postingId: number): Promi
   return response.json();
 }
 
-// CO-05.1. An ended application still blocks its posting (A5), so the ids of
-// every posting applied to come back next to the active applications.
-export type Applications = { active: DeskApplication[]; appliedPostingIds: number[] };
+const STAGE_LABELS: Record<string, ApplicationStage> = {
+  APPLIED: "Applied",
+  SCREENING: "Screening",
+  INTERVIEW: "Interview",
+  OFFER: "Offer",
+  HIRED: "Hired",
+  REJECTED: "Rejected",
+  WITHDRAWN: "Withdrawn",
+  OFFER_DECLINED: "Offer Declined",
+};
+
+const ACTIVE_STAGES: ReadonlySet<ApplicationStage> = new Set<ApplicationStage>(STAGES);
+
+function stageLabel(status: string): ApplicationStage {
+  return STAGE_LABELS[status] ?? "Applied";
+}
+
+export type ApplicationSummary = {
+  applicationId: number;
+  postingId: number;
+  title: string;
+  organizationName: string;
+  location: string;
+  employmentType: string;
+  applicationStatus: ApplicationStage;
+  active: boolean;
+  dateApplied: string;
+  lastStageChangeDate: string;
+};
+
+// CO-05.1. Active applications come first from the backend along with the active count;
+// ended ones stay in `all` and `appliedPostingIds` because a posting can be applied to once (A5).
+export type Applications = {
+  all: ApplicationSummary[];
+  active: DeskApplication[];
+  appliedPostingIds: number[];
+  activeApplicationCount: number;
+  applicationLimit: number;
+};
+
+type RawApplicationSummary = Omit<ApplicationSummary, "applicationStatus" | "active"> & {
+  applicationStatus: string;
+};
+
+type RawApplicationsResponse = {
+  applications: RawApplicationSummary[];
+  activeApplicationCount: number;
+  applicationLimit: number;
+};
 
 export async function viewApplications(token: string): Promise<Applications> {
   const response = await backendFetch("/api/applicant/applications", { headers: bearer(token) });
@@ -287,16 +333,36 @@ export async function viewApplications(token: string): Promise<Applications> {
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }
-  const applications: (Omit<DeskApplication, "applicationStatus"> & { applicationStatus: string })[] =
-    await response.json();
+  const body: RawApplicationsResponse = await response.json();
+  const all: ApplicationSummary[] = [];
   const active: DeskApplication[] = [];
-  for (const application of applications) {
-    const stage = STAGES.find((name) => name.toUpperCase() === application.applicationStatus);
-    if (stage) {
-      active.push({ ...application, applicationStatus: stage });
+  const appliedPostingIds: number[] = [];
+  for (const item of body.applications) {
+    const label = stageLabel(item.applicationStatus);
+    const isActive = ACTIVE_STAGES.has(label);
+    const base = {
+      applicationId: item.applicationId,
+      postingId: item.postingId,
+      title: item.title,
+      organizationName: item.organizationName,
+      location: item.location,
+      employmentType: item.employmentType,
+      dateApplied: item.dateApplied,
+      lastStageChangeDate: item.lastStageChangeDate,
+    };
+    all.push({ ...base, applicationStatus: label, active: isActive });
+    if (isActive) {
+      active.push({ ...base, applicationStatus: label as Stage });
     }
+    appliedPostingIds.push(item.postingId);
   }
-  return { active, appliedPostingIds: applications.map((application) => application.postingId) };
+  return {
+    all,
+    active,
+    appliedPostingIds,
+    activeApplicationCount: body.activeApplicationCount,
+    applicationLimit: body.applicationLimit,
+  };
 }
 
 // CO-03.2 details, in the order the form shows them; all but the names may be left empty

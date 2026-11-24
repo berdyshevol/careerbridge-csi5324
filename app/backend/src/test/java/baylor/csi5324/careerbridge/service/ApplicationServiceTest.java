@@ -8,6 +8,7 @@ import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
+import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
 import jakarta.persistence.EntityManager;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
@@ -76,12 +77,12 @@ class ApplicationServiceTest {
         JobPosting posting = save("Platform Engineer", PostStatus.PUBLISHED, today.plusDays(14));
         Applicant sam = applicantRepository.findByEmailIgnoreCase(SAM).orElseThrow();
         upload(SAM, "sam.pdf", "%PDF-1.4 sam".getBytes(StandardCharsets.ISO_8859_1));
-        long jordansBefore = applicationService.viewApplications(JORDAN).size();
+        long jordansBefore = applicationService.viewApplications(JORDAN).applications().size();
 
         applicationService.submitApplication(posting.getJobPostId(), "SAM.RIVERA@example.com");
 
-        assertEquals(jordansBefore, applicationService.viewApplications(JORDAN).size());
-        Application sams = applicationService.viewApplications(SAM).get(0);
+        assertEquals(jordansBefore, applicationService.viewApplications(JORDAN).applications().size());
+        Application sams = applicationService.viewApplications(SAM).applications().get(0);
         assertEquals(sam.getUserId(), sams.getApplicant().getUserId());
         assertEquals("sam.pdf", sams.getResumeSnapshot().getFileName());
         // Jordan can still apply to it: the rule is one application per applicant and posting (A5)
@@ -279,15 +280,52 @@ class ApplicationServiceTest {
                 .filter(a -> a.getJobPosting().getJobPostId().equals(ended.getJobPostId()))
                 .findFirst().orElseThrow().setApplicationStatus(ApplicationStatus.WITHDRAWN);
 
-        var applications = applicationService.viewApplications(JORDAN);
+        var result = applicationService.viewApplications(JORDAN);
 
-        assertEquals(2, applications.size());
-        assertTrue(applications.stream().anyMatch(a -> a.getApplicationStatus() == ApplicationStatus.WITHDRAWN));
+        assertEquals(2, result.applications().size());
+        assertEquals(1, result.activeApplicationCount());
+        assertTrue(result.applications().stream().anyMatch(a -> a.getApplicationStatus() == ApplicationStatus.WITHDRAWN));
     }
 
     @Test
     void listsNothingWhenTheApplicantHasNotApplied() {
-        assertTrue(applicationService.viewApplications(JORDAN).isEmpty());
+        var result = applicationService.viewApplications(JORDAN);
+
+        assertTrue(result.applications().isEmpty());
+        assertEquals(0, result.activeApplicationCount());
+    }
+
+    @Test
+    void ordersActiveApplicationsBeforeClosedOnesAndTracksLastStageChangeDate() {
+        JobPosting closedJob = save("Closed Job", PostStatus.PUBLISHED, today.plusDays(10));
+        JobPosting activeJob = save("Active Job", PostStatus.PUBLISHED, today.plusDays(10));
+        JobPosting newerActiveJob = save("Newer Active Job", PostStatus.PUBLISHED, today.plusDays(10));
+
+        Application closed = applicationService.submitApplication(closedJob.getJobPostId(), JORDAN).application();
+        closed.setApplicationStatus(ApplicationStatus.REJECTED);
+        closed.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.REJECTED, today.plusDays(5)));
+
+        Application active = applicationService.submitApplication(activeJob.getJobPostId(), JORDAN).application();
+        active.setApplicationStatus(ApplicationStatus.SCREENING);
+        active.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.SCREENING, today.plusDays(1)));
+
+        Application newerActive = applicationService.submitApplication(newerActiveJob.getJobPostId(), JORDAN).application();
+        newerActive.setApplicationStatus(ApplicationStatus.OFFER);
+        newerActive.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.OFFER, today.plusDays(3)));
+        entityManager.flush();
+
+        var result = applicationService.viewApplications(JORDAN);
+        var applications = result.applications();
+
+        assertEquals(3, applications.size());
+        assertEquals(2, result.activeApplicationCount());
+        assertEquals(ApplicationService.APPLICATION_LIMIT, result.applicationLimit());
+        assertEquals("Newer Active Job", applications.get(0).getJobPosting().getTitle());
+        assertEquals(today.plusDays(3), applications.get(0).getLastStageChangeDate());
+        assertEquals("Active Job", applications.get(1).getJobPosting().getTitle());
+        assertEquals(today.plusDays(1), applications.get(1).getLastStageChangeDate());
+        assertEquals("Closed Job", applications.get(2).getJobPosting().getTitle());
+        assertEquals(today.plusDays(5), applications.get(2).getLastStageChangeDate());
     }
 
     private void upload(String email, String fileName, byte[] content) {
