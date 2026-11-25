@@ -5,7 +5,8 @@ Applicant Profile and Log In, written in Gherkin (`.feature` files) and run as e
 [playwright-bdd](https://github.com/vitalets/playwright-bdd). Every scenario comes from a use case in
 [use-cases.md](../use-cases.md), its main success scenario or one of its extensions, and names the item
 of the course's minimum scope for the final iteration that it shows. The owner of another use case adds
-its scenarios the same way.
+its scenarios the same way; the `user-scenario` skill (`.claude/skills/user-scenario/`) writes or audits
+them in this order.
 
 The style follows Dave Farley's acceptance tests: a scenario says **what** the system does, in the words
 of the use case, never **how** a screen does it, so it stays true when the screens change.
@@ -74,7 +75,12 @@ Feature: UC-02 Register as Applicant
   - Names are always in quotes (`"Sam"`), so one step definition serves every scenario.
   - Reuse a step from `dsl.ts` before writing a new one; a new step is one line there that calls the driver.
   - `Given` creates the data; each `Then` is an outcome the use case requires, including what must not
-    happen ("no account exists for ..."). One scenario, one outcome.
+    happen ("no account exists for ..."), and may check its postconditions after the last step (the
+    account works when logging in again).
+  - One scenario, one outcome: the main success scenario, or one extension. Extensions that end in the
+    same outcome of the same request may share a scenario, tagged with each (2a and 2c: one refused
+    registration). An extension with several cases (2a: a field missing, malformed, or no last name)
+    shows one; the others are listed under Coverage.
 - Write the wording yourself; do not copy text from course pages.
 - When a use case or a screen changes, update its scenarios, steps or driver in the same pull request.
 
@@ -114,6 +120,7 @@ up on its own, except:
 
 | Use case | Not covered | Why |
 | --- | --- | --- |
+| UC-02 | 2a: a missing field, a malformed email | Shown by "no last name", the same refusal of the same request. |
 | UC-01 | 2a: no posting is open at all | Other postings are always open on a shared database. |
 | UC-01 | A closed posting is not returned | A scenario cannot close a posting yet: only the deadline does (UC-13). |
 | UC-01, UC-02, UC-03 | \*a: the system fails | Needs the backend to fail in the middle of a request. |
