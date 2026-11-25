@@ -1,10 +1,11 @@
 # User scenarios
 
 Acceptance scenarios for UC-01 Search Job Postings, UC-02 Register as Applicant, UC-03 Update
-Applicant Profile, UC-14 Screen Applications (steps 1-2 so far) and Log In, written in Gherkin (`.feature` files) and run as end-to-end tests with
+Applicant Profile, UC-11 Create Job Posting, UC-12 Approve Job Posting, UC-14 Screen Applications (steps
+1-2 so far) and Log In, written in Gherkin (`.feature` files) and run as end-to-end tests with
 [playwright-bdd](https://github.com/vitalets/playwright-bdd). Every scenario comes from a use case in
 [use-cases.md](../use-cases.md), its main success scenario or one of its extensions, and names the item
-of the course's minimum scope for the final iteration that it shows. The owner of another use case adds
+of the course's minimum scope for the final iteration that it shows, where it has one. The owner of another use case adds
 its scenarios the same way; the `user-scenario` skill (`.claude/skills/user-scenario/`) writes or audits
 them in this order.
 
@@ -106,13 +107,22 @@ Feature: UC-02 Register as Applicant
 | [A recruiter logs in and reaches only the recruiter's work](recruiter-1-log-in.feature) | Log In; minimum scope Recruiter 1 |
 | [A recruiter sees every posting of the organization, whatever its status, with its applications at each stage](recruiter-3-view-postings.feature) | UC-14 main success scenario, steps 1-2; minimum scope Recruiter 3 (view own postings), permissions by role |
 | [The administrator logs in and reaches the posting approval queue](administrator-1-log-in.feature) | Log In: a session with the Administrator role, which UC-12 requires (FR-UC12.1); minimum scope Administrator 1 |
+| [A recruiter creates a posting and sends it for approval](recruiter-2-create-posting.feature) | UC-11 main success scenario, steps 1-7; minimum scope Recruiter 2 |
+| [A posting saved as a draft is not sent for approval or shown to the public](recruiter-2-create-posting-draft.feature) | UC-11 extension 3b; minimum scope Recruiter 2 |
+| [A posting with no title is refused and nothing is saved](recruiter-2-create-posting-field-missing.feature) | UC-11 extension 5a; minimum scope Recruiter 2, input validation |
+| [A posting whose deadline is more than 90 days away cannot be sent for approval](recruiter-2-create-posting-deadline-wrong.feature) | UC-11 extension 5b; minimum scope Recruiter 2, input validation |
+| [The administrator approves a posting and it opens on the job board](administrator-approve-posting.feature) | UC-12 main success scenario, steps 1-8 |
+| [The administrator returns a posting with a comment and it stays off the job board](administrator-return-posting.feature) | UC-12 extension 5a |
+| [The administrator rejects a posting, and it cannot be sent for approval again](administrator-reject-posting.feature) | UC-12 extension 5b |
 
 ## Coverage
 
 **Minimum scope.** Of the items that belong to these use cases, every one has a scenario: Applicant 1
 (register), 2 (log in), 3 (view and update own profile), 4 (browse and search jobs), 5 (view a job's
 details) and 7 (the resume that goes with an application, uploaded in UC-03), Recruiter 1 and
-Administrator 1 (log in), and the viewing half of Recruiter 3 (own postings, UC-14 step 2). The system-wide requirements shown are input validation, meaningful errors,
+Administrator 1 (log in), Recruiter 2 (create a job posting), and the viewing half of Recruiter 3 (own
+postings, UC-14 step 2). Approving a posting (UC-12) is not an item of the minimum scope, so its
+scenarios carry no scope tag. The system-wide requirements shown are input validation, meaningful errors,
 authentication and permissions by role. Applicant 6, 8 and 9 and the other recruiter and administrator
 items belong to UC-04 to UC-15.
 
@@ -127,6 +137,16 @@ up on its own, except:
 | UC-01, UC-02, UC-03 | \*a: the system fails | Needs the backend to fail in the middle of a request. |
 | UC-01 | No applicant or application data on public pages (special requirement) | A check that something is absent from a page proves little; left to review. |
 | Log In | A recruiter in Pending Approval sees only the request's status | Needs UC-08, not on main yet. |
+| UC-11 | \*a, 2a: the recruiter's memberships | Needs Organization Membership (UC-08 to UC-10), not on main yet. |
+| UC-11 | 3a: start from an earlier posting | Not built. |
+| UC-11 | 5a: other missing or invalid fields | Shown by "no title", the same refusal of the same request. |
+| UC-11 | 5b: a deadline in the past | The form does not offer a past date; shown by a deadline more than 90 days away. |
+| UC-11 | 6a: revise a returned posting | Built in #123, not on main yet. |
+| UC-12 | 2a: the queue is empty | Other postings are always waiting on a shared database. |
+| UC-12 | 6a: the deadline passed while the posting waited | A posting cannot be sent for approval with a deadline that is about to pass. |
+| UC-12 | 6b: the organization or recruiter is no longer active | Needs Organization Membership, not on main yet. |
+| UC-12 | 6c: another administrator decided first | There is only one administrator account. |
+| UC-13 | Expire Job Posting | A scenario cannot move a deadline into the past; `e2e/expire-job-posting.spec.ts` checks expiry against the sample data. |
 | UC-14 | Steps 3-7 and extensions 2a, 3a, 5a-5d, 6a | Not built yet: only steps 1-2 are (SCRUM-195). |
 | UC-14 | \*a: a posting of an organization the recruiter is not a member of | Every recruiter acts for one stand-in organization until memberships exist (SCRUM-198). Step 2 already checks that another organization's posting is not listed. |
 | UC-14 | 7a: the Notification Service is unavailable | Needs the backend to fail in the middle of a request. |
