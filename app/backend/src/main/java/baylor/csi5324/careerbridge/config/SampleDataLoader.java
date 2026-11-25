@@ -6,6 +6,7 @@ import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.Interview;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.Offer;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.Resume;
@@ -21,6 +22,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -64,6 +66,7 @@ public class SampleDataLoader implements CommandLineRunner {
     }
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
         if (jobPostingRepository.count() > 0) {
             // A database loaded before resumes or stage histories existed: keep Jordan's demo desk complete
@@ -74,12 +77,20 @@ public class SampleDataLoader implements CommandLineRunner {
                 }
                 for (Application application : applicationRepository.findByApplicant(jordan)) {
                     ApplicationStatus status = application.getApplicationStatus();
+                    boolean updated = false;
                     if (application.getStatusHistory().size() <= 1
                             && (status == ApplicationStatus.SCREENING
                                     || status == ApplicationStatus.INTERVIEW
                                     || status == ApplicationStatus.OFFER)) {
                         seedStageHistoryAndInterviews(
                                 application, application.getDateApplied(), status);
+                        updated = true;
+                    }
+                    if (status == ApplicationStatus.OFFER && application.getOffer() == null) {
+                        application.setOffer(sampleOffer(application, application.getDateApplied()));
+                        updated = true;
+                    }
+                    if (updated) {
                         applicationRepository.save(application);
                     }
                 }
@@ -134,7 +145,21 @@ public class SampleDataLoader implements CommandLineRunner {
         if (status == ApplicationStatus.OFFER) {
             application.getStatusHistory().add(new StatusHistoryEntry(
                     ApplicationStatus.OFFER, appliedDate.plusDays(16)));
+            if (application.getOffer() == null) {
+                application.setOffer(sampleOffer(application, appliedDate));
+            }
         }
+    }
+
+    private static Offer sampleOffer(Application application, LocalDate appliedDate) {
+        return new Offer(
+                application,
+                appliedDate.plusDays(16),
+                LocalDate.of(2027, 7, 19),
+                "$54,000 USD per year",
+                "Full-time on-site in Waco. Health, dental, and 401(k) match from day one.",
+                LocalDate.of(2027, 6, 30),
+                "Waco_Health_Offer_Letter.pdf");
     }
 
     private static String read(String file) throws Exception {

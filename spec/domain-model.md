@@ -28,7 +28,7 @@ Figure 25; classes and associations that are not in the figure are listed in sec
 | Organization Membership | status, membershipId, requested at, approved at |
 | Organization | organizationId, name, organization Status, website, description, timeZone |
 | Job Posting | jobPostId, title, description, location, applicationDeadline, postStatus, date posted, numberOfOpenings, salaryRange, approvalStatus, approvedBy, approvedAt, reviewComment, employmentType, jobRequirements, closingReason, closedAt |
-| Offer | offerId, dateExtended, expirationDate, status, responseDate, salary |
+| Offer | offerId, dateExtended, startDate, salary, terms, expirationDate, offerLetterFileName, status, responseDate, revision |
 | Interview | interviewId, roundNumber, scheduledTime, format, location, outcome, notes |
 | Notification | notificationId, type, message, sentAt, status |
 
@@ -71,10 +71,10 @@ Multiplicities are read as "one A is linked to … B".
 
 ### 5.4 Differences from Figure 25
 
-The figure was drawn for Iteration 1 and has not been redrawn. The text above corrects it in ten
+The figure was drawn for Iteration 1 and has not been redrawn. The text above corrects it in eleven
 places: five needed for UC-04 Apply for Job, one for UC-12 Approve Job Posting, two for UC-13
-Expire Job Posting, one for UC-03 Update Applicant Profile, and one for UC-05 Track Application
-Status:
+Expire Job Posting, one for UC-03 Update Applicant Profile, one for UC-05 Track Application
+Status, and one for UC-07 Respond to Job Offer:
 
 | # | Figure 25 | Current model | Why |
 | --- | --- | --- | --- |
@@ -88,6 +88,7 @@ Status:
 | 8 | Job Posting does not record how or when it closed | Job Posting has closingReason and closedAt | UC-13 closes an overdue posting with the reason Expired and the time it closed (FR-UC13.3). |
 | 9 | Applicant has no attributes of its own | Applicant has location, headline, skills, education and work experience | UC-03 step 2 and FR-UC03.1: the applicant views and edits these profile details, so the model keeps them. |
 | 10 | Interview has no round number, format, or location | Interview has roundNumber, format, and location | UC-05 step 4, FR-UC05.3, A13, and FR-UC14.7 display and schedule each interview round's number, format, and location. |
+| 11 | Offer has no start date, other terms, offer letter, or revision | Offer has startDate, terms, offerLetterFileName, and revision | UC-07 step 2 and FR-UC07.1 show start date, terms, and optional offer letter; FR-UC07.11 (ext 6b) detects revised terms before recording a response. |
 
 Two more things in the figure are not carried into the text:
 
@@ -107,7 +108,7 @@ are left for the iteration that implements the use cases named.
 | Organization | No industry, headquarters location, size | UC-08 step 3 |
 | Organization Membership | No role, justification, denial reason, review flag; no link to the deciding Administrator | CO-09.1; UC-10; A17 |
 | Job Posting | approvedBy is an attribute, not an association to Administrator; approvalStatus repeats postStatus; no submission date | CO-12.1; UC-12; Close Job Posting |
-| Offer | No start date, other terms, offer letter | UC-15 postconditions; CO-07.1 |
+| Offer | Offer letter stores filename only until UC-15 adds PDF upload | UC-15 postconditions |
 | Interview | No interviewers; the limit of two rounds (A13) is not in the multiplicity | FR-UC14.7; CO-14.4 |
 | Status History Entry | No link to the Recruiter who made the change | CO-14.2, CO-14.3 |
 

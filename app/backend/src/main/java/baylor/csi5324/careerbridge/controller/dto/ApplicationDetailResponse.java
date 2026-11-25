@@ -13,12 +13,21 @@ public record ApplicationDetailResponse(Long applicationId, Long postingId, Stri
                                         LocalDate dateApplied,
                                         List<StatusHistoryEntryResponse> statusHistory,
                                         List<InterviewSummaryResponse> interviews,
+                                        OfferSummaryResponse offer,
                                         String rejectionReason, ApplicationStatus rejectedAtStage,
                                         LocalDate rejectionDate, Instant withdrawnAt,
                                         List<String> availableActions) {
 
     public static ApplicationDetailResponse from(Application application) {
+        return from(application, Instant.now());
+    }
+
+    public static ApplicationDetailResponse from(Application application, Instant now) {
         var posting = application.getJobPosting();
+        var zoneId = posting.getOrganization().getZoneId();
+        OfferSummaryResponse offerSummary = application.getOffer() == null
+                ? null
+                : OfferSummaryResponse.from(application.getOffer(), now, zoneId);
         return new ApplicationDetailResponse(
                 application.getApplicationId(),
                 posting.getJobPostId(),
@@ -30,10 +39,11 @@ public record ApplicationDetailResponse(Long applicationId, Long postingId, Stri
                 application.getDateApplied(),
                 application.getStatusHistory().stream().map(StatusHistoryEntryResponse::from).toList(),
                 application.getInterviews().stream().map(InterviewSummaryResponse::from).toList(),
+                offerSummary,
                 application.getRejectionReason(),
                 application.getRejectedAtStage(),
                 application.getRejectionDate(),
                 application.getWithdrawnAt(),
-                application.availableActions());
+                application.availableActions(now));
     }
 }

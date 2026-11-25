@@ -5,6 +5,8 @@ import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.Interview;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.Offer;
+import baylor.csi5324.careerbridge.model.OfferStatus;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
 import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
@@ -12,6 +14,8 @@ import baylor.csi5324.careerbridge.service.ApplicantApplications;
 import baylor.csi5324.careerbridge.service.ApplicationActionRefusedException;
 import baylor.csi5324.careerbridge.service.ApplicationNotFoundException;
 import baylor.csi5324.careerbridge.service.ApplicationService;
+import baylor.csi5324.careerbridge.service.OfferResponseResult;
+import baylor.csi5324.careerbridge.service.OfferRevisedException;
 import baylor.csi5324.careerbridge.service.WithdrawalPrompt;
 import baylor.csi5324.careerbridge.service.WithdrawnApplication;
 import org.junit.jupiter.api.Test;
@@ -19,9 +23,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.mockito.Mockito.mock;
@@ -34,9 +40,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class ApplicantApplicationsControllerTest {
 
+    private static final Instant NOW = Instant.parse("2026-10-30T15:00:00Z");
     private final ApplicationService applicationService = mock(ApplicationService.class);
     private final MockMvc mockMvc = MockMvcBuilders.standaloneSetup(
-            new ApplicantApplicationsController(applicationService)).build();
+            new ApplicantApplicationsController(applicationService, Clock.fixed(NOW, ZoneOffset.UTC))).build();
 
     @Test
     void returnsApplicationsWithDatesAndActiveApplicationCount() throws Exception {
@@ -167,5 +174,66 @@ class ApplicantApplicationsControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.currentStage").value("OFFER"))
                 .andExpect(jsonPath("$.message").value("This application is at the Offer stage."));
+    }
+
+    @Test
+    void returnsOfferDetailsAcceptsDeclinesAndReportsRevisedTerms() throws Exception {
+        JobPosting posting = new JobPosting();
+        posting.setJobPostId(4L);
+        posting.setTitle("Data Analyst");
+        posting.setOrganization(new Organization("Brazos Health"));
+        posting.setLocation("On-site");
+        posting.setEmploymentType("Full-time");
+
+        Application offered = new Application(new Applicant(), posting,
+                new ResumeSnapshot("cv.pdf", "application/pdf", 1024L), LocalDate.of(2026, 10, 1));
+        offered.setApplicationStatus(ApplicationStatus.OFFER);
+        Offer offer = new Offer(offered, LocalDate.of(2026, 10, 28), LocalDate.of(2026, 12, 7),
+                "68,000 USD per year", "Hybrid after 90 days.", LocalDate.of(2026, 11, 5),
+                "Brazos_Health_Offer_Letter.pdf");
+        offered.setOffer(offer);
+        when(applicationService.viewOffer(15L, "jordan.lee@example.com")).thenReturn(offered);
+
+        mockMvc.perform(get("/api/applicant/applications/15/offer").principal(() -> "jordan.lee@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Data Analyst"))
+                .andExpect(jsonPath("$.salary").value("68,000 USD per year"))
+                .andExpect(jsonPath("$.expirationDate").value("2026-11-05"))
+                .andExpect(jsonPath("$.canRespond").value(true));
+
+        Application hired = new Application(new Applicant(), posting,
+                new ResumeSnapshot("cv.pdf", "application/pdf", 1024L), LocalDate.of(2026, 10, 1));
+        hired.setApplicationStatus(ApplicationStatus.HIRED);
+        Offer acceptedOffer = new Offer(hired, LocalDate.of(2026, 10, 28), LocalDate.of(2026, 12, 7),
+                "68,000 USD per year", "Hybrid after 90 days.", LocalDate.of(2026, 11, 5), null);
+        acceptedOffer.setStatus(OfferStatus.ACCEPTED);
+        acceptedOffer.setResponseDate(LocalDate.of(2026, 10, 30));
+        hired.setOffer(acceptedOffer);
+        when(applicationService.acceptOffer(15L, "jordan.lee@example.com", 1))
+                .thenReturn(new OfferResponseResult(hired, 2, NOW));
+
+        mockMvc.perform(post("/api/applicant/applications/15/offer/accept")
+                        .principal(() -> "jordan.lee@example.com")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"expectedRevision\":1}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.application.applicationStatus").value("HIRED"))
+                .andExpect(jsonPath("$.application.offer.status").value("ACCEPTED"))
+                .andExpect(jsonPath("$.activeApplicationCount").value(2));
+
+        Offer revised = new Offer(offered, LocalDate.of(2026, 10, 28), LocalDate.of(2026, 12, 14),
+                "72,000 USD per year", "Updated terms.", LocalDate.of(2026, 11, 10), null);
+        revised.setRevision(2);
+        when(applicationService.declineOffer(15L, "jordan.lee@example.com", "Accepted another", 1))
+                .thenThrow(new OfferRevisedException(revised, NOW, ZoneOffset.UTC));
+
+        mockMvc.perform(post("/api/applicant/applications/15/offer/decline")
+                        .principal(() -> "jordan.lee@example.com")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Accepted another\",\"expectedRevision\":1}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("OFFER_REVISED"))
+                .andExpect(jsonPath("$.offer.salary").value("72,000 USD per year"))
+                .andExpect(jsonPath("$.offer.revision").value(2));
     }
 }

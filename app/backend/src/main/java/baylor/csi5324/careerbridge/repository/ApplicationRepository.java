@@ -20,10 +20,10 @@ import java.util.Optional;
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
     // Fetches the posting, its organization and stage history with each row; the list shows all three (CO-05.1)
-    @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization", "statusHistory"})
+    @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization", "statusHistory", "offer"})
     List<Application> findByApplicant(Applicant applicant);
 
-    @EntityGraph(attributePaths = {"applicant", "jobPosting", "jobPosting.organization", "statusHistory"})
+    @EntityGraph(attributePaths = {"applicant", "jobPosting", "jobPosting.organization", "statusHistory", "offer"})
     Optional<Application> findWithDetailsByApplicationId(Long applicationId);
 
     // Row lock without outer-join fetch so PostgreSQL accepts FOR UPDATE during state transitions (CO-06.2, CO-07.2)
