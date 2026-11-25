@@ -18,9 +18,9 @@ At least one test case per implemented feature, in the template's columns; the A
 left empty until the case has run. Each member writes and runs the cases of their own use cases.
 
 **UC-11 to UC-13 and the administrator's list of users (TC-ADM).** Written and reviewed by Zeba Tusnia Towshi. Claude Code (Anthropic) helped
-draft the cases and match each one to its automated test. All cases were run on November 25, 2026;
-the Actual Result names the test that checked it. Some cases test code that is still in a pull request
-(#121 to #129); they are rerun once it merges.
+draft the cases and match each one to its automated test. All cases were rerun on November 25, 2026,
+on `main` after #121 to #133 merged (JUnit 265, Vitest 316, Playwright 150 passed); the Actual Result
+names the test that checked it.
 
 | Test Case ID | Assigned Tester | Scenario/Condition | Test Inputs | Expected Result | Actual Result | Test Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -34,7 +34,7 @@ the Actual Result names the test that checked it. Some cases test code that is s
 | TC-11-08 | Zeba Tusnia Towshi | UC-11 ext. 5b: deadline outside 1 to 90 days at submission | Drafts with deadlines today, 91 days and 90 days away | Today and 91 days refused with the allowed range; 90 days submitted | As expected (`JobPostingApprovalTest.deadlineMustBeBetweenOneAndNinetyDaysAway`) | Pass |
 | TC-11-09 | Zeba Tusnia Towshi | UC-11 ext. 6a: a Returned posting is resubmitted | Returned posting with the Administrator's comment | Pending Approval again; the previous decision and comment cleared | As expected (`JobPostingApprovalTest.returnedPostingCanBeResubmitted`, `resubmittingClearsPreviousReviewInformation`) | Pass |
 | TC-11-10 | Zeba Tusnia Towshi | UC-11 steps 4–6 after UC-12 ext. 5b: a Rejected posting cannot be resubmitted | Rejected posting | Refused with 409 naming its status | As expected (`JobPostingApprovalTest.rejectedPostingCannotBeResubmitted`) | Pass |
-| TC-11-11 | Zeba Tusnia Towshi | UC-11 ext. \*a: the recruiter is not an active member of the organization (SD-4, SD-5) | Riley, who acts for Waco Health Partners, creates, submits, edits and closes postings of Brazos Analytics | Each refused with 403; nothing changes | As expected (`JobPostingApprovalTest.aRecruiterActsOnlyForTheOrganizationTheyAreAMemberOf`; membership from the stand-in, SCRUM-220) | Pass |
+| TC-11-11 | Zeba Tusnia Towshi | UC-11 ext. \*a: the recruiter is not an active member of the organization (SD-4, SD-5) | Riley, an Active member of Brazos Analytics and Waco Health Partners only, creates, submits, edits and closes postings of Lone Star Logistics | Each refused with 403; nothing changes | As expected (`JobPostingApprovalTest.aRecruiterActsOnlyForTheOrganizationTheyAreAMemberOf`; memberships of UC-08 to UC-10) | Pass |
 | TC-11-12 | Zeba Tusnia Towshi | CO-11.1: a new posting records its recruiter | Logged-in recruiter riley.chen@example.com creates a valid posting | The saved posting is linked to that recruiter; an account that is not a recruiter is refused with 403 | As expected (`JobPostingServiceTest.createPostingLinksTheRecruiterWhoCreatedIt`, `createPostingRefusesAnAccountThatIsNotARecruiter`) | Pass |
 | TC-11-13 | Zeba Tusnia Towshi | CO-11.1: another recruiter submits the posting | Draft created by Riley Chen, submitted as other@example.com; a sample posting with no recruiter | Refused with 403 and the reason; the posting stays Draft | As expected (`JobPostingApprovalTest.anotherRecruiterCannotSubmitThePosting`, `aPostingNoRecruiterCreatedCannotBeSubmitted`; `JobPostingControllerTest.anotherRecruitersPostingIsForbiddenWithItsReason`) | Pass |
 | TC-11-14 | Zeba Tusnia Towshi | UC-11 ext. 3b: the recruiter reopens and changes their draft | Draft by Riley Chen; new title, location Remote, 3 openings | Saved; still a Draft of the same organization | As expected (`JobPostingApprovalTest.aDraftIsReopenedAndChangedByItsRecruiter`) | Pass |
