@@ -70,61 +70,63 @@ class OfferAcceptanceConcurrencyTest {
         Application firstApp = saveOfferApplication(first, posting);
         Application secondApp = saveOfferApplication(second, posting);
 
-        CyclicBarrier startTogether = new CyclicBarrier(2);
-        AtomicInteger succeeded = new AtomicInteger();
-        AtomicInteger refused = new AtomicInteger();
-
-        Callable<Void> taskA = () -> {
-            startTogether.await();
-            try {
-                applicationService.acceptOffer(firstApp.getApplicationId(), first.getEmail(), 1);
-                succeeded.incrementAndGet();
-            } catch (ApplicationActionRefusedException expected) {
-                refused.incrementAndGet();
-            }
-            return null;
-        };
-        Callable<Void> taskB = () -> {
-            startTogether.await();
-            try {
-                applicationService.acceptOffer(secondApp.getApplicationId(), second.getEmail(), 1);
-                succeeded.incrementAndGet();
-            } catch (ApplicationActionRefusedException expected) {
-                refused.incrementAndGet();
-            }
-            return null;
-        };
-
-        ExecutorService pool = Executors.newFixedThreadPool(2);
         try {
-            List<Future<Void>> futures = pool.invokeAll(List.of(taskA, taskB));
-            for (Future<Void> future : futures) {
-                future.get();
+            CyclicBarrier startTogether = new CyclicBarrier(2);
+            AtomicInteger succeeded = new AtomicInteger();
+            AtomicInteger refused = new AtomicInteger();
+
+            Callable<Void> taskA = () -> {
+                startTogether.await();
+                try {
+                    applicationService.acceptOffer(firstApp.getApplicationId(), first.getEmail(), 1);
+                    succeeded.incrementAndGet();
+                } catch (ApplicationActionRefusedException expected) {
+                    refused.incrementAndGet();
+                }
+                return null;
+            };
+            Callable<Void> taskB = () -> {
+                startTogether.await();
+                try {
+                    applicationService.acceptOffer(secondApp.getApplicationId(), second.getEmail(), 1);
+                    succeeded.incrementAndGet();
+                } catch (ApplicationActionRefusedException expected) {
+                    refused.incrementAndGet();
+                }
+                return null;
+            };
+
+            ExecutorService pool = Executors.newFixedThreadPool(2);
+            try {
+                List<Future<Void>> futures = pool.invokeAll(List.of(taskA, taskB));
+                for (Future<Void> future : futures) {
+                    future.get();
+                }
+            } finally {
+                pool.shutdownNow();
             }
+
+            assertEquals(1, succeeded.get());
+            assertEquals(1, refused.get());
+
+            JobPosting finalPosting = jobPostingRepository.findById(posting.getJobPostId()).orElseThrow();
+            assertEquals(PostStatus.CLOSED, finalPosting.getPostStatus());
+            assertEquals("Filled", finalPosting.getClosingReason());
+            assertNotNull(finalPosting.getClosedAt());
+            assertEquals(1, applicationRepository.countByJobPostingAndApplicationStatus(finalPosting, ApplicationStatus.HIRED));
+
+            Application a = applicationRepository.findWithDetailsByApplicationId(firstApp.getApplicationId()).orElseThrow();
+            Application b = applicationRepository.findWithDetailsByApplicationId(secondApp.getApplicationId()).orElseThrow();
+            Application loser = a.getApplicationStatus() == ApplicationStatus.HIRED ? b : a;
+            assertEquals(ApplicationStatus.REJECTED, loser.getApplicationStatus());
+            assertEquals("Posting closed", loser.getRejectionReason());
+            assertEquals(OfferStatus.RESCINDED, loser.getOffer().getStatus());
         } finally {
-            pool.shutdownNow();
+            applicationRepository.deleteAllById(List.of(firstApp.getApplicationId(), secondApp.getApplicationId()));
+            jobPostingRepository.deleteById(posting.getJobPostId());
+            organizationRepository.deleteById(org.getOrganizationId());
+            applicantRepository.deleteAllById(List.of(first.getUserId(), second.getUserId()));
         }
-
-        assertEquals(1, succeeded.get());
-        assertEquals(1, refused.get());
-
-        JobPosting finalPosting = jobPostingRepository.findById(posting.getJobPostId()).orElseThrow();
-        assertEquals(PostStatus.CLOSED, finalPosting.getPostStatus());
-        assertEquals("Filled", finalPosting.getClosingReason());
-        assertNotNull(finalPosting.getClosedAt());
-        assertEquals(1, applicationRepository.countByJobPostingAndApplicationStatus(finalPosting, ApplicationStatus.HIRED));
-
-        Application a = applicationRepository.findWithDetailsByApplicationId(firstApp.getApplicationId()).orElseThrow();
-        Application b = applicationRepository.findWithDetailsByApplicationId(secondApp.getApplicationId()).orElseThrow();
-        Application loser = a.getApplicationStatus() == ApplicationStatus.HIRED ? b : a;
-        assertEquals(ApplicationStatus.REJECTED, loser.getApplicationStatus());
-        assertEquals("Posting closed", loser.getRejectionReason());
-        assertEquals(OfferStatus.RESCINDED, loser.getOffer().getStatus());
-
-        applicationRepository.deleteAllById(List.of(firstApp.getApplicationId(), secondApp.getApplicationId()));
-        jobPostingRepository.deleteById(posting.getJobPostId());
-        organizationRepository.deleteById(org.getOrganizationId());
-        applicantRepository.deleteAllById(List.of(first.getUserId(), second.getUserId()));
     }
 
     private Applicant saveApplicant(String email) {
