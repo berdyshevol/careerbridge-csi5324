@@ -1,4 +1,4 @@
-# Anyone searches the open jobs
+# A visitor finds the open postings that match a keyword
 
 **Use case:** UC-01 Search Job Postings: main success scenario, steps 1–2  
 **Minimum scope:** Applicant 4 (browse and search jobs)
@@ -6,10 +6,14 @@
 ## Scenario
 
 ```gherkin
-Given a visitor on the job board
-Then only open postings are listed: "Backend Developer" is there; "QA Engineer" (closed), "Product Designer" (pending) and "Marketing Coordinator" (draft) are not
-When they type "analyst" in "Keywords" and select "Search"
-Then "Data Analyst Intern" and "Logistics Analyst" are listed and "Backend Developer" is not
-When they clear "Keywords", choose "On-site" in "Location" and "Internship" in "Employment type", and select "Search"
-Then "Data Analyst Intern" is listed and "IT Support Specialist" is not
+Feature: UC-01 Search Job Postings
+
+  Scenario: A visitor finds the open postings that match a keyword
+    Given open postings "Data Analyst Intern" and "Backend Developer"
+    And a closed posting "Logistics Analyst"
+    And a posting "Research Analyst" that is waiting for approval
+    When a visitor who is not logged in searches the open postings for "analyst"
+    Then "Data Analyst Intern" is returned with its title, organization, location, employment type, application deadline, description, requirements and number of openings
+    And "Backend Developer" is not returned, because it does not match
+    And neither "Logistics Analyst" nor "Research Analyst" is returned, because only open postings are public
 ```
