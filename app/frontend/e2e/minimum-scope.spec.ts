@@ -1,6 +1,6 @@
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { ACCOUNTS, logIn, registerNewApplicant } from "./accounts";
+import { ACCOUNTS, logIn, logOut, registerNewApplicant } from "./accounts";
 
 // The final iteration's minimum scope, one check per item: Applicant A1–A9, Recruiter R1–R7,
 // Administrator D1–D3. Each drives the UI against the real backend and database. An item that is not
@@ -65,13 +65,15 @@ test.describe("Applicant", () => {
     await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: "Submit application" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Application submitted" })).toBeVisible();
+    // No screen shows the copy yet; once R6 (SCRUM-196) shows it to the recruiter, check its file name there
+    await expect(page.getByText(/A copy of your resume went with it/)).toBeVisible();
   });
 
   test("A8 · given an applicant with applications, when they open Applications, then each is listed with its current stage", async ({ page }) => {
     await logIn(page, ACCOUNTS.applicant, "/applications");
     await expect(page.getByRole("heading", { level: 1, name: "Applications" })).toBeVisible();
-    await expect(page.getByText("Backend Developer")).toBeVisible();
-    await expect(page.getByText("of 5 active")).toBeVisible();
+    // Jordan's sample application to Backend Developer is at the Interview stage (applications.csv)
+    await expect(page.getByRole("listitem").filter({ hasText: "Backend Developer" })).toContainText("Interview");
   });
 
   test("A9 · given an active application, when the applicant withdraws it, then it is Withdrawn", async ({ page }, testInfo) => {
@@ -99,10 +101,19 @@ test.describe("Recruiter", () => {
     const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     await logIn(page, ACCOUNTS.recruiter, "/recruiter/postings/new");
     await page.getByLabel("Job title").fill(title);
+    await page.getByLabel("Job description").fill("Check the minimum scope end to end.");
+    await page.getByLabel("Job requirements").fill("Playwright, patience");
     await page.getByLabel("Application deadline").fill(deadline);
     await page.getByRole("button", { name: "Save draft" }).click();
     await page.getByRole("button", { name: "Submit for approval" }).click();
     await expect(page.getByText("Submitted for administrator review!")).toBeVisible();
+
+    // Saved with its details: the administrator's queue shows them
+    await logOut(page);
+    await logIn(page, ACCOUNTS.administrator, "/admin/postings");
+    const posting = page.getByRole("article").filter({ hasText: title });
+    await expect(posting).toContainText("Check the minimum scope end to end.");
+    await expect(posting).toContainText("Playwright, patience");
   });
 
   // SCRUM-195 (open as #110) lists them; editing is SCRUM-131 (UC-11), and the spec excludes editing a
