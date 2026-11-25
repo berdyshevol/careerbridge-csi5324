@@ -54,6 +54,8 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC14.1:** The system shall present every posting of the organization the Recruiter is acting for, each with the number of applications at each stage. (A10; UC-14 steps 1–2)
 
+  *Interim (SCRUM-195):* until UC-09's Active membership is merged (SCRUM-198), one organization named in the setting `careerbridge.standin.recruiter-organization` (environment variable `RECRUITER_ORGANIZATION`) stands for every Recruiter. With no name set, or one that matches no organization, the Recruiter acts for none and sees no postings. SCRUM-198 removes the setting.
+
 - **FR-UC14.2:** The system shall present an application's resume copy, the applicant's profile details and the application's stage history, and nothing about the applicant's other applications. (A6, BR-15; UC14 steps 3–4)
 
 - **FR-UC14.3:** The system shall let the Recruiter add an optional internal note and advance an application only to the next stage of the fixed pipeline, and shall record the new stage, the date and the Recruiter. (BR-8; UC-14 steps 5–6)
@@ -202,6 +204,8 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC11.8:** The system shall show a Returned posting with the Administrator's comments and let a recruiter of the organization revise and resubmit it. (UC-11 extension 6a; UC-12 extension 5a)
 
+  *Interim (SCRUM-212):* until organization memberships exist, only the recruiter who created the posting may revise and resubmit it (CO-11.1, CO-11.2).
+
 #### UC-12 Approve Job Posting
 
 - **FR-UC12.1:** The system shall allow only authenticated Administrators to access the job-posting approval queue. (UC-12 Preconditions)
@@ -237,6 +241,14 @@ The requirements below come from the use cases in section 4.2. Each functional r
 - **FR-UC13.7:** The system shall notify the owning organization's recruiters when a posting expires and include the number of still-active applications. (UC-13 step 4)
 
 - **FR-UC13.8:** The system shall log each expiration run, including start time, postings closed, and errors. (UC-13 step 5)
+
+- **FR-UC13.9:** The system shall let the Recruiter who created a Published posting close it before its deadline, with reason Closed by recruiter: the posting leaves public listings and accepts no new applications, and applications already submitted keep their stages. It shall refuse a posting that is not Published, that is past its deadline, or that another recruiter created. (A3; UC-13 extension \*a)
+
+#### Administration
+
+These are not part of a use case; they come from the minimum scope of the final iteration.
+
+- **FR-ADM.1:** The system shall let the Administrator view every registered user with their name, email address, role and account status, and the number of users in each role.
 
 ### 3.2 Non-functional Requirements
 
@@ -361,6 +373,10 @@ The requirements below come from the use cases in section 4.2. Each functional r
 - **NFR-UC13.4 (Reliability):** If the Notification Service is unavailable, no recorded posting closure shall be lost, and every held notice is sent within 15 minutes after the service is available again.
 
 - **NFR-UC13.5 (Correctness):** A posting shall stop accepting applications at 23:59 on its deadline date in the organization's time zone, and shall leave public listings no more than 15 minutes later (one run interval).
+
+#### Administration
+
+- **NFR-ADM.1 (Security):** Only users with the Administrator role shall see the list of users. It shall never show a password or log-in details.
 
 ### 3.3 Requirements Clarifications
 
@@ -501,8 +517,8 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC11.4|UC-11 step 5, extension 5b|submitJobPosting(organizationId, postingData)|CO-11.1|
 |FR-UC11.5|UC-11 step 6|submitJobPosting(organizationId, postingData)|CO-11.1|
 |FR-UC11.6|UC-11 Success Guarantee|submitJobPosting(organizationId, postingData)|CO-11.1|
-|FR-UC11.7|UC-11 extension 3b|none for UC-11 ext. 3b|none for UC-11 ext. 3b|
-|FR-UC11.8|UC-11 extension 6a; UC-12<br/>extension 5a|submitJobPosting(organizationId, postingData);<br/>none for UC-12 ext. 5a|CO-11.1; none for UC-12 ext.<br/>5a|
+|FR-UC11.7|UC-11 extension 3b|openPostingForEdit(postingId) (query),<br/>updatePosting(postingId, postingData)|CO-11.2|
+|FR-UC11.8|UC-11 extension 6a; UC-12<br/>extension 5a|openPostingForEdit(postingId) (query),<br/>updatePosting(postingId, postingData),<br/>submitJobPosting(organizationId, postingData)|CO-11.2, CO-11.1|
 |FR-UC12.1|UC-12 Preconditions|openPostingApprovalQueue()|query (no contract)|
 |FR-UC12.2|UC-12 step 2|openPostingApprovalQueue()|query (no contract)|
 |FR-UC12.3|UC-12 step 4|selectPosting(postingId)|query (no contract)|
@@ -519,6 +535,8 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC13.6|UC-13 extension 3a|runExpirationJob()|CO-13.1|
 |FR-UC13.7|UC-13 step 4|runExpirationJob()|CO-13.1|
 |FR-UC13.8|UC-13 step 5|runExpirationJob()|CO-13.1|
+|FR-UC13.9|UC-13 extension \*a|closePosting(postingId)|CO-13.2|
+|FR-ADM.1|Minimum scope, Administrator 2|viewUsers()|query (no contract)|
 |FR-UC14.1|UC-14 steps 1–2|listPostings()|query (no contract)|
 |FR-UC14.2|UC-14 steps 3–4|reviewApplication(applicationId)|CO-14.1|
 |FR-UC14.3|UC-14 steps 5–6|advanceApplication(applicationId, note)|CO-14.2|

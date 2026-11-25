@@ -1,5 +1,5 @@
-import { STAGES, type DeskApplication } from "./sampleDesk";
-import type { Session } from "./session";
+import { STAGES, type ApplicationStage, type DeskApplication, type Stage } from "./sampleDesk";
+import type { Role, Session } from "./session";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
@@ -232,17 +232,45 @@ export async function createPosting(token: string, posting: NewPosting): Promise
   return response.json();
 }
 
+// The details of a posting being changed: those of a new one but its organization, which stays
+export type PostingChanges = Omit<NewPosting, "organizationId">;
+
+// UC-11 extensions 3b and 6a: the recruiter's own Draft or Returned posting, with the Administrator's comment
+export async function openPostingForEdit(token: string, postingId: number): Promise<JobPosting> {
+  const response = await backendFetch(`/api/postings/${postingId}/edit`, { headers: bearer(token) });
+  if (response.status === 404) {
+    throw new PostingRejected("There is no posting at this address.");
+  }
+  return postingAnswer(response, [403, 409]);
+}
+
+// CO-11.2: saves the changes; the posting keeps its status until it is submitted
+export async function updatePosting(token: string, postingId: number, changes: PostingChanges): Promise<JobPosting> {
+  const response = await backendFetch(`/api/postings/${postingId}`, {
+    method: "PUT",
+    headers: { ...bearer(token), "Content-Type": "application/json" },
+    body: JSON.stringify(changes),
+  });
+  return postingAnswer(response, [400, 403, 409]);
+}
+
 // UC-11: a saved draft goes to the administrators' queue
 export async function submitJobPosting(token: string, postingId: number): Promise<JobPosting> {
   const response = await backendFetch(`/api/postings/${postingId}/submit`, {
     method: "POST",
     headers: bearer(token),
   });
-  endedSession(response);
-  const reason = await refusal(response, [400, 409]);
+  return postingAnswer(response, [400, 403, 409]);
+}
+
+// The reason is read first: a 403 that gives one is a posting refusing this recruiter (SCRUM-215),
+// while a 403 without one is the token refused, so the session has ended
+async function postingAnswer(response: Response, refusals: number[]): Promise<JobPosting> {
+  const reason = await refusal(response, refusals);
   if (reason !== null) {
     throw new PostingRejected(reason);
   }
+  endedSession(response);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }
@@ -277,9 +305,55 @@ export async function submitApplication(token: string, postingId: number): Promi
   return response.json();
 }
 
-// CO-05.1. An ended application still blocks its posting (A5), so the ids of
-// every posting applied to come back next to the active applications.
-export type Applications = { active: DeskApplication[]; appliedPostingIds: number[] };
+const STAGE_LABELS: Record<string, ApplicationStage> = {
+  APPLIED: "Applied",
+  SCREENING: "Screening",
+  INTERVIEW: "Interview",
+  OFFER: "Offer",
+  HIRED: "Hired",
+  REJECTED: "Rejected",
+  WITHDRAWN: "Withdrawn",
+  OFFER_DECLINED: "Offer Declined",
+};
+
+const ACTIVE_STAGES: ReadonlySet<ApplicationStage> = new Set<ApplicationStage>(STAGES);
+
+function stageLabel(status: string): ApplicationStage {
+  return STAGE_LABELS[status] ?? "Applied";
+}
+
+export type ApplicationSummary = {
+  applicationId: number;
+  postingId: number;
+  title: string;
+  organizationName: string;
+  location: string;
+  employmentType: string;
+  applicationStatus: ApplicationStage;
+  active: boolean;
+  dateApplied: string;
+  lastStageChangeDate: string;
+};
+
+// CO-05.1. Active applications come first from the backend along with the active count;
+// ended ones stay in `all` and `appliedPostingIds` because a posting can be applied to once (A5).
+export type Applications = {
+  all: ApplicationSummary[];
+  active: DeskApplication[];
+  appliedPostingIds: number[];
+  activeApplicationCount: number;
+  applicationLimit: number;
+};
+
+type RawApplicationSummary = Omit<ApplicationSummary, "applicationStatus" | "active"> & {
+  applicationStatus: string;
+};
+
+type RawApplicationsResponse = {
+  applications: RawApplicationSummary[];
+  activeApplicationCount: number;
+  applicationLimit: number;
+};
 
 export async function viewApplications(token: string): Promise<Applications> {
   const response = await backendFetch("/api/applicant/applications", { headers: bearer(token) });
@@ -287,16 +361,312 @@ export async function viewApplications(token: string): Promise<Applications> {
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }
-  const applications: (Omit<DeskApplication, "applicationStatus"> & { applicationStatus: string })[] =
-    await response.json();
+  const body: RawApplicationsResponse = await response.json();
+  const all: ApplicationSummary[] = [];
   const active: DeskApplication[] = [];
-  for (const application of applications) {
-    const stage = STAGES.find((name) => name.toUpperCase() === application.applicationStatus);
-    if (stage) {
-      active.push({ ...application, applicationStatus: stage });
+  const appliedPostingIds: number[] = [];
+  for (const item of body.applications) {
+    const label = stageLabel(item.applicationStatus);
+    const isActive = ACTIVE_STAGES.has(label);
+    const base = {
+      applicationId: item.applicationId,
+      postingId: item.postingId,
+      title: item.title,
+      organizationName: item.organizationName,
+      location: item.location,
+      employmentType: item.employmentType,
+      dateApplied: item.dateApplied,
+      lastStageChangeDate: item.lastStageChangeDate,
+    };
+    all.push({ ...base, applicationStatus: label, active: isActive });
+    if (isActive) {
+      active.push({ ...base, applicationStatus: label as Stage });
     }
+    appliedPostingIds.push(item.postingId);
   }
-  return { active, appliedPostingIds: applications.map((application) => application.postingId) };
+  return {
+    all,
+    active,
+    appliedPostingIds,
+    activeApplicationCount: body.activeApplicationCount,
+    applicationLimit: body.applicationLimit,
+  };
+}
+
+export type ApplicationAction = "WITHDRAW" | "ACCEPT_OFFER" | "DECLINE_OFFER";
+
+export type StatusHistoryEntry = {
+  status: ApplicationStage;
+  date: string;
+};
+
+export type InterviewSummary = {
+  interviewId: number;
+  roundNumber: number;
+  scheduledTime: string;
+  format: string;
+  location: string;
+};
+
+export type OfferStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "RESCINDED";
+
+export type OfferSummary = {
+  offerId: number;
+  dateExtended: string;
+  startDate: string;
+  salary: string;
+  terms: string | null;
+  expirationDate: string;
+  offerLetterFileName: string | null;
+  status: OfferStatus;
+  responseDate: string | null;
+  revision: number;
+  expired: boolean;
+  canRespond: boolean;
+};
+
+export type OfferDetail = OfferSummary & {
+  applicationId: number;
+  postingId: number;
+  title: string;
+  organizationName: string;
+};
+
+export type ApplicationDetail = {
+  applicationId: number;
+  postingId: number;
+  title: string;
+  organizationName: string;
+  location: string;
+  employmentType: string;
+  applicationStatus: ApplicationStage;
+  dateApplied: string;
+  statusHistory: StatusHistoryEntry[];
+  interviews: InterviewSummary[];
+  offer: OfferSummary | null;
+  rejectionReason: string | null;
+  rejectedAtStage: ApplicationStage | null;
+  rejectionDate: string | null;
+  withdrawnAt: string | null;
+  availableActions: ApplicationAction[];
+};
+
+type RawApplicationDetail = Omit<
+  ApplicationDetail,
+  "applicationStatus" | "statusHistory" | "rejectedAtStage"
+> & {
+  applicationStatus: string;
+  statusHistory: { status: string; date: string }[];
+  rejectedAtStage: string | null;
+};
+
+// UC-06 / UC-07: an applicant action was refused because the application moved to another stage
+export class ApplicationActionRefused extends Error {
+  constructor(
+    message: string,
+    readonly currentStage: ApplicationStage,
+  ) {
+    super(message);
+  }
+}
+
+// UC-07 ext 6b (FR-UC07.11): the recruiter revised the offer before the applicant confirmed
+export class OfferRevised extends Error {
+  constructor(
+    message: string,
+    readonly revisedOffer: OfferSummary,
+  ) {
+    super(message);
+  }
+}
+
+export type WithdrawalPrompt = {
+  applicationId: number;
+  title: string;
+  organizationName: string;
+  applicationStatus: ApplicationStage;
+  warning: string;
+  reasons: string[];
+};
+
+export type WithdrawalResult = {
+  application: ApplicationDetail;
+  activeApplicationCount: number;
+  applicationLimit: number;
+};
+
+export type OfferResponseResult = {
+  application: ApplicationDetail;
+  activeApplicationCount: number;
+  applicationLimit: number;
+};
+
+function mapDetail(raw: RawApplicationDetail): ApplicationDetail {
+  return {
+    ...raw,
+    applicationStatus: stageLabel(raw.applicationStatus),
+    statusHistory: raw.statusHistory.map((entry) => ({
+      status: stageLabel(entry.status),
+      date: entry.date,
+    })),
+    rejectedAtStage: raw.rejectedAtStage ? stageLabel(raw.rejectedAtStage) : null,
+  };
+}
+
+// CO-05.2: returns null when the application does not exist or belongs to another applicant (BR-15)
+export async function viewApplication(
+  token: string,
+  applicationId: string,
+): Promise<ApplicationDetail | null> {
+  const response = await backendFetch(
+    `/api/applicant/applications/${encodeURIComponent(applicationId)}`,
+    { headers: bearer(token) },
+  );
+  endedSession(response);
+  if (response.status === 404 || response.status === 400) {
+    return null;
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return mapDetail(await response.json());
+}
+
+async function throwIfActionRefused(response: Response): Promise<void> {
+  if (response.status === 409) {
+    const body: {
+      code?: string;
+      currentStage?: string;
+      message: string;
+      offer?: OfferSummary;
+    } = await response.json();
+    if (body.code === "OFFER_REVISED" && body.offer) {
+      throw new OfferRevised(body.message, body.offer);
+    }
+    throw new ApplicationActionRefused(
+      body.message,
+      body.currentStage ? stageLabel(body.currentStage) : "Offer",
+    );
+  }
+}
+
+// CO-06.1: fetches posting details, stage, finality warning and reason list before withdrawal
+export async function requestWithdrawal(
+  token: string,
+  applicationId: number,
+): Promise<WithdrawalPrompt> {
+  const response = await backendFetch(`/api/applicant/applications/${applicationId}/withdrawal`, {
+    headers: bearer(token),
+  });
+  endedSession(response);
+  await throwIfActionRefused(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  const raw: Omit<WithdrawalPrompt, "applicationStatus"> & { applicationStatus: string } =
+    await response.json();
+  return { ...raw, applicationStatus: stageLabel(raw.applicationStatus) };
+}
+
+// CO-06.2: confirms withdrawal with an optional reason
+export async function withdrawApplication(
+  token: string,
+  applicationId: number,
+  reason?: string,
+): Promise<WithdrawalResult> {
+  const response = await backendFetch(`/api/applicant/applications/${applicationId}/withdraw`, {
+    method: "POST",
+    headers: { ...bearer(token), "Content-Type": "application/json" },
+    body: JSON.stringify({ reason: reason?.trim() || null }),
+  });
+  endedSession(response);
+  await throwIfActionRefused(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  const raw: {
+    application: RawApplicationDetail;
+    activeApplicationCount: number;
+    applicationLimit: number;
+  } = await response.json();
+  return {
+    application: mapDetail(raw.application),
+    activeApplicationCount: raw.activeApplicationCount,
+    applicationLimit: raw.applicationLimit,
+  };
+}
+
+// CO-07.1: fetches offer details for an application at the Offer stage
+export async function viewOffer(token: string, applicationId: number): Promise<OfferDetail> {
+  const response = await backendFetch(`/api/applicant/applications/${applicationId}/offer`, {
+    headers: bearer(token),
+  });
+  endedSession(response);
+  await throwIfActionRefused(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+// CO-07.2: confirms final acceptance of an active offer
+export async function acceptOffer(
+  token: string,
+  applicationId: number,
+  expectedRevision: number,
+): Promise<OfferResponseResult> {
+  const response = await backendFetch(`/api/applicant/applications/${applicationId}/offer/accept`, {
+    method: "POST",
+    headers: { ...bearer(token), "Content-Type": "application/json" },
+    body: JSON.stringify({ expectedRevision }),
+  });
+  endedSession(response);
+  await throwIfActionRefused(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  const raw: {
+    application: RawApplicationDetail;
+    activeApplicationCount: number;
+    applicationLimit: number;
+  } = await response.json();
+  return {
+    application: mapDetail(raw.application),
+    activeApplicationCount: raw.activeApplicationCount,
+    applicationLimit: raw.applicationLimit,
+  };
+}
+
+// CO-07.3: confirms final decline of an active offer with an optional reason
+export async function declineOffer(
+  token: string,
+  applicationId: number,
+  reason: string | undefined,
+  expectedRevision: number,
+): Promise<OfferResponseResult> {
+  const response = await backendFetch(`/api/applicant/applications/${applicationId}/offer/decline`, {
+    method: "POST",
+    headers: { ...bearer(token), "Content-Type": "application/json" },
+    body: JSON.stringify({
+      reason: reason?.trim() || null,
+      expectedRevision,
+    }),
+  });
+  endedSession(response);
+  await throwIfActionRefused(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  const raw: {
+    application: RawApplicationDetail;
+    activeApplicationCount: number;
+    applicationLimit: number;
+  } = await response.json();
+  return {
+    application: mapDetail(raw.application),
+    activeApplicationCount: raw.activeApplicationCount,
+    applicationLimit: raw.applicationLimit,
+  };
 }
 
 // CO-03.2 details, in the order the form shows them; all but the names may be left empty
@@ -410,6 +780,56 @@ export async function openPostingApprovalQueue(token: string): Promise<JobPostin
   return response.json();
 }
 
+// Minimum scope Administrator 2 (FR-ADM.1): every user with their role, read only
+export type UserRow = {
+  userId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: Role;
+  accountStatus: "ACTIVE" | "PENDING_VERIFICATION";
+};
+
+export type UserDirectory = {
+  users: UserRow[];
+  usersByRole: Record<Role, number>;
+};
+
+export async function viewUsers(token: string): Promise<UserDirectory> {
+  const response = await backendFetch("/api/admin/users", { headers: bearer(token) });
+  endedSession(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+// UC-14 steps 1-2: the postings of the organization the recruiter acts for, with their applications per active stage
+export type ActiveStage = "APPLIED" | "SCREENING" | "INTERVIEW" | "OFFER";
+
+export type RecruiterPostingRow = {
+  postingId: number;
+  title: string;
+  postStatus: string;
+  closingReason: string | null;
+  applicationsByStage: Record<ActiveStage, number>;
+};
+
+export type RecruiterPostings = {
+  // Null when the recruiter acts for no organization
+  organizationName: string | null;
+  postings: RecruiterPostingRow[];
+};
+
+export async function viewRecruiterPostings(token: string): Promise<RecruiterPostings> {
+  const response = await backendFetch("/api/recruiter/postings", { headers: bearer(token) });
+  endedSession(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
 export type ReviewAction = "approve" | "return" | "reject";
 
 export async function reviewPosting(
@@ -459,7 +879,21 @@ export function formatDate(isoDate: string): string {
 
 // A moment the backend recorded by its UTC clock, shown as the day it was where the user is
 export function formatUtcDay(utcDateTime: string): string {
-  return new Date(`${utcDateTime}Z`).toLocaleDateString("en-US", DATE_FORMAT);
+  const normalized = utcDateTime.endsWith("Z") ? utcDateTime : `${utcDateTime}Z`;
+  return new Date(normalized).toLocaleDateString("en-US", DATE_FORMAT);
+}
+
+const DATE_TIME_FORMAT: Intl.DateTimeFormatOptions = {
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+};
+
+export function formatDateTime(isoDateTime: string): string {
+  return new Date(isoDateTime).toLocaleString("en-US", DATE_TIME_FORMAT);
 }
 
 // UC-08, UC-09, UC-10: recruiters, their organizations and the Administrator's approval of them

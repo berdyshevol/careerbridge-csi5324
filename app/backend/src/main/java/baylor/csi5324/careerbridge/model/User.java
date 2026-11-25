@@ -113,10 +113,6 @@ public class User {
         this.passwordHash = passwordHash;
     }
 
-    public Instant getLockedUntil() {
-        return lockedUntil;
-    }
-
     public boolean isLockedAt(Instant now) {
         return lockedUntil != null && now.isBefore(lockedUntil);
     }

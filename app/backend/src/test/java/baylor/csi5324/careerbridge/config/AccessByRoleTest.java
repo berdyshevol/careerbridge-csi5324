@@ -109,16 +109,43 @@ class AccessByRoleTest {
     }
 
     @Test
+    void onlyTheAdministratorSeesTheUsers() throws Exception {
+        mockMvc.perform(get("/api/admin/users")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/admin/users").with(as("APPLICANT"))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/admin/users").with(as("RECRUITER"))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/admin/users").with(as("ADMINISTRATOR"))).andExpect(status().isOk());
+    }
+
+    @Test
     void onlyARecruiterCreatesAPosting() throws Exception {
         mockMvc.perform(post("/api/postings").with(as("APPLICANT"))
                         .contentType(MediaType.APPLICATION_JSON).content(blankPosting))
                 .andExpect(status().isForbidden());
         mockMvc.perform(post("/api/postings/1/submit").with(as("APPLICANT"))).andExpect(status().isForbidden());
         mockMvc.perform(post("/api/postings/1/submit").with(as("ADMINISTRATOR"))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/postings/1/edit").with(as("APPLICANT"))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/postings/1/edit")).andExpect(status().isUnauthorized());
+        mockMvc.perform(put("/api/postings/1").with(as("ADMINISTRATOR"))
+                .contentType(MediaType.APPLICATION_JSON).content(blankPosting)).andExpect(status().isForbidden());
+        // The edit lookup reads the token although it is a GET under /api/postings: it reaches the
+        // service, which answers 404 for an unknown posting instead of 401
+        mockMvc.perform(get("/api/postings/" + Long.MAX_VALUE + "/edit").with(as("RECRUITER")))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(post("/api/postings/1/close").with(as("APPLICANT"))).andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/postings/1/close").with(as("ADMINISTRATOR"))).andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/postings/1/close")).andExpect(status().isUnauthorized());
         // Reaches the service, which refuses the blank title: the recruiter's mistake, in plain text
         mockMvc.perform(post("/api/postings").with(as("RECRUITER"))
                         .contentType(MediaType.APPLICATION_JSON).content(blankPosting))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Job title is required"));
+    }
+
+    @Test
+    void onlyARecruiterListsTheOrganizationsPostings() throws Exception {
+        mockMvc.perform(get("/api/recruiter/postings")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/recruiter/postings").with(as("APPLICANT"))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/recruiter/postings").with(as("ADMINISTRATOR"))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/recruiter/postings").with(as("RECRUITER"))).andExpect(status().isOk());
     }
 }

@@ -15,8 +15,10 @@ import PostingDetails from "@/components/PostingDetails";
 import ResumeOnFile from "@/components/ResumeOnFile";
 import SlotMeter from "@/components/SlotMeter";
 import { StageBadge, StageProgress } from "@/components/StageBadge";
+import StageTimeline from "@/components/StageTimeline";
+import UserList from "@/components/UserList";
 import { formatDate, type JobPosting } from "@/lib/api";
-import { APPLICATION_LIMIT, STAGES, applications, offer } from "@/lib/sampleDesk";
+import { ALL_STAGES, APPLICATION_LIMIT, STAGES, applications, offer } from "@/lib/sampleDesk";
 import type { SessionUser } from "@/lib/session";
 
 // Every block here is the real component, so this page cannot drift from the
@@ -170,9 +172,9 @@ export default function StyleguidePage() {
       </Section>
 
       <Section title="Status">
-        <Block title="Stage badge" use="<StageBadge stage={…} /> — stages come from STAGES in src/lib/sampleDesk.ts">
+        <Block title="Stage badge" use="<StageBadge stage={…} onWarning? /> — stages come from ALL_STAGES in src/lib/sampleDesk.ts">
           <div className="flex flex-wrap gap-3">
-            {STAGES.map((stage) => (
+            {ALL_STAGES.map((stage) => (
               <StageBadge key={stage} stage={stage} />
             ))}
           </div>
@@ -184,11 +186,34 @@ export default function StyleguidePage() {
             ))}
           </div>
         </Block>
-        <Block title="Slot meter" use="<SlotMeter used={…} total={APPLICATION_LIMIT} caption? />">
+        <Block title="Stage timeline" use="<StageTimeline entries={…} interviews? />">
+          <div className="max-w-sm rounded-2xl border border-base-300 bg-base-100 p-5">
+            <StageTimeline
+              entries={[
+                { status: "Applied", date: "2026-10-01" },
+                { status: "Screening", date: "2026-10-08" },
+                { status: "Interview", date: "2026-10-15" },
+              ]}
+              interviews={[
+                {
+                  interviewId: 1,
+                  roundNumber: 1,
+                  scheduledTime: "2026-10-21T14:00:00",
+                  format: "On-site",
+                  location: "1200 Austin Ave, Waco",
+                },
+              ]}
+            />
+          </div>
+        </Block>
+        <Block title="Slot meter" use="<SlotMeter used={…} total={APPLICATION_LIMIT} caption? compact? />">
           <div className="grid gap-3 md:grid-cols-3">
             <SlotMeter used={0} total={APPLICATION_LIMIT} />
             <SlotMeter used={3} total={APPLICATION_LIMIT} caption="With a caption." />
             <SlotMeter used={5} total={APPLICATION_LIMIT} />
+          </div>
+          <div className="mt-3">
+            <SlotMeter used={3} total={APPLICATION_LIMIT} compact className="sm:w-64" />
           </div>
         </Block>
         <Block title="Resume on file" use="<ResumeOnFile resume={…}>{what this screen says about it}</ResumeOnFile>">
@@ -222,6 +247,18 @@ export default function StyleguidePage() {
               <ApplicationRow key={application.applicationId} application={application} />
             ))}
           </ul>
+        </Block>
+        <Block title="User list" use="<UserList directory={…} /> — the administrator's list of users, with the count of each role">
+          <UserList
+            directory={{
+              usersByRole: { APPLICANT: 2, RECRUITER: 1, ADMINISTRATOR: 1 },
+              users: [
+                { userId: 1, firstName: "Avery", lastName: "Morgan", email: "admin@careerbridge.example", role: "ADMINISTRATOR", accountStatus: "ACTIVE" },
+                { userId: 2, firstName: "Riley", lastName: "Chen", email: "riley.chen@example.com", role: "RECRUITER", accountStatus: "PENDING_VERIFICATION" },
+                { userId: 3, firstName: "Jordan", lastName: "Lee", email: "jordan.lee@example.com", role: "APPLICANT", accountStatus: "ACTIVE" },
+              ],
+            }}
+          />
         </Block>
         <Block title="Action row" use="<ActionRow title description href action primary? /> — a role's actions on its home, in a ul with flex flex-col gap-3; primary on one only">
           <ul className="flex flex-col gap-3">

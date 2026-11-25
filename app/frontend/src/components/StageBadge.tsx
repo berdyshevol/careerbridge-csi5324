@@ -1,16 +1,29 @@
-import { STAGES, type Stage } from "@/lib/sampleDesk";
+import { STAGES, type ApplicationStage, type Stage } from "@/lib/sampleDesk";
 
-const chipStyle: Record<Stage, string> = {
+const chipStyle: Record<ApplicationStage, string> = {
   Applied: "bg-base-200 text-base-content",
   Screening: "bg-secondary text-secondary-content",
   Interview: "bg-secondary text-secondary-content",
   Offer: "bg-warning text-warning-content",
+  Hired: "bg-secondary text-secondary-content",
+  Rejected: "bg-error/15 text-error",
+  Withdrawn: "border border-base-300 bg-transparent text-muted",
+  "Offer Declined": "border border-base-300 bg-transparent text-muted",
 };
 
-export function StageBadge({ stage, className = "" }: { stage: Stage; className?: string }) {
+export function StageBadge({
+  stage,
+  onWarning = false,
+  className = "",
+}: {
+  stage: ApplicationStage;
+  onWarning?: boolean;
+  className?: string;
+}) {
+  const tone = onWarning ? "bg-base-100 text-warning-content" : chipStyle[stage];
   return (
     <span
-      className={`rounded-lg px-2.5 py-1 text-center text-sm font-semibold ${chipStyle[stage]} ${className}`}
+      className={`inline-flex items-center justify-center rounded-lg px-2.5 py-1 text-center text-sm font-semibold whitespace-nowrap ${tone} ${className}`}
     >
       {stage}
     </span>

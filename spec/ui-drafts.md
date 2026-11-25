@@ -94,7 +94,7 @@ match its mockup, and a screen that is not listed here is added before it is cod
 | Applicant | `/` home | Home · Find jobs · Applications · Profile | Account menu |
 | Recruiter, pending | `/recruiter/status` | none | Account menu (Log out) |
 | Recruiter | `/recruiter` | Home · Postings · Organizations | Organization switcher, account menu |
-| Administrator | `/admin` | Home · Posting approvals · Recruiter requests | Account menu |
+| Administrator | `/admin` | Home · Posting approvals · Recruiter requests · Users | Account menu |
 
 **Visitor**
 
@@ -128,7 +128,7 @@ is shown on that application's page; the desk and the Applications entry point t
 | --- | --- | --- | --- | --- |
 | [`recruiter-status`](screens/recruiter-status.html) | `/recruiter/status` | Request status | UC-08 \*a, BR-14 | For a recruiter without an Active membership: the request's state (email not verified, under review, information requested, denied with reason). Nothing else is reachable. |
 | [`recruiter-home`](screens/recruiter-home.html) | `/recruiter` | Home | UC-11, UC-14, UC-09 | The recruiter's actions for the current organization: New posting (UC-11), Postings and their applicants (UC-11, UC-14, UC-15), Organizations (UC-09). |
-| [`recruiter-postings`](screens/recruiter-postings.html) | `/recruiter/postings` | Postings | UC-11, UC-14 step 2 | Every posting of the organization with its status; a Published posting with the number of applications at each stage (FR-UC14.1). New posting. |
+| [`recruiter-postings`](screens/recruiter-postings.html) | `/recruiter/postings` | Postings | UC-11, UC-14 step 2 | Every posting of the organization with its status; a Published or Closed posting with the number of applications at each stage (FR-UC14.1), leaving out a stage with none unless every stage has none. New posting. |
 | [`recruiter-posting-form`](screens/recruiter-posting-form.html) | `/recruiter/postings/new`, `/recruiter/postings/{id}/edit` | Posting form | UC-11 | "Posting for: organization"; start from an earlier posting (3a); Save draft (3b) or Submit for approval. On a Returned posting, the Administrator's comments above the form (6a). |
 | [`recruiter-posting`](screens/recruiter-posting.html) | `/recruiter/postings/{id}` | Posting and its applicants | UC-14, UC-11 | Status, and the public page when Published. Applicants by active stage: Applied, Screening, Interview, Offer, with counts. Choose several and advance them together (5d). None yet: 3a. |
 | [`recruiter-review`](screens/recruiter-review.html) | `/recruiter/applications/{id}` | Application review | UC-14, UC-15 | The resume copy (A6), the applicant's profile details, this application's stage history with its internal notes, and nothing about the applicant's other applications (BR-15). The main action follows the stage: Move to Screening, Move to Interview, Extend offer at Interview, Revise offer at Offer; an advance takes an optional internal note (step 5). Record an interview at Interview, and its outcome once it has taken place, at most two rounds (A13). Reject at any active stage, with a reason and a comment for the applicant, warning at Offer that the offer is rescinded. |
@@ -144,6 +144,7 @@ is shown on that application's page; the desk and the Applications entry point t
 | [`admin-posting`](screens/admin-posting.html) | `/admin/postings/{id}` | Posting review | UC-12 | The posting as the public will see it, drawn by the same component as `/jobs/{id}` (technology variation 4a), and the organization's status. Approve, Return with comments, Reject with a reason. After a decision: back to the queue (step 8). The blocked cases 6a and 6b say why. |
 | [`admin-requests`](screens/admin-requests.html) | `/admin/requests` | Recruiter requests | UC-10 | Oldest first: request type (new organization, joining an existing organization, an additional organization), requester, organization, date, review flag. |
 | [`admin-request`](screens/admin-request.html) | `/admin/requests/{id}` | Request review | UC-10 | Requester (name, work email, job title, memberships), organization with a link to its website (5a), justification. Approve, Deny with a reason, Ask for information; for a duplicate organization, approve the membership in the existing one (5c). |
+| [`admin-users`](screens/admin-users.html) | `/admin/users` | Users | Administration (FR-ADM.1) | Every user with their name, email, role and account status, and the number of users in each role. Read only. |
 
 UC-13 Expire Job Posting has no screen: its results appear as Closed · Expired and Expired on the
 recruiter's postings and home.

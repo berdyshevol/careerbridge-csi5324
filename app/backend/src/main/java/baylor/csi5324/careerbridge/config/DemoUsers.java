@@ -45,6 +45,12 @@ public class DemoUsers implements CommandLineRunner {
     // The demo recruiter's approved organizations (UC-09 precondition); Lone Star Logistics is left to join
     static final List<String> DEMO_RECRUITER_ORGANIZATIONS = List.of("Brazos Analytics", "Waco Health Partners");
 
+    private static final List<String> NUMBERS = List.of("One", "Two", "Three");
+
+    private static DemoUser numbered(String role, int n, Supplier<User> kind, String password) {
+        return new DemoUser(role, NUMBERS.get(n - 1), role.toLowerCase() + n + "@example.com", kind, password);
+    }
+
     private final UserRepository userRepository;
     private final OrganizationRepository organizationRepository;
     private final OrganizationMembershipRepository membershipRepository;
@@ -57,6 +63,7 @@ public class DemoUsers implements CommandLineRunner {
                      @Value("${careerbridge.demo.second-applicant-password}") String secondApplicantPassword,
                      @Value("${careerbridge.demo.recruiter-password}") String recruiterPassword,
                      @Value("${careerbridge.demo.administrator-password}") String administratorPassword,
+                     @Value("${careerbridge.demo.numbered-password}") String numberedPassword,
                      @Value("${spring.datasource.url}") String databaseUrl,
                      @Value("${careerbridge.demo.local-passwords}") boolean localPasswordsAllowed) {
         this.userRepository = userRepository;
@@ -65,6 +72,7 @@ public class DemoUsers implements CommandLineRunner {
         this.passwordEncoder = passwordEncoder;
         // The Docker image switches this off: an image that lost DATABASE_URL must not get known passwords
         boolean inMemory = localPasswordsAllowed && databaseUrl.startsWith("jdbc:h2:mem:");
+        String numbered = orLocal(numberedPassword, "Baylor@2026", inMemory);
         this.demoUsers = List.of(
                 new DemoUser("Jordan", "Lee", SampleDataLoader.SAMPLE_APPLICANT_EMAIL,
                         Applicant::new, orLocal(applicantPassword, "Applicant-local-1", inMemory)),
@@ -73,7 +81,13 @@ public class DemoUsers implements CommandLineRunner {
                 new DemoUser("Riley", "Chen", "riley.chen@example.com", Recruiter::new,
                         orLocal(recruiterPassword, "Recruiter-local-1", inMemory)),
                 new DemoUser("Avery", "Morgan", "admin@careerbridge.example", Administrator::new,
-                        orLocal(administratorPassword, "Administrator-local-1", inMemory)));
+                        orLocal(administratorPassword, "Administrator-local-1", inMemory)),
+                // Easy to say out loud in a demo; they share one password
+                numbered("Applicant", 1, Applicant::new, numbered),
+                numbered("Applicant", 2, Applicant::new, numbered),
+                numbered("Applicant", 3, Applicant::new, numbered),
+                numbered("Recruiter", 1, Recruiter::new, numbered),
+                numbered("Recruiter", 2, Recruiter::new, numbered));
     }
 
     @Override

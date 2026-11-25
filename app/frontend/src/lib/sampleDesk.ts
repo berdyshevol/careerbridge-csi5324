@@ -5,6 +5,10 @@
 export const STAGES = ["Applied", "Screening", "Interview", "Offer"] as const;
 export type Stage = (typeof STAGES)[number];
 
+const CLOSED_STAGES = ["Hired", "Rejected", "Withdrawn", "Offer Declined"] as const;
+export const ALL_STAGES = [...STAGES, ...CLOSED_STAGES] as const;
+export type ApplicationStage = (typeof ALL_STAGES)[number];
+
 export const APPLICATION_LIMIT = 5;
 
 export type DeskApplication = {
@@ -15,6 +19,8 @@ export type DeskApplication = {
   location: string;
   employmentType: string;
   applicationStatus: Stage;
+  dateApplied?: string;
+  lastStageChangeDate?: string;
 };
 
 export const applications: DeskApplication[] = [
@@ -26,6 +32,8 @@ export const applications: DeskApplication[] = [
     location: "On-site",
     employmentType: "Part-time",
     applicationStatus: "Offer",
+    dateApplied: "2026-09-22",
+    lastStageChangeDate: "2026-10-08",
   },
   {
     applicationId: 2,
@@ -35,6 +43,8 @@ export const applications: DeskApplication[] = [
     location: "Remote",
     employmentType: "Full-time",
     applicationStatus: "Interview",
+    dateApplied: "2026-09-29",
+    lastStageChangeDate: "2026-10-05",
   },
   {
     applicationId: 3,
@@ -44,6 +54,8 @@ export const applications: DeskApplication[] = [
     location: "Hybrid",
     employmentType: "Full-time",
     applicationStatus: "Applied",
+    dateApplied: "2026-10-02",
+    lastStageChangeDate: "2026-10-02",
   },
 ];
 

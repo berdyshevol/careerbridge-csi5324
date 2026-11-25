@@ -1,5 +1,6 @@
 package baylor.csi5324.careerbridge.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -12,6 +13,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -59,6 +63,13 @@ public class Application {
     @OrderColumn
     private List<StatusHistoryEntry> statusHistory = new ArrayList<>();
 
+    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("roundNumber ASC, scheduledTime ASC")
+    private List<Interview> interviews = new ArrayList<>();
+
+    @OneToOne(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Offer offer;
+
     public Application() {
     }
 
@@ -103,6 +114,63 @@ public class Application {
         this.rejectionReason = rejectionReason;
     }
 
+    public ApplicationStatus getRejectedAtStage() {
+        for (int i = statusHistory.size() - 1; i >= 0; i--) {
+            if (statusHistory.get(i).getStatus() == ApplicationStatus.REJECTED) {
+                return i > 0 ? statusHistory.get(i - 1).getStatus() : null;
+            }
+        }
+        return null;
+    }
+
+    public LocalDate getRejectionDate() {
+        for (int i = statusHistory.size() - 1; i >= 0; i--) {
+            StatusHistoryEntry entry = statusHistory.get(i);
+            if (entry.getStatus() == ApplicationStatus.REJECTED) {
+                return entry.getDate();
+            }
+        }
+        return null;
+    }
+
+    public List<Interview> getInterviews() {
+        return interviews;
+    }
+
+    public Offer getOffer() {
+        return offer;
+    }
+
+    public void setOffer(Offer offer) {
+        this.offer = offer;
+    }
+
+    public boolean isWithdrawable() {
+        return applicationStatus == ApplicationStatus.APPLIED
+                || applicationStatus == ApplicationStatus.SCREENING
+                || applicationStatus == ApplicationStatus.INTERVIEW;
+    }
+
+    public List<String> availableActions() {
+        return availableActions(Instant.now());
+    }
+
+    public List<String> availableActions(Instant now) {
+        return switch (applicationStatus) {
+            case APPLIED, SCREENING, INTERVIEW -> List.of("WITHDRAW");
+            case OFFER -> {
+                if (jobPosting != null && jobPosting.getPostStatus() == PostStatus.CLOSED) {
+                    yield List.of();
+                }
+                if (offer != null && !offer.canRespond(now, jobPosting.getOrganization().getZoneId())) {
+                    yield List.of();
+                }
+                yield List.of("ACCEPT_OFFER", "DECLINE_OFFER");
+            }
+            case HIRED, REJECTED, WITHDRAWN, OFFER_DECLINED -> List.of();
+        };
+    }
+
     public Instant getWithdrawnAt() {
         return withdrawnAt;
     }
@@ -117,5 +185,16 @@ public class Application {
 
     public List<StatusHistoryEntry> getStatusHistory() {
         return statusHistory;
+    }
+
+    public boolean isActive() {
+        return applicationStatus.isActive();
+    }
+
+    public LocalDate getLastStageChangeDate() {
+        if (statusHistory.isEmpty()) {
+            return dateApplied;
+        }
+        return statusHistory.get(statusHistory.size() - 1).getDate();
     }
 }

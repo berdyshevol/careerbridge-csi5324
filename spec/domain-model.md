@@ -24,19 +24,19 @@ Figure 25; classes and associations that are not in the figure are listed in sec
 | Resume | resumeId, file Name, file Type, file Size, content, upload Date |
 | Application | applicationId, dateApplied, applicationStatus, rejectionReason, withdrawnAt |
 | Resume Snapshot | file Name, file Type, file Size, content |
-| Status History Entry | status, date |
+| Status History Entry | status, date, reason |
 | Organization Membership | status, membershipId, requested at, approved at, request type, role, justification, review flag, decided by, decided at, decision note |
 | Organization | organizationId, name, organization Status, website, description, timeZone, industry, headquarters, size |
 | Job Posting | jobPostId, title, description, location, applicationDeadline, postStatus, date posted, numberOfOpenings, salaryRange, approvalStatus, approvedBy, approvedAt, reviewComment, employmentType, jobRequirements, closingReason, closedAt |
-| Offer | offerId, dateExtended, expirationDate, status, responseDate, salary |
-| Interview | interviewId, scheduledTime, outcome, notes |
+| Offer | offerId, dateExtended, startDate, salary, terms, expirationDate, offerLetterFileName, status, responseDate, revision |
+| Interview | interviewId, roundNumber, scheduledTime, format, location, outcome, notes |
 | Notification | notificationId, type, message, sentAt, status |
 
 - **Resume Snapshot** is the copy of the resume kept with an application as it was at submission
   (A6), the file's content included, so it outlives a Resume that is replaced and deleted. The
   operation contracts call it the Application's _resumeSnapshot_.
-- **Status History Entry** is one stage an application reached, with the date. The operation
-  contracts call the entries of an application its _statusHistory_.
+- **Status History Entry** is one stage an application reached, with the date and an optional
+  reason. The operation contracts call the entries of an application its _statusHistory_.
 - A **Job Posting**'s _location_ is On-site, Hybrid or Remote (UC-11 step 3), and its
   _employmentType_ is Full-time, Part-time, Internship, Contract or Temporary. The job board
   filters by these same values (UC-01 step 1).
@@ -55,7 +55,7 @@ Figure 25; classes and associations that are not in the figure are listed in sec
   UC-10, BR-14), Active or Inactive (a recruiter whose only request was denied). An
   **Organization**'s _organization Status_ is Pending Approval, Active or Inactive.
 - A **Job Posting** closed by the system or a recruiter keeps why in _closingReason_ (Expired, for
-  UC-13) and when in _closedAt_, a UTC instant.
+  UC-13; Closed by recruiter, for UC-13 extension \*a; Filled, for UC-07) and when in _closedAt_, a UTC instant.
 
 ### 5.2 Generalization
 
@@ -82,9 +82,10 @@ Multiplicities are read as "one A is linked to … B".
 
 ### 5.4 Differences from Figure 25
 
-The figure was drawn for Iteration 1 and has not been redrawn. The text above corrects it in eleven
+The figure was drawn for Iteration 1 and has not been redrawn. The text above corrects it in thirteen
 places: five needed for UC-04 Apply for Job, one for UC-12 Approve Job Posting, two for UC-13
-Expire Job Posting, one for UC-03 Update Applicant Profile and two for UC-08 to UC-10:
+Expire Job Posting, one for UC-03 Update Applicant Profile, one for UC-05 Track Application
+Status, one for UC-07 Respond to Job Offer, and two for UC-08 to UC-10:
 
 | # | Figure 25 | Current model | Why |
 | --- | --- | --- | --- |
@@ -92,13 +93,15 @@ Expire Job Posting, one for UC-03 Update Applicant Profile and two for UC-08 to 
 | 2 | Resume 1 — 1 Application | Removed; Application 1 — 1 Resume Snapshot instead | An applicant has one resume and many applications, so 1 — 1 cannot hold. The application must not follow later changes to the resume (A6), so it keeps a copy, not a link to the resume on file. |
 | 3 | Applicant 1 — 1 Resume | Applicant 1 — 0..1 Resume | UC-02 postcondition: "An empty applicant profile with no resume has been created". UC-04 extension 2a handles an applicant with no resume. |
 | 4 | Application has the attribute resumeSnapshot | Class Resume Snapshot (file Name, file Type, file Size, content) | The copy has its own data ("available as a PDF or DOCX, in the format the applicant uploaded"), so it is a class, not a simple attribute. |
-| 5 | Application has the attribute statusHistory | Class Status History Entry (status, date) | The history has one entry per stage, each with its own date, so it is a class, not a simple attribute. |
+| 5 | Application has the attribute statusHistory | Class Status History Entry (status, date, reason) | The history has one entry per stage, each with its own date and an optional reason when an applicant withdraws (CO-06.2) or declines an offer (CO-07.3), so it is a class, not a simple attribute. |
 | 6 | Job Posting has no review comment; approvedBy and approvedAt suggest an approval only | Job Posting has reviewComment; approvedBy and approvedAt record the Administrator who made any decision (approve, return or reject) and when | UC-12 requires comments to return or reject a posting (extensions 5a, 5b), and logs every decision with who decided and when (Special Requirements). |
 | 7 | Organization has no time zone | Organization has timeZone | UC-13 variation 2a: a deadline means 23:59 on that date in the organization's time zone (A11, NFR-UC13.5). |
 | 8 | Job Posting does not record how or when it closed | Job Posting has closingReason and closedAt | UC-13 closes an overdue posting with the reason Expired and the time it closed (FR-UC13.3). |
 | 9 | Applicant has no attributes of its own | Applicant has location, headline, skills, education and work experience | UC-03 step 2 and FR-UC03.1: the applicant views and edits these profile details, so the model keeps them. |
-| 10 | Recruiter has no attributes of its own; Organization has no industry, headquarters or size | Recruiter has job title and email verified; Organization has industry, headquarters and size | UC-08 step 3 asks for them, and UC-10 step 4 shows them to the Administrator. Email verified is UC-08 steps 6-7. |
-| 11 | Organization Membership has status, membershipId, requested at and approved at only | It also has request type, role, justification, review flag, decided by, decided at and decision note | CO-09.1 takes the role and the justification; UC-10 step 2 shows the request type and the review flag of A17; UC-10 records who decided, when, and why (NFR-UC10.1). |
+| 10 | Interview has no round number, format, or location | Interview has roundNumber, format, and location | UC-05 step 4, FR-UC05.3, A13, and FR-UC14.7 display and schedule each interview round's number, format, and location. |
+| 11 | Offer has no start date, other terms, offer letter, or revision | Offer has startDate, terms, offerLetterFileName, and revision | UC-07 step 2 and FR-UC07.1 show start date, terms, and optional offer letter; FR-UC07.11 (ext 6b) detects revised terms before recording a response. |
+| 12 | Recruiter has no attributes of its own; Organization has no industry, headquarters or size | Recruiter has job title and email verified; Organization has industry, headquarters and size | UC-08 step 3 asks for them, and UC-10 step 4 shows them to the Administrator. Email verified is UC-08 steps 6-7. |
+| 13 | Organization Membership has status, membershipId, requested at and approved at only | It also has request type, role, justification, review flag, decided by, decided at and decision note | CO-09.1 takes the role and the justification; UC-10 step 2 shows the request type and the review flag of A17; UC-10 records who decided, when, and why (NFR-UC10.1). |
 
 Two more things in the figure are not carried into the text:
 
@@ -115,9 +118,9 @@ are left for the iteration that implements the use cases named.
 | Class | Gap | Where it comes from |
 | --- | --- | --- |
 | Job Posting | approvedBy is an attribute, not an association to Administrator; approvalStatus repeats postStatus; no submission date | CO-12.1; UC-12; Close Job Posting |
-| Offer | No start date, other terms, offer letter | UC-15 postconditions; CO-07.1 |
-| Interview | No format, location, interviewers; the limit of two rounds (A13) is not in the multiplicity | FR-UC14.7; CO-14.4 |
-| Status History Entry | No note or reason, no link to the Recruiter who made the change | CO-14.2, CO-14.3, CO-06.2, CO-07.3 |
+| Offer | Offer letter stores filename only until UC-15 adds PDF upload | UC-15 postconditions |
+| Interview | No interviewers; the limit of two rounds (A13) is not in the multiplicity | FR-UC14.7; CO-14.4 |
+| Status History Entry | No link to the Recruiter who made the change | CO-14.2, CO-14.3 |
 
 Wording elsewhere in the specification that still follows the figure and should be aligned with
 5.3 when those use cases are implemented:

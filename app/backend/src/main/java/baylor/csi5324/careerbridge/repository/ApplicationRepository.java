@@ -4,21 +4,44 @@ import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.Organization;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
-    // Fetches the posting and its organization with each row; the response shows both
-    @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization"})
+    // Fetches the posting, its organization and stage history with each row; the list shows all three (CO-05.1)
+    @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization", "statusHistory", "offer"})
     List<Application> findByApplicant(Applicant applicant);
 
-    @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization"})
+    @EntityGraph(attributePaths = {"applicant", "jobPosting", "jobPosting.organization", "statusHistory", "offer"})
+    Optional<Application> findWithDetailsByApplicationId(Long applicationId);
+
+    // Row lock without outer-join fetch so PostgreSQL accepts FOR UPDATE during state transitions (CO-06.2, CO-07.2)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT a FROM Application a WHERE a.applicationId = :applicationId")
+    Optional<Application> findByIdForUpdate(@Param("applicationId") Long applicationId);
+
+    // Non-locking posting lookup so acceptOffer locks JobPosting before Application to prevent deadlocks (FR-UC07.10)
+    @Query("SELECT a.jobPosting.jobPostId FROM Application a WHERE a.applicationId = :applicationId")
+    Optional<Long> findJobPostIdByApplicationId(@Param("applicationId") Long applicationId);
+
+    long countByJobPostingAndApplicationStatus(JobPosting jobPosting, ApplicationStatus status);
+
+    List<Application> findByJobPostingAndApplicationStatusIn(JobPosting jobPosting,
+                                                             Collection<ApplicationStatus> statuses);
+
+    @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization", "statusHistory"})
     List<Application> findByApplicantAndApplicationStatusIn(Applicant applicant,
                                                             Collection<ApplicationStatus> statuses);
 
@@ -28,6 +51,15 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     default long countActiveByApplicant(Applicant applicant) {
         return countByApplicantAndApplicationStatusIn(applicant, ApplicationStatus.ACTIVE);
     }
+
+    // One grouped query for the whole organization, so a long list of postings costs one read (NFR-UC14.1)
+    @Query("SELECT new baylor.csi5324.careerbridge.repository.StageCount("
+            + "a.jobPosting.jobPostId, a.applicationStatus, COUNT(a)) "
+            + "FROM Application a WHERE a.jobPosting.organization = :organization "
+            + "AND a.applicationStatus IN :statuses "
+            + "GROUP BY a.jobPosting.jobPostId, a.applicationStatus")
+    List<StageCount> countByPostingAndStage(@Param("organization") Organization organization,
+                                            @Param("statuses") Collection<ApplicationStatus> statuses);
 
     // Any status counts, so a withdrawn application still blocks applying again (A5)
     boolean existsByApplicantAndJobPosting(Applicant applicant, JobPosting jobPosting);

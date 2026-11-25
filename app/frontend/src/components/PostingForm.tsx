@@ -9,8 +9,9 @@ import {
   submitJobPosting as sendForApproval,
   type JobPosting,
 } from "@/lib/api";
-import { EMPLOYMENT_TYPES, LOCATIONS } from "@/lib/postingOptions";
 import { useEndSession } from "@/lib/useEndSession";
+import { SelectField } from "./FormField";
+import PostingFields, { EMPTY_DETAILS, editPostingPath, requestOf, type PostingDetails } from "./PostingFields";
 
 const SESSION_ENDED = "Your session has ended. Log in again as a recruiter.";
 
@@ -18,39 +19,26 @@ const SESSION_ENDED = "Your session has ended. Log in again as a recruiter.";
 export default function PostingForm({ token }: { token: string }) {
   const endSession = useEndSession();
   const [organizationId, setOrganizationId] = useState("1");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [jobRequirements, setJobRequirements] = useState("");
-  const [location, setLocation] = useState("");
-  const [employmentType, setEmploymentType] = useState("Full-time");
-  const [salaryRange, setSalaryRange] = useState("");
-  const [numberOfOpenings, setNumberOfOpenings] = useState("1");
-  const [applicationDeadline, setApplicationDeadline] = useState("");
+  const [details, setDetails] = useState<PostingDetails>(EMPTY_DETAILS);
 
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  // The backend's reason for refusing the posting, shown under the field it names
+  const [refused, setRefused] = useState("");
   const [created, setCreated] = useState<JobPosting | null>(null);
-
-  const today = new Date().toLocaleDateString("en-CA");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setRefused("");
     setCreated(null);
     setSaving(true);
 
     try {
       const posting = await createPosting(token, {
         organizationId: Number(organizationId),
-        title: title.trim(),
-        description: description.trim(),
-        jobRequirements: jobRequirements.trim(),
-        location,
-        employmentType,
-        salaryRange: salaryRange.trim() || null,
-        numberOfOpenings: Number(numberOfOpenings),
-        applicationDeadline,
+        ...requestOf(details),
       });
 
       setCreated(posting);
@@ -58,13 +46,11 @@ export default function PostingForm({ token }: { token: string }) {
       if (err instanceof SessionEnded) {
         endSession();
       }
-      setError(
-        err instanceof PostingRejected && err.message
-          ? err.message
-          : err instanceof SessionEnded
-            ? SESSION_ENDED
-            : "Unable to save the posting. Please try again.",
-      );
+      if (err instanceof PostingRejected && err.message) {
+        setRefused(err.message);
+      } else {
+        setError(err instanceof SessionEnded ? SESSION_ENDED : "Unable to save the posting. Please try again.");
+      }
     } finally {
       setSaving(false);
     }
@@ -146,6 +132,12 @@ export default function PostingForm({ token }: { token: string }) {
           </div>
 
           {created.postStatus === "DRAFT" && (
+            <Link href={editPostingPath(created.jobPostId)} className="btn">
+              Edit draft
+            </Link>
+          )}
+
+          {created.postStatus === "DRAFT" && (
             <button
               type="button"
               className="btn btn-primary"
@@ -173,152 +165,20 @@ export default function PostingForm({ token }: { token: string }) {
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-6 rounded-2xl border border-base-300 bg-base-100 p-5 shadow-sm md:p-8"
+        className="card border border-base-300 bg-base-100 flex flex-col gap-6 p-5 md:p-8"
       >
-        <div className="grid gap-5 md:grid-cols-2">
-          <fieldset className="fieldset md:col-span-2">
-            <label htmlFor="organization" className="fieldset-legend">
-              Organization *
-            </label>
-            <select
-              id="organization"
-              className="select w-full"
-              value={organizationId}
-              onChange={(event) => setOrganizationId(event.target.value)}
-              required
-            >
-              <option value="1">Brazos Analytics</option>
-              <option value="2">Waco Health Partners</option>
-            </select>
-          </fieldset>
+        <SelectField
+          id="organization"
+          label="Organization"
+          value={organizationId}
+          onChange={(event) => setOrganizationId(event.target.value)}
+          required
+        >
+          <option value="1">Brazos Analytics</option>
+          <option value="2">Waco Health Partners</option>
+        </SelectField>
 
-          <fieldset className="fieldset md:col-span-2">
-            <label htmlFor="title" className="fieldset-legend">
-              Job title *
-            </label>
-            <input
-              id="title"
-              className="input w-full"
-              placeholder="e.g. Cybersecurity Analyst"
-              maxLength={255}
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              required
-            />
-          </fieldset>
-
-          <fieldset className="fieldset md:col-span-2">
-            <label htmlFor="description" className="fieldset-legend">
-              Job description
-            </label>
-            <textarea
-              id="description"
-              className="textarea min-h-32 w-full"
-              placeholder="Describe the role and responsibilities"
-              maxLength={10000}
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-            />
-          </fieldset>
-
-          <fieldset className="fieldset md:col-span-2">
-            <label htmlFor="requirements" className="fieldset-legend">
-              Job requirements
-            </label>
-            <textarea
-              id="requirements"
-              className="textarea min-h-28 w-full"
-              placeholder="List the skills, experience, or qualifications"
-              maxLength={2000}
-              value={jobRequirements}
-              onChange={(event) => setJobRequirements(event.target.value)}
-            />
-          </fieldset>
-
-          <fieldset className="fieldset">
-            <label htmlFor="location" className="fieldset-legend">
-              Location
-            </label>
-            <select
-              id="location"
-              className="select w-full"
-              value={location}
-              onChange={(event) => setLocation(event.target.value)}
-            >
-              <option value="" disabled>
-                Choose a location
-              </option>
-              {LOCATIONS.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </fieldset>
-
-          <fieldset className="fieldset">
-            <label htmlFor="employmentType" className="fieldset-legend">
-              Employment type
-            </label>
-            <select
-              id="employmentType"
-              className="select w-full"
-              value={employmentType}
-              onChange={(event) => setEmploymentType(event.target.value)}
-            >
-              {EMPLOYMENT_TYPES.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </fieldset>
-
-          <fieldset className="fieldset">
-            <label htmlFor="salary" className="fieldset-legend">
-              Salary range
-            </label>
-            <input
-              id="salary"
-              className="input w-full"
-              placeholder="e.g. $70,000 - $90,000"
-              maxLength={255}
-              value={salaryRange}
-              onChange={(event) => setSalaryRange(event.target.value)}
-            />
-          </fieldset>
-
-          <fieldset className="fieldset">
-            <label htmlFor="openings" className="fieldset-legend">
-              Number of openings *
-            </label>
-            <input
-              id="openings"
-              type="number"
-              className="input w-full"
-              min={1}
-              step={1}
-              value={numberOfOpenings}
-              onChange={(event) => setNumberOfOpenings(event.target.value)}
-              required
-            />
-          </fieldset>
-
-          <fieldset className="fieldset md:col-span-2">
-            <label htmlFor="deadline" className="fieldset-legend">
-              Application deadline *
-            </label>
-            <input
-              id="deadline"
-              type="date"
-              className="input w-full"
-              min={today}
-              value={applicationDeadline}
-              onChange={(event) => setApplicationDeadline(event.target.value)}
-              required
-            />
-          </fieldset>
-        </div>
+        <PostingFields details={details} onChange={setDetails} refused={refused} />
 
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-base-300 pt-5">
           <Link href="/jobs" className="btn btn-ghost">

@@ -1,11 +1,18 @@
 package baylor.csi5324.careerbridge.config;
 
 import baylor.csi5324.careerbridge.model.AccountStatus;
+import baylor.csi5324.careerbridge.model.Applicant;
+import baylor.csi5324.careerbridge.model.Application;
+import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.MembershipRequestType;
 import baylor.csi5324.careerbridge.model.MembershipStatus;
+import baylor.csi5324.careerbridge.model.Offer;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
+import baylor.csi5324.careerbridge.model.ResumeSnapshot;
+import baylor.csi5324.careerbridge.repository.ApplicantRepository;
+import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationMembershipRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
@@ -31,6 +38,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
@@ -42,6 +50,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 // so that no read is refused before it reaches the code that could write
 @WithMockUser(username = "jordan.lee@example.com", roles = {"APPLICANT", "RECRUITER", "ADMINISTRATOR"})
 class ReadsChangeNothingTest {
+
+    private static final String RECRUITER = "riley.chen@example.com";
 
     @Autowired
     private WebApplicationContext context;
@@ -59,6 +69,12 @@ class ReadsChangeNothingTest {
     private OrganizationRepository organizationRepository;
 
     @Autowired
+    private ApplicantRepository applicantRepository;
+
+    @Autowired
+    private ApplicationRepository applicationRepository;
+
+    @Autowired
     private RecruiterRepository recruiterRepository;
 
     @Autowired
@@ -67,8 +83,17 @@ class ReadsChangeNothingTest {
     @Test
     void everyReadUnderApiLeavesTheDatabaseAsItWas() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
-        // A posting of its own: other tests share the database and may have removed the sample ones
-        String postingId = String.valueOf(publishedPosting().getJobPostId());
+        // A posting and applications of their own: other tests share the database and may have removed the sample ones
+        JobPosting posting = publishedPosting();
+        JobPosting offerPosting = publishedPosting();
+        String postingId = String.valueOf(posting.getJobPostId());
+        String applicationId = String.valueOf(sampleApplication(posting).getApplicationId());
+        String offerApplicationId = String.valueOf(sampleOfferApplication(offerPosting).getApplicationId());
+        // Reopening a posting to edit it needs a Draft that the demo recruiter created (UC-11)
+        JobPosting draft = publishedPosting();
+        draft.setPostStatus(PostStatus.DRAFT);
+        draft.setRecruiter(recruiterRepository.findByEmailIgnoreCase(RECRUITER).orElseThrow());
+        String draftId = String.valueOf(jobPostingRepository.save(draft).getJobPostId());
         // The same for the Administrator's view of one recruiter request (UC-10)
         String requestId = String.valueOf(pendingRequest());
         List<String> reads = handlerMapping.getHandlerMethods().keySet().stream()
@@ -77,14 +102,18 @@ class ReadsChangeNothingTest {
                         || info.getMethodsCondition().getMethods().contains(RequestMethod.GET))
                 .flatMap(info -> info.getPatternValues().stream())
                 .filter(pattern -> pattern.startsWith("/api/"))
-                .map(pattern -> pattern.replaceAll("\\{[^}]+}", pattern.startsWith("/api/admin/requests/") ? requestId : postingId))
+                .map(pattern -> pattern
+                        .replace("{applicationId}", pattern.endsWith("/offer") ? offerApplicationId : applicationId)
+                        .replaceAll("\\{[^}]+}", pattern.startsWith("/api/admin/requests/") ? requestId
+                                : pattern.endsWith("/edit") ? draftId : postingId))
                 .toList();
         assertFalse(reads.isEmpty());
 
         var before = everyTable();
         for (String read : reads) {
             // A refused read never reaches the code that could write
-            int status = mockMvc.perform(get(read)).andReturn().getResponse().getStatus();
+            var request = read.endsWith("/edit") ? get(read).with(user(RECRUITER).roles("RECRUITER")) : get(read);
+            int status = mockMvc.perform(request).andReturn().getResponse().getStatus();
             assertTrue(status < 400, "GET " + read + " answered " + status
                     + ": give this test a request that reaches the handler");
             var after = everyTable();
@@ -125,5 +154,35 @@ class ReadsChangeNothingTest {
         posting.setApplicationDeadline(LocalDate.now().plusDays(30));
         posting.setPostStatus(PostStatus.PUBLISHED);
         return jobPostingRepository.save(posting);
+    }
+
+    private Application sampleApplication(JobPosting posting) {
+        Applicant jordan = applicantRepository.findByEmailIgnoreCase(SampleDataLoader.SAMPLE_APPLICANT_EMAIL)
+                .orElseThrow();
+        return applicationRepository.save(new Application(
+                jordan,
+                posting,
+                new ResumeSnapshot("read-only.pdf", "application/pdf", 1024L),
+                LocalDate.now()));
+    }
+
+    private Application sampleOfferApplication(JobPosting posting) {
+        Applicant jordan = applicantRepository.findByEmailIgnoreCase(SampleDataLoader.SAMPLE_APPLICANT_EMAIL)
+                .orElseThrow();
+        Application application = new Application(
+                jordan,
+                posting,
+                new ResumeSnapshot("read-only.pdf", "application/pdf", 1024L),
+                LocalDate.now());
+        application.setApplicationStatus(ApplicationStatus.OFFER);
+        application.setOffer(new Offer(
+                application,
+                LocalDate.now(),
+                LocalDate.now().plusDays(30),
+                "$65,000 USD per year",
+                "Standard benefits.",
+                LocalDate.now().plusDays(14),
+                null));
+        return applicationRepository.save(application);
     }
 }

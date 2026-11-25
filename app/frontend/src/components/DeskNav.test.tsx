@@ -48,6 +48,7 @@ describe("DeskNav", () => {
       "href",
       "/admin/postings",
     );
+    expect(within(sideColumn()).getByRole("link", { name: "Users" })).toHaveAttribute("href", "/admin/users");
     expect(screen.queryByText("Find jobs")).toBeNull();
   });
 
@@ -56,7 +57,7 @@ describe("DeskNav", () => {
 
     expect(within(sideColumn()).getByRole("link", { name: "Postings" })).toHaveAttribute(
       "href",
-      "/recruiter/postings/new",
+      "/recruiter/postings",
     );
     expect(screen.queryByText("Find jobs")).toBeNull();
   });
