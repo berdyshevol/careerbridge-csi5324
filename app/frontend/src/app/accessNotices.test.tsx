@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { SessionEnded, startApplication, viewApplications, viewPosting, viewProfile, type ApplicationStart, type JobPosting } from "@/lib/api";
 import { serverSession } from "@/lib/serverSession";
 import type { Role, Session } from "@/lib/session";
+import AdminPostingsPage from "./admin/postings/page";
 import ApplyPage from "./jobs/[id]/apply/page";
 import ProfilePage from "./profile/page";
 import NewPostingPage from "./recruiter/postings/new/page";
@@ -125,6 +126,27 @@ describe("pages that need a log-in", () => {
     render(await NewPostingPage());
     expect(screen.getByText(/Only a recruiter creates job postings/)).toBeInTheDocument();
   });
+
+  it("asks a visitor to log in as an administrator before the approval queue", async () => {
+    vi.mocked(serverSession).mockResolvedValue(null);
+    render(await AdminPostingsPage());
+
+    expect(screen.getByRole("heading", { name: "Administrators only" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/login?next=%2Fadmin%2Fpostings");
+    expect(screen.queryByRole("heading", { name: "Job posting approvals" })).not.toBeInTheDocument();
+  });
+
+  it.each(["APPLICANT", "RECRUITER"] as const)(
+    "shows a %s only the notice on the approval queue, not the administrator's page",
+    async (role) => {
+      vi.mocked(serverSession).mockResolvedValue(as(role));
+      render(await AdminPostingsPage());
+
+      expect(screen.getByText(/Only an administrator reviews postings/)).toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: "Job posting approvals" })).not.toBeInTheDocument();
+      expect(screen.queryByText(/Administrator workspace/i)).not.toBeInTheDocument();
+    },
+  );
 
   it("shows the profile only to an applicant", async () => {
     vi.mocked(serverSession).mockResolvedValue(as("ADMINISTRATOR"));

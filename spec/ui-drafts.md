@@ -69,7 +69,8 @@ match its mockup, and a screen that is not listed here is added before it is cod
    its use case, nothing computed.
 4. **Every use case has one place, and every hand-off is a link** (table "Hand-offs" below).
 5. **A screen of another role is closed, not only hidden.** A logged-in user who opens another
-   role's address goes to their own home; a visitor goes to Log In and comes back after it. The job
+   role's address sees only a notice that names their role, with nothing of that page; a visitor
+   is asked to log in and comes back after it. The job
    board stays open to everyone (UC-01 serves all actors through generalization), but only the
    Visitor and the Applicant have it in their navigation.
 6. **Final actions are confirmed.** Withdraw, accept, decline, reject an application, reject a
