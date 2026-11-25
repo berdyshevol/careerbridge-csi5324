@@ -14,7 +14,7 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   else
     base=$remote_sha
   fi
-  if [ -z "$base" ] || ! git diff --quiet "$base" "$local_sha" -- app .github; then
+  if [ -z "$base" ] || ! git diff --quiet "$base" "$local_sha" -- app .github spec/user-scenarios; then
     changed=1
   fi
 done
