@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
+  closePosting,
+  PostingRejected,
   SessionEnded,
   viewRecruiterPostings,
   type ActiveStage,
@@ -13,6 +15,7 @@ import { STAGES } from "@/lib/sampleDesk";
 import AccessNotice from "./AccessNotice";
 import EmptyState from "./EmptyState";
 import PageTitle from "./PageTitle";
+import { editPostingPath } from "./PostingFields";
 import PostingStatusBadge from "./PostingStatusBadge";
 
 // FR-UC14.1: a posting that took applications shows how many are at each stage. A posting with none
@@ -48,6 +51,41 @@ export default function RecruiterPostingList({ token }: { token: string }) {
   const [postings, setPostings] = useState<RecruiterPostings | null>(null);
   const [ended, setEnded] = useState(false);
   const [error, setError] = useState("");
+  // UC-13 extension *a: the posting whose closing waits for the recruiter's confirmation
+  const [closing, setClosing] = useState<number | null>(null);
+  const [closeBusy, setCloseBusy] = useState(false);
+  const [closeRefusal, setCloseRefusal] = useState<{ postingId: number; reason: string } | null>(null);
+
+  async function confirmClose(postingId: number) {
+    setCloseBusy(true);
+    setCloseRefusal(null);
+    try {
+      const closed = await closePosting(token, postingId);
+      setPostings((current) =>
+        current && {
+          ...current,
+          postings: current.postings.map((row) =>
+            row.postingId === postingId
+              ? { ...row, postStatus: closed.postStatus, closingReason: closed.closingReason ?? null }
+              : row,
+          ),
+        },
+      );
+      setClosing(null);
+    } catch (err) {
+      if (err instanceof SessionEnded) {
+        setEnded(true);
+        return;
+      }
+      setCloseRefusal({
+        postingId,
+        reason:
+          err instanceof PostingRejected && err.message ? err.message : "The posting could not be closed. Try again.",
+      });
+    } finally {
+      setCloseBusy(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -107,19 +145,73 @@ export default function RecruiterPostingList({ token }: { token: string }) {
           {postings.postings.map((row) => {
             const line = note(row, organizationName);
             return (
-              <li
-                key={row.postingId}
-                className="flex flex-col gap-2.5 rounded-xl border border-base-300 bg-base-100 px-4 py-3.5 md:flex-row md:items-center md:gap-4"
-              >
-                <div className="min-w-0 grow">
-                  <p className="font-semibold">{row.title}</p>
-                  {line && <p className="text-sm text-muted">{line}</p>}
+              <li key={row.postingId} className="flex flex-col gap-3 rounded-xl border border-base-300 bg-base-100 px-4 py-3.5">
+                <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:gap-4">
+                  <div className="min-w-0 grow">
+                    <p className="font-semibold">{row.title}</p>
+                    {line && <p className="text-sm text-muted">{line}</p>}
+                  </div>
+                  <PostingStatusBadge
+                    postStatus={row.postStatus}
+                    closingReason={row.closingReason}
+                    className="w-44 shrink-0 self-start md:self-center"
+                  />
+                  {row.postStatus === "RETURNED" && (
+                    <Link href={editPostingPath(row.postingId)} className="btn btn-sm self-start md:self-center">
+                      Revise
+                    </Link>
+                  )}
+                  {row.postStatus === "DRAFT" && (
+                    <Link href={editPostingPath(row.postingId)} className="btn btn-sm self-start md:self-center">
+                      Continue
+                    </Link>
+                  )}
+                  {row.postStatus === "PUBLISHED" && closing !== row.postingId && (
+                    <button
+                      type="button"
+                      className="btn btn-sm self-start md:self-center"
+                      onClick={() => {
+                        setCloseRefusal(null);
+                        setClosing(row.postingId);
+                      }}
+                    >
+                      Close
+                    </button>
+                  )}
                 </div>
-                <PostingStatusBadge
-                  postStatus={row.postStatus}
-                  closingReason={row.closingReason}
-                  className="w-40 shrink-0 self-start md:self-center"
-                />
+                {closing === row.postingId && (
+                  <div
+                    role="dialog"
+                    aria-labelledby={`close-${row.postingId}`}
+                    className="flex flex-col gap-3 rounded-2xl border border-base-300 bg-base-100 p-4 shadow-md"
+                  >
+                    <h2 id={`close-${row.postingId}`} className="font-display text-lg font-semibold">
+                      Close {row.title}?
+                    </h2>
+                    <p className="text-sm">
+                      It leaves the job board and takes no new applications. Applications in progress continue. A
+                      closed posting cannot be opened again.
+                    </p>
+                    <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                      <button type="button" className="btn" onClick={() => setClosing(null)} disabled={closeBusy}>
+                        Go back
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-neutral"
+                        onClick={() => void confirmClose(row.postingId)}
+                        disabled={closeBusy}
+                      >
+                        {closeBusy ? "Closing…" : "Close posting, final"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {closeRefusal?.postingId === row.postingId && (
+                  <div role="alert" className="alert alert-error">
+                    <span>{closeRefusal.reason}</span>
+                  </div>
+                )}
               </li>
             );
           })}

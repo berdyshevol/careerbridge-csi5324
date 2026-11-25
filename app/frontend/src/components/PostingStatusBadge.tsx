@@ -23,7 +23,8 @@ export default function PostingStatusBadge({
     <span
       className={`inline-flex items-center justify-center rounded-lg px-2.5 py-1 text-center text-sm font-semibold whitespace-nowrap ${tone} ${className}`}
     >
-      {postStatus === "CLOSED" && closingReason ? `${label} · ${closingReason}` : label}
+      {/* "Closed by recruiter" reads "Closed · by recruiter" */}
+      {postStatus === "CLOSED" && closingReason ? `${label} · ${closingReason.replace(/^Closed /, "")}` : label}
     </span>
   );
 }

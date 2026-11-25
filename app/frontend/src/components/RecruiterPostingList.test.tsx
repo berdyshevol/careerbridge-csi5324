@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import type { RecruiterPostings } from "@/lib/api";
 import RecruiterPostingList from "./RecruiterPostingList";
 
@@ -19,6 +19,7 @@ const answer: RecruiterPostings = {
     { postingId: 3, title: "Medical Records Clerk", postStatus: "PENDING_APPROVAL", closingReason: null, applicationsByStage: stages(0, 0, 0, 0) },
     { postingId: 4, title: "Clinical Data Engineer", postStatus: "DRAFT", closingReason: null, applicationsByStage: stages(0, 0, 0, 0) },
     { postingId: 5, title: "Front Desk Coordinator", postStatus: "CLOSED", closingReason: "Filled", applicationsByStage: stages(0, 0, 0, 0) },
+    { postingId: 6, title: "Nurse Scheduler", postStatus: "RETURNED", closingReason: null, applicationsByStage: stages(0, 0, 0, 0) },
   ],
 };
 
@@ -100,5 +101,70 @@ describe("RecruiterPostingList", () => {
     render(<RecruiterPostingList token="t" />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent("could not be loaded");
+  });
+
+  const row = (title: string) => screen.getByText(title).closest("li")!;
+  const findRow = async (title: string) => (await screen.findByText(title)).closest("li")!;
+
+  it("offers to revise a returned posting and continue a draft, on the edit page", async () => {
+    fetchMock.mockResolvedValueOnce(reply(200, answer));
+    render(<RecruiterPostingList token="t" />);
+
+    expect(within(await findRow("Nurse Scheduler")).getByRole("link", { name: "Revise" })).toHaveAttribute("href", "/recruiter/postings/6/edit");
+    expect(within(row("Clinical Data Engineer")).getByRole("link", { name: "Continue" })).toHaveAttribute("href", "/recruiter/postings/4/edit");
+    expect(within(row("Medical Records Clerk")).queryByRole("link")).toBeNull();
+    expect(within(row("Front Desk Coordinator")).queryByRole("button", { name: "Close" })).toBeNull();
+  });
+
+  it("closes a published posting only after the recruiter confirms", async () => {
+    fetchMock
+      .mockResolvedValueOnce(reply(200, answer))
+      .mockResolvedValueOnce(reply(200, { jobPostId: 1, postStatus: "CLOSED", closingReason: "Closed by recruiter" }));
+    render(<RecruiterPostingList token="t" />);
+
+    fireEvent.click(within(await findRow("Data Analyst")).getByRole("button", { name: "Close" }));
+    const dialog = screen.getByRole("dialog", { name: "Close Data Analyst?" });
+    expect(dialog).toHaveTextContent("cannot be opened again");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Close posting, final" }));
+
+    expect(await within(row("Data Analyst")).findByText("Closed · by recruiter")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    const [url, init] = fetchMock.mock.calls[1];
+    expect(url).toMatch(/\/api\/postings\/1\/close$/);
+    expect(init.method).toBe("POST");
+  });
+
+  it("goes back without closing", async () => {
+    fetchMock.mockResolvedValueOnce(reply(200, answer));
+    render(<RecruiterPostingList token="t" />);
+
+    fireEvent.click(within(await findRow("Data Analyst")).getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button", { name: "Go back" }));
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(within(row("Data Analyst")).getByText("Published")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the reason when the backend refuses to close", async () => {
+    fetchMock
+      .mockResolvedValueOnce(reply(200, answer))
+      .mockResolvedValueOnce(
+        new Response("Only the recruiter who created this posting can close it", {
+          status: 403,
+          headers: { "Content-Type": "text/plain" },
+        }),
+      );
+    render(<RecruiterPostingList token="t" />);
+
+    fireEvent.click(within(await findRow("Data Analyst")).getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close posting, final" }));
+
+    expect(await within(row("Data Analyst")).findByRole("alert")).toHaveTextContent(
+      "Only the recruiter who created this posting can close it",
+    );
+    expect(within(row("Data Analyst")).getByText("Published")).toBeInTheDocument();
   });
 });
