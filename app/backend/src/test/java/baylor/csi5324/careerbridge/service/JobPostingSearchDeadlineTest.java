@@ -6,6 +6,7 @@ import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
+import baylor.csi5324.careerbridge.repository.RecruiterRepository;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
@@ -28,7 +29,7 @@ class JobPostingSearchDeadlineTest {
 
     private final JobPostingRepository repository = mock(JobPostingRepository.class);
     private final JobPostingService service = new JobPostingService(
-            repository, mock(OrganizationRepository.class), Clock.fixed(NOW, ZoneOffset.UTC));
+            repository, mock(OrganizationRepository.class), mock(RecruiterRepository.class), Clock.fixed(NOW, ZoneOffset.UTC));
 
     private static JobPosting posting(String title, String timeZone) {
         Organization organization = new Organization(title + " Inc");

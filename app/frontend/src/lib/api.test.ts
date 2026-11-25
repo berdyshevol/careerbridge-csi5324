@@ -4,6 +4,7 @@ import { SessionEnded,
   formatDate,
   formatUtcDay,
   isOpen,
+  openPostingForEdit,
   PostingRejected,
   searchPostings,
   searchCriteria,
@@ -12,6 +13,8 @@ import { SessionEnded,
   submitApplication,
   viewApplication,
   viewApplications,
+  viewRecruiterPostings,
+  updatePosting,
   updateProfile,
   viewProfile,
   ApplicationActionRefused,
@@ -204,6 +207,77 @@ describe("createPosting", () => {
 
     expect(failed).not.toBeInstanceOf(PostingRejected);
     expect(failed.message).not.toContain("path");
+  });
+});
+
+describe("openPostingForEdit and updatePosting", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  function answer(status: number, body: string, contentType: string) {
+    const fetch = vi.fn().mockResolvedValue(new Response(body, { status, headers: { "Content-Type": contentType } }));
+    vi.stubGlobal("fetch", fetch);
+    return fetch;
+  }
+
+  const changes = {
+    title: "Nurse Scheduler",
+    description: "",
+    jobRequirements: "",
+    location: "Hybrid",
+    employmentType: "Full-time",
+    salaryRange: null,
+    numberOfOpenings: 1,
+    applicationDeadline: "2999-12-31",
+  };
+
+  it("reads the recruiter's own posting with the token", async () => {
+    const draft = posting({ postStatus: "DRAFT" });
+    const fetch = answer(200, JSON.stringify(draft), "application/json");
+
+    await expect(openPostingForEdit("t", 7)).resolves.toEqual(draft);
+
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toMatch(/\/api\/postings\/7\/edit$/);
+    expect(init.headers.Authorization).toBe("Bearer t");
+  });
+
+  it.each([403, 409])("passes on the reason a posting cannot be changed, not an ended session: %i", async (status) => {
+    answer(status, "Only the recruiter who created this posting can change it", "text/plain;charset=UTF-8");
+
+    const refused = await openPostingForEdit("t", 7).catch((error) => error);
+
+    expect(refused).toBeInstanceOf(PostingRejected);
+    expect(refused.message).toBe("Only the recruiter who created this posting can change it");
+  });
+
+  it("says there is no posting for a 404", async () => {
+    answer(404, '{"status":404}', "application/json");
+
+    await expect(openPostingForEdit("t", 7)).rejects.toThrow("There is no posting at this address.");
+  });
+
+  it("ends the session for a 403 without a reason", async () => {
+    answer(403, "", "application/json");
+
+    await expect(openPostingForEdit("t", 7)).rejects.toBeInstanceOf(SessionEnded);
+  });
+
+  it("puts the changes and returns the saved posting", async () => {
+    const saved = posting({ postStatus: "RETURNED" });
+    const fetch = answer(200, JSON.stringify(saved), "application/json");
+
+    await expect(updatePosting("t", 7, changes)).resolves.toEqual(saved);
+
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toMatch(/\/api\/postings\/7$/);
+    expect(init.method).toBe("PUT");
+    expect(JSON.parse(init.body)).toEqual(changes);
+  });
+
+  it("passes on the reason when the backend refuses the changes", async () => {
+    answer(400, "Job title is required", "text/plain;charset=UTF-8");
+
+    await expect(updatePosting("t", 7, changes)).rejects.toThrow("Job title is required");
   });
 });
 
@@ -746,5 +820,32 @@ describe("uploadResume", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 403 })));
 
     await expect(uploadResume("t", file)).rejects.toBeInstanceOf(SessionEnded);
+  });
+});
+
+describe("viewRecruiterPostings", () => {
+  it("sends the recruiter's token and returns the organization with its postings", async () => {
+    const body = { organizationName: "Waco Health Partners", postings: [] };
+    const fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(body) });
+    vi.stubGlobal("fetch", fetch);
+
+    expect(await viewRecruiterPostings("t")).toEqual(body);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/recruiter/postings"),
+      expect.objectContaining({ headers: { Authorization: "Bearer t" } }),
+    );
+  });
+
+  it("says the session ended when the backend refuses the token", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 403 }));
+
+    await expect(viewRecruiterPostings("t")).rejects.toBeInstanceOf(SessionEnded);
+  });
+
+  it("fails loudly on any other answer", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
+
+    await expect(viewRecruiterPostings("t")).rejects.toThrow("Backend answered 500");
   });
 });

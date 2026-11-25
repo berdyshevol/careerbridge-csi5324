@@ -54,6 +54,6 @@ test("given a logged-in recruiter, when they open the job board, then the naviga
   await logIn(page, ACCOUNTS.recruiter, "/jobs");
 
   const navigation = page.locator(visibleNavigation);
-  await expect(navigation.getByRole("link", { name: "Postings" })).toHaveAttribute("href", "/recruiter/postings/new");
+  await expect(navigation.getByRole("link", { name: "Postings" })).toHaveAttribute("href", "/recruiter/postings");
   await expect(navigation.getByRole("link", { name: /Find jobs|Jobs/ })).toHaveCount(0);
 });

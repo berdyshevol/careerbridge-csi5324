@@ -232,17 +232,45 @@ export async function createPosting(token: string, posting: NewPosting): Promise
   return response.json();
 }
 
+// The details of a posting being changed: those of a new one but its organization, which stays
+export type PostingChanges = Omit<NewPosting, "organizationId">;
+
+// UC-11 extensions 3b and 6a: the recruiter's own Draft or Returned posting, with the Administrator's comment
+export async function openPostingForEdit(token: string, postingId: number): Promise<JobPosting> {
+  const response = await backendFetch(`/api/postings/${postingId}/edit`, { headers: bearer(token) });
+  if (response.status === 404) {
+    throw new PostingRejected("There is no posting at this address.");
+  }
+  return postingAnswer(response, [403, 409]);
+}
+
+// CO-11.2: saves the changes; the posting keeps its status until it is submitted
+export async function updatePosting(token: string, postingId: number, changes: PostingChanges): Promise<JobPosting> {
+  const response = await backendFetch(`/api/postings/${postingId}`, {
+    method: "PUT",
+    headers: { ...bearer(token), "Content-Type": "application/json" },
+    body: JSON.stringify(changes),
+  });
+  return postingAnswer(response, [400, 403, 409]);
+}
+
 // UC-11: a saved draft goes to the administrators' queue
 export async function submitJobPosting(token: string, postingId: number): Promise<JobPosting> {
   const response = await backendFetch(`/api/postings/${postingId}/submit`, {
     method: "POST",
     headers: bearer(token),
   });
-  endedSession(response);
-  const reason = await refusal(response, [400, 409]);
+  return postingAnswer(response, [400, 403, 409]);
+}
+
+// The reason is read first: a 403 that gives one is a posting refusing this recruiter (SCRUM-215),
+// while a 403 without one is the token refused, so the session has ended
+async function postingAnswer(response: Response, refusals: number[]): Promise<JobPosting> {
+  const reason = await refusal(response, refusals);
   if (reason !== null) {
     throw new PostingRejected(reason);
   }
+  endedSession(response);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }
@@ -745,6 +773,32 @@ export async function uploadResume(token: string, file: File): Promise<Resume> {
 // UC-12: the queue of postings waiting for an administrator
 export async function openPostingApprovalQueue(token: string): Promise<JobPosting[]> {
   const response = await backendFetch("/api/admin/postings/pending", { headers: bearer(token) });
+  endedSession(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+// UC-14 steps 1-2: the postings of the organization the recruiter acts for, with their applications per active stage
+export type ActiveStage = "APPLIED" | "SCREENING" | "INTERVIEW" | "OFFER";
+
+export type RecruiterPostingRow = {
+  postingId: number;
+  title: string;
+  postStatus: string;
+  closingReason: string | null;
+  applicationsByStage: Record<ActiveStage, number>;
+};
+
+export type RecruiterPostings = {
+  // Null when the recruiter acts for no organization
+  organizationName: string | null;
+  postings: RecruiterPostingRow[];
+};
+
+export async function viewRecruiterPostings(token: string): Promise<RecruiterPostings> {
+  const response = await backendFetch("/api/recruiter/postings", { headers: bearer(token) });
   endedSession(response);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
