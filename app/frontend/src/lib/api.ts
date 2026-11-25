@@ -800,6 +800,8 @@ export type RecruiterPostingRow = {
   postStatus: string;
   closingReason: string | null;
   applicationsByStage: Record<ActiveStage, number>;
+  // Only the recruiter who created a posting may edit or close it
+  createdByYou: boolean;
 };
 
 export type RecruiterPostings = {
