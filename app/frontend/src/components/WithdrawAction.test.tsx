@@ -41,19 +41,19 @@ describe("WithdrawAction", () => {
   it("opens confirmation dialog with warning and makes no change when cancelled (FR-UC06.2, FR-UC06.3)", async () => {
     vi.mocked(requestWithdrawal).mockResolvedValue(prompt);
     const user = userEvent.setup();
-    render(<WithdrawAction applicationId={12} token="t" />);
+    render(<WithdrawAction applicationId={12} token="t" canWithdraw />);
 
     await user.click(screen.getByRole("button", { name: "Withdraw application" }));
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText(/Withdrawing this application is final/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Go back" }));
+    await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(withdrawApplication).not.toHaveBeenCalled();
   });
 
-  it("confirms withdrawal with optional reason and shows updated active count (FR-UC06.5, FR-UC06.6)", async () => {
+  it("confirms withdrawal with optional reason and keeps active count visible after refresh (FR-UC06.5, FR-UC06.6)", async () => {
     vi.mocked(requestWithdrawal).mockResolvedValue(prompt);
     vi.mocked(withdrawApplication).mockResolvedValue({
       application: { applicationStatus: "Withdrawn" } as ApplicationDetail,
@@ -61,20 +61,23 @@ describe("WithdrawAction", () => {
       applicationLimit: 5,
     });
     const user = userEvent.setup();
-    render(<WithdrawAction applicationId={12} token="t" />);
+    const { rerender } = render(<WithdrawAction applicationId={12} token="t" canWithdraw />);
 
     await user.click(screen.getByRole("button", { name: "Withdraw application" }));
     await user.selectOptions(screen.getByLabelText("Reason, optional"), "No longer interested");
     await user.click(screen.getByRole("button", { name: "Withdraw, final" }));
 
     expect(withdrawApplication).toHaveBeenCalledWith("t", 12, "No longer interested");
+    expect(refresh).toHaveBeenCalled();
+
+    // Server refresh flips canWithdraw to false; the step 7 confirmation remains visible
+    rerender(<WithdrawAction applicationId={12} token="t" canWithdraw={false} />);
     expect(screen.getByRole("status")).toHaveTextContent(
       "Application withdrawn. You now have 2 of 5 active applications.",
     );
-    expect(refresh).toHaveBeenCalled();
   });
 
-  it("shows refusal message and refreshes when stage changed (ext 4a, 4b)", async () => {
+  it("shows refusal message and keeps it visible after refresh when stage changed (ext 4a, 4b)", async () => {
     vi.mocked(requestWithdrawal).mockResolvedValue(prompt);
     vi.mocked(withdrawApplication).mockRejectedValue(
       new ApplicationActionRefused(
@@ -83,13 +86,14 @@ describe("WithdrawAction", () => {
       ),
     );
     const user = userEvent.setup();
-    render(<WithdrawAction applicationId={12} token="t" />);
+    const { rerender } = render(<WithdrawAction applicationId={12} token="t" canWithdraw />);
 
     await user.click(screen.getByRole("button", { name: "Withdraw application" }));
     await user.click(screen.getByRole("button", { name: "Withdraw, final" }));
 
-    expect(screen.getByRole("alert")).toHaveTextContent(/Offer stage/);
     expect(refresh).toHaveBeenCalled();
+    rerender(<WithdrawAction applicationId={12} token="t" canWithdraw={false} />);
+    expect(screen.getByRole("alert")).toHaveTextContent(/Offer stage/);
   });
 });
 

@@ -128,7 +128,7 @@ public class ApplicationService {
     // CO-06.2: transitions to Withdrawn, records date/reason, frees active slot, retains audit record (FR-UC06.4-6.6, 6.9)
     public WithdrawnApplication withdrawApplication(Long applicationId, String applicantEmail, String reason) {
         Applicant applicant = applicant(applicantEmail);
-        Application application = ownedApplication(applicationId, applicant);
+        Application application = ownedApplicationForUpdate(applicationId, applicant);
         requireWithdrawable(application);
 
         Instant now = clock.instant();
@@ -149,8 +149,18 @@ public class ApplicationService {
     private Application ownedApplication(Long applicationId, Applicant applicant) {
         Application application = applicationRepository.findWithDetailsByApplicationId(applicationId)
                 .orElseThrow(() -> new ApplicationNotFoundException(applicationId));
+        return verifyOwnership(application, applicationId, applicant);
+    }
+
+    private Application ownedApplicationForUpdate(Long applicationId, Applicant applicant) {
+        Application application = applicationRepository.findByIdForUpdate(applicationId)
+                .orElseThrow(() -> new ApplicationNotFoundException(applicationId));
+        return verifyOwnership(application, applicationId, applicant);
+    }
+
+    private Application verifyOwnership(Application application, Long applicationId, Applicant applicant) {
         if (!application.getApplicant().getUserId().equals(applicant.getUserId())) {
-            log.warn("Unauthorized attempt by applicant {} to view application {}", applicant.getUserId(), applicationId);
+            log.warn("Unauthorized attempt by applicant {} to access application {}", applicant.getUserId(), applicationId);
             throw new ApplicationNotFoundException(applicationId);
         }
         return application;
@@ -166,7 +176,7 @@ public class ApplicationService {
                     stage, "This application is at the Offer stage. Use Decline on the offer instead.");
         }
         throw new ApplicationActionRefusedException(
-                stage, "This application is already " + stageLabel(stage) + " and can no longer be withdrawn.");
+                stage, "This application is already " + stage.getLabel() + " and can no longer be withdrawn.");
     }
 
     private static String normalizeReason(String reason) {
@@ -178,19 +188,6 @@ public class ApplicationService {
             return null;
         }
         return trimmed.length() > 1000 ? trimmed.substring(0, 1000) : trimmed;
-    }
-
-    private static String stageLabel(ApplicationStatus status) {
-        return switch (status) {
-            case APPLIED -> "Applied";
-            case SCREENING -> "Screening";
-            case INTERVIEW -> "Interview";
-            case OFFER -> "Offer";
-            case HIRED -> "Hired";
-            case REJECTED -> "Rejected";
-            case WITHDRAWN -> "Withdrawn";
-            case OFFER_DECLINED -> "Offer Declined";
-        };
     }
 
     private Applicant applicant(String email) {

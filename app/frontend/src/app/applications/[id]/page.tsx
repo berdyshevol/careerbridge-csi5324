@@ -144,9 +144,11 @@ export default async function ApplicationDetailPage({
             </div>
           )}
 
-          {canWithdraw && (
-            <WithdrawAction applicationId={application.applicationId} token={session.token} />
-          )}
+          <WithdrawAction
+            applicationId={application.applicationId}
+            token={session.token}
+            canWithdraw={canWithdraw}
+          />
         </div>
 
         <aside className="flex flex-col gap-4">

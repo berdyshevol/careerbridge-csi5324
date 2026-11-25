@@ -392,15 +392,33 @@ class ApplicationServiceTest {
         assertEquals(ApplicationStatus.WITHDRAWN, withdrawn.application().getApplicationStatus());
         assertEquals(0, withdrawn.activeApplicationCount());
         assertTrue(withdrawn.application().getWithdrawnAt() != null);
-        var lastEntry = withdrawn.application().getStatusHistory()
-                .get(withdrawn.application().getStatusHistory().size() - 1);
+
+        // Verify withdrawnAt and StatusHistoryEntry.reason round-trip through JPA columns
+        Application persisted = reloaded(id);
+        assertEquals(ApplicationStatus.WITHDRAWN, persisted.getApplicationStatus());
+        assertTrue(persisted.getWithdrawnAt() != null);
+        var lastEntry = persisted.getStatusHistory().get(persisted.getStatusHistory().size() - 1);
         assertEquals(ApplicationStatus.WITHDRAWN, lastEntry.getStatus());
         assertEquals("No longer interested", lastEntry.getReason());
         // Record remains stored for audit (FR-UC06.9) and still blocks reapplying (A5)
-        assertTrue(applicationRepository.findById(id).isPresent());
         ApplicationRefusedException refused = assertThrows(ApplicationRefusedException.class,
                 () -> applicationService.submitApplication(posting.getJobPostId(), JORDAN));
         assertEquals(ApplicationRefusal.ALREADY_APPLIED, refused.getReason());
+    }
+
+    @Test
+    void withdrawsWithBlankReasonAsNullAndRefusesNonOwnerAccess() {
+        JobPosting first = save("QA Engineer", PostStatus.PUBLISHED, today.plusDays(14));
+        Long firstId = applicationService.submitApplication(first.getJobPostId(), JORDAN).application().getApplicationId();
+
+        assertThrows(ApplicationNotFoundException.class, () -> applicationService.requestWithdrawal(firstId, SAM));
+        assertThrows(ApplicationNotFoundException.class, () -> applicationService.withdrawApplication(firstId, SAM, "Nope"));
+        assertEquals(ApplicationStatus.APPLIED, reloaded(firstId).getApplicationStatus());
+
+        applicationService.withdrawApplication(firstId, JORDAN, "   ");
+        Application persisted = reloaded(firstId);
+        assertEquals(ApplicationStatus.WITHDRAWN, persisted.getApplicationStatus());
+        assertEquals(null, persisted.getStatusHistory().get(persisted.getStatusHistory().size() - 1).getReason());
     }
 
     @Test
@@ -413,6 +431,11 @@ class ApplicationServiceTest {
         Application rejectedApp = applicationService.submitApplication(rejectedPosting.getJobPostId(), JORDAN).application();
         rejectedApp.setApplicationStatus(ApplicationStatus.REJECTED);
         entityManager.flush();
+
+        assertThrows(ApplicationActionRefusedException.class,
+                () -> applicationService.requestWithdrawal(offerApp.getApplicationId(), JORDAN));
+        assertThrows(ApplicationActionRefusedException.class,
+                () -> applicationService.requestWithdrawal(rejectedApp.getApplicationId(), JORDAN));
 
         ApplicationActionRefusedException offerRefused = assertThrows(ApplicationActionRefusedException.class,
                 () -> applicationService.withdrawApplication(offerApp.getApplicationId(), JORDAN, null));

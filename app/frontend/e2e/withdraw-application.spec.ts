@@ -18,7 +18,7 @@ test("given an active application, when the applicant withdraws after confirming
 
   await page.getByRole("link", { name: "Track application status" }).click();
   await expect(page).toHaveURL(/\/applications$/);
-  await expect(page.getByText("1")).toBeVisible();
+  await expect(page.getByText("1", { exact: true })).toBeVisible();
   await expect(page.getByText("of 5 active")).toBeVisible();
 
   await page.getByRole("link", { name: "View" }).click();
@@ -36,12 +36,14 @@ test("given an active application, when the applicant withdraws after confirming
   await page.getByLabel("Reason, optional").selectOption("No longer interested");
   await page.getByRole("button", { name: "Withdraw, final" }).click();
 
+  await expect(page.getByText(/Application withdrawn\. You now have 0 of 5 active applications\./i)).toBeVisible();
   await expect(page.getByText(/Withdrawn on/i)).toBeVisible();
   await expect(page.getByRole("button", { name: "Withdraw application" })).toHaveCount(0);
 
   // Slot freed on /applications
   await page.getByRole("link", { name: /All applications/ }).click();
-  await expect(page.getByText("0")).toBeVisible();
+  await expect(page).toHaveURL(/\/applications$/);
+  await expect(page.getByText("0", { exact: true })).toBeVisible();
   await expect(page.getByText("of 5 active")).toBeVisible();
 
   // Reapplying to the same posting is still blocked (A5)

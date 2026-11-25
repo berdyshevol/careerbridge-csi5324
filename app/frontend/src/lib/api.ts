@@ -463,6 +463,13 @@ export async function viewApplication(
   return mapDetail(await response.json());
 }
 
+async function throwIfActionRefused(response: Response): Promise<void> {
+  if (response.status === 409) {
+    const body: { currentStage: string; message: string } = await response.json();
+    throw new ApplicationActionRefused(body.message, stageLabel(body.currentStage));
+  }
+}
+
 // CO-06.1: fetches posting details, stage, finality warning and reason list before withdrawal
 export async function requestWithdrawal(
   token: string,
@@ -472,10 +479,7 @@ export async function requestWithdrawal(
     headers: bearer(token),
   });
   endedSession(response);
-  if (response.status === 409) {
-    const body: { currentStage: string; message: string } = await response.json();
-    throw new ApplicationActionRefused(body.message, stageLabel(body.currentStage));
-  }
+  await throwIfActionRefused(response);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }
@@ -496,10 +500,7 @@ export async function withdrawApplication(
     body: JSON.stringify({ reason: reason?.trim() || null }),
   });
   endedSession(response);
-  if (response.status === 409) {
-    const body: { currentStage: string; message: string } = await response.json();
-    throw new ApplicationActionRefused(body.message, stageLabel(body.currentStage));
-  }
+  await throwIfActionRefused(response);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }
