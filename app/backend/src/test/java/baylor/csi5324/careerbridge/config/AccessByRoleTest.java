@@ -115,6 +115,9 @@ class AccessByRoleTest {
                 .andExpect(status().isForbidden());
         mockMvc.perform(post("/api/postings/1/submit").with(as("APPLICANT"))).andExpect(status().isForbidden());
         mockMvc.perform(post("/api/postings/1/submit").with(as("ADMINISTRATOR"))).andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/postings/1/close").with(as("APPLICANT"))).andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/postings/1/close").with(as("ADMINISTRATOR"))).andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/postings/1/close")).andExpect(status().isUnauthorized());
         // Reaches the service, which refuses the blank title: the recruiter's mistake, in plain text
         mockMvc.perform(post("/api/postings").with(as("RECRUITER"))
                         .contentType(MediaType.APPLICATION_JSON).content(blankPosting))

@@ -6,8 +6,10 @@ import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
+import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
+import baylor.csi5324.careerbridge.repository.RecruiterRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,18 +34,24 @@ public class JobPostingService {
 
     private static final int MAX_COMMENT_LENGTH = 2000;
 
+    // UC-13 extension *a, the reason Close Job Posting records
+    static final String CLOSED_BY_RECRUITER = "Closed by recruiter";
+
     private static final ZoneOffset LATEST_ZONE = ZoneOffset.ofHours(-12);
 
     private final JobPostingRepository jobPostingRepository;
     private final OrganizationRepository organizationRepository;
+    private final RecruiterRepository recruiterRepository;
     private final Clock clock;
 
     public JobPostingService(
             JobPostingRepository jobPostingRepository,
             OrganizationRepository organizationRepository,
+            RecruiterRepository recruiterRepository,
             Clock clock) {
         this.jobPostingRepository = jobPostingRepository;
         this.organizationRepository = organizationRepository;
+        this.recruiterRepository = recruiterRepository;
         this.clock = clock;
     }
 
@@ -82,7 +90,7 @@ public class JobPostingService {
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
     }
 
-    public JobPosting createPosting(CreateJobPostingRequest request) {
+    public JobPosting createPosting(CreateJobPostingRequest request, String recruiterEmail) {
         if (request == null) {
             throw new InvalidPostingException("Posting details are required");
         }
@@ -129,8 +137,11 @@ public class JobPostingService {
                     "At least one opening is required");
         }
 
+        Recruiter recruiter = recruiterOf(recruiterEmail);
+
         JobPosting posting = new JobPosting();
         posting.setOrganization(organization);
+        posting.setRecruiter(recruiter);
         posting.setTitle(request.title().trim());
         posting.setDescription(request.description());
         posting.setJobRequirements(request.jobRequirements());
@@ -145,8 +156,14 @@ public class JobPostingService {
         return jobPostingRepository.save(posting);
     }
 
-    public JobPosting submitJobPosting(Long postingId) {
+    // One transaction, so the lazily loaded recruiter can be read
+    @Transactional
+    public JobPosting submitJobPosting(Long postingId, String recruiterEmail) {
         JobPosting posting = findPosting(postingId);
+
+        if (!posting.wasCreatedBy(recruiterEmail)) {
+            throw new PostingNotAllowedException("Only the recruiter who created this posting can submit it");
+        }
 
         if (posting.getPostStatus() != PostStatus.DRAFT
                 && posting.getPostStatus() != PostStatus.RETURNED) {
@@ -168,6 +185,30 @@ public class JobPostingService {
         posting.setApprovedBy(null);
         posting.setApprovedAt(null);
         posting.setReviewComment(null);
+        return jobPostingRepository.save(posting);
+    }
+
+    // UC-13 extension *a, CO-13.2: the Recruiter who created a Published posting closes it early
+    @Transactional
+    public JobPosting closePosting(Long postingId, String recruiterEmail) {
+        JobPosting posting = findPosting(postingId);
+
+        if (!posting.wasCreatedBy(recruiterEmail)) {
+            throw new PostingNotAllowedException("Only the recruiter who created this posting can close it");
+        }
+        if (posting.getPostStatus() != PostStatus.PUBLISHED) {
+            throw new PostingStateConflictException(
+                    "Only a published posting can be closed; this one is " + posting.getPostStatus().getLabel());
+        }
+        Instant now = clock.instant();
+        // Past its deadline the posting is UC-13's to close as Expired, at the next run
+        if (posting.isPastDeadline(now)) {
+            throw new PostingStateConflictException(
+                    "The application deadline has passed, so this posting is closing as Expired");
+        }
+
+        // Applications keep their stages (A3): only the posting changes
+        posting.close(CLOSED_BY_RECRUITER, now);
         return jobPostingRepository.save(posting);
     }
 
@@ -201,6 +242,11 @@ public class JobPostingService {
         JobPosting posting = findPendingPosting(postingId);
         recordDecision(posting, PostStatus.REJECTED, administrator, requireComment(comment));
         return jobPostingRepository.save(posting);
+    }
+
+    private Recruiter recruiterOf(String email) {
+        return recruiterRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new PostingNotAllowedException("Only a recruiter can create or submit a posting"));
     }
 
     private JobPosting findPosting(Long postingId) {

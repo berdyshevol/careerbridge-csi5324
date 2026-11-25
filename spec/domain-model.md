@@ -44,7 +44,7 @@ Figure 25; classes and associations that are not in the figure are listed in sec
   accepting applications at 23:59 on its _applicationDeadline_ in that zone (UC-13 variation 2a,
   NFR-UC13.5). An organization with no zone recorded uses UTC.
 - A **Job Posting** closed by the system or a recruiter keeps why in _closingReason_ (Expired, for
-  UC-13; Filled, for UC-07) and when in _closedAt_, a UTC instant.
+  UC-13; Closed by recruiter, for UC-13 extension \*a; Filled, for UC-07) and when in _closedAt_, a UTC instant.
 
 ### 5.2 Generalization
 
