@@ -14,7 +14,7 @@ as. The team agreed at its November 25 meeting to give each role its own colors.
 
 1. **Three variants of one theme.** `careerbridge` (applicants and visitors, teal),
    `careerbridge-recruiter` (blue) and `careerbridge-administrator` (plum), all in
-   `app/frontend/src/app/globals.css`. They differ only in the primary and secondary colors. Fonts,
+   `app/frontend/src/app/globals.css`. They differ only in the primary and secondary colors; the accent color is shared. Fonts,
    spacing, corners, and the success, warning, error and info colors are the same for everyone, so a
    message means the same thing in every role.
 2. **The shared layout picks the variant** from the logged-in user's role (`themeOf` in
