@@ -10,6 +10,7 @@ import baylor.csi5324.careerbridge.model.Offer;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.OrganizationStatus;
 import baylor.csi5324.careerbridge.model.PostStatus;
+import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.model.Resume;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
 import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
@@ -17,6 +18,7 @@ import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
+import baylor.csi5324.careerbridge.repository.RecruiterRepository;
 import baylor.csi5324.careerbridge.repository.ResumeRepository;
 import baylor.csi5324.careerbridge.util.CsvReader;
 import org.springframework.boot.CommandLineRunner;
@@ -38,6 +40,9 @@ import java.util.Map;
 public class SampleDataLoader implements CommandLineRunner {
 
     private static final String JOBS_FILE = "data/jobs.csv";
+    // The recruiters a sample posting may name as its creator, so Close and Revise work on it in a demo.
+    // DemoUsers gives them their password, as it does for Jordan Lee
+    private static final String RECRUITERS_FILE = "data/recruiters.csv";
     // The sample applicant's desk, the same as src/lib/sampleDesk.ts in the frontend
     private static final String APPLICATIONS_FILE = "data/applications.csv";
     // Jordan Lee, the demo applicant who starts with the sample applications (DemoUsers gives the password)
@@ -53,17 +58,20 @@ public class SampleDataLoader implements CommandLineRunner {
     private final ApplicantRepository applicantRepository;
     private final ApplicationRepository applicationRepository;
     private final ResumeRepository resumeRepository;
+    private final RecruiterRepository recruiterRepository;
 
     public SampleDataLoader(JobPostingRepository jobPostingRepository,
                             OrganizationRepository organizationRepository,
                             ApplicantRepository applicantRepository,
                             ApplicationRepository applicationRepository,
-                            ResumeRepository resumeRepository) {
+                            ResumeRepository resumeRepository,
+                            RecruiterRepository recruiterRepository) {
         this.jobPostingRepository = jobPostingRepository;
         this.organizationRepository = organizationRepository;
         this.applicantRepository = applicantRepository;
         this.applicationRepository = applicationRepository;
         this.resumeRepository = resumeRepository;
+        this.recruiterRepository = recruiterRepository;
     }
 
     // The back-fill below walks lazy collections of applications already in the database
@@ -98,6 +106,12 @@ public class SampleDataLoader implements CommandLineRunner {
                 }
             });
             return;
+        }
+        for (Map<String, String> record : CsvReader.parse(read(RECRUITERS_FILE))) {
+            // A database without postings may already have the account, from DemoUsers on an earlier start
+            if (recruiterRepository.findByEmailIgnoreCase(record.get("email")).isEmpty()) {
+                recruiterRepository.save(toRecruiter(record));
+            }
         }
         Map<String, JobPosting> postingsByTitle = new HashMap<>();
         for (Map<String, String> record : CsvReader.parse(read(JOBS_FILE))) {
@@ -210,6 +224,21 @@ public class SampleDataLoader implements CommandLineRunner {
         posting.setDatePosted(LocalDate.parse(record.get("datePosted")));
         posting.setApplicationDeadline(LocalDate.parse(record.get("applicationDeadline")));
         posting.setPostStatus(PostStatus.fromLabel(record.get("postStatus")));
+        String recruiterEmail = record.get("recruiterEmail");
+        if (!recruiterEmail.isBlank()) {
+            posting.setRecruiter(recruiterRepository.findByEmailIgnoreCase(recruiterEmail)
+                    .orElseThrow(() -> new IllegalStateException(JOBS_FILE + " names a recruiter that is not in "
+                            + RECRUITERS_FILE + ": " + recruiterEmail)));
+        }
         return posting;
+    }
+
+    private static Recruiter toRecruiter(Map<String, String> record) {
+        Recruiter recruiter = new Recruiter();
+        recruiter.setFirstName(record.get("firstName"));
+        recruiter.setLastName(record.get("lastName"));
+        recruiter.setEmail(record.get("email"));
+        recruiter.setAccountStatus(AccountStatus.ACTIVE);
+        return recruiter;
     }
 }

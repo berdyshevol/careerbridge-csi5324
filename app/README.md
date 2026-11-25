@@ -23,7 +23,7 @@ npm run dev                   # frontend on http://localhost:3000
 
 Open <http://localhost:3000>. The backend works on the shared Neon `dev` database when `app/backend/.env` exists (copy `.env.example` and ask Oleg for the values), and on an in-memory H2 database when it does not ([ADR-0009](../spec/adr/0009-postgresql-on-neon.md)); the H2 console is then at <http://localhost:8080/h2-console> (JDBC URL `jdbc:h2:mem:careerbridge`, user `sa`, no password). `./mvnw test` in `app/backend` runs the backend tests on PostgreSQL in Docker; when Docker is not running they run on in-memory H2 instead, and the pull request checks PostgreSQL.
 
-Every database has one demo account per role ([ADR-0010](../spec/adr/0010-log-in-with-jwt.md)), plus five numbered ones for demos. On the in-memory H2 database their passwords are the ones below; on Neon they come from `DEMO_*_PASSWORD` in `.env` (Oleg hands them out).
+Every database has one demo account per role ([ADR-0010](../spec/adr/0010-log-in-with-jwt.md)), plus nine numbered ones for demos. On the in-memory H2 database their passwords are the ones below; on Neon they come from `DEMO_*_PASSWORD` in `.env` (Oleg hands them out).
 
 | Role | Email | Password on H2 |
 | --- | --- | --- |
@@ -32,9 +32,9 @@ Every database has one demo account per role ([ADR-0010](../spec/adr/0010-log-in
 | Recruiter | `riley.chen@example.com` | `Recruiter-local-1` |
 | Administrator | `admin@careerbridge.example` | `Administrator-local-1` |
 | Applicants with none, for demos | `applicant1@example.com` to `applicant3@example.com` | `Baylor@2026` |
-| Recruiters, for demos | `recruiter1@example.com`, `recruiter2@example.com` | `Baylor@2026` |
+| Recruiters, for demos | `recruiter1@example.com` to `recruiter6@example.com` | `Baylor@2026` |
 
-The numbered accounts share `DEMO_NUMBERED_PASSWORD` on Neon.
+The numbered accounts share `DEMO_NUMBERED_PASSWORD` on Neon. On H2, recruiter1 and recruiter2, like Riley, are members of Brazos Analytics and Waco Health Partners; recruiter3 to recruiter6 each belong to one sample organization (Pixel Labs, Lone Star Robotics, Cloud Nine Software, Green Grid Energy) and created its postings (`data/jobs.csv`).
 
 Log in at <http://localhost:3000/login>; posting approvals are at <http://localhost:3000/admin/postings> for the Administrator.
 

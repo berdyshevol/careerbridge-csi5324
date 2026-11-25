@@ -23,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.function.Supplier;
 
 // One account per role for demonstrations and the end-to-end tests. The passwords come from the
@@ -44,8 +46,14 @@ public class DemoUsers implements CommandLineRunner {
 
     // The demo recruiter's approved organizations (UC-09 precondition); Lone Star Logistics is left to join
     static final List<String> DEMO_RECRUITER_ORGANIZATIONS = List.of("Brazos Analytics", "Waco Health Partners");
+    // The sample recruiters of data/recruiters.csv who belong to one organization only: theirs
+    static final Map<String, String> OWN_ORGANIZATION = Map.of(
+            "recruiter3@example.com", "Pixel Labs",
+            "recruiter4@example.com", "Lone Star Robotics",
+            "recruiter5@example.com", "Cloud Nine Software",
+            "recruiter6@example.com", "Green Grid Energy");
 
-    private static final List<String> NUMBERS = List.of("One", "Two", "Three");
+    private static final List<String> NUMBERS = List.of("One", "Two", "Three", "Four", "Five", "Six");
 
     private static DemoUser numbered(String role, int n, Supplier<User> kind, String password) {
         return new DemoUser(role, NUMBERS.get(n - 1), role.toLowerCase() + n + "@example.com", kind, password);
@@ -87,7 +95,11 @@ public class DemoUsers implements CommandLineRunner {
                 numbered("Applicant", 2, Applicant::new, numbered),
                 numbered("Applicant", 3, Applicant::new, numbered),
                 numbered("Recruiter", 1, Recruiter::new, numbered),
-                numbered("Recruiter", 2, Recruiter::new, numbered));
+                numbered("Recruiter", 2, Recruiter::new, numbered),
+                numbered("Recruiter", 3, Recruiter::new, numbered),
+                numbered("Recruiter", 4, Recruiter::new, numbered),
+                numbered("Recruiter", 5, Recruiter::new, numbered),
+                numbered("Recruiter", 6, Recruiter::new, numbered));
     }
 
     @Override
@@ -117,7 +129,8 @@ public class DemoUsers implements CommandLineRunner {
         if (!membershipRepository.findByRecruiterOrderByRequestedAtAscMembershipIdAsc(recruiter).isEmpty()) {
             return;
         }
-        for (String name : DEMO_RECRUITER_ORGANIZATIONS) {
+        String own = OWN_ORGANIZATION.get(recruiter.getEmail().toLowerCase(Locale.ROOT));
+        for (String name : own == null ? DEMO_RECRUITER_ORGANIZATIONS : List.of(own)) {
             organizationRepository.findByName(name).ifPresent(organization -> {
                 OrganizationMembership membership = new OrganizationMembership(recruiter, organization,
                         MembershipStatus.ACTIVE, MembershipRequestType.NEW_RECRUITER_EXISTING_ORGANIZATION, Instant.now());

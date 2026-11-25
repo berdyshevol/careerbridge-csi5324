@@ -53,7 +53,9 @@ class LogInControllerTest {
         String[][] accounts = {
                 {"applicant1@example.com", "APPLICANT"}, {"applicant2@example.com", "APPLICANT"},
                 {"applicant3@example.com", "APPLICANT"}, {"recruiter1@example.com", "RECRUITER"},
-                {"recruiter2@example.com", "RECRUITER"}};
+                {"recruiter2@example.com", "RECRUITER"}, {"recruiter3@example.com", "RECRUITER"},
+                {"recruiter4@example.com", "RECRUITER"}, {"recruiter5@example.com", "RECRUITER"},
+                {"recruiter6@example.com", "RECRUITER"}};
         for (String[] account : accounts) {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
