@@ -112,13 +112,15 @@ Feature: UC-02 Register as Applicant
 | [The administrator approves a posting and it opens on the job board](administrator-approve-posting.feature) | UC-12 main success scenario, steps 1-8 |
 | [The administrator returns a posting with a comment and it stays off the job board](administrator-return-posting.feature) | UC-12 extension 5a |
 | [The administrator rejects a posting, and it cannot be sent for approval again](administrator-reject-posting.feature) | UC-12 extension 5b |
+| [A recruiter revises a returned posting and sends it for approval again](recruiter-3-revise-returned-posting.feature) | UC-11 extension 6a; minimum scope Recruiter 3 |
+| [A recruiter closes their open posting and it leaves the job board](recruiter-4-close-posting.feature) | UC-13 extension \*a; minimum scope Recruiter 4 |
 
 ## Coverage
 
 **Minimum scope.** Of the items that belong to these use cases, every one has a scenario: Applicant 1
 (register), 2 (log in), 3 (view and update own profile), 4 (browse and search jobs), 5 (view a job's
 details) and 7 (the resume that goes with an application, uploaded in UC-03), Recruiter 1 and
-Administrator 1 (log in), and Recruiter 2 (create a job posting). Approving a posting (UC-12) is not
+Administrator 1 (log in), and Recruiter 2 (create a job posting), 3 (view and modify own postings) and 4 (close own postings). Approving a posting (UC-12) is not
 an item of the minimum scope, so its scenarios carry no scope tag. The system-wide requirements shown are input validation, meaningful errors,
 authentication and permissions by role. Applicant 6, 8 and 9 and the other recruiter and administrator
 items belong to UC-04 to UC-15.
@@ -138,7 +140,6 @@ up on its own, except:
 | UC-11 | 3a: start from an earlier posting | Not built. |
 | UC-11 | 5a: other missing or invalid fields | Shown by "no title", the same refusal of the same request. |
 | UC-11 | 5b: a deadline in the past | The form does not offer a past date; shown by a deadline more than 90 days away. |
-| UC-11 | 6a: revise a returned posting | Built in #123, not on main yet. |
 | UC-12 | 2a: the queue is empty | Other postings are always waiting on a shared database. |
 | UC-12 | 6a: the deadline passed while the posting waited | A posting cannot be sent for approval with a deadline that is about to pass. |
 | UC-12 | 6b: the organization or recruiter is no longer active | Needs Organization Membership, not on main yet. |
