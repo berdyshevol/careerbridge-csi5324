@@ -1,44 +1,55 @@
 package baylor.csi5324.careerbridge.service;
 
+import baylor.csi5324.careerbridge.model.MembershipStatus;
 import baylor.csi5324.careerbridge.model.Organization;
-import baylor.csi5324.careerbridge.repository.OrganizationRepository;
+import baylor.csi5324.careerbridge.model.OrganizationMembership;
+import baylor.csi5324.careerbridge.repository.OrganizationMembershipRepository;
+import baylor.csi5324.careerbridge.repository.RecruiterRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 
-// STAND-IN: SCRUM-198 replaces this with the recruiter's Active OrganizationMembership (BR-14, A16),
-// which UC-09 owns. Until then one configured organization stands for every recruiter, except those
-// named in the exceptions, so a test or a demo can show a recruiter of another organization. Fails
-// closed: with no name set, or one that matches nothing, the recruiter acts for no organization.
+// The organizations a recruiter acts for are their Active OrganizationMemberships (BR-14, A16, UC-09).
+// A recruiter works in one at a time, chosen in the header (UC-09 special requirements); until that
+// switcher exists, one with several works in the organization named here, or else the earliest joined.
 @Component
 public class RecruiterOrganization {
 
-    private final OrganizationRepository organizationRepository;
-    private final String organizationName;
-    private final Map<String, String> exceptions = new HashMap<>();
+    private final RecruiterRepository recruiterRepository;
+    private final OrganizationMembershipRepository membershipRepository;
+    private final String preferredName;
 
-    public RecruiterOrganization(OrganizationRepository organizationRepository,
-                                 @Value("${careerbridge.standin.recruiter-organization:}") String organizationName,
-                                 @Value("${careerbridge.standin.recruiter-organization-exceptions:}") String exceptions) {
-        this.organizationRepository = organizationRepository;
-        this.organizationName = organizationName.trim();
-        // "email=Organization name;email=Organization name": organization names may hold commas
-        for (String entry : exceptions.split(";")) {
-            String[] pair = entry.split("=", 2);
-            if (pair.length == 2 && !pair[0].isBlank()) {
-                this.exceptions.put(pair[0].trim().toLowerCase(Locale.ROOT), pair[1].trim());
-            }
-        }
+    public RecruiterOrganization(RecruiterRepository recruiterRepository,
+                                 OrganizationMembershipRepository membershipRepository,
+                                 @Value("${careerbridge.recruiter-organization:}") String preferredName) {
+        this.recruiterRepository = recruiterRepository;
+        this.membershipRepository = membershipRepository;
+        this.preferredName = preferredName.trim();
     }
 
+    // The organization the recruiter works in now: empty when they have no Active membership
     public Optional<Organization> activeOrganizationOf(String recruiterEmail) {
-        String name = recruiterEmail == null
-                ? organizationName
-                : exceptions.getOrDefault(recruiterEmail.trim().toLowerCase(Locale.ROOT), organizationName);
-        return name.isEmpty() ? Optional.empty() : organizationRepository.findByName(name);
+        List<Organization> organizations = activeOrganizations(recruiterEmail);
+        return organizations.stream()
+                .filter(organization -> organization.getName().equals(preferredName))
+                .findFirst()
+                .or(() -> organizations.stream().findFirst());
+    }
+
+    public boolean isActiveMember(String recruiterEmail, Organization organization) {
+        return activeOrganizations(recruiterEmail).stream()
+                .anyMatch(member -> member.getOrganizationId().equals(organization.getOrganizationId()));
+    }
+
+    private List<Organization> activeOrganizations(String recruiterEmail) {
+        return recruiterRepository.findByEmailIgnoreCase(recruiterEmail)
+                .map(recruiter -> membershipRepository.findByRecruiterOrderByRequestedAtAscMembershipIdAsc(recruiter)
+                        .stream()
+                        .filter(membership -> membership.getStatus() == MembershipStatus.ACTIVE)
+                        .map(OrganizationMembership::getOrganization)
+                        .toList())
+                .orElse(List.of());
     }
 }

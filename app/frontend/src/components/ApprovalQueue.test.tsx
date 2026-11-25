@@ -101,27 +101,14 @@ describe("ApprovalQueue", () => {
     expect(screen.queryByRole("heading", { name: "Backend Developer" })).not.toBeInTheDocument();
   });
 
-  it("asks a visitor to log in as an administrator, and calls nothing", () => {
-    render(<ApprovalQueue session={null} />);
-
-    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/login?next=/admin/postings");
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  it("tells an applicant that only an administrator reviews postings", () => {
-    render(<ApprovalQueue session={sessionOf("APPLICANT")} />);
-
-    expect(screen.getByText(/Only an administrator reviews postings/)).toBeInTheDocument();
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
   it("ends the session when the backend refuses the token", async () => {
     fetchMock.mockResolvedValueOnce(reply(401, ""));
     saveSession(sessionOf("ADMINISTRATOR"));
     render(<ApprovalQueue session={sessionOf("ADMINISTRATOR")} />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Your session has ended");
-    expect(screen.getByRole("link", { name: "Log in" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Administrators only" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/login?next=/admin/postings");
     expect(document.cookie).not.toContain("cb_session=");
     expect(refresh).toHaveBeenCalled();
   });

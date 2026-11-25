@@ -3,9 +3,14 @@ package baylor.csi5324.careerbridge.config;
 import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.Administrator;
 import baylor.csi5324.careerbridge.model.Applicant;
+import baylor.csi5324.careerbridge.model.MembershipRequestType;
+import baylor.csi5324.careerbridge.model.MembershipStatus;
+import baylor.csi5324.careerbridge.model.OrganizationMembership;
 import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.model.Role;
 import baylor.csi5324.careerbridge.model.User;
+import baylor.csi5324.careerbridge.repository.OrganizationMembershipRepository;
+import baylor.csi5324.careerbridge.repository.OrganizationRepository;
 import baylor.csi5324.careerbridge.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +21,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.function.Supplier;
 
 // One account per role for demonstrations and the end-to-end tests. The passwords come from the
@@ -36,6 +44,15 @@ public class DemoUsers implements CommandLineRunner {
         return password.isBlank() && inMemory ? local : password;
     }
 
+    // The demo recruiter's approved organizations (UC-09 precondition); Lone Star Logistics is left to join
+    static final List<String> DEMO_RECRUITER_ORGANIZATIONS = List.of("Brazos Analytics", "Waco Health Partners");
+    // The sample recruiters of data/recruiters.csv who belong to one organization only: theirs
+    static final Map<String, String> OWN_ORGANIZATION = Map.of(
+            "recruiter3@example.com", "Pixel Labs",
+            "recruiter4@example.com", "Lone Star Robotics",
+            "recruiter5@example.com", "Cloud Nine Software",
+            "recruiter6@example.com", "Green Grid Energy");
+
     private static final List<String> NUMBERS = List.of("One", "Two", "Three", "Four", "Five", "Six");
 
     private static DemoUser numbered(String role, int n, Supplier<User> kind, String password) {
@@ -43,10 +60,13 @@ public class DemoUsers implements CommandLineRunner {
     }
 
     private final UserRepository userRepository;
+    private final OrganizationRepository organizationRepository;
+    private final OrganizationMembershipRepository membershipRepository;
     private final PasswordEncoder passwordEncoder;
     private final List<DemoUser> demoUsers;
 
-    public DemoUsers(UserRepository userRepository, PasswordEncoder passwordEncoder,
+    public DemoUsers(UserRepository userRepository, OrganizationRepository organizationRepository,
+                     OrganizationMembershipRepository membershipRepository, PasswordEncoder passwordEncoder,
                      @Value("${careerbridge.demo.applicant-password}") String applicantPassword,
                      @Value("${careerbridge.demo.second-applicant-password}") String secondApplicantPassword,
                      @Value("${careerbridge.demo.recruiter-password}") String recruiterPassword,
@@ -55,6 +75,8 @@ public class DemoUsers implements CommandLineRunner {
                      @Value("${spring.datasource.url}") String databaseUrl,
                      @Value("${careerbridge.demo.local-passwords}") boolean localPasswordsAllowed) {
         this.userRepository = userRepository;
+        this.organizationRepository = organizationRepository;
+        this.membershipRepository = membershipRepository;
         this.passwordEncoder = passwordEncoder;
         // The Docker image switches this off: an image that lost DATABASE_URL must not get known passwords
         boolean inMemory = localPasswordsAllowed && databaseUrl.startsWith("jdbc:h2:mem:");
@@ -96,6 +118,26 @@ public class DemoUsers implements CommandLineRunner {
             if (user.getPasswordHash() == null || !passwordEncoder.matches(demo.password(), user.getPasswordHash())) {
                 user.setPasswordHash(passwordEncoder.encode(demo.password()));
             }
+            if (user instanceof Recruiter recruiter) {
+                giveMemberships(recruiter);
+            }
+        }
+    }
+
+    // Only a recruiter who has none yet: memberships changed through the app are left as they are
+    private void giveMemberships(Recruiter recruiter) {
+        if (!membershipRepository.findByRecruiterOrderByRequestedAtAscMembershipIdAsc(recruiter).isEmpty()) {
+            return;
+        }
+        String own = OWN_ORGANIZATION.get(recruiter.getEmail().toLowerCase(Locale.ROOT));
+        for (String name : own == null ? DEMO_RECRUITER_ORGANIZATIONS : List.of(own)) {
+            organizationRepository.findByName(name).ifPresent(organization -> {
+                OrganizationMembership membership = new OrganizationMembership(recruiter, organization,
+                        MembershipStatus.ACTIVE, MembershipRequestType.NEW_RECRUITER_EXISTING_ORGANIZATION, Instant.now());
+                membership.setRole("Recruiter");
+                membership.approve("demo data", Instant.now());
+                membershipRepository.save(membership);
+            });
         }
     }
 

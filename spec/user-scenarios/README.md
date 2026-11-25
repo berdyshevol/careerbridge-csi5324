@@ -42,11 +42,9 @@ if new words are needed.
 
 **Isolation.** Every scenario creates its own people and postings in its `Given` steps. The driver gives
 each alias ("Sam", "Cloud Developer") this run's suffix, so scenarios never meet each other's data and
-can run in parallel and again on the same database. Three exceptions, because the system cannot create
-these roles or memberships yet: `a recruiter "Riley" with an active account` is the demo recruiter Riley
-Chen, `the administrator` is the demo administrator Avery Morgan (`config/DemoUsers.java`), and a posting
-`of another organization` is created by the demo account recruiter2, who acts for Brazos Analytics in the
-test configuration (`careerbridge.standin.recruiter-organization-exceptions`).
+can run in parallel and again on the same database. Two exceptions, because the system cannot create
+these roles yet: `a recruiter "Riley" with an active account` is the demo recruiter Riley Chen, and
+`the administrator` is the demo administrator Avery Morgan (`config/DemoUsers.java`).
 
 ## How a scenario is written
 

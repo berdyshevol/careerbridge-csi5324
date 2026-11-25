@@ -8,6 +8,7 @@ import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
+import baylor.csi5324.careerbridge.model.OrganizationStatus;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
@@ -64,7 +65,7 @@ class JobPostingApprovalTest {
         applicationRepository.deleteAll();
         jobPostingRepository.deleteAll();
 
-        // The recruiter acts for this one in the test configuration (RecruiterOrganization stand-in)
+        // Riley is an Active member of Brazos Analytics and Waco Health Partners (DemoUsers)
         organization = organizationRepository.findByName("Waco Health Partners").orElseThrow();
         owner = recruiterRepository.findByEmailIgnoreCase(OWNER).orElseThrow();
     }
@@ -424,17 +425,17 @@ class JobPostingApprovalTest {
 
     @Test
     void aRecruiterActsOnlyForTheOrganizationTheyAreAMemberOf() {
-        Organization brazos = organizationRepository.findByName("Brazos Analytics").orElseThrow();
-        CreateJobPostingRequest forBrazos = new CreateJobPostingRequest(brazos.getOrganizationId(), "Analyst",
+        Organization logistics = organizationRepository.findByName("Lone Star Logistics").orElseThrow();
+        CreateJobPostingRequest forLogistics = new CreateJobPostingRequest(logistics.getOrganizationId(), "Analyst",
                 "", "", "Remote", "Full-time", null, 1, LocalDate.now().plusDays(20));
         JobPosting draft = createPosting(PostStatus.DRAFT, LocalDate.now().plusDays(10));
-        draft.setOrganization(brazos);
+        draft.setOrganization(logistics);
         jobPostingRepository.save(draft);
         JobPosting published = createPosting(PostStatus.PUBLISHED, LocalDate.now().plusDays(10));
-        published.setOrganization(brazos);
+        published.setOrganization(logistics);
         jobPostingRepository.save(published);
 
-        assertThrows(PostingNotAllowedException.class, () -> jobPostingService.createPosting(forBrazos, OWNER));
+        assertThrows(PostingNotAllowedException.class, () -> jobPostingService.createPosting(forLogistics, OWNER));
         assertThrows(PostingNotAllowedException.class, () -> jobPostingService.submitJobPosting(draft.getJobPostId(), OWNER));
         assertThrows(PostingNotAllowedException.class, () -> jobPostingService.openPostingForEdit(draft.getJobPostId(), OWNER));
         assertThrows(PostingNotAllowedException.class, () -> jobPostingService.closePosting(published.getJobPostId(), OWNER));
@@ -444,7 +445,7 @@ class JobPostingApprovalTest {
     @Test
     void anInactiveOrganizationsPostingStaysPending() {
         JobPosting pending = createPosting(PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
-        organization.setOrganizationStatus("SUSPENDED");
+        organization.setOrganizationStatus(OrganizationStatus.INACTIVE);
         organizationRepository.save(organization);
 
         assertThrows(PostingStateConflictException.class,

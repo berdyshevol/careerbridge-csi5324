@@ -55,6 +55,7 @@ test("given an applicant, when they open the approval page, then they are told o
   await logIn(page, ACCOUNTS.secondApplicant);
   await page.goto("/admin/postings");
   await expect(page.getByText(/Only an administrator reviews postings/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Job posting approvals" })).toHaveCount(0);
 });
 
 for (const account of [ACCOUNTS.recruiter, ACCOUNTS.administrator]) {

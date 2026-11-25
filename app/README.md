@@ -8,12 +8,12 @@ Two terminals:
 
 ```bash
 cd app/backend
-RECRUITER_ORGANIZATION="Waco Health Partners" ./mvnw spring-boot:run   # backend on http://localhost:8080
+./mvnw spring-boot:run        # backend on http://localhost:8080
 ```
 
-`RECRUITER_ORGANIZATION` names the organization every recruiter acts for until organization memberships
-exist (a stand-in, SCRUM-198). Without it a recruiter sees no postings and cannot create one. Set it on
-the deployed backend too.
+A recruiter works on the postings of the organizations they are an Active member of. One with several
+works in the organization named by the optional `RECRUITER_ORGANIZATION`, or else the one joined first,
+until the header gets its organization switcher (UC-09).
 
 ```bash
 cd app/frontend
@@ -34,7 +34,7 @@ Every database has one demo account per role ([ADR-0010](../spec/adr/0010-log-in
 | Applicants with none, for demos | `applicant1@example.com` to `applicant3@example.com` | `Baylor@2026` |
 | Recruiters, for demos | `recruiter1@example.com` to `recruiter6@example.com` | `Baylor@2026` |
 
-The numbered accounts share `DEMO_NUMBERED_PASSWORD` on Neon. On H2, recruiter1 acts for `RECRUITER_ORGANIZATION`, and recruiter2 to recruiter6 each act for their own sample organization (Brazos Analytics, Pixel Labs, Lone Star Robotics, Cloud Nine Software, Green Grid Energy), whose postings they created (`data/jobs.csv`).
+The numbered accounts share `DEMO_NUMBERED_PASSWORD` on Neon. On H2, recruiter1 and recruiter2, like Riley, are members of Brazos Analytics and Waco Health Partners; recruiter3 to recruiter6 each belong to one sample organization (Pixel Labs, Lone Star Robotics, Cloud Nine Software, Green Grid Energy) and created its postings (`data/jobs.csv`).
 
 Log in at <http://localhost:3000/login>; posting approvals are at <http://localhost:3000/admin/postings> for the Administrator.
 

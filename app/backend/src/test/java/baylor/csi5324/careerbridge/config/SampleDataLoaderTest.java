@@ -2,9 +2,12 @@ package baylor.csi5324.careerbridge.config;
 
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.OrganizationMembership;
 import baylor.csi5324.careerbridge.model.Resume;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
+import baylor.csi5324.careerbridge.repository.OrganizationMembershipRepository;
+import baylor.csi5324.careerbridge.repository.RecruiterRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,6 +30,12 @@ class SampleDataLoaderTest {
 
     @Autowired
     private JobPostingRepository jobPostingRepository;
+
+    @Autowired
+    private RecruiterRepository recruiterRepository;
+
+    @Autowired
+    private OrganizationMembershipRepository membershipRepository;
 
     @Test
     void theDemoApplicantStartsWithAPdfResumeOnFile() {
@@ -57,6 +66,11 @@ class SampleDataLoaderTest {
 
         assertEquals("Lone Star Robotics", posting.getOrganization().getName());
         assertTrue(posting.wasCreatedBy("recruiter4@example.com"));
+        // And they belong to that organization only, so they may close it (DemoUsers)
+        var recruiter = recruiterRepository.findByEmailIgnoreCase("recruiter4@example.com").orElseThrow();
+        assertEquals(java.util.List.of("Lone Star Robotics"),
+                membershipRepository.findByRecruiterOrderByRequestedAtAscMembershipIdAsc(recruiter).stream()
+                        .map(OrganizationMembership::getOrganization).map(o -> o.getName()).toList());
     }
 
     private Applicant jordan() {

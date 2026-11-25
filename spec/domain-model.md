@@ -19,14 +19,14 @@ Figure 25; classes and associations that are not in the figure are listed in sec
 | --- | --- |
 | User | userId, First Name, Last Name, email, phone #, account Status, password (kept only as a salted hash, NFR-UC02.1), failed log-ins, locked until (A15) |
 | Applicant | location, headline, skills, education, work experience (a kind of User) |
-| Recruiter | none of its own (a kind of User) |
+| Recruiter | job title, email verified (a kind of User) |
 | Administrator | none of its own (a kind of User) |
 | Resume | resumeId, file Name, file Type, file Size, content, upload Date |
 | Application | applicationId, dateApplied, applicationStatus, rejectionReason, withdrawnAt |
 | Resume Snapshot | file Name, file Type, file Size, content |
 | Status History Entry | status, date, reason |
-| Organization Membership | status, membershipId, requested at, approved at |
-| Organization | organizationId, name, organization Status, website, description, timeZone |
+| Organization Membership | status, membershipId, requested at, approved at, request type, role, justification, review flag, decided by, decided at, decision note |
+| Organization | organizationId, name, organization Status, website, description, timeZone, industry, headquarters, size |
 | Job Posting | jobPostId, title, description, location, applicationDeadline, postStatus, date posted, numberOfOpenings, salaryRange, approvalStatus, approvedBy, approvedAt, reviewComment, employmentType, jobRequirements, closingReason, closedAt |
 | Offer | offerId, dateExtended, startDate, salary, terms, expirationDate, offerLetterFileName, status, responseDate, revision |
 | Interview | interviewId, roundNumber, scheduledTime, format, location, outcome, notes |
@@ -43,6 +43,17 @@ Figure 25; classes and associations that are not in the figure are listed in sec
 - An **Organization**'s _timeZone_ is where its deadlines are read: a **Job Posting** stops
   accepting applications at 23:59 on its _applicationDeadline_ in that zone (UC-13 variation 2a,
   NFR-UC13.5). An organization with no zone recorded uses UTC.
+- An **Organization Membership** is also the request for it that the Administrator decides (UC-08,
+  UC-09, UC-10). Its _status_ is Awaiting Verification, Pending, Information Requested, Active,
+  Denied or Cancelled; only Pending and Information Requested are in the approval queue. Its
+  _request type_ tells the queue's three kinds apart (UC-10 step 2): a new recruiter with a new
+  organization, a new recruiter joining an existing one, or an existing recruiter joining another,
+  with or without a new organization (UC-09 extension 3a). _Decided by_ and _decided at_ record the
+  Administrator and the time of every decision; the _decision note_ is a denial's reason or the
+  question asked (UC-10 extensions 5a, 5b; NFR-UC10.1). A decided request is kept, not deleted.
+- A **User**'s _account Status_ is Pending Verification, Pending Approval (a recruiter waiting for
+  UC-10, BR-14), Active or Inactive (a recruiter whose only request was denied). An
+  **Organization**'s _organization Status_ is Pending Approval, Active or Inactive.
 - A **Job Posting** closed by the system or a recruiter keeps why in _closingReason_ (Expired, for
   UC-13; Closed by recruiter, for UC-13 extension \*a; Filled, for UC-07) and when in _closedAt_, a UTC instant.
 
@@ -71,10 +82,10 @@ Multiplicities are read as "one A is linked to … B".
 
 ### 5.4 Differences from Figure 25
 
-The figure was drawn for Iteration 1 and has not been redrawn. The text above corrects it in eleven
+The figure was drawn for Iteration 1 and has not been redrawn. The text above corrects it in thirteen
 places: five needed for UC-04 Apply for Job, one for UC-12 Approve Job Posting, two for UC-13
 Expire Job Posting, one for UC-03 Update Applicant Profile, one for UC-05 Track Application
-Status, and one for UC-07 Respond to Job Offer:
+Status, one for UC-07 Respond to Job Offer, and two for UC-08 to UC-10:
 
 | # | Figure 25 | Current model | Why |
 | --- | --- | --- | --- |
@@ -89,6 +100,8 @@ Status, and one for UC-07 Respond to Job Offer:
 | 9 | Applicant has no attributes of its own | Applicant has location, headline, skills, education and work experience | UC-03 step 2 and FR-UC03.1: the applicant views and edits these profile details, so the model keeps them. |
 | 10 | Interview has no round number, format, or location | Interview has roundNumber, format, and location | UC-05 step 4, FR-UC05.3, A13, and FR-UC14.7 display and schedule each interview round's number, format, and location. |
 | 11 | Offer has no start date, other terms, offer letter, or revision | Offer has startDate, terms, offerLetterFileName, and revision | UC-07 step 2 and FR-UC07.1 show start date, terms, and optional offer letter; FR-UC07.11 (ext 6b) detects revised terms before recording a response. |
+| 12 | Recruiter has no attributes of its own; Organization has no industry, headquarters or size | Recruiter has job title and email verified; Organization has industry, headquarters and size | UC-08 step 3 asks for them, and UC-10 step 4 shows them to the Administrator. Email verified is UC-08 steps 6-7. |
+| 13 | Organization Membership has status, membershipId, requested at and approved at only | It also has request type, role, justification, review flag, decided by, decided at and decision note | CO-09.1 takes the role and the justification; UC-10 step 2 shows the request type and the review flag of A17; UC-10 records who decided, when, and why (NFR-UC10.1). |
 
 Two more things in the figure are not carried into the text:
 
@@ -104,9 +117,6 @@ are left for the iteration that implements the use cases named.
 
 | Class | Gap | Where it comes from |
 | --- | --- | --- |
-| Recruiter | No job title | UC-08 step 3 |
-| Organization | No industry, headquarters location, size | UC-08 step 3 |
-| Organization Membership | No role, justification, denial reason, review flag; no link to the deciding Administrator | CO-09.1; UC-10; A17 |
 | Job Posting | approvedBy is an attribute, not an association to Administrator; approvalStatus repeats postStatus; no submission date | CO-12.1; UC-12; Close Job Posting |
 | Offer | Offer letter stores filename only until UC-15 adds PDF upload | UC-15 postconditions |
 | Interview | No interviewers; the limit of two rounds (A13) is not in the multiplicity | FR-UC14.7; CO-14.4 |

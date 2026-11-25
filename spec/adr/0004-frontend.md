@@ -3,6 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-10-07
 - **Extends:** [ADR-0001](0001-spring-boot-and-nextjs.md) (Next.js as the frontend)
+- **Amended by:** [ADR-0012](0012-role-colors.md) (each role has its own primary colors)
 
 ## Context
 
