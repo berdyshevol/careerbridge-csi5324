@@ -28,6 +28,8 @@ export type JobPosting = {
   postStatus: string;
   organization: Organization;
   reviewComment?: string | null;
+  // Why a closed posting closed: Expired, Filled or Closed by recruiter
+  closingReason?: string | null;
 };
 
 export type NewPosting = {
@@ -261,6 +263,15 @@ export async function submitJobPosting(token: string, postingId: number): Promis
     headers: bearer(token),
   });
   return postingAnswer(response, [400, 403, 409]);
+}
+
+// UC-13 extension *a, CO-13.2: the recruiter who created a published posting closes it
+export async function closePosting(token: string, postingId: number): Promise<JobPosting> {
+  const response = await backendFetch(`/api/postings/${postingId}/close`, { method: "POST", headers: bearer(token) });
+  if (response.status === 404) {
+    throw new PostingRejected("This posting no longer exists.");
+  }
+  return postingAnswer(response, [403, 409]);
 }
 
 // The reason is read first: a 403 that gives one is a posting refusing this recruiter (SCRUM-215),
@@ -813,6 +824,8 @@ export type RecruiterPostingRow = {
   postStatus: string;
   closingReason: string | null;
   applicationsByStage: Record<ActiveStage, number>;
+  // Only the recruiter who created a posting may edit or close it
+  createdByYou: boolean;
 };
 
 export type RecruiterPostings = {

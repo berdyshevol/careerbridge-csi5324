@@ -39,8 +39,8 @@ class RecruiterPostingsControllerTest {
         counts.put(ApplicationStatus.INTERVIEW, 3L);
         counts.put(ApplicationStatus.OFFER, 1L);
         when(service.listPostings("riley.chen@example.com")).thenReturn(new RecruiterPostings(organization, List.of(
-                new RecruiterPostings.RecruiterPosting(open, counts),
-                new RecruiterPostings.RecruiterPosting(filled, new EnumMap<>(ApplicationStatus.class)))));
+                new RecruiterPostings.RecruiterPosting(open, counts, true),
+                new RecruiterPostings.RecruiterPosting(filled, new EnumMap<>(ApplicationStatus.class), false))));
 
         mockMvc.perform(get("/api/recruiter/postings").principal(() -> "riley.chen@example.com"))
                 .andExpect(status().isOk())
@@ -53,7 +53,9 @@ class RecruiterPostingsControllerTest {
                 .andExpect(jsonPath("$.postings[0].applicationsByStage.SCREENING").value(0))
                 .andExpect(jsonPath("$.postings[0].applicationsByStage.OFFER").value(1))
                 .andExpect(jsonPath("$.postings[1].postStatus").value("CLOSED"))
-                .andExpect(jsonPath("$.postings[1].closingReason").value("Filled"));
+                .andExpect(jsonPath("$.postings[1].closingReason").value("Filled"))
+                .andExpect(jsonPath("$.postings[0].createdByYou").value(true))
+                .andExpect(jsonPath("$.postings[1].createdByYou").value(false));
     }
 
     @Test

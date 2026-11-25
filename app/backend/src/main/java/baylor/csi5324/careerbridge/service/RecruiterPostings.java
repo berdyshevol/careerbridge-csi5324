@@ -11,6 +11,8 @@ import java.util.Map;
 public record RecruiterPostings(Organization organization, List<RecruiterPosting> postings) {
 
     // applicationsByStage holds every active stage, in pipeline order, also those with none (FR-UC14.1)
-    public record RecruiterPosting(JobPosting posting, Map<ApplicationStatus, Long> applicationsByStage) {
+    // createdByYou: only the recruiter who created a posting may edit or close it (CO-11.2, CO-13.2)
+    public record RecruiterPosting(JobPosting posting, Map<ApplicationStatus, Long> applicationsByStage,
+                                   boolean createdByYou) {
     }
 }

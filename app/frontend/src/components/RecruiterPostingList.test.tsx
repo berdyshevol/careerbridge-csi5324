@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import type { RecruiterPostings } from "@/lib/api";
 import RecruiterPostingList from "./RecruiterPostingList";
 
@@ -14,11 +14,13 @@ const stages = (applied: number, screening: number, interview: number, offer: nu
 const answer: RecruiterPostings = {
   organizationName: "Brazos Health",
   postings: [
-    { postingId: 1, title: "Data Analyst", postStatus: "PUBLISHED", closingReason: null, applicationsByStage: stages(7, 5, 3, 1) },
-    { postingId: 2, title: "Patient Billing Specialist", postStatus: "PUBLISHED", closingReason: null, applicationsByStage: stages(5, 0, 2, 1) },
-    { postingId: 3, title: "Medical Records Clerk", postStatus: "PENDING_APPROVAL", closingReason: null, applicationsByStage: stages(0, 0, 0, 0) },
-    { postingId: 4, title: "Clinical Data Engineer", postStatus: "DRAFT", closingReason: null, applicationsByStage: stages(0, 0, 0, 0) },
-    { postingId: 5, title: "Front Desk Coordinator", postStatus: "CLOSED", closingReason: "Filled", applicationsByStage: stages(0, 0, 0, 0) },
+    { postingId: 1, title: "Data Analyst", postStatus: "PUBLISHED", closingReason: null, applicationsByStage: stages(7, 5, 3, 1), createdByYou: true },
+    { postingId: 2, title: "Patient Billing Specialist", postStatus: "PUBLISHED", closingReason: null, applicationsByStage: stages(5, 0, 2, 1), createdByYou: true },
+    { postingId: 3, title: "Medical Records Clerk", postStatus: "PENDING_APPROVAL", closingReason: null, applicationsByStage: stages(0, 0, 0, 0), createdByYou: true },
+    { postingId: 4, title: "Clinical Data Engineer", postStatus: "DRAFT", closingReason: null, applicationsByStage: stages(0, 0, 0, 0), createdByYou: true },
+    { postingId: 5, title: "Front Desk Coordinator", postStatus: "CLOSED", closingReason: "Filled", applicationsByStage: stages(0, 0, 0, 0), createdByYou: true },
+    { postingId: 6, title: "Nurse Scheduler", postStatus: "RETURNED", closingReason: null, applicationsByStage: stages(0, 0, 0, 0), createdByYou: true },
+    { postingId: 7, title: "Lab Courier", postStatus: "PUBLISHED", closingReason: null, applicationsByStage: stages(1, 0, 0, 0), createdByYou: false },
   ],
 };
 
@@ -100,5 +102,125 @@ describe("RecruiterPostingList", () => {
     render(<RecruiterPostingList token="t" />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent("could not be loaded");
+  });
+
+  const row = (title: string) => screen.getByText(title).closest("li")!;
+  const findRow = async (title: string) => (await screen.findByText(title)).closest("li")!;
+
+  it("offers to revise a returned posting and continue a draft, on the edit page", async () => {
+    fetchMock.mockResolvedValueOnce(reply(200, answer));
+    render(<RecruiterPostingList token="t" />);
+
+    expect(within(await findRow("Nurse Scheduler")).getByRole("link", { name: "Revise" })).toHaveAttribute("href", "/recruiter/postings/6/edit");
+    expect(within(row("Clinical Data Engineer")).getByRole("link", { name: "Continue" })).toHaveAttribute("href", "/recruiter/postings/4/edit");
+    expect(within(row("Medical Records Clerk")).queryByRole("link")).toBeNull();
+    expect(within(row("Front Desk Coordinator")).queryByRole("button", { name: "Close" })).toBeNull();
+  });
+
+  it("closes a published posting only after the recruiter confirms", async () => {
+    fetchMock
+      .mockResolvedValueOnce(reply(200, answer))
+      .mockResolvedValueOnce(reply(200, { jobPostId: 1, postStatus: "CLOSED", closingReason: "Closed by recruiter" }));
+    render(<RecruiterPostingList token="t" />);
+
+    fireEvent.click(within(await findRow("Data Analyst")).getByRole("button", { name: "Close" }));
+    const dialog = screen.getByRole("dialog", { name: "Close Data Analyst?" });
+    expect(dialog).toHaveTextContent("cannot be opened again");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Close posting, final" }));
+
+    expect(await within(row("Data Analyst")).findByText("Closed · by recruiter")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    const [url, init] = fetchMock.mock.calls[1];
+    expect(url).toMatch(/\/api\/postings\/1\/close$/);
+    expect(init.method).toBe("POST");
+  });
+
+  it("goes back without closing", async () => {
+    fetchMock.mockResolvedValueOnce(reply(200, answer));
+    render(<RecruiterPostingList token="t" />);
+
+    fireEvent.click(within(await findRow("Data Analyst")).getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button", { name: "Go back" }));
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(within(row("Data Analyst")).getByText("Published")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the reason when the backend refuses to close", async () => {
+    fetchMock
+      .mockResolvedValueOnce(reply(200, answer))
+      .mockResolvedValueOnce(
+        new Response("Only the recruiter who created this posting can close it", {
+          status: 403,
+          headers: { "Content-Type": "text/plain" },
+        }),
+      )
+      .mockResolvedValueOnce(reply(200, answer));
+    render(<RecruiterPostingList token="t" />);
+
+    fireEvent.click(within(await findRow("Data Analyst")).getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close posting, final" }));
+
+    expect(await within(row("Data Analyst")).findByRole("alert")).toHaveTextContent(
+      "Only the recruiter who created this posting can close it",
+    );
+    expect(screen.queryByRole("dialog")).toBeNull();
+    // The refusal means the list may be out of date, so it loads again
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+  });
+
+  it("keeps the reason when the reload shows the posting already closed", async () => {
+    const closedMeanwhile = {
+      ...answer,
+      postings: answer.postings.map((p) =>
+        p.postingId === 1 ? { ...p, postStatus: "CLOSED", closingReason: "Expired" } : p,
+      ),
+    };
+    fetchMock
+      .mockResolvedValueOnce(reply(200, answer))
+      .mockResolvedValueOnce(
+        new Response("Only a published posting can be closed; this one is Closed", {
+          status: 409,
+          headers: { "Content-Type": "text/plain" },
+        }),
+      )
+      .mockResolvedValueOnce(reply(200, closedMeanwhile));
+    render(<RecruiterPostingList token="t" />);
+
+    fireEvent.click(within(await findRow("Data Analyst")).getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close posting, final" }));
+
+    // The reload turns the row Closed, which takes its Close away; the reason stays
+    expect(await within(row("Data Analyst")).findByText("Closed · Expired")).toBeInTheDocument();
+    expect(within(row("Data Analyst")).queryByRole("button", { name: "Close" })).toBeNull();
+    expect(within(row("Data Analyst")).getByRole("alert")).toHaveTextContent(
+      "Only a published posting can be closed; this one is Closed",
+    );
+  });
+
+  it("offers no actions on a posting another recruiter created", async () => {
+    fetchMock.mockResolvedValueOnce(reply(200, answer));
+    render(<RecruiterPostingList token="t" />);
+
+    const teammates = await findRow("Lab Courier");
+    expect(within(teammates).queryByRole("button")).toBeNull();
+    expect(within(teammates).queryByRole("link")).toBeNull();
+  });
+
+  it("puts focus in the confirmation, and back on Close after Escape", async () => {
+    fetchMock.mockResolvedValueOnce(reply(200, answer));
+    render(<RecruiterPostingList token="t" />);
+
+    fireEvent.click(within(await findRow("Data Analyst")).getByRole("button", { name: "Close" }));
+    const dialog = screen.getByRole("dialog", { name: "Close Data Analyst?" });
+    expect(dialog).toHaveFocus();
+
+    fireEvent.keyDown(dialog, { key: "Escape" });
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(within(row("Data Analyst")).getByRole("button", { name: "Close" })).toHaveFocus();
   });
 });

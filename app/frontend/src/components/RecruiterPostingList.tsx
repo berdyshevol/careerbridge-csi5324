@@ -13,6 +13,8 @@ import { STAGES } from "@/lib/sampleDesk";
 import AccessNotice from "./AccessNotice";
 import EmptyState from "./EmptyState";
 import PageTitle from "./PageTitle";
+import ClosePostingAction from "./ClosePostingAction";
+import { editPostingPath } from "./PostingFields";
 import PostingStatusBadge from "./PostingStatusBadge";
 
 // FR-UC14.1: a posting that took applications shows how many are at each stage. A posting with none
@@ -44,11 +46,29 @@ function note(row: RecruiterPostingRow, organizationName: string): string | null
   }
 }
 
+// UC-11 extensions 6a and 3b: a returned posting is revised, a draft continued, on the edit page
+const EDIT_ACTIONS: Record<string, string> = { RETURNED: "Revise", DRAFT: "Continue" };
+
 export default function RecruiterPostingList({ token }: { token: string }) {
   const [postings, setPostings] = useState<RecruiterPostings | null>(null);
   const [ended, setEnded] = useState(false);
   const [error, setError] = useState("");
+  // Bumped when a refusal shows the list is out of date, so it loads again
+  const [reload, setReload] = useState(0);
+  // A refused close, by posting: kept here so the reason outlives the reload that may change the row
+  const [refusals, setRefusals] = useState<Record<number, string>>({});
 
+  function updateRow(postingId: number, postStatus: string, closingReason: string | null) {
+    setPostings(
+      (current) =>
+        current && {
+          ...current,
+          postings: current.postings.map((row) =>
+            row.postingId === postingId ? { ...row, postStatus, closingReason } : row,
+          ),
+        },
+    );
+  }
   useEffect(() => {
     let cancelled = false;
     viewRecruiterPostings(token)
@@ -66,7 +86,7 @@ export default function RecruiterPostingList({ token }: { token: string }) {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [token, reload]);
 
   if (ended) {
     return (
@@ -109,7 +129,7 @@ export default function RecruiterPostingList({ token }: { token: string }) {
             return (
               <li
                 key={row.postingId}
-                className="flex flex-col gap-2.5 rounded-xl border border-base-300 bg-base-100 px-4 py-3.5 md:flex-row md:items-center md:gap-4"
+                className="flex flex-col flex-wrap gap-2.5 rounded-xl border border-base-300 bg-base-100 px-4 py-3.5 md:flex-row md:items-center md:gap-4"
               >
                 <div className="min-w-0 grow">
                   <p className="font-semibold">{row.title}</p>
@@ -118,8 +138,32 @@ export default function RecruiterPostingList({ token }: { token: string }) {
                 <PostingStatusBadge
                   postStatus={row.postStatus}
                   closingReason={row.closingReason}
-                  className="w-40 shrink-0 self-start md:self-center"
+                  className="w-44 shrink-0 self-start md:self-center"
                 />
+                {/* Only the recruiter who created a posting may change or close it (CO-11.2, CO-13.2) */}
+                {row.createdByYou && EDIT_ACTIONS[row.postStatus] && (
+                  <Link href={editPostingPath(row.postingId)} className="btn btn-sm self-start md:self-center">
+                    {EDIT_ACTIONS[row.postStatus]}
+                  </Link>
+                )}
+                {row.createdByYou && row.postStatus === "PUBLISHED" && (
+                  <ClosePostingAction
+                    token={token}
+                    postingId={row.postingId}
+                    title={row.title}
+                    onClosed={(closed) => updateRow(row.postingId, closed.postStatus, closed.closingReason ?? null)}
+                    onRefused={(reason) => {
+                      setRefusals((current) => ({ ...current, [row.postingId]: reason }));
+                      setReload((count) => count + 1);
+                    }}
+                    onSessionEnded={() => setEnded(true)}
+                  />
+                )}
+                {refusals[row.postingId] && (
+                  <div role="alert" className="alert alert-error w-full md:basis-full">
+                    <span>{refusals[row.postingId]}</span>
+                  </div>
+                )}
               </li>
             );
           })}

@@ -9,6 +9,9 @@ const STATUSES: Record<string, { label: string; tone: string }> = {
   CLOSED: { label: "Closed", tone: "border border-base-300 bg-transparent text-muted" },
 };
 
+// The backend's reason "Closed by recruiter" would read "Closed · Closed by recruiter"
+const REASON_LABELS: Record<string, string> = { "Closed by recruiter": "by recruiter" };
+
 export default function PostingStatusBadge({
   postStatus,
   closingReason,
@@ -23,7 +26,7 @@ export default function PostingStatusBadge({
     <span
       className={`inline-flex items-center justify-center rounded-lg px-2.5 py-1 text-center text-sm font-semibold whitespace-nowrap ${tone} ${className}`}
     >
-      {postStatus === "CLOSED" && closingReason ? `${label} · ${closingReason}` : label}
+      {postStatus === "CLOSED" && closingReason ? `${label} · ${REASON_LABELS[closingReason] ?? closingReason}` : label}
     </span>
   );
 }

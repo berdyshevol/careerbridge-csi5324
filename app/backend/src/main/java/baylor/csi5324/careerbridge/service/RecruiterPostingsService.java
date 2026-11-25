@@ -46,7 +46,9 @@ public class RecruiterPostingsService {
         List<RecruiterPostings.RecruiterPosting> postings = jobPostingRepository
                 .findByOrganizationOrderByDatePostedDescJobPostIdDesc(organization).stream()
                 .map(posting -> new RecruiterPostings.RecruiterPosting(
-                        posting, counts.getOrDefault(posting.getJobPostId(), noApplications())))
+                        posting, counts.getOrDefault(posting.getJobPostId(), noApplications()),
+                        // Read here, in the transaction: the recruiter link loads lazily
+                        posting.wasCreatedBy(recruiterEmail)))
                 .toList();
         return new RecruiterPostings(organization, postings);
     }

@@ -12,6 +12,7 @@ import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
+import baylor.csi5324.careerbridge.repository.RecruiterRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -46,6 +48,9 @@ class RecruiterPostingsServiceTest {
 
     @Autowired
     private ApplicantRepository applicantRepository;
+
+    @Autowired
+    private RecruiterRepository recruiterRepository;
 
     private Organization organization;
     private int applicants;
@@ -119,6 +124,19 @@ class RecruiterPostingsServiceTest {
 
         assertNull(postings.organization());
         assertTrue(postings.postings().isEmpty());
+    }
+
+    @Test
+    void marksThePostingsTheRecruiterCreated() {
+        JobPosting own = posting(organization, "Own", PostStatus.PUBLISHED);
+        own.setRecruiter(recruiterRepository.findByEmailIgnoreCase(RECRUITER).orElseThrow());
+        jobPostingRepository.save(own);
+        posting(organization, "Sample", PostStatus.PUBLISHED);
+
+        var rows = service.listPostings(RECRUITER).postings();
+
+        assertTrue(rows.stream().filter(row -> row.posting().getTitle().equals("Own")).findFirst().orElseThrow().createdByYou());
+        assertFalse(rows.stream().filter(row -> row.posting().getTitle().equals("Sample")).findFirst().orElseThrow().createdByYou());
     }
 
     private JobPosting posting(Organization owner, String title, PostStatus status) {
