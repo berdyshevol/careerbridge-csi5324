@@ -15,8 +15,11 @@ import java.util.Map;
 @Service
 public class UserDirectoryService {
 
+    // Administrators first, as the admin-users mockup draws them
+    private static final List<Role> ROLE_ORDER = List.of(Role.ADMINISTRATOR, Role.RECRUITER, Role.APPLICANT);
+
     private static final Comparator<User> BY_ROLE_THEN_NAME = Comparator
-            .comparing(Role::of)
+            .comparing((User user) -> ROLE_ORDER.indexOf(Role.of(user)))
             .thenComparing(User::getLastName, String.CASE_INSENSITIVE_ORDER)
             .thenComparing(User::getFirstName, String.CASE_INSENSITIVE_ORDER)
             .thenComparing(User::getUserId);

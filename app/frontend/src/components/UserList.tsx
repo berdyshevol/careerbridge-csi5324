@@ -1,7 +1,7 @@
 import type { UserDirectory, UserRow } from "@/lib/api";
 import { ROLE_LABELS, type Role } from "@/lib/session";
 
-const ROLES: Role[] = ["APPLICANT", "RECRUITER", "ADMINISTRATOR"];
+const ROLES = Object.keys(ROLE_LABELS) as Role[];
 
 function count(role: Role, users: number) {
   const word = ROLE_LABELS[role].toLowerCase();
@@ -15,7 +15,7 @@ function UserItem({ user }: { user: UserRow }) {
         <span className="font-semibold">
           {user.firstName} {user.lastName}
         </span>
-        <span className="inline-flex items-center rounded-lg bg-secondary px-2.5 py-0.5 text-sm font-semibold text-secondary-content">
+        <span className="badge badge-secondary font-semibold">
           {ROLE_LABELS[user.role]}
         </span>
       </div>
@@ -23,7 +23,7 @@ function UserItem({ user }: { user: UserRow }) {
       {user.accountStatus === "ACTIVE" ? (
         <span className="text-xs text-muted">Active</span>
       ) : (
-        <span className="w-fit rounded-lg bg-warning px-2.5 py-0.5 text-sm font-semibold text-warning-content">
+        <span className="badge badge-warning w-fit font-semibold">
           Pending verification
         </span>
       )}
@@ -37,10 +37,7 @@ export default function UserList({ directory }: { directory: UserDirectory }) {
     <div className="flex flex-col gap-4">
       <ul aria-label="Users by role" className="flex flex-wrap gap-2">
         {ROLES.map((role) => (
-          <li
-            key={role}
-            className="rounded-lg border border-base-300 px-2.5 py-0.5 text-sm font-semibold text-muted"
-          >
+          <li key={role} className="badge badge-outline font-semibold text-muted">
             {count(role, directory.usersByRole[role] ?? 0)}
           </li>
         ))}

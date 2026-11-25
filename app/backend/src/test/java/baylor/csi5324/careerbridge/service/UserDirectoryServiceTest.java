@@ -42,15 +42,15 @@ class UserDirectoryServiceTest {
     }
 
     @Test
-    void sortsByRoleThenLastNameThenFirstName() {
+    void listsAdministratorsThenRecruitersThenApplicantsEachByName() {
         userRepository.save(applicant("Bea", "Zimmer", "bea.zimmer@example.com"));
         userRepository.save(applicant("Al", "Aaron", "al.aaron@example.com"));
         userRepository.save(applicant("Cy", "Aaron", "cy.aaron@example.com"));
 
         List<User> users = userDirectoryService.viewUsers().users();
 
-        List<Role> roles = users.stream().map(Role::of).toList();
-        assertEquals(roles.stream().sorted().toList(), roles);
+        List<Role> roles = users.stream().map(Role::of).distinct().toList();
+        assertEquals(List.of(Role.ADMINISTRATOR, Role.RECRUITER, Role.APPLICANT), roles);
         List<String> applicants = users.stream().filter(user -> Role.of(user) == Role.APPLICANT)
                 .map(User::getEmail).filter(email -> email.matches("(bea|al|cy)\\..*")).toList();
         assertEquals(List.of("al.aaron@example.com", "cy.aaron@example.com", "bea.zimmer@example.com"), applicants);
