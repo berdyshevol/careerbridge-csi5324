@@ -32,6 +32,10 @@ describe("log-in page", () => {
     await renderWith(next);
 
     expect(viewPosting).toHaveBeenCalledWith("3");
+    expect(screen.getByRole("link", { name: "Register as an applicant" })).toHaveAttribute(
+      "href",
+      `/register?next=${encodeURIComponent(next)}`,
+    );
     expect(
       screen.getByText("Log in to apply for Backend Developer at Brazos Analytics. You come back to it afterwards."),
     ).toBeInTheDocument();

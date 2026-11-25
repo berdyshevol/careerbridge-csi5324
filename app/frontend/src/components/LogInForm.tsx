@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LogInRefused, logIn } from "@/lib/api";
@@ -66,13 +65,6 @@ export default function LogInForm({ next }: { next?: string }) {
           Log in
         </button>
       </form>
-
-      <p className="text-sm">
-        New here?{" "}
-        <Link href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"} className="link link-primary">
-          Register as an applicant
-        </Link>
-      </p>
     </>
   );
 }

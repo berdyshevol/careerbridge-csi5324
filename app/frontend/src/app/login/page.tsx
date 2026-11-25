@@ -1,3 +1,4 @@
+import Link from "next/link";
 import LogInForm from "@/components/LogInForm";
 import PageTitle from "@/components/PageTitle";
 import { queryValue, viewPosting, type PageQuery } from "@/lib/api";
@@ -5,10 +6,7 @@ import { queryValue, viewPosting, type PageQuery } from "@/lib/api";
 // A visitor sent here by Apply comes back to that posting, and the mockup visitor-login names it
 async function postingToReturnTo(next: string | undefined) {
   const id = next?.match(/^\/jobs\/(\d+)(\/apply)?$/)?.[1];
-  if (!id) {
-    return null;
-  }
-  return viewPosting(id);
+  return id ? viewPosting(id) : null;
 }
 
 export default async function LogInPage({ searchParams }: { searchParams: Promise<PageQuery> }) {
@@ -25,6 +23,12 @@ export default async function LogInPage({ searchParams }: { searchParams: Promis
         Log in
       </PageTitle>
       <LogInForm next={next} />
+      <p className="text-sm">
+        New here?{" "}
+        <Link href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"} className="link link-primary">
+          Register as an applicant
+        </Link>
+      </p>
     </div>
   );
 }
