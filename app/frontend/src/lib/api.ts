@@ -380,6 +380,30 @@ export type InterviewSummary = {
   location: string;
 };
 
+export type OfferStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "RESCINDED";
+
+export type OfferSummary = {
+  offerId: number;
+  dateExtended: string;
+  startDate: string;
+  salary: string;
+  terms: string | null;
+  expirationDate: string;
+  offerLetterFileName: string | null;
+  status: OfferStatus;
+  responseDate: string | null;
+  revision: number;
+  expired: boolean;
+  canRespond: boolean;
+};
+
+export type OfferDetail = OfferSummary & {
+  applicationId: number;
+  postingId: number;
+  title: string;
+  organizationName: string;
+};
+
 export type ApplicationDetail = {
   applicationId: number;
   postingId: number;
@@ -391,6 +415,7 @@ export type ApplicationDetail = {
   dateApplied: string;
   statusHistory: StatusHistoryEntry[];
   interviews: InterviewSummary[];
+  offer: OfferSummary | null;
   rejectionReason: string | null;
   rejectedAtStage: ApplicationStage | null;
   rejectionDate: string | null;
@@ -417,6 +442,16 @@ export class ApplicationActionRefused extends Error {
   }
 }
 
+// UC-07 ext 6b (FR-UC07.11): the recruiter revised the offer before the applicant confirmed
+export class OfferRevised extends Error {
+  constructor(
+    message: string,
+    readonly revisedOffer: OfferSummary,
+  ) {
+    super(message);
+  }
+}
+
 export type WithdrawalPrompt = {
   applicationId: number;
   title: string;
@@ -427,6 +462,12 @@ export type WithdrawalPrompt = {
 };
 
 export type WithdrawalResult = {
+  application: ApplicationDetail;
+  activeApplicationCount: number;
+  applicationLimit: number;
+};
+
+export type OfferResponseResult = {
   application: ApplicationDetail;
   activeApplicationCount: number;
   applicationLimit: number;
@@ -465,8 +506,19 @@ export async function viewApplication(
 
 async function throwIfActionRefused(response: Response): Promise<void> {
   if (response.status === 409) {
-    const body: { currentStage: string; message: string } = await response.json();
-    throw new ApplicationActionRefused(body.message, stageLabel(body.currentStage));
+    const body: {
+      code?: string;
+      currentStage?: string;
+      message: string;
+      offer?: OfferSummary;
+    } = await response.json();
+    if (body.code === "OFFER_REVISED" && body.offer) {
+      throw new OfferRevised(body.message, body.offer);
+    }
+    throw new ApplicationActionRefused(
+      body.message,
+      body.currentStage ? stageLabel(body.currentStage) : "Offer",
+    );
   }
 }
 
@@ -498,6 +550,79 @@ export async function withdrawApplication(
     method: "POST",
     headers: { ...bearer(token), "Content-Type": "application/json" },
     body: JSON.stringify({ reason: reason?.trim() || null }),
+  });
+  endedSession(response);
+  await throwIfActionRefused(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  const raw: {
+    application: RawApplicationDetail;
+    activeApplicationCount: number;
+    applicationLimit: number;
+  } = await response.json();
+  return {
+    application: mapDetail(raw.application),
+    activeApplicationCount: raw.activeApplicationCount,
+    applicationLimit: raw.applicationLimit,
+  };
+}
+
+// CO-07.1: fetches offer details for an application at the Offer stage
+export async function viewOffer(token: string, applicationId: number): Promise<OfferDetail> {
+  const response = await backendFetch(`/api/applicant/applications/${applicationId}/offer`, {
+    headers: bearer(token),
+  });
+  endedSession(response);
+  await throwIfActionRefused(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+// CO-07.2: confirms final acceptance of an active offer
+export async function acceptOffer(
+  token: string,
+  applicationId: number,
+  expectedRevision: number,
+): Promise<OfferResponseResult> {
+  const response = await backendFetch(`/api/applicant/applications/${applicationId}/offer/accept`, {
+    method: "POST",
+    headers: { ...bearer(token), "Content-Type": "application/json" },
+    body: JSON.stringify({ expectedRevision }),
+  });
+  endedSession(response);
+  await throwIfActionRefused(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  const raw: {
+    application: RawApplicationDetail;
+    activeApplicationCount: number;
+    applicationLimit: number;
+  } = await response.json();
+  return {
+    application: mapDetail(raw.application),
+    activeApplicationCount: raw.activeApplicationCount,
+    applicationLimit: raw.applicationLimit,
+  };
+}
+
+// CO-07.3: confirms final decline of an active offer with an optional reason
+export async function declineOffer(
+  token: string,
+  applicationId: number,
+  reason: string | undefined,
+  expectedRevision: number,
+): Promise<OfferResponseResult> {
+  const response = await backendFetch(`/api/applicant/applications/${applicationId}/offer/decline`, {
+    method: "POST",
+    headers: { ...bearer(token), "Content-Type": "application/json" },
+    body: JSON.stringify({
+      reason: reason?.trim() || null,
+      expectedRevision,
+    }),
   });
   endedSession(response);
   await throwIfActionRefused(response);

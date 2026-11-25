@@ -16,10 +16,14 @@ import { SessionEnded,
   viewProfile,
   ApplicationActionRefused,
   ApplicationRefused,
+  acceptOffer,
+  declineOffer,
+  OfferRevised,
   ProfileRefused,
   ResumeRefused,
   requestWithdrawal,
   uploadResume,
+  viewOffer,
   withdrawApplication,
   type JobPosting,
   type NewPosting,
@@ -507,6 +511,104 @@ describe("requestWithdrawal and withdrawApplication", () => {
     );
 
     await expect(withdrawApplication("t", 12)).rejects.toBeInstanceOf(ApplicationActionRefused);
+  });
+});
+
+describe("viewOffer, acceptOffer and declineOffer", () => {
+  it("loads offer details and accepts or declines an offer", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              offerId: 5,
+              applicationId: 15,
+              postingId: 2,
+              title: "IT Support Specialist",
+              organizationName: "Baylor IT Services",
+              dateExtended: "2026-10-16",
+              startDate: "2027-07-19",
+              salary: "$54,000 USD per year",
+              terms: "Full-time on-site.",
+              expirationDate: "2027-06-30",
+              offerLetterFileName: "Offer.pdf",
+              status: "PENDING",
+              responseDate: null,
+              revision: 1,
+              expired: false,
+              canRespond: true,
+            }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              activeApplicationCount: 2,
+              applicationLimit: 5,
+              application: {
+                applicationId: 15,
+                postingId: 2,
+                title: "IT Support Specialist",
+                organizationName: "Baylor IT Services",
+                location: "On-site",
+                employmentType: "Full-time",
+                applicationStatus: "HIRED",
+                dateApplied: "2026-09-30",
+                statusHistory: [{ status: "HIRED", date: "2026-11-01" }],
+                interviews: [],
+                offer: null,
+                rejectionReason: null,
+                rejectedAtStage: null,
+                rejectionDate: null,
+                withdrawnAt: null,
+                availableActions: [],
+              },
+            }),
+        }),
+    );
+
+    const offer = await viewOffer("t", 15);
+    expect(offer.salary).toBe("$54,000 USD per year");
+
+    const accepted = await acceptOffer("t", 15, 1);
+    expect(accepted.application.applicationStatus).toBe("Hired");
+    expect(accepted.activeApplicationCount).toBe(2);
+  });
+
+  it("throws OfferRevised on 409 OFFER_REVISED conflict", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 409,
+        json: () =>
+          Promise.resolve({
+            code: "OFFER_REVISED",
+            message: "Offer revised.",
+            offer: {
+              offerId: 5,
+              dateExtended: "2026-10-16",
+              startDate: "2027-07-19",
+              salary: "$60,000 USD per year",
+              terms: "Updated.",
+              expirationDate: "2027-07-05",
+              offerLetterFileName: null,
+              status: "PENDING",
+              responseDate: null,
+              revision: 2,
+              expired: false,
+              canRespond: true,
+            },
+          }),
+      }),
+    );
+
+    await expect(declineOffer("t", 15, "No thanks", 1)).rejects.toBeInstanceOf(OfferRevised);
   });
 });
 

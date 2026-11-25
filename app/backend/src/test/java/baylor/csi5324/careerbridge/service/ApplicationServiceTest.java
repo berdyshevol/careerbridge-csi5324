@@ -6,6 +6,8 @@ import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.Interview;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.Offer;
+import baylor.csi5324.careerbridge.model.OfferStatus;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
@@ -446,6 +448,98 @@ class ApplicationServiceTest {
                 () -> applicationService.withdrawApplication(rejectedApp.getApplicationId(), JORDAN, null));
         assertEquals(ApplicationStatus.REJECTED, terminalRefused.getCurrentStage());
         assertEquals(ApplicationStatus.REJECTED, rejectedApp.getApplicationStatus());
+    }
+
+    @Test
+    void viewsAndAcceptsOpenOfferMovingApplicationToHiredAndFreeingSlot() {
+        JobPosting posting = save("Data Analyst", PostStatus.PUBLISHED, today.plusDays(14));
+        Application offered = submitWithOffer(posting, today.plusDays(7));
+        Long id = offered.getApplicationId();
+
+        Application viewed = applicationService.viewOffer(id, JORDAN);
+        assertEquals("68,000 USD per year", viewed.getOffer().getSalary());
+        assertThrows(ApplicationNotFoundException.class, () -> applicationService.viewOffer(id, SAM));
+
+        OfferResponseResult accepted = applicationService.acceptOffer(id, JORDAN, 1);
+        assertEquals(ApplicationStatus.HIRED, accepted.application().getApplicationStatus());
+        assertEquals(0, accepted.activeApplicationCount());
+
+        Application persisted = reloaded(id);
+        assertEquals(ApplicationStatus.HIRED, persisted.getApplicationStatus());
+        assertEquals(OfferStatus.ACCEPTED, persisted.getOffer().getStatus());
+        assertEquals(LocalDate.ofInstant(accepted.respondedAt(), organization.getZoneId()),
+                persisted.getOffer().getResponseDate());
+        assertEquals(ApplicationStatus.HIRED,
+                persisted.getStatusHistory().get(persisted.getStatusHistory().size() - 1).getStatus());
+    }
+
+    @Test
+    void declinesOpenOfferWithReasonFreesSlotAndLeavesPostingOpen() {
+        JobPosting posting = save("Product Analyst", PostStatus.PUBLISHED, today.plusDays(14));
+        Application offered = submitWithOffer(posting, today.plusDays(7));
+        Long id = offered.getApplicationId();
+
+        OfferResponseResult declined = applicationService.declineOffer(id, JORDAN, "Accepted another role", 1);
+        assertEquals(ApplicationStatus.OFFER_DECLINED, declined.application().getApplicationStatus());
+        assertEquals(0, declined.activeApplicationCount());
+
+        Application persisted = reloaded(id);
+        assertEquals(ApplicationStatus.OFFER_DECLINED, persisted.getApplicationStatus());
+        assertEquals(OfferStatus.DECLINED, persisted.getOffer().getStatus());
+        assertEquals(LocalDate.ofInstant(declined.respondedAt(), organization.getZoneId()),
+                persisted.getOffer().getResponseDate());
+        var lastEntry = persisted.getStatusHistory().get(persisted.getStatusHistory().size() - 1);
+        assertEquals(ApplicationStatus.OFFER_DECLINED, lastEntry.getStatus());
+        assertEquals("Accepted another role", lastEntry.getReason());
+        assertEquals(PostStatus.PUBLISHED, jobPostingRepository.findById(posting.getJobPostId()).orElseThrow().getPostStatus());
+    }
+
+    @Test
+    void refusesExpiredRevisedClosedAndNonOwnerOfferResponsesWithoutChangingData() {
+        JobPosting expiredPosting = save("Expired Offer Role", PostStatus.PUBLISHED, today.plusDays(14));
+        Application expiredApp = submitWithOffer(expiredPosting, today.minusDays(1));
+        assertThrows(ApplicationActionRefusedException.class,
+                () -> applicationService.acceptOffer(expiredApp.getApplicationId(), JORDAN, 1));
+        assertEquals(ApplicationStatus.OFFER, reloaded(expiredApp.getApplicationId()).getApplicationStatus());
+
+        JobPosting revisedPosting = save("Revised Offer Role", PostStatus.PUBLISHED, today.plusDays(14));
+        Application revisedApp = submitWithOffer(revisedPosting, today.plusDays(7));
+        revisedApp.getOffer().setSalary("75,000 USD per year");
+        revisedApp.getOffer().setRevision(2);
+        entityManager.flush();
+
+        OfferRevisedException revised = assertThrows(OfferRevisedException.class,
+                () -> applicationService.acceptOffer(revisedApp.getApplicationId(), JORDAN, 1));
+        assertEquals(2, revised.getOffer().getRevision());
+        assertEquals("75,000 USD per year", revised.getOffer().getSalary());
+        assertEquals(ApplicationStatus.OFFER, reloaded(revisedApp.getApplicationId()).getApplicationStatus());
+        assertThrows(ApplicationNotFoundException.class,
+                () -> applicationService.acceptOffer(revisedApp.getApplicationId(), SAM, 2));
+
+        JobPosting closedPosting = save("Closed Offer Role", PostStatus.PUBLISHED, today.plusDays(14));
+        Application closedApp = submitWithOffer(closedPosting, today.plusDays(7));
+        closedPosting.setPostStatus(PostStatus.CLOSED);
+        closedPosting.setClosingReason("Filled");
+        entityManager.flush();
+        assertThrows(ApplicationActionRefusedException.class,
+                () -> applicationService.acceptOffer(closedApp.getApplicationId(), JORDAN, 1));
+        assertEquals(ApplicationStatus.OFFER, reloaded(closedApp.getApplicationId()).getApplicationStatus());
+    }
+
+    private Application submitWithOffer(JobPosting posting, LocalDate expirationDate) {
+        Application application = applicationService.submitApplication(posting.getJobPostId(), JORDAN).application();
+        application.setApplicationStatus(ApplicationStatus.OFFER);
+        application.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.OFFER, today));
+        application.setOffer(new Offer(
+                application,
+                today,
+                today.plusDays(30),
+                "68,000 USD per year",
+                "Hybrid after 90 days.",
+                expirationDate,
+                "Offer_Letter.pdf"));
+        entityManager.flush();
+        return application;
     }
 
     private void upload(String email, String fileName, byte[] content) {

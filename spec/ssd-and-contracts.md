@@ -470,7 +470,7 @@ Figure 13 shows SSD-07, the system sequence diagram for the main success scenari
 
 #### CO-07.2: acceptOffer
 
-**Operation:** acceptOffer(applicationId)
+**Operation:** acceptOffer(applicationId, expectedRevision)
 
 **Cross-references:** UC-07 steps 3–8; extensions 5a, 6a, 6b, 6c, 7a; FR-UC07.2, FR-UC07.3, FR-UC07.4, FR-UC07.6 through FR-UC07.11
 
@@ -500,15 +500,15 @@ Figure 13 shows SSD-07, the system sequence diagram for the main success scenari
 
 **Exceptions:**
 
-- The offer is no longer open (extension 6a) or was revised (extension 6b): no postcondition holds.
+- The offer is no longer open (extension 6a) or was revised (extension 6b, where `expectedRevision` does not match the Offer's current _revision_): no postcondition holds.
 
 - The Notification Service is unavailable (extension 7a): the postconditions still hold, and each Notification keeps _status_ Pending until the service accepts it.
 
 #### CO-07.3: declineOffer
 
-**Operation:** declineOffer(applicationId, reason)
+**Operation:** declineOffer(applicationId, reason, expectedRevision)
 
-**Cross-references:** UC-07 extension 3a; FR-UC07.2, FR-UC07.3, FR-UC07.5, FR-UC07.8, FR-UC07.9
+**Cross-references:** UC-07 extension 3a; FR-UC07.2, FR-UC07.3, FR-UC07.5, FR-UC07.6, FR-UC07.8, FR-UC07.9, FR-UC07.11
 
 **Preconditions:**
 
@@ -532,7 +532,7 @@ Figure 13 shows SSD-07, the system sequence diagram for the main success scenari
 
 **Exceptions:**
 
-- The offer is no longer open (extension 6a): no postcondition holds.
+- The offer is no longer open (extension 6a) or was revised (extension 6b, where `expectedRevision` does not match the Offer's current _revision_): no postcondition holds.
 
 - The Notification Service is unavailable (extension 7a): the postconditions still hold, and each Notification keeps _status_ Pending until the service accepts it.
 

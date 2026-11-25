@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
@@ -65,6 +66,9 @@ public class Application {
     @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("roundNumber ASC, scheduledTime ASC")
     private List<Interview> interviews = new ArrayList<>();
+
+    @OneToOne(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Offer offer;
 
     public Application() {
     }
@@ -133,6 +137,14 @@ public class Application {
         return interviews;
     }
 
+    public Offer getOffer() {
+        return offer;
+    }
+
+    public void setOffer(Offer offer) {
+        this.offer = offer;
+    }
+
     public boolean isWithdrawable() {
         return applicationStatus == ApplicationStatus.APPLIED
                 || applicationStatus == ApplicationStatus.SCREENING
@@ -140,9 +152,21 @@ public class Application {
     }
 
     public List<String> availableActions() {
+        return availableActions(Instant.now());
+    }
+
+    public List<String> availableActions(Instant now) {
         return switch (applicationStatus) {
             case APPLIED, SCREENING, INTERVIEW -> List.of("WITHDRAW");
-            case OFFER -> List.of("ACCEPT_OFFER", "DECLINE_OFFER");
+            case OFFER -> {
+                if (jobPosting != null && jobPosting.getPostStatus() == PostStatus.CLOSED) {
+                    yield List.of();
+                }
+                if (offer != null && !offer.canRespond(now, jobPosting.getOrganization().getZoneId())) {
+                    yield List.of();
+                }
+                yield List.of("ACCEPT_OFFER", "DECLINE_OFFER");
+            }
             case HIRED, REJECTED, WITHDRAWN, OFFER_DECLINED -> List.of();
         };
     }

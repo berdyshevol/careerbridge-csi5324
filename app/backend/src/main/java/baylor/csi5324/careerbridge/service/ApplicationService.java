@@ -4,6 +4,9 @@ import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.Offer;
+import baylor.csi5324.careerbridge.model.OfferStatus;
+import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.Resume;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
 import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
@@ -144,6 +147,86 @@ public class ApplicationService {
 
         int activeCount = (int) applicationRepository.countActiveByApplicant(applicant);
         return new WithdrawnApplication(application, activeCount);
+    }
+
+    // CO-07.1: query-only offer view for an application at the Offer stage (FR-UC07.1)
+    @Transactional(readOnly = true)
+    public Application viewOffer(Long applicationId, String applicantEmail) {
+        Application application = ownedApplication(applicationId, applicant(applicantEmail));
+        if (application.getApplicationStatus() != ApplicationStatus.OFFER || application.getOffer() == null) {
+            throw new ApplicationActionRefusedException(
+                    application.getApplicationStatus(),
+                    "This application is in the " + application.getApplicationStatus().getLabel()
+                            + " stage and has no open offer.");
+        }
+        return application;
+    }
+
+    // CO-07.2: accepts an active offer, moving the application to Hired (FR-UC07.2-7.4, 7.6, 7.11)
+    public OfferResponseResult acceptOffer(Long applicationId, String applicantEmail, Integer expectedRevision) {
+        Applicant applicant = applicant(applicantEmail);
+        Application application = ownedApplicationForUpdate(applicationId, applicant);
+        Instant now = clock.instant();
+        Offer offer = requireRespondableOffer(application, now, expectedRevision);
+        LocalDate responseDate = LocalDate.ofInstant(now, application.getJobPosting().getOrganization().getZoneId());
+
+        application.setApplicationStatus(ApplicationStatus.HIRED);
+        application.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.HIRED, responseDate));
+        offer.setStatus(OfferStatus.ACCEPTED);
+        offer.setResponseDate(responseDate);
+        applicationRepository.saveAndFlush(application);
+        application.getInterviews().size();
+
+        int activeCount = (int) applicationRepository.countActiveByApplicant(applicant);
+        return new OfferResponseResult(application, activeCount, now);
+    }
+
+    // CO-07.3: declines an active offer with an optional reason and frees the active slot (FR-UC07.2-7.3, 7.5-7.6, 7.11)
+    public OfferResponseResult declineOffer(Long applicationId, String applicantEmail, String reason,
+                                            Integer expectedRevision) {
+        Applicant applicant = applicant(applicantEmail);
+        Application application = ownedApplicationForUpdate(applicationId, applicant);
+        Instant now = clock.instant();
+        Offer offer = requireRespondableOffer(application, now, expectedRevision);
+        LocalDate responseDate = LocalDate.ofInstant(now, application.getJobPosting().getOrganization().getZoneId());
+        String normalizedReason = normalizeReason(reason);
+
+        application.setApplicationStatus(ApplicationStatus.OFFER_DECLINED);
+        application.getStatusHistory().add(new StatusHistoryEntry(
+                ApplicationStatus.OFFER_DECLINED, responseDate, normalizedReason));
+        offer.setStatus(OfferStatus.DECLINED);
+        offer.setResponseDate(responseDate);
+        applicationRepository.saveAndFlush(application);
+        application.getInterviews().size();
+
+        int activeCount = (int) applicationRepository.countActiveByApplicant(applicant);
+        return new OfferResponseResult(application, activeCount, now);
+    }
+
+    private Offer requireRespondableOffer(Application application, Instant now, Integer expectedRevision) {
+        if (expectedRevision == null) {
+            throw new IllegalArgumentException("Offer revision is required.");
+        }
+        ApplicationStatus stage = application.getApplicationStatus();
+        Offer offer = application.getOffer();
+        if (stage != ApplicationStatus.OFFER || offer == null || offer.getStatus() != OfferStatus.PENDING) {
+            throw new ApplicationActionRefusedException(
+                    stage, "This offer is no longer open. Current stage: " + stage.getLabel() + ".");
+        }
+        JobPosting posting = application.getJobPosting();
+        if (posting.getPostStatus() == PostStatus.CLOSED) {
+            throw new ApplicationActionRefusedException(
+                    stage, "This posting is closed and the offer can no longer be answered.");
+        }
+        var zoneId = posting.getOrganization().getZoneId();
+        if (offer.isExpired(now, zoneId)) {
+            throw new ApplicationActionRefusedException(
+                    stage, "The response deadline has passed. This offer can no longer be accepted.");
+        }
+        if (!expectedRevision.equals(offer.getRevision())) {
+            throw new OfferRevisedException(offer, now, zoneId);
+        }
+        return offer;
     }
 
     private Application ownedApplication(Long applicationId, Applicant applicant) {

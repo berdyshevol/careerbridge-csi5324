@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import AccessNotice from "@/components/AccessNotice";
 import BackendDown from "@/components/BackendDown";
+import OfferResponsePanel from "@/components/OfferResponsePanel";
 import PageTitle from "@/components/PageTitle";
 import { StageBadge } from "@/components/StageBadge";
 import StageTimeline from "@/components/StageTimeline";
@@ -80,32 +81,16 @@ export default async function ApplicationDetailPage({
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
         <div className="flex min-w-0 flex-col gap-5">
-          {isOffer && (
-            <section
-              aria-label="Offer"
-              className="flex flex-col gap-3 rounded-2xl bg-warning p-5 text-warning-content"
-            >
-              <p className="text-xs font-semibold uppercase tracking-wider">Offer</p>
-              <p className="font-display text-xl font-semibold text-base-content">
-                {application.organizationName} offers you the {application.title} position
-              </p>
-              <p className="text-sm text-base-content">Accepting or declining is final.</p>
-              {(canAcceptOffer || canDeclineOffer) && (
-                <div className="flex flex-wrap gap-3">
-                  {canAcceptOffer && (
-                    <button type="button" className="btn btn-primary" disabled>
-                      Accept offer
-                    </button>
-                  )}
-                  {canDeclineOffer && (
-                    <button type="button" className="btn" disabled>
-                      Decline
-                    </button>
-                  )}
-                </div>
-              )}
-            </section>
-          )}
+          <OfferResponsePanel
+            applicationId={application.applicationId}
+            title={application.title}
+            organizationName={application.organizationName}
+            token={session.token}
+            isOfferStage={isOffer}
+            offer={application.offer}
+            canAccept={canAcceptOffer}
+            canDecline={canDeclineOffer}
+          />
 
           {application.applicationStatus === "Rejected" && (
             <div role="status" className="alert alert-soft alert-error">
