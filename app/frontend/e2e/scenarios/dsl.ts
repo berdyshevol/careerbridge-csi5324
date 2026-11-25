@@ -3,7 +3,7 @@ import { createBdd, test as base } from "playwright-bdd";
 import * as system from "./driver";
 import { ADMINISTRATOR, Cast } from "./driver";
 
-// The vocabulary of spec/user-scenarios/*.feature: each step says what happens in the words of the
+// The DSL of spec/user-scenarios/*.feature, its step definitions: each step says what happens in the words of the
 // use cases and calls the driver, which alone knows the screens. Every scenario gets its own cast.
 
 export const test = base.extend<{ cast: Cast }>({

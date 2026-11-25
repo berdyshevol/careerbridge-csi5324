@@ -4,7 +4,7 @@ import { expect, type APIRequestContext, type Page } from "@playwright/test";
 import { ACCOUNTS, logIn, logOut, tokenOf } from "../accounts";
 
 // The protocol driver of the user scenarios (spec/user-scenarios): the only place that knows the
-// screens, their wording and the backend's addresses. The step definitions speak the use cases'
+// screens, their wording and the backend's addresses. The DSL (dsl.ts) speaks the use cases'
 // language and call this; when a screen changes, only this file does.
 
 const API = "http://localhost:8080";

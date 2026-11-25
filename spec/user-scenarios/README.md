@@ -31,10 +31,10 @@ Three layers, as in Farley's model:
 | Layer | Where | Knows |
 | --- | --- | --- |
 | Scenarios | `spec/user-scenarios/*.feature` | The use cases' language only |
-| Step definitions (the vocabulary) | [app/frontend/e2e/scenarios/steps.ts](../../app/frontend/e2e/scenarios/steps.ts) | What each step means, in calls to the driver |
+| DSL: the step definitions, the scenarios' vocabulary | [app/frontend/e2e/scenarios/dsl.ts](../../app/frontend/e2e/scenarios/dsl.ts) | What each step means, in calls to the driver |
 | Driver | [app/frontend/e2e/scenarios/driver.ts](../../app/frontend/e2e/scenarios/driver.ts) | The screens, their wording and the backend's addresses |
 
-Step definitions only call the driver; they hold no addresses, labels or wording. When a screen changes
+The DSL only calls the driver; they hold no addresses, labels or wording. When a screen changes
 its wording, only the driver changes. When a use case changes, its scenarios change, and the steps only
 if new words are needed.
 
@@ -72,7 +72,7 @@ Feature: UC-02 Register as Applicant
 - **Steps:** domain language only, what a person achieves and what the system decides. No buttons, fields,
   page titles, addresses or exact messages: those belong in the driver.
   - Names are always in quotes (`"Sam"`), so one step definition serves every scenario.
-  - Reuse a step from `steps.ts` before writing a new one; a new step is one line there that calls the driver.
+  - Reuse a step from `dsl.ts` before writing a new one; a new step is one line there that calls the driver.
   - `Given` creates the data; each `Then` is an outcome the use case requires, including what must not
     happen ("no account exists for ..."). One scenario, one outcome.
 - Write the wording yourself; do not copy text from course pages.
