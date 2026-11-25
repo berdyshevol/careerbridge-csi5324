@@ -2,12 +2,15 @@
 package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
+import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
+import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
+import baylor.csi5324.careerbridge.repository.RecruiterRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,7 +39,14 @@ class JobPostingApprovalTest {
     @Autowired
     private OrganizationRepository organizationRepository;
 
+    @Autowired
+    private RecruiterRepository recruiterRepository;
+
+    // Seeded by DemoUsers
+    private static final String OWNER = "riley.chen@example.com";
+
     private Organization organization;
+    private Recruiter owner;
 
     @BeforeEach
     void setUp() {
@@ -45,6 +55,33 @@ class JobPostingApprovalTest {
 
         organization = organizationRepository.save(
                 new Organization("UC12 Test Organization"));
+        owner = recruiterRepository.findByEmailIgnoreCase(OWNER).orElseThrow();
+    }
+
+    @Test
+    void anotherRecruiterCannotSubmitThePosting() {
+        JobPosting draft = createPosting(PostStatus.DRAFT, LocalDate.now().plusDays(10));
+        Recruiter other = new Recruiter();
+        other.setFirstName("Sam");
+        other.setLastName("Ortiz");
+        other.setEmail("other@example.com");
+        other.setAccountStatus(AccountStatus.ACTIVE);
+        recruiterRepository.save(other);
+
+        assertThrows(PostingNotAllowedException.class,
+                () -> jobPostingService.submitJobPosting(draft.getJobPostId(), "other@example.com"));
+        assertEquals(PostStatus.DRAFT,
+                jobPostingRepository.findById(draft.getJobPostId()).orElseThrow().getPostStatus());
+    }
+
+    @Test
+    void aPostingNoRecruiterCreatedCannotBeSubmitted() {
+        JobPosting sample = createPosting(PostStatus.DRAFT, LocalDate.now().plusDays(10));
+        sample.setRecruiter(null);
+        jobPostingRepository.save(sample);
+
+        assertThrows(PostingNotAllowedException.class,
+                () -> jobPostingService.submitJobPosting(sample.getJobPostId(), OWNER));
     }
 
     @Test
@@ -53,7 +90,7 @@ class JobPostingApprovalTest {
                 PostStatus.DRAFT, LocalDate.now().plusDays(10));
 
         JobPosting result =
-                jobPostingService.submitJobPosting(draft.getJobPostId());
+                jobPostingService.submitJobPosting(draft.getJobPostId(), OWNER);
 
         assertEquals(PostStatus.PENDING_APPROVAL,
                 result.getPostStatus());
@@ -65,7 +102,7 @@ class JobPostingApprovalTest {
                 PostStatus.RETURNED, LocalDate.now().plusDays(10));
 
         JobPosting result =
-                jobPostingService.submitJobPosting(returned.getJobPostId());
+                jobPostingService.submitJobPosting(returned.getJobPostId(), OWNER);
 
         assertEquals(PostStatus.PENDING_APPROVAL,
                 result.getPostStatus());
@@ -144,8 +181,7 @@ class JobPostingApprovalTest {
                 PostStatus.REJECTED, LocalDate.now().plusDays(10));
 
         assertThrows(PostingStateConflictException.class,
-                () -> jobPostingService.submitJobPosting(
-                        rejected.getJobPostId()));
+                () -> jobPostingService.submitJobPosting(rejected.getJobPostId(), OWNER));
     }
 
     @Test
@@ -180,11 +216,11 @@ class JobPostingApprovalTest {
         JobPosting lastDay = createPosting(PostStatus.DRAFT, LocalDate.now().plusDays(90));
 
         assertThrows(InvalidPostingException.class,
-                () -> jobPostingService.submitJobPosting(today.getJobPostId()));
+                () -> jobPostingService.submitJobPosting(today.getJobPostId(), OWNER));
         assertThrows(InvalidPostingException.class,
-                () -> jobPostingService.submitJobPosting(tooFar.getJobPostId()));
+                () -> jobPostingService.submitJobPosting(tooFar.getJobPostId(), OWNER));
         assertEquals(PostStatus.PENDING_APPROVAL,
-                jobPostingService.submitJobPosting(lastDay.getJobPostId()).getPostStatus());
+                jobPostingService.submitJobPosting(lastDay.getJobPostId(), OWNER).getPostStatus());
     }
 
     @Test
@@ -235,7 +271,7 @@ class JobPostingApprovalTest {
         returned.setReviewComment("Needs corrections");
 
         JobPosting result =
-                jobPostingService.submitJobPosting(returned.getJobPostId());
+                jobPostingService.submitJobPosting(returned.getJobPostId(), OWNER);
 
         assertEquals(PostStatus.PENDING_APPROVAL,
                 result.getPostStatus());
@@ -259,7 +295,9 @@ class JobPostingApprovalTest {
         posting.setApplicationDeadline(deadline);
         posting.setPostStatus(status);
         posting.setOrganization(organization);
+        posting.setRecruiter(owner);
 
         return jobPostingRepository.save(posting);
     }
+
 }

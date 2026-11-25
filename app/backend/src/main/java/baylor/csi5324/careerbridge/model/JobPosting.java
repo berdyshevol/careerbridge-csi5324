@@ -1,8 +1,10 @@
 package baylor.csi5324.careerbridge.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,7 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-// Not mapped yet: the creating Recruiter, and approvalStatus, which repeats postStatus
+// Not mapped: approvalStatus, which repeats postStatus
 @Entity
 @Table(name = "job_postings")
 public class JobPosting {
@@ -50,6 +52,12 @@ public class JobPosting {
     @ManyToOne(optional = false)
     @JoinColumn(name = "organization_id")
     private Organization organization;
+
+    // Null for the sample postings, which no recruiter created. Never sent: a User carries its password hash
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recruiter_id")
+    private Recruiter recruiter;
 
     // They record whoever decided, also for a return or a rejection
     private String approvedBy;
@@ -182,6 +190,18 @@ public class JobPosting {
 
     public void setOrganization(Organization organization) {
         this.organization = organization;
+    }
+
+    public Recruiter getRecruiter() {
+        return recruiter;
+    }
+
+    public void setRecruiter(Recruiter recruiter) {
+        this.recruiter = recruiter;
+    }
+
+    public boolean wasCreatedBy(String recruiterEmail) {
+        return recruiter != null && recruiter.getEmail().equalsIgnoreCase(recruiterEmail);
     }
 
     public String getApprovedBy() {
