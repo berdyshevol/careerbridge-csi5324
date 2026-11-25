@@ -417,3 +417,34 @@ Then("{string} is on the job board", async ({ request, cast }, posting: string) 
 Then("{string} cannot be submitted again", async ({ request, cast }, posting: string) => {
   expect(await system.submitAgainByApi(request, cast, cast.posting(posting))).toBe(409);
 });
+
+// UC-11 extension 6a: revising a returned posting
+
+Given(
+  "{string} was returned with the comment {string}",
+  async ({ request, cast }, posting: string, comment: string) => {
+    await system.returnByApi(request, cast, cast.posting(posting), comment);
+  },
+);
+
+When("{string} opens {string} to revise it", async ({ page, cast }, _alias: string, posting: string) => {
+  await system.openForRevision(page, cast.posting(posting));
+});
+
+Then("{string} sees the comment {string}", async ({ page }, _alias: string, comment: string) => {
+  await system.expectAdministratorsComment(page, comment);
+});
+
+When("{string} adds the salary range {string} and submits it again", async ({ page }, _alias: string, salary: string) => {
+  await system.addSalaryAndSubmit(page, salary);
+});
+
+// UC-13 extension *a: the recruiter closes their posting
+
+When("{string} closes {string}", async ({ page, cast }, _alias: string, posting: string) => {
+  await system.closeOnScreen(page, cast.posting(posting));
+});
+
+Then("{string} shows as closed by its recruiter", async ({ page, cast }, posting: string) => {
+  await system.expectClosedByRecruiter(page, cast.posting(posting));
+});

@@ -519,3 +519,40 @@ export async function expectDecision(page: Page, posting: Posting, decision: "pu
   }[decision];
   await expect(page.getByRole("main").getByRole("status")).toHaveText(told);
 }
+
+// UC-11 extension 6a and UC-13 extension *a, from the recruiter's postings list
+
+const myPosting = (page: Page, posting: Posting) => page.getByRole("listitem").filter({ hasText: posting.title });
+
+export async function returnByApi(request: APIRequestContext, cast: Cast, posting: Posting, comment: string) {
+  const answer = await request.post(`${API}/api/admin/postings/${posting.id}/return`, {
+    headers: await cast.token(request, ACCOUNTS.administrator),
+    data: { comment },
+  });
+  expect(answer.ok(), await answer.text()).toBeTruthy();
+}
+
+export async function openForRevision(page: Page, posting: Posting) {
+  await page.goto("/recruiter/postings");
+  await myPosting(page, posting).getByRole("link", { name: "Revise" }).click();
+}
+
+export async function expectAdministratorsComment(page: Page, comment: string) {
+  await expect(page.getByRole("status", { name: "Administrator's comments" })).toContainText(comment);
+}
+
+export async function addSalaryAndSubmit(page: Page, salaryRange: string) {
+  await page.getByLabel("Salary range, optional").fill(salaryRange);
+  await page.getByRole("button", { name: "Submit for approval" }).click();
+  await expect(page.getByText(/Submitted for approval/)).toBeVisible();
+}
+
+export async function closeOnScreen(page: Page, posting: Posting) {
+  await page.goto("/recruiter/postings");
+  await myPosting(page, posting).getByRole("button", { name: "Close" }).click();
+  await page.getByRole("dialog", { name: `Close ${posting.title}?` }).getByRole("button", { name: "Close posting, final" }).click();
+}
+
+export async function expectClosedByRecruiter(page: Page, posting: Posting) {
+  await expect(myPosting(page, posting).getByText("Closed · by recruiter")).toBeVisible();
+}
