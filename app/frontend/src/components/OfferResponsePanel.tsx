@@ -150,12 +150,18 @@ export default function OfferResponsePanel({
     return (
       <div className="flex flex-col gap-3">
         {confirmed && (
-          <div role="status" className="alert alert-soft alert-success">
+          <div
+            role="status"
+            className="alert alert-soft alert-success border border-primary/25 border-l-4 border-l-primary transition-colors duration-200"
+          >
             <span>{confirmed}</span>
           </div>
         )}
         {error && (
-          <div role="alert" className="alert alert-soft alert-error">
+          <div
+            role="alert"
+            className="alert alert-soft alert-error border border-error/25 border-l-4 border-l-error transition-colors duration-200"
+          >
             <span>{error}</span>
           </div>
         )}
@@ -175,7 +181,7 @@ export default function OfferResponsePanel({
     <div className="flex flex-col gap-4">
       <section
         aria-label={isExpired ? "Offer after its response deadline" : "Offer"}
-        className="flex flex-col gap-4 rounded-2xl bg-warning p-5 text-warning-content"
+        className="flex flex-col gap-4 rounded-2xl border border-accent/25 border-l-4 border-l-accent bg-warning p-5 text-warning-content transition-colors duration-200"
       >
         <div className="flex flex-col gap-1">
           <p className="text-xs font-semibold uppercase tracking-wider">{eyebrow}</p>
@@ -277,10 +283,13 @@ export default function OfferResponsePanel({
               handleCloseDialog();
             }
           }}
-          className="max-w-md rounded-2xl border border-base-300 bg-base-100 p-5 shadow-md outline-none"
+          className="max-w-md rounded-2xl border border-primary/40 border-l-4 border-l-primary bg-secondary/40 p-5 shadow-md outline-none transition-colors duration-200"
         >
           <form onSubmit={handleAccept} className="flex flex-col gap-4">
-            <h2 id="accept-offer-dialog-title" className="font-display text-lg font-semibold">
+            <h2
+              id="accept-offer-dialog-title"
+              className="font-display text-lg font-semibold text-secondary-content"
+            >
               Accept the {title} offer?
             </h2>
             <p className="text-sm text-base-content">You cannot change your answer afterwards.</p>
@@ -307,10 +316,13 @@ export default function OfferResponsePanel({
               handleCloseDialog();
             }
           }}
-          className="max-w-md rounded-2xl border border-base-300 bg-base-100 p-5 shadow-md outline-none"
+          className="max-w-md rounded-2xl border border-error/40 border-l-4 border-l-error bg-error/5 p-5 shadow-md outline-none transition-colors duration-200"
         >
           <form onSubmit={handleDecline} className="flex flex-col gap-4">
-            <h2 id="decline-offer-dialog-title" className="font-display text-lg font-semibold">
+            <h2
+              id="decline-offer-dialog-title"
+              className="font-display text-lg font-semibold text-error"
+            >
               Decline the {title} offer?
             </h2>
             <TextAreaField

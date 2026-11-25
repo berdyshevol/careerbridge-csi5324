@@ -107,12 +107,18 @@ export default function WithdrawAction({
     return (
       <div className="flex flex-col gap-3">
         {confirmed && (
-          <div role="status" className="alert alert-soft alert-success">
+          <div
+            role="status"
+            className="alert alert-soft alert-success border border-primary/25 border-l-4 border-l-primary transition-colors duration-200"
+          >
             <span>{confirmed}</span>
           </div>
         )}
         {error && (
-          <div role="alert" className="alert alert-soft alert-error">
+          <div
+            role="alert"
+            className="alert alert-soft alert-error border border-error/25 border-l-4 border-l-error transition-colors duration-200"
+          >
             <span>{error}</span>
           </div>
         )}
@@ -121,7 +127,13 @@ export default function WithdrawAction({
   }
 
   return (
-    <section className="card border border-base-300 bg-base-100">
+    <section
+      className={`card border border-l-4 transition-colors duration-200 ${
+        prompt
+          ? "border-error/40 border-l-error bg-error/5"
+          : "border-base-300 border-l-base-300 bg-base-100"
+      }`}
+    >
       <div className="card-body gap-4">
         <p className="text-sm text-muted">
           Submitted applications cannot be edited. You can withdraw while this application is in
@@ -129,13 +141,19 @@ export default function WithdrawAction({
         </p>
 
         {confirmed && (
-          <div role="status" className="alert alert-soft alert-success">
+          <div
+            role="status"
+            className="alert alert-soft alert-success border border-primary/25 border-l-4 border-l-primary transition-colors duration-200"
+          >
             <span>{confirmed}</span>
           </div>
         )}
 
         {error && (
-          <div role="alert" className="alert alert-soft alert-error">
+          <div
+            role="alert"
+            className="alert alert-soft alert-error border border-error/25 border-l-4 border-l-error transition-colors duration-200"
+          >
             <span>{error}</span>
           </div>
         )}
@@ -145,7 +163,7 @@ export default function WithdrawAction({
             <button
               ref={triggerRef}
               type="button"
-              className="btn"
+              className="btn transition-colors duration-200 hover:border-error/40 hover:bg-error/10 hover:text-error"
               onClick={handleStart}
               disabled={busy}
             >
@@ -165,11 +183,14 @@ export default function WithdrawAction({
                 handleCancel();
               }
             }}
-            className="rounded-2xl border border-base-300 bg-base-100 p-5 shadow-md outline-none"
+            className="rounded-2xl border border-error/30 border-l-4 border-l-error bg-base-100 p-5 shadow-md outline-none transition-colors duration-200"
           >
             <form onSubmit={handleConfirm} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1">
-                <h2 id="withdraw-dialog-title" className="font-display text-lg font-semibold">
+                <h2
+                  id="withdraw-dialog-title"
+                  className="font-display text-lg font-semibold text-error"
+                >
                   Withdraw your {prompt.title} application?
                 </h2>
                 <p className="text-sm text-muted">
