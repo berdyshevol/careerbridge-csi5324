@@ -10,6 +10,38 @@ Applicant Profile and Log In; the owner of another use case adds its scenarios t
 the order of the course's minimum scope for the final iteration (applicant, recruiter, administrator).
 The steps of each use case stay in [use-cases.md](../use-cases.md); a scenario only strings them together.
 
+## How a scenario is written
+
+One scenario per file. Copy an existing one, such as [applicant-1-register.md](applicant-1-register.md).
+
+**File name:** `<role>-<n>-<what>.md`, where the role is `applicant`, `recruiter` or `administrator`
+and `n` follows the order of the minimum scope for that role; `rule-<n>-<what>.md` for a rule the whole
+system keeps. Lower case, words joined by hyphens.
+
+**Sections, in this order:**
+
+1. `# <Title>`: what a person does, as a short sentence in the present tense ("An applicant registers").
+2. `**Use cases:**` the use cases the scenario goes through (`UC-02`, `Log In`), and `**Status:**` one of
+   *Works*, *Not built yet* or *Checked by hand*.
+3. `## Scenario`: one `gherkin` block with
+   - `Given` the starting point, named from the sample data below (Jordan Lee, Backend Developer), or
+     created by the scenario itself (a new applicant who registers);
+   - `When` what the person does, in the words a user would use, not field names or endpoints;
+   - `Then` what they see afterwards, which a test can check. `And` adds a line to any of the three.
+4. `## Checked by` (when it works): one line per end-to-end test that proves it, as
+   `` `app/frontend/e2e/<file>.spec.ts`, the test matching "<words from its title>" ``, then the
+   command that runs those files.
+5. `## Not checked yet` (when it is not built): the ticket that will build it, `SCRUM-NN`, or "No ticket
+   yet". `## How to check` instead for a scenario checked by hand: the steps to follow.
+
+**Rules:**
+
+- A scenario strings use cases together; it does not repeat their steps or extensions, which stay in
+  [use-cases.md](../use-cases.md). One scenario, one outcome: a second outcome is a second file.
+- Write the wording yourself; do not copy text from course pages.
+- When a scenario's test is added or a test it names is renamed, update its "Checked by" lines, its
+  status, and its row in the table at the end of this file, in the same pull request.
+
 ## The data the scenarios start from
 
 Every run starts from the same sample data, so a scenario names it instead of creating it:
