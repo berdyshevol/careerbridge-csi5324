@@ -20,4 +20,17 @@ public enum ApplicationStatus {
     public boolean isActive() {
         return ACTIVE.contains(this);
     }
+
+    public String getLabel() {
+        return switch (this) {
+            case APPLIED -> "Applied";
+            case SCREENING -> "Screening";
+            case INTERVIEW -> "Interview";
+            case OFFER -> "Offer";
+            case HIRED -> "Hired";
+            case REJECTED -> "Rejected";
+            case WITHDRAWN -> "Withdrawn";
+            case OFFER_DECLINED -> "Offer Declined";
+        };
+    }
 }

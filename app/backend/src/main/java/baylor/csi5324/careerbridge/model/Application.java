@@ -133,6 +133,12 @@ public class Application {
         return interviews;
     }
 
+    public boolean isWithdrawable() {
+        return applicationStatus == ApplicationStatus.APPLIED
+                || applicationStatus == ApplicationStatus.SCREENING
+                || applicationStatus == ApplicationStatus.INTERVIEW;
+    }
+
     public List<String> availableActions() {
         return switch (applicationStatus) {
             case APPLIED, SCREENING, INTERVIEW -> List.of("WITHDRAW");

@@ -407,6 +407,43 @@ type RawApplicationDetail = Omit<
   rejectedAtStage: string | null;
 };
 
+// UC-06 / UC-07: an applicant action was refused because the application moved to another stage
+export class ApplicationActionRefused extends Error {
+  constructor(
+    message: string,
+    readonly currentStage: ApplicationStage,
+  ) {
+    super(message);
+  }
+}
+
+export type WithdrawalPrompt = {
+  applicationId: number;
+  title: string;
+  organizationName: string;
+  applicationStatus: ApplicationStage;
+  warning: string;
+  reasons: string[];
+};
+
+export type WithdrawalResult = {
+  application: ApplicationDetail;
+  activeApplicationCount: number;
+  applicationLimit: number;
+};
+
+function mapDetail(raw: RawApplicationDetail): ApplicationDetail {
+  return {
+    ...raw,
+    applicationStatus: stageLabel(raw.applicationStatus),
+    statusHistory: raw.statusHistory.map((entry) => ({
+      status: stageLabel(entry.status),
+      date: entry.date,
+    })),
+    rejectedAtStage: raw.rejectedAtStage ? stageLabel(raw.rejectedAtStage) : null,
+  };
+}
+
 // CO-05.2: returns null when the application does not exist or belongs to another applicant (BR-15)
 export async function viewApplication(
   token: string,
@@ -423,15 +460,59 @@ export async function viewApplication(
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }
-  const raw: RawApplicationDetail = await response.json();
+  return mapDetail(await response.json());
+}
+
+async function throwIfActionRefused(response: Response): Promise<void> {
+  if (response.status === 409) {
+    const body: { currentStage: string; message: string } = await response.json();
+    throw new ApplicationActionRefused(body.message, stageLabel(body.currentStage));
+  }
+}
+
+// CO-06.1: fetches posting details, stage, finality warning and reason list before withdrawal
+export async function requestWithdrawal(
+  token: string,
+  applicationId: number,
+): Promise<WithdrawalPrompt> {
+  const response = await backendFetch(`/api/applicant/applications/${applicationId}/withdrawal`, {
+    headers: bearer(token),
+  });
+  endedSession(response);
+  await throwIfActionRefused(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  const raw: Omit<WithdrawalPrompt, "applicationStatus"> & { applicationStatus: string } =
+    await response.json();
+  return { ...raw, applicationStatus: stageLabel(raw.applicationStatus) };
+}
+
+// CO-06.2: confirms withdrawal with an optional reason
+export async function withdrawApplication(
+  token: string,
+  applicationId: number,
+  reason?: string,
+): Promise<WithdrawalResult> {
+  const response = await backendFetch(`/api/applicant/applications/${applicationId}/withdraw`, {
+    method: "POST",
+    headers: { ...bearer(token), "Content-Type": "application/json" },
+    body: JSON.stringify({ reason: reason?.trim() || null }),
+  });
+  endedSession(response);
+  await throwIfActionRefused(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  const raw: {
+    application: RawApplicationDetail;
+    activeApplicationCount: number;
+    applicationLimit: number;
+  } = await response.json();
   return {
-    ...raw,
-    applicationStatus: stageLabel(raw.applicationStatus),
-    statusHistory: raw.statusHistory.map((entry) => ({
-      status: stageLabel(entry.status),
-      date: entry.date,
-    })),
-    rejectedAtStage: raw.rejectedAtStage ? stageLabel(raw.rejectedAtStage) : null,
+    application: mapDetail(raw.application),
+    activeApplicationCount: raw.activeApplicationCount,
+    applicationLimit: raw.applicationLimit,
   };
 }
 

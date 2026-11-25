@@ -5,6 +5,7 @@ import BackendDown from "@/components/BackendDown";
 import PageTitle from "@/components/PageTitle";
 import { StageBadge } from "@/components/StageBadge";
 import StageTimeline from "@/components/StageTimeline";
+import WithdrawAction from "@/components/WithdrawAction";
 import {
   formatDate,
   formatUtcDay,
@@ -143,21 +144,11 @@ export default async function ApplicationDetailPage({
             </div>
           )}
 
-          {canWithdraw && (
-            <section className="card border border-base-300 bg-base-100">
-              <div className="card-body gap-3">
-                <p className="text-sm text-muted">
-                  Submitted applications cannot be edited. You can withdraw while this application
-                  is in Applied, Screening, or Interview.
-                </p>
-                <div>
-                  <button type="button" className="btn" disabled>
-                    Withdraw application
-                  </button>
-                </div>
-              </div>
-            </section>
-          )}
+          <WithdrawAction
+            applicationId={application.applicationId}
+            token={session.token}
+            canWithdraw={canWithdraw}
+          />
         </div>
 
         <aside className="flex flex-col gap-4">
