@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { SessionEnded, viewRecruiterPostings, type RecruiterPostingRow, type RecruiterPostings } from "@/lib/api";
+import {
+  SessionEnded,
+  viewRecruiterPostings,
+  type ActiveStage,
+  type RecruiterPostingRow,
+  type RecruiterPostings,
+} from "@/lib/api";
 import { STAGES } from "@/lib/sampleDesk";
 import AccessNotice from "./AccessNotice";
 import EmptyState from "./EmptyState";
@@ -15,9 +21,12 @@ function stageCounts(row: RecruiterPostingRow): string | null {
   if (row.postStatus !== "PUBLISHED" && row.postStatus !== "CLOSED") {
     return null;
   }
-  const counts = STAGES.map((stage) => ({ stage, applications: row.applicationsByStage[stage.toUpperCase() as keyof RecruiterPostingRow["applicationsByStage"]] }));
-  const withApplications = counts.filter(({ applications }) => applications > 0);
-  return (withApplications.length ? withApplications : counts)
+  const counts = STAGES.map((stage) => ({
+    stage,
+    applications: row.applicationsByStage[stage.toUpperCase() as ActiveStage],
+  }));
+  const shown = counts.filter(({ applications }) => applications > 0);
+  return (shown.length ? shown : counts)
     .map(({ stage, applications }) => `${applications} ${stage}`)
     .join(", ");
 }

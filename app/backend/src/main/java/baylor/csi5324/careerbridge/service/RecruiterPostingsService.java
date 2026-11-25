@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +37,7 @@ public class RecruiterPostingsService {
             return new RecruiterPostings(null, List.of());
         }
 
-        Map<Long, Map<ApplicationStatus, Long>> counts = new java.util.HashMap<>();
+        Map<Long, Map<ApplicationStatus, Long>> counts = new HashMap<>();
         for (StageCount count : applicationRepository.countByPostingAndStage(organization, ApplicationStatus.ACTIVE)) {
             counts.computeIfAbsent(count.jobPostId(), id -> noApplications())
                     .put(count.applicationStatus(), count.applications());
@@ -50,13 +51,11 @@ public class RecruiterPostingsService {
         return new RecruiterPostings(organization, postings);
     }
 
-    // The stages in pipeline order: ApplicationStatus declares them first
+    // ACTIVE is an EnumSet, so the stages come in pipeline order
     private static Map<ApplicationStatus, Long> noApplications() {
         Map<ApplicationStatus, Long> counts = new EnumMap<>(ApplicationStatus.class);
-        for (ApplicationStatus stage : ApplicationStatus.values()) {
-            if (stage.isActive()) {
-                counts.put(stage, 0L);
-            }
+        for (ApplicationStatus stage : ApplicationStatus.ACTIVE) {
+            counts.put(stage, 0L);
         }
         return counts;
     }
