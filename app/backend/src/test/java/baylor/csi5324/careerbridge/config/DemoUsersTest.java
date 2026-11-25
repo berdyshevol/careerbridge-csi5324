@@ -1,6 +1,8 @@
 package baylor.csi5324.careerbridge.config;
 
 import baylor.csi5324.careerbridge.model.User;
+import baylor.csi5324.careerbridge.repository.OrganizationMembershipRepository;
+import baylor.csi5324.careerbridge.repository.OrganizationRepository;
 import baylor.csi5324.careerbridge.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -25,7 +27,8 @@ class DemoUsersTest {
     private DemoUsers demoUsersOn(String databaseUrl) {
         when(userRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenAnswer(call -> call.getArgument(0));
-        return new DemoUsers(userRepository, passwordEncoder, "", "", "", "", "", databaseUrl, true);
+        return new DemoUsers(userRepository, mock(OrganizationRepository.class),
+                mock(OrganizationMembershipRepository.class), passwordEncoder, "", "", "", "", "", databaseUrl, true);
     }
 
     @Test
