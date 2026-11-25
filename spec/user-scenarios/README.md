@@ -105,13 +105,15 @@ Feature: UC-02 Register as Applicant
 | [A resume that is not a PDF or DOCX is refused and the current resume is kept](applicant-7-upload-resume-wrong-file.feature) | UC-03 extension 6a; minimum scope Applicant 7, input validation |
 | [A recruiter logs in and reaches only the recruiter's work](recruiter-1-log-in.feature) | Log In; minimum scope Recruiter 1 |
 | [The administrator logs in and reaches the posting approval queue](administrator-1-log-in.feature) | Log In: a session with the Administrator role, which UC-12 requires (FR-UC12.1); minimum scope Administrator 1 |
+| [The administrator sees every user with their role](administrator-2-view-users.feature) | Administration, FR-ADM.1; minimum scope Administrator 2 |
+| [An applicant cannot see the list of users](administrator-2-view-users-refused.feature) | Administration, NFR-ADM.1; minimum scope Administrator 2, permissions by role |
 
 ## Coverage
 
 **Minimum scope.** Of the items that belong to these use cases, every one has a scenario: Applicant 1
 (register), 2 (log in), 3 (view and update own profile), 4 (browse and search jobs), 5 (view a job's
 details) and 7 (the resume that goes with an application, uploaded in UC-03), Recruiter 1 and
-Administrator 1 (log in). The system-wide requirements shown are input validation, meaningful errors,
+Administrator 1 (log in), and Administrator 2 (view users and their roles). The system-wide requirements shown are input validation, meaningful errors,
 authentication and permissions by role. Applicant 6, 8 and 9 and the other recruiter and administrator
 items belong to UC-04 to UC-15.
 

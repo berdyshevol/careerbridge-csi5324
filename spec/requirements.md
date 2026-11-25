@@ -238,6 +238,12 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC13.8:** The system shall log each expiration run, including start time, postings closed, and errors. (UC-13 step 5)
 
+#### Administration
+
+These are not part of a use case; they come from the minimum scope of the final iteration.
+
+- **FR-ADM.1:** The system shall let the Administrator view every registered user with their name, email address, role and account status, and the number of users in each role.
+
 ### 3.2 Non-functional Requirements
 
 #### UC-01 Search Job Postings
@@ -361,6 +367,10 @@ The requirements below come from the use cases in section 4.2. Each functional r
 - **NFR-UC13.4 (Reliability):** If the Notification Service is unavailable, no recorded posting closure shall be lost, and every held notice is sent within 15 minutes after the service is available again.
 
 - **NFR-UC13.5 (Correctness):** A posting shall stop accepting applications at 23:59 on its deadline date in the organization's time zone, and shall leave public listings no more than 15 minutes later (one run interval).
+
+#### Administration
+
+- **NFR-ADM.1 (Security):** Only users with the Administrator role shall see the list of users. It shall never show a password or log-in details.
 
 ### 3.3 Requirements Clarifications
 
@@ -519,6 +529,7 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC13.6|UC-13 extension 3a|runExpirationJob()|CO-13.1|
 |FR-UC13.7|UC-13 step 4|runExpirationJob()|CO-13.1|
 |FR-UC13.8|UC-13 step 5|runExpirationJob()|CO-13.1|
+|FR-ADM.1|Minimum scope, Administrator 2|viewUsers()|query (no contract)|
 |FR-UC14.1|UC-14 steps 1–2|listPostings()|query (no contract)|
 |FR-UC14.2|UC-14 steps 3–4|reviewApplication(applicationId)|CO-14.1|
 |FR-UC14.3|UC-14 steps 5–6|advanceApplication(applicationId, note)|CO-14.2|

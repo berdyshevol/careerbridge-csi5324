@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Role } from "@/lib/session";
-import { ApplicationsIcon, HomeIcon, PostingsIcon, ProfileIcon, SearchIcon, StatusIcon } from "./Icons";
+import { ApplicationsIcon, HomeIcon, PostingsIcon, ProfileIcon, SearchIcon, StatusIcon, UsersIcon } from "./Icons";
 
 type NavItem = {
   href: string;
@@ -32,7 +32,10 @@ const navigation: Record<Role, { caption: string; items: NavItem[] }> = {
   },
   ADMINISTRATOR: {
     caption: "Administration",
-    items: [{ href: "/admin/postings", label: "Posting approvals", shortLabel: "Postings", Icon: StatusIcon }],
+    items: [
+      { href: "/admin/postings", label: "Posting approvals", shortLabel: "Postings", Icon: StatusIcon },
+      { href: "/admin/users", label: "Users", shortLabel: "Users", Icon: UsersIcon },
+    ],
   },
 };
 

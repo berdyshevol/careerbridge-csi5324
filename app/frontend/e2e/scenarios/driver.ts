@@ -420,3 +420,22 @@ export async function expectPostingDetails(page: Page, posting: Posting) {
     await expect(main.getByText(detail).first()).toBeVisible();
   }
 }
+
+// Minimum scope Administrator 2: the users and their roles
+
+const userRow = (page: Page, person: Person) =>
+  page.getByRole("region", { name: "Users" }).getByRole("listitem").filter({ hasText: person.email });
+
+export async function openUsers(page: Page) {
+  await page.goto("/admin/users");
+}
+
+export async function expectListedAs(page: Page, person: Person, role: "Applicant" | "Recruiter" | "Administrator") {
+  await expect(userRow(page, person)).toContainText(person.fullName);
+  await expect(userRow(page, person)).toContainText(role);
+}
+
+export async function expectUsersRefused(page: Page) {
+  await expect(page.getByText(/Only an administrator sees the list of users/)).toBeVisible();
+  await expect(page.getByRole("region", { name: "Users" })).toHaveCount(0);
+}

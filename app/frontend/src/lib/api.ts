@@ -1,5 +1,5 @@
 import { STAGES, type ApplicationStage, type DeskApplication, type Stage } from "./sampleDesk";
-import type { Session } from "./session";
+import type { Role, Session } from "./session";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
@@ -745,6 +745,30 @@ export async function uploadResume(token: string, file: File): Promise<Resume> {
 // UC-12: the queue of postings waiting for an administrator
 export async function openPostingApprovalQueue(token: string): Promise<JobPosting[]> {
   const response = await backendFetch("/api/admin/postings/pending", { headers: bearer(token) });
+  endedSession(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+// Minimum scope Administrator 2 (FR-ADM.1): every user with their role, read only
+export type UserRow = {
+  userId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: Role;
+  accountStatus: "ACTIVE" | "PENDING_VERIFICATION";
+};
+
+export type UserDirectory = {
+  users: UserRow[];
+  usersByRole: Record<Role, number>;
+};
+
+export async function viewUsers(token: string): Promise<UserDirectory> {
+  const response = await backendFetch("/api/admin/users", { headers: bearer(token) });
   endedSession(response);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
