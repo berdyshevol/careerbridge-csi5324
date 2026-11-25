@@ -204,6 +204,8 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC11.8:** The system shall show a Returned posting with the Administrator's comments and let a recruiter of the organization revise and resubmit it. (UC-11 extension 6a; UC-12 extension 5a)
 
+  *Interim (SCRUM-212):* until organization memberships exist, only the recruiter who created the posting may revise and resubmit it (CO-11.1, CO-11.2).
+
 #### UC-12 Approve Job Posting
 
 - **FR-UC12.1:** The system shall allow only authenticated Administrators to access the job-posting approval queue. (UC-12 Preconditions)
@@ -505,8 +507,8 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC11.4|UC-11 step 5, extension 5b|submitJobPosting(organizationId, postingData)|CO-11.1|
 |FR-UC11.5|UC-11 step 6|submitJobPosting(organizationId, postingData)|CO-11.1|
 |FR-UC11.6|UC-11 Success Guarantee|submitJobPosting(organizationId, postingData)|CO-11.1|
-|FR-UC11.7|UC-11 extension 3b|none for UC-11 ext. 3b|none for UC-11 ext. 3b|
-|FR-UC11.8|UC-11 extension 6a; UC-12<br/>extension 5a|submitJobPosting(organizationId, postingData);<br/>none for UC-12 ext. 5a|CO-11.1; none for UC-12 ext.<br/>5a|
+|FR-UC11.7|UC-11 extension 3b|openPostingForEdit(postingId) (query),<br/>updatePosting(postingId, postingData)|CO-11.2|
+|FR-UC11.8|UC-11 extension 6a; UC-12<br/>extension 5a|openPostingForEdit(postingId) (query),<br/>updatePosting(postingId, postingData),<br/>submitJobPosting(organizationId, postingData)|CO-11.2, CO-11.1|
 |FR-UC12.1|UC-12 Preconditions|openPostingApprovalQueue()|query (no contract)|
 |FR-UC12.2|UC-12 step 2|openPostingApprovalQueue()|query (no contract)|
 |FR-UC12.3|UC-12 step 4|selectPosting(postingId)|query (no contract)|

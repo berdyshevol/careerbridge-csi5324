@@ -23,11 +23,14 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -111,6 +114,33 @@ class JobPostingControllerTest {
                 .andExpect(status().isForbidden())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
                 .andExpect(content().string("Only the recruiter who created this posting can submit it"));
+    }
+
+    @Test
+    void reopeningAPostingSendsTheAdministratorsComment() throws Exception {
+        JobPosting returned = approvedPosting();
+        returned.setPostStatus(PostStatus.RETURNED);
+        returned.setReviewComment("Add the salary range");
+        when(jobPostingService.openPostingForEdit(7L, "owner@example.com")).thenReturn(returned);
+
+        mockMvc.perform(get("/api/postings/7/edit").principal(() -> "owner@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.postStatus").value("RETURNED"))
+                .andExpect(jsonPath("$.reviewComment").value("Add the salary range"));
+    }
+
+    @Test
+    void changingAPostingPassesTheDetailsAndTheLoggedInRecruiter() throws Exception {
+        when(jobPostingService.updatePosting(eq(7L), any(), eq("owner@example.com"))).thenReturn(approvedPosting());
+
+        mockMvc.perform(put("/api/postings/7").principal(() -> "owner@example.com")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\": \"Backend Developer\", \"numberOfOpenings\": 2}"))
+                .andExpect(status().isOk());
+
+        verify(jobPostingService).updatePosting(eq(7L),
+                argThat(request -> "Backend Developer".equals(request.title()) && request.numberOfOpenings() == 2),
+                eq("owner@example.com"));
     }
 
     @Test

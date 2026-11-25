@@ -115,6 +115,14 @@ class AccessByRoleTest {
                 .andExpect(status().isForbidden());
         mockMvc.perform(post("/api/postings/1/submit").with(as("APPLICANT"))).andExpect(status().isForbidden());
         mockMvc.perform(post("/api/postings/1/submit").with(as("ADMINISTRATOR"))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/postings/1/edit").with(as("APPLICANT"))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/postings/1/edit")).andExpect(status().isUnauthorized());
+        mockMvc.perform(put("/api/postings/1").with(as("ADMINISTRATOR"))
+                .contentType(MediaType.APPLICATION_JSON).content(blankPosting)).andExpect(status().isForbidden());
+        // The edit lookup reads the token although it is a GET under /api/postings: it reaches the
+        // service, which answers 404 for an unknown posting instead of 401
+        mockMvc.perform(get("/api/postings/" + Long.MAX_VALUE + "/edit").with(as("RECRUITER")))
+                .andExpect(status().isNotFound());
         mockMvc.perform(post("/api/postings/1/close").with(as("APPLICANT"))).andExpect(status().isForbidden());
         mockMvc.perform(post("/api/postings/1/close").with(as("ADMINISTRATOR"))).andExpect(status().isForbidden());
         mockMvc.perform(post("/api/postings/1/close")).andExpect(status().isUnauthorized());

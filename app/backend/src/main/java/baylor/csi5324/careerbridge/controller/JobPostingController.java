@@ -47,6 +47,17 @@ public class JobPostingController {
         return jobPostingService.submitJobPosting(postingId, recruiter.getName());
     }
 
+    @GetMapping("/{postingId}/edit")
+    public JobPosting openPostingForEdit(@PathVariable Long postingId, Principal recruiter) {
+        return jobPostingService.openPostingForEdit(postingId, recruiter.getName());
+    }
+
+    @PutMapping("/{postingId}")
+    public JobPosting updatePosting(
+            @PathVariable Long postingId, @RequestBody CreateJobPostingRequest request, Principal recruiter) {
+        return jobPostingService.updatePosting(postingId, request, recruiter.getName());
+    }
+
     @PostMapping("/{postingId}/close")
     public JobPosting closePosting(@PathVariable Long postingId, Principal recruiter) {
         return jobPostingService.closePosting(postingId, recruiter.getName());
