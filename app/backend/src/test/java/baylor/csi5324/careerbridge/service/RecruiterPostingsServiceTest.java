@@ -5,12 +5,17 @@ import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.MembershipRequestType;
+import baylor.csi5324.careerbridge.model.MembershipStatus;
 import baylor.csi5324.careerbridge.model.Organization;
+import baylor.csi5324.careerbridge.model.OrganizationMembership;
 import baylor.csi5324.careerbridge.model.PostStatus;
+import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
+import baylor.csi5324.careerbridge.repository.OrganizationMembershipRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
 import baylor.csi5324.careerbridge.repository.RecruiterRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -28,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // CO-14: listPostings is a query, so it has no contract; FR-UC14.1, FR-UC14.9
-@SpringBootTest(properties = "careerbridge.standin.recruiter-organization=Screening Test Org")
+@SpringBootTest(properties = "careerbridge.recruiter-organization=Screening Test Org")
 @Transactional
 class RecruiterPostingsServiceTest {
 
@@ -52,6 +58,9 @@ class RecruiterPostingsServiceTest {
     @Autowired
     private RecruiterRepository recruiterRepository;
 
+    @Autowired
+    private OrganizationMembershipRepository membershipRepository;
+
     private Organization organization;
     private int applicants;
 
@@ -60,6 +69,10 @@ class RecruiterPostingsServiceTest {
         applicationRepository.deleteAll();
         jobPostingRepository.deleteAll();
         organization = organizationRepository.save(new Organization("Screening Test Org"));
+        // Riley is also a member of the sample organizations; the configuration makes this one current
+        Recruiter riley = recruiterRepository.findByEmailIgnoreCase(RECRUITER).orElseThrow();
+        membershipRepository.save(new OrganizationMembership(riley, organization, MembershipStatus.ACTIVE,
+                MembershipRequestType.NEW_RECRUITER_EXISTING_ORGANIZATION, Instant.now()));
     }
 
     @Test
@@ -114,13 +127,16 @@ class RecruiterPostingsServiceTest {
     }
 
     @Test
-    void showsNothingWhenTheStandInFindsNoOrganization() {
-        // A name that matches no organization: the stand-in fails closed (SCRUM-198 replaces it)
-        organization.setName("Renamed After Configuration");
-        organizationRepository.save(organization);
+    void showsNothingToARecruiterWithNoActiveMembership() {
+        Recruiter newcomer = new Recruiter();
+        newcomer.setFirstName("Noor");
+        newcomer.setLastName("Haddad");
+        newcomer.setEmail("noor.haddad@example.com");
+        newcomer.setAccountStatus(AccountStatus.ACTIVE);
+        recruiterRepository.save(newcomer);
         posting(organization, "Hidden", PostStatus.PUBLISHED);
 
-        RecruiterPostings postings = service.listPostings(RECRUITER);
+        RecruiterPostings postings = service.listPostings("noor.haddad@example.com");
 
         assertNull(postings.organization());
         assertTrue(postings.postings().isEmpty());

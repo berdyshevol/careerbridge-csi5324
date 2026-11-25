@@ -3,6 +3,7 @@ package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
 import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
+import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
@@ -42,16 +43,19 @@ public class JobPostingService {
     private final JobPostingRepository jobPostingRepository;
     private final OrganizationRepository organizationRepository;
     private final RecruiterRepository recruiterRepository;
+    private final RecruiterOrganization recruiterOrganization;
     private final Clock clock;
 
     public JobPostingService(
             JobPostingRepository jobPostingRepository,
             OrganizationRepository organizationRepository,
             RecruiterRepository recruiterRepository,
+            RecruiterOrganization recruiterOrganization,
             Clock clock) {
         this.jobPostingRepository = jobPostingRepository;
         this.organizationRepository = organizationRepository;
         this.recruiterRepository = recruiterRepository;
+        this.recruiterOrganization = recruiterOrganization;
         this.clock = clock;
     }
 
@@ -107,6 +111,7 @@ public class JobPostingService {
         validateDetails(request);
 
         Recruiter recruiter = recruiterOf(recruiterEmail);
+        requireActiveMember(recruiterEmail, organization);
 
         JobPosting posting = new JobPosting();
         posting.setOrganization(organization);
@@ -165,6 +170,7 @@ public class JobPostingService {
         if (!posting.wasCreatedBy(recruiterEmail)) {
             throw new PostingNotAllowedException("Only the recruiter who created this posting can close it");
         }
+        requireActiveMember(recruiterEmail, posting.getOrganization());
         if (posting.getPostStatus() != PostStatus.PUBLISHED) {
             throw new PostingStateConflictException(
                     "Only a published posting can be closed; this one is " + posting.getPostStatus().getLabel());
@@ -193,6 +199,7 @@ public class JobPostingService {
         if (posting.getApplicationDeadline() == null || posting.isPastDeadline(clock.instant())) {
             recordDecision(posting, PostStatus.RETURNED, administrator, DEADLINE_PASSED);
         } else {
+            requireStillActive(posting);
             recordDecision(posting, PostStatus.PUBLISHED, administrator, comment);
             posting.setDatePosted(LocalDate.now());
         }
@@ -218,12 +225,39 @@ public class JobPostingService {
                 .orElseThrow(() -> new PostingNotAllowedException("Only a recruiter can create or submit a posting"));
     }
 
+    // UC-11 extension *a, BR-14: only an Active member of the organization works on its postings
+    private void requireActiveMember(String recruiterEmail, Organization organization) {
+        if (!recruiterOrganization.isActiveMember(recruiterEmail, organization)) {
+            throw new PostingNotAllowedException("You are not an active member of " + organization.getName());
+        }
+    }
+
+    // UC-12 extension 6b, CO-12.1: nothing is published for an organization or a recruiter that is no
+    // longer active; the posting stays pending
+    private void requireStillActive(JobPosting posting) {
+        Organization organization = posting.getOrganization();
+        if (!organization.isRegistered()) {
+            throw new PostingStateConflictException(
+                    organization.getName() + " is no longer active, so the posting stays pending");
+        }
+        Recruiter recruiter = posting.getRecruiter();
+        if (recruiter == null) {
+            return;
+        }
+        if (recruiter.getAccountStatus() != AccountStatus.ACTIVE
+                || !recruiterOrganization.isActiveMember(recruiter.getEmail(), organization)) {
+            throw new PostingStateConflictException("The recruiter who submitted it is no longer an active member of "
+                    + organization.getName() + ", so the posting stays pending");
+        }
+    }
+
     // Only the recruiter who created a posting changes or submits it, and only before the Administrator has it
     private JobPosting findOwnDraftOrReturned(Long postingId, String recruiterEmail, String verb, String done) {
         JobPosting posting = findPosting(postingId);
         if (!posting.wasCreatedBy(recruiterEmail)) {
             throw new PostingNotAllowedException("Only the recruiter who created this posting can " + verb + " it");
         }
+        requireActiveMember(recruiterEmail, posting.getOrganization());
         if (posting.getPostStatus() != PostStatus.DRAFT && posting.getPostStatus() != PostStatus.RETURNED) {
             throw new PostingStateConflictException("Only a draft or a returned posting can be " + done
                     + "; this one is " + posting.getPostStatus().getLabel());

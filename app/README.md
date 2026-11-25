@@ -11,6 +11,10 @@ cd app/backend
 ./mvnw spring-boot:run        # backend on http://localhost:8080
 ```
 
+A recruiter works on the postings of the organizations they are an Active member of. One with several
+works in the organization named by the optional `RECRUITER_ORGANIZATION`, or else the one joined first,
+until the header gets its organization switcher (UC-09).
+
 ```bash
 cd app/frontend
 npm install

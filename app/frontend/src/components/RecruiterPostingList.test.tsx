@@ -12,6 +12,7 @@ const stages = (applied: number, screening: number, interview: number, offer: nu
 });
 
 const answer: RecruiterPostings = {
+  organizationId: 1,
   organizationName: "Brazos Health",
   postings: [
     { postingId: 1, title: "Data Analyst", postStatus: "PUBLISHED", closingReason: null, applicationsByStage: stages(7, 5, 3, 1), createdByYou: true },

@@ -829,7 +829,8 @@ export type RecruiterPostingRow = {
 };
 
 export type RecruiterPostings = {
-  // Null when the recruiter acts for no organization
+  // Both null when the recruiter acts for no organization
+  organizationId: number | null;
   organizationName: string | null;
   postings: RecruiterPostingRow[];
 };
