@@ -36,7 +36,7 @@ public class DemoUsers implements CommandLineRunner {
         return password.isBlank() && inMemory ? local : password;
     }
 
-    private static final List<String> NUMBERS = List.of("One", "Two", "Three");
+    private static final List<String> NUMBERS = List.of("One", "Two", "Three", "Four", "Five", "Six");
 
     private static DemoUser numbered(String role, int n, Supplier<User> kind, String password) {
         return new DemoUser(role, NUMBERS.get(n - 1), role.toLowerCase() + n + "@example.com", kind, password);
@@ -73,7 +73,11 @@ public class DemoUsers implements CommandLineRunner {
                 numbered("Applicant", 2, Applicant::new, numbered),
                 numbered("Applicant", 3, Applicant::new, numbered),
                 numbered("Recruiter", 1, Recruiter::new, numbered),
-                numbered("Recruiter", 2, Recruiter::new, numbered));
+                numbered("Recruiter", 2, Recruiter::new, numbered),
+                numbered("Recruiter", 3, Recruiter::new, numbered),
+                numbered("Recruiter", 4, Recruiter::new, numbered),
+                numbered("Recruiter", 5, Recruiter::new, numbered),
+                numbered("Recruiter", 6, Recruiter::new, numbered));
     }
 
     @Override

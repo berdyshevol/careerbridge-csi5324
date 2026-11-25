@@ -43,7 +43,8 @@ class DemoUsersTest {
         verify(userRepository, atLeastOnce()).save(saved.capture());
         assertThat(saved.getAllValues()).extracting(User::getEmail).contains(
                 "applicant1@example.com", "applicant2@example.com", "applicant3@example.com",
-                "recruiter1@example.com", "recruiter2@example.com");
+                "recruiter1@example.com", "recruiter2@example.com", "recruiter3@example.com",
+                "recruiter4@example.com", "recruiter5@example.com", "recruiter6@example.com");
         verify(passwordEncoder, atLeastOnce()).encode("Baylor@2026");
     }
 }

@@ -1,10 +1,24 @@
-title,organizationName,description,jobRequirements,location,employmentType,salaryRange,numberOfOpenings,datePosted,applicationDeadline,postStatus
-Junior Software Engineer,Brazos Analytics,"Build and test features for our reporting web app.","Java or JavaScript, Git, basic SQL",Hybrid,Full-time,"$65,000 - $80,000",2,2026-10-01,2026-12-20,Published
-Data Analyst Intern,Waco Health Partners,"Clean clinic data and prepare weekly dashboards.","Excel, SQL, attention to detail",On-site,Internship,,1,2026-10-03,2026-12-15,Published
-Backend Developer,Brazos Analytics,"Design REST services for the data ingestion pipeline.","Java, Spring Boot, PostgreSQL",Remote,Full-time,"$90,000 - $110,000",1,2026-10-05,2026-12-31,Published
-IT Support Specialist,Waco Health Partners,"Support clinic staff with hardware and account issues.","Customer service, Windows, networking basics",On-site,Part-time,"$22 - $26 per hour",2,2026-10-06,2026-12-10,Published
-QA Engineer,Lone Star Logistics,"Write and run test plans for the dispatch system.","Test design, bug reporting, Jira",Remote,Full-time,"$70,000 - $90,000",1,2026-09-01,2026-09-30,Closed
-Product Designer,Lone Star Logistics,"Design the driver mobile app screens.","Figma, user research",Hybrid,Full-time,,1,2026-10-06,2026-12-28,Pending Approval
-Marketing Coordinator,Brazos Analytics,"Plan campus recruiting events.","Writing, event planning",On-site,Full-time,,1,2026-10-07,2026-12-30,Draft
-Logistics Analyst,Lone Star Logistics,"Track delivery times and report on carrier performance.","Excel, SQL, clear writing",Hybrid,Full-time,"$60,000 - $72,000",1,2026-10-08,2026-12-22,Published
-Warehouse Coordinator,Lone Star Logistics,"Schedule inbound trucks and keep the dock board current.","Spreadsheets, clear communication",On-site,Full-time,"$42,000 - $50,000",1,2026-08-20,2026-09-15,Published
+title,organizationName,description,jobRequirements,location,employmentType,salaryRange,numberOfOpenings,datePosted,applicationDeadline,postStatus,recruiterEmail
+Junior Software Engineer,Brazos Analytics,"Build and test features for our reporting web app.","Java or JavaScript, Git, basic SQL",Hybrid,Full-time,"$65,000 - $80,000",2,2026-10-01,2026-12-20,Published,
+Data Analyst Intern,Waco Health Partners,"Clean clinic data and prepare weekly dashboards.","Excel, SQL, attention to detail",On-site,Internship,,1,2026-10-03,2026-12-15,Published,
+Backend Developer,Brazos Analytics,"Design REST services for the data ingestion pipeline.","Java, Spring Boot, PostgreSQL",Remote,Full-time,"$90,000 - $110,000",1,2026-10-05,2026-12-31,Published,
+IT Support Specialist,Waco Health Partners,"Support clinic staff with hardware and account issues.","Customer service, Windows, networking basics",On-site,Part-time,"$22 - $26 per hour",2,2026-10-06,2026-12-10,Published,
+QA Engineer,Lone Star Logistics,"Write and run test plans for the dispatch system.","Test design, bug reporting, Jira",Remote,Full-time,"$70,000 - $90,000",1,2026-09-01,2026-09-30,Closed,
+Product Designer,Lone Star Logistics,"Design the driver mobile app screens.","Figma, user research",Hybrid,Full-time,,1,2026-10-06,2026-12-28,Pending Approval,
+Marketing Coordinator,Brazos Analytics,"Plan campus recruiting events.","Writing, event planning",On-site,Full-time,,1,2026-10-07,2026-12-30,Draft,
+Logistics Analyst,Lone Star Logistics,"Track delivery times and report on carrier performance.","Excel, SQL, clear writing",Hybrid,Full-time,"$60,000 - $72,000",1,2026-10-08,2026-12-22,Published,
+Warehouse Coordinator,Lone Star Logistics,"Schedule inbound trucks and keep the dock board current.","Spreadsheets, clear communication",On-site,Full-time,"$42,000 - $50,000",1,2026-08-20,2026-09-15,Published,
+Junior Web Developer,Pixel Labs,"Build and fix pages for our customers' websites.","HTML, CSS, JavaScript. React is a plus.",Hybrid,Full-time,"$65,000 - $75,000",2,2026-11-20,2027-01-15,Published,recruiter3@example.com
+Mobile App Developer,Pixel Labs,"Create iPhone and Android apps with our design team.","Swift or Kotlin, 1 year of app experience",Remote,Full-time,"$85,000 - $100,000",1,2026-11-21,2027-01-20,Published,recruiter3@example.com
+UX Design Intern,Pixel Labs,"Help design simple, friendly app screens.","Figma, a short portfolio, interest in design",On-site,Internship,"$20 per hour",1,2026-11-22,2027-01-12,Pending Approval,recruiter3@example.com
+Mechanical Engineer,Lone Star Robotics,"Design robot arms and test them in our lab.","BS in Mechanical Engineering, SolidWorks",On-site,Full-time,"$80,000 - $95,000",2,2026-11-18,2027-01-22,Published,recruiter4@example.com
+Robotics Software Engineer,Lone Star Robotics,"Write the code that helps our robots move safely.","Python or C++, ROS, basic math for robotics",Hybrid,Full-time,"$95,000 - $115,000",1,2026-11-19,2027-01-18,Published,recruiter4@example.com
+Electrical Engineering Intern,Lone Star Robotics,"Test circuit boards and sensors with senior engineers.","Coursework in circuits, soldering experience",On-site,Internship,"$22 per hour",2,2026-11-22,2027-01-10,Pending Approval,recruiter4@example.com
+Backend Engineer,Cloud Nine Software,"Build the services that store and share files.","Java or Go, REST APIs, SQL",Remote,Full-time,"$100,000 - $120,000",2,2026-11-17,2027-01-25,Published,recruiter5@example.com
+Cloud Engineer,Cloud Nine Software,"Keep our servers running on AWS and fix problems fast.","AWS, Linux, Docker",Remote,Full-time,"$105,000 - $125,000",1,2026-11-23,2027-01-19,Pending Approval,recruiter5@example.com
+Software Test Engineer,Cloud Nine Software,"Write automated tests so every release works.","Playwright or Selenium, JavaScript",Hybrid,Contract,"$45 - $55 per hour",1,2026-11-23,2027-01-14,Pending Approval,recruiter5@example.com
+Solar Design Engineer,Green Grid Energy,"Plan solar panel layouts for homes.","BS in Electrical or Civil Engineering, AutoCAD",Hybrid,Full-time,"$75,000 - $90,000",2,2026-11-16,2027-01-16,Published,recruiter6@example.com
+Battery Systems Engineer,Green Grid Energy,"Design and test home battery packs.","Electrical Engineering degree, battery or power electronics experience",On-site,Full-time,"$90,000 - $110,000",1,2026-11-24,2027-01-24,Pending Approval,recruiter6@example.com
+Field Service Technician,Green Grid Energy,"Install and repair solar systems at customers' homes.","Basic electrical skills, driver's license",On-site,Part-time,"$25 per hour",3,2026-11-15,2027-01-11,Published,recruiter6@example.com
+Biomedical Engineer,Waco Health Partners,"Keep our clinic's medical equipment safe and working.","BS in Biomedical Engineering",On-site,Full-time,"$70,000 - $85,000",1,2026-11-24,2027-01-21,Pending Approval,recruiter1@example.com
+Data Engineer,Brazos Analytics,"Build pipelines that move data into our reports.","SQL, Python, experience with ETL tools",Remote,Full-time,"$95,000 - $110,000",1,2026-11-24,2027-01-23,Pending Approval,recruiter2@example.com
