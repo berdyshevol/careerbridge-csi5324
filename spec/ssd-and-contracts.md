@@ -488,7 +488,7 @@ Figure 13 shows SSD-07, the system sequence diagram for the main success scenari
 
 - The Offer's _status_ became Accepted and its _responseDate_ became the current date.
 
-- If the Job Posting now has as many Hired applications as its _numberOfOpenings_ (extension 6c, Close Job Posting): the Job Posting's _postStatus_ became Closed (Filled), and for each other active Application to it, _applicationStatus_ became Rejected, _rejectionReason_ became "Posting closed" (A3) and _statusHistory_ gained the entry Rejected with the current date.
+- If the Job Posting now has as many Hired applications as its _numberOfOpenings_ (extension 6c, Close Job Posting): the Job Posting's _postStatus_ became Closed (Filled), and for each other active Application to it, _applicationStatus_ became Rejected, _rejectionReason_ became "Posting closed" (A3), _statusHistory_ gained the entry Rejected with the current date, and any pending Offer on that Application had its _status_ set to Rescinded.
 
 - A Notification instance was created for each recruiter who is an Active member of the posting's Organization, with _type_ Offer accepted and _status_ Pending, and associated with that Recruiter.
 
