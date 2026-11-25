@@ -1,8 +1,17 @@
 import { defineConfig, devices } from "@playwright/test";
+import { defineBddConfig } from "playwright-bdd";
 
 // Another app may already hold 3000 on a developer's machine: E2E_FRONTEND_PORT=3200 npm run test:e2e
 const FRONTEND_PORT = Number(process.env.E2E_FRONTEND_PORT ?? 3000);
 const FRONTEND_URL = `http://localhost:${FRONTEND_PORT}`;
+
+// The user scenarios (spec/user-scenarios) become Playwright tests here; bddgen writes them before each run
+const scenariosDir = defineBddConfig({
+  features: "../../spec/user-scenarios/*.feature",
+  featuresRoot: "../../spec/user-scenarios",
+  steps: "e2e/scenarios/*.ts",
+  outputDir: ".features-gen",
+});
 
 export default defineConfig({
   testDir: "./e2e",
@@ -16,8 +25,10 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   projects: [
-    { name: "laptop", use: { ...devices["Desktop Chrome"] } },
-    { name: "phone", use: { ...devices["Pixel 7"] } },
+    { name: "laptop", testDir: "./e2e", use: { ...devices["Desktop Chrome"] } },
+    { name: "phone", testDir: "./e2e", use: { ...devices["Pixel 7"] } },
+    // Laptop only: they check what the system does, which the screen width does not change
+    { name: "scenarios", testDir: scenariosDir, use: { ...devices["Desktop Chrome"] } },
   ],
   webServer: [
     {
