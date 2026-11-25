@@ -144,6 +144,24 @@ public class JobPostingService {
         return jobPostingRepository.save(posting);
     }
 
+    // UC-11 extensions 3b and 6a: a query, so it has no contract
+    @Transactional(readOnly = true)
+    public JobPosting openPostingForEdit(Long postingId, String recruiterEmail) {
+        return findOwnDraftOrReturned(postingId, recruiterEmail, "change", "changed");
+    }
+
+    // CO-11.2: the organization stays, and a Returned posting keeps its comment until it is submitted again
+    @Transactional
+    public JobPosting updatePosting(Long postingId, CreateJobPostingRequest request, String recruiterEmail) {
+        JobPosting posting = findOwnDraftOrReturned(postingId, recruiterEmail, "change", "changed");
+        if (request == null) {
+            throw new InvalidPostingException("Posting details are required");
+        }
+        validateDetails(request);
+        applyDetails(posting, request);
+        return jobPostingRepository.save(posting);
+    }
+
     // UC-13 extension *a, CO-13.2: the Recruiter who created a Published posting closes it early
     @Transactional
     public JobPosting closePosting(Long postingId, String recruiterEmail) {
@@ -166,24 +184,6 @@ public class JobPostingService {
 
         // Applications keep their stages (A3): only the posting changes
         posting.close(CLOSED_BY_RECRUITER, now);
-        return jobPostingRepository.save(posting);
-    }
-
-    // UC-11 extensions 3b and 6a: a query, so it has no contract
-    @Transactional(readOnly = true)
-    public JobPosting openPostingForEdit(Long postingId, String recruiterEmail) {
-        return findOwnDraftOrReturned(postingId, recruiterEmail, "change", "changed");
-    }
-
-    // CO-11.2: the organization stays, and a Returned posting keeps its comment until it is submitted again
-    @Transactional
-    public JobPosting updatePosting(Long postingId, CreateJobPostingRequest request, String recruiterEmail) {
-        JobPosting posting = findOwnDraftOrReturned(postingId, recruiterEmail, "change", "changed");
-        if (request == null) {
-            throw new InvalidPostingException("Posting details are required");
-        }
-        validateDetails(request);
-        applyDetails(posting, request);
         return jobPostingRepository.save(posting);
     }
 
@@ -225,7 +225,6 @@ public class JobPostingService {
                 .orElseThrow(() -> new PostingNotAllowedException("Only a recruiter can create or submit a posting"));
     }
 
-    // Only the recruiter who created a posting changes or submits it, and only before the Administrator has it
     // UC-11 extension *a, BR-14. STAND-IN until OrganizationMembership (UC-09, SCRUM-198): the
     // organization the recruiter acts for comes from RecruiterOrganization, as on the postings list
     private void requireActiveMember(String recruiterEmail, Organization organization) {
@@ -258,6 +257,7 @@ public class JobPostingService {
         }
     }
 
+    // Only the recruiter who created a posting changes or submits it, and only before the Administrator has it
     private JobPosting findOwnDraftOrReturned(Long postingId, String recruiterEmail, String verb, String done) {
         JobPosting posting = findPosting(postingId);
         if (!posting.wasCreatedBy(recruiterEmail)) {

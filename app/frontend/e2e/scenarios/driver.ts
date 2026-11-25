@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
 import { ACCOUNTS, logIn, logOut, tokenOf } from "../accounts";
@@ -14,8 +14,11 @@ const WRONG_PASSWORD = "not-the-password-1";
 const RESUME_PDF = path.join(__dirname, "..", "fixtures", "Pat_Kim_Resume.pdf");
 const RESUME_NAME = path.basename(RESUME_PDF);
 
-// The demo recruiter acts for Waco Health Partners in the test configuration (RecruiterOrganization stand-in)
+// Every recruiter acts for this one until memberships exist: the test backend's stand-in
+// (RecruiterOrganization), and a recruiter may only post for their own organization (SCRUM-220)
 const ORGANIZATION = { id: 2, name: "Waco Health Partners" };
+// What the test backend's other recruiter acts for
+const OTHER_ORGANIZATION = { id: 1, name: "Brazos Analytics" };
 const POSTING_DETAILS = { location: "Hybrid", employmentType: "Contract", numberOfOpenings: 2 };
 
 export type Person = { firstName: string; lastName: string; fullName: string; email: string; password: string };
@@ -129,14 +132,21 @@ export async function setPhoneByApi(request: APIRequestContext, cast: Cast, appl
   expect(answer.ok(), await answer.text()).toBeTruthy();
 }
 
-// The demo recruiter submits a posting; the administrator approves it when it is to be open
-export async function postingByApi(request: APIRequestContext, cast: Cast, alias: string, open: boolean) {
-  const recruiter = await cast.token(request, ACCOUNTS.recruiter);
+// The demo recruiter submits a posting, or the other recruiter for another organization; the
+// administrator approves it when it is to be open
+export async function postingByApi(
+  request: APIRequestContext,
+  cast: Cast,
+  alias: string,
+  open: boolean,
+  ofAnotherOrganization = false,
+) {
+  const recruiter = await cast.token(request, ofAnotherOrganization ? ACCOUNTS.otherRecruiter : ACCOUNTS.recruiter);
   const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const created = await request.post(`${API}/api/postings`, {
     headers: recruiter,
     data: {
-      organizationId: ORGANIZATION.id,
+      organizationId: (ofAnotherOrganization ? OTHER_ORGANIZATION : ORGANIZATION).id,
       title: cast.postingTitle(alias),
       description: `What the ${alias} does all day.`,
       jobRequirements: `What a ${alias} needs to know.`,
@@ -153,6 +163,18 @@ export async function postingByApi(request: APIRequestContext, cast: Cast, alias
       (await request.post(`${API}/api/admin/postings/${posting.id}/approve`, { headers: administrator })).ok(),
     ).toBeTruthy();
   }
+}
+
+export async function applyByApi(request: APIRequestContext, cast: Cast, applicant: Person, posting: Posting) {
+  await registerByApi(request, applicant);
+  const headers = await cast.token(request, applicant);
+  const resume = await request.post(`${API}/api/applicant/resume`, {
+    headers,
+    multipart: { file: { name: RESUME_NAME, mimeType: "application/pdf", buffer: readFileSync(RESUME_PDF) } },
+  });
+  expect(resume.ok(), await resume.text()).toBeTruthy();
+  const applied = await request.post(`${API}/api/postings/${posting.id}/application`, { headers });
+  expect(applied.ok(), await applied.text()).toBeTruthy();
 }
 
 export async function isWaitingForApproval(request: APIRequestContext, cast: Cast, posting: Posting) {
@@ -420,4 +442,141 @@ export async function expectPostingDetails(page: Page, posting: Posting) {
   ]) {
     await expect(main.getByText(detail).first()).toBeVisible();
   }
+}
+
+// Minimum scope Administrator 2: the users and their roles
+
+const userRow = (page: Page, person: Person) =>
+  page.getByRole("region", { name: "Users" }).getByRole("listitem").filter({ hasText: person.email });
+
+export async function openUsers(page: Page) {
+  await page.goto("/admin/users");
+}
+
+export async function expectListedAs(page: Page, person: Person, role: "Applicant" | "Recruiter" | "Administrator") {
+  await expect(userRow(page, person)).toContainText(person.fullName);
+  await expect(userRow(page, person)).toContainText(role);
+}
+
+export async function expectUsersRefused(page: Page) {
+  await expect(page.getByText(/Only an administrator sees the list of users/)).toBeVisible();
+  await expect(page.getByRole("region", { name: "Users" })).toHaveCount(0);
+}
+
+// UC-11 Create Job Posting and UC-12 Approve Job Posting
+
+const daysAway = (days: number) => new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+const thirtyDaysAway = () => daysAway(30);
+// The form's labels may carry a required mark, and the title is "Job title" on the first version of the form
+const titleField = (page: Page) => page.getByLabel(/^(Job title|Title)\b/);
+const savedPosting = (page: Page) => page.getByRole("main").getByRole("status");
+const pendingPosting = (page: Page, posting: Posting) => page.getByRole("article").filter({ hasText: posting.title });
+
+async function fillPosting(page: Page, title: string, deadline: string) {
+  await page.goto("/recruiter/postings/new");
+  await titleField(page).fill(title);
+  await page.getByLabel(/^Application deadline/).fill(deadline);
+}
+
+// Saves the posting as a draft and keeps its id, shown in the confirmation as "Posting #<id>"
+export async function saveDraftOnScreen(page: Page, cast: Cast, alias: string, deadline = thirtyDaysAway()) {
+  await fillPosting(page, cast.postingTitle(alias), deadline);
+  await page.getByRole("button", { name: "Save draft" }).click();
+  await expect(savedPosting(page)).toContainText("Job posting saved successfully!");
+  const id = Number((await savedPosting(page).textContent())?.match(/Posting #(\d+)/)?.[1]);
+  expect(id).toBeGreaterThan(0);
+  cast.addPosting(alias, id);
+}
+
+export async function saveDraftMoreThan90DaysAway(page: Page, cast: Cast, alias: string) {
+  await saveDraftOnScreen(page, cast, alias, daysAway(100));
+}
+
+export async function submitForApprovalOnScreen(page: Page) {
+  await page.getByRole("button", { name: "Submit for approval" }).click();
+}
+
+export async function expectSubmittedForApproval(page: Page) {
+  await expect(savedPosting(page)).toContainText("Submitted for administrator review!");
+}
+
+export async function expectSavedAsDraft(page: Page) {
+  await expect(savedPosting(page)).toContainText("(DRAFT)");
+}
+
+// A title of spaces passes the browser's check, so the refusal is the backend's
+export async function saveWithoutTitle(page: Page) {
+  await fillPosting(page, "   ", thirtyDaysAway());
+  await page.getByRole("button", { name: "Save draft" }).click();
+}
+
+export async function expectTitleRefused(page: Page) {
+  await expect(page.getByText("Job title is required")).toBeVisible();
+}
+
+export async function expectNothingSaved(page: Page) {
+  await expect(page.getByText("Job posting saved successfully!")).toHaveCount(0);
+}
+
+export async function expectDeadlineRefused(page: Page) {
+  await expect(page.getByText("The application deadline must be between 1 and 90 days away")).toBeVisible();
+}
+
+export async function isOnJobBoard(request: APIRequestContext, posting: Posting) {
+  const open: { jobPostId: number }[] = await openPostingsMatching(request, posting.title);
+  return open.some((each) => each.jobPostId === posting.id);
+}
+
+export async function submitAgainByApi(request: APIRequestContext, cast: Cast, posting: Posting) {
+  return (
+    await request.post(`${API}/api/postings/${posting.id}/submit`, { headers: await cast.token(request, ACCOUNTS.recruiter) })
+  ).status();
+}
+
+export async function approveOnScreen(page: Page, posting: Posting) {
+  await openApprovalQueue(page);
+  await pendingPosting(page, posting).getByRole("button", { name: "Approve & publish" }).click();
+}
+
+export async function returnOnScreen(page: Page, posting: Posting, comment: string) {
+  await openApprovalQueue(page);
+  await pendingPosting(page, posting).getByLabel("Administrator review comment").fill(comment);
+  await pendingPosting(page, posting).getByRole("button", { name: "Return for corrections" }).click();
+}
+
+// Rejecting asks the browser to confirm, since it cannot be undone
+export async function rejectOnScreen(page: Page, posting: Posting, reason: string) {
+  await openApprovalQueue(page);
+  await pendingPosting(page, posting).getByLabel("Administrator review comment").fill(reason);
+  page.once("dialog", (dialog) => dialog.accept());
+  await pendingPosting(page, posting).getByRole("button", { name: "Reject" }).click();
+}
+
+export async function expectDecision(page: Page, posting: Posting, decision: "published" | "returned" | "rejected", comment = "") {
+  const told = {
+    published: `Posting #${posting.id} is approved and published.`,
+    returned: `Posting #${posting.id} is returned to the recruiters: ${comment}`,
+    rejected: `Posting #${posting.id} is rejected.`,
+  }[decision];
+  await expect(page.getByRole("main").getByRole("status")).toHaveText(told);
+}
+
+// UC-14 Screen Applications
+
+export async function openRecruiterPostings(page: Page) {
+  await navigation(page).getByRole("link", { name: "Postings" }).first().click();
+  await expect(page.getByRole("heading", { level: 1, name: "Postings" })).toBeVisible();
+}
+
+export async function expectApplicationsAtStage(page: Page, posting: Posting, count: number, stage: string) {
+  // The count line reads "2 Applied, 1 Screening"
+  const row = page.getByRole("listitem").filter({ hasText: posting.title });
+  await expect(row.getByText(new RegExp(`(^|, )${count} ${stage}(,|$)`))).toBeVisible();
+}
+
+const POSTING_STATUS_LABELS = { "waiting for approval": "Pending approval" };
+
+export async function expectPostingStatus(page: Page, posting: Posting, status: keyof typeof POSTING_STATUS_LABELS) {
+  const row = page.getByRole("listitem").filter({ hasText: posting.title });
+  await expect(row.getByText(POSTING_STATUS_LABELS[status], { exact: true })).toBeVisible();
 }
