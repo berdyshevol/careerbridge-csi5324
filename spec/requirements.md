@@ -502,7 +502,7 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC11.5|UC-11 step 6|submitJobPosting(organizationId, postingData)|CO-11.1|
 |FR-UC11.6|UC-11 Success Guarantee|submitJobPosting(organizationId, postingData)|CO-11.1|
 |FR-UC11.7|UC-11 extension 3b|openPostingForEdit(postingId) (query),<br/>updatePosting(postingId, postingData)|CO-11.2|
-|FR-UC11.8|UC-11 extension 6a; UC-12<br/>extension 5a|openPostingForEdit(postingId) (query),<br/>updatePosting(postingId, postingData),<br/>submitJobPosting(postingId)|CO-11.2, CO-11.1|
+|FR-UC11.8|UC-11 extension 6a; UC-12<br/>extension 5a|openPostingForEdit(postingId) (query),<br/>updatePosting(postingId, postingData),<br/>submitJobPosting(organizationId, postingData)|CO-11.2, CO-11.1|
 |FR-UC12.1|UC-12 Preconditions|openPostingApprovalQueue()|query (no contract)|
 |FR-UC12.2|UC-12 step 2|openPostingApprovalQueue()|query (no contract)|
 |FR-UC12.3|UC-12 step 4|selectPosting(postingId)|query (no contract)|
