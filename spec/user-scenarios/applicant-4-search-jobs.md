@@ -1,23 +1,14 @@
 # Anyone searches the open jobs
 
-**Use cases:** UC-01  
-**Status:** Works
+**Use cases:** UC-01
 
 ## Scenario
 
 ```gherkin
-Given the open sample postings
-When someone searches by keyword, location, organization or employment type
-Then only the matching open postings are listed, newest first, and a search with no match says so
-```
-
-## Checked by
-
-- `app/frontend/e2e/browse-postings.spec.ts`, the test matching "lists only open postings"
-- `app/frontend/e2e/browse-postings.spec.ts`, the test matching "keyword finds postings"
-- `app/frontend/e2e/browse-postings.spec.ts`, the test matching "filters narrow the list"
-- `app/frontend/e2e/browse-postings.spec.ts`, the test matching "match nothing say so"
-
-```bash
-cd app/frontend && npx playwright test e2e/browse-postings.spec.ts
+Given a visitor on the job board
+Then only open postings are listed: Backend Developer is there, QA Engineer (closed) and Product Designer (pending) are not
+When they type "analyst" in "Keywords" and select "Search"
+Then Data Analyst Intern and Logistics Analyst are listed and Backend Developer is not
+When they search for "astronaut"
+Then the page says "No matching postings." and "astronaut" stays in "Keywords"
 ```

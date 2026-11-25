@@ -1,20 +1,13 @@
 # An applicant logs in
 
-**Use cases:** Log In  
-**Status:** Works
+**Use cases:** Log In
 
 ## Scenario
 
 ```gherkin
-Given Jordan Lee's account
-When Jordan logs in from the header
-Then the header shows Jordan Lee as an applicant and Jordan is back on the page
-```
-
-## Checked by
-
-- `app/frontend/e2e/log-in.spec.ts`, the test matching "given a demo applicant, when they log in"
-
-```bash
-cd app/frontend && npx playwright test e2e/log-in.spec.ts
+Given Jordan Lee is not logged in and is on the job board
+When Jordan selects "Log in" in the header
+And fills in Jordan's email and password and selects "Log in"
+Then Jordan is back on the job board
+And the header shows "Jordan Lee" as an applicant
 ```
