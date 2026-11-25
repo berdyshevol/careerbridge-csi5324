@@ -3,12 +3,15 @@ package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
 import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
+import baylor.csi5324.careerbridge.config.SampleDataLoader;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
+import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
+import baylor.csi5324.careerbridge.repository.RecruiterRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,8 +43,15 @@ class JobPostingServiceTest {
     @Autowired
     private OrganizationRepository organizationRepository;
 
+    @Autowired
+    private RecruiterRepository recruiterRepository;
+
+    // Seeded by DemoUsers
+    private static final String OWNER = "riley.chen@example.com";
+
     private final LocalDate today = LocalDate.now();
     private Organization organization;
+    private Recruiter owner;
 
     @BeforeEach
     void replaceSampleData() {
@@ -49,6 +59,7 @@ class JobPostingServiceTest {
         jobPostingRepository.deleteAll();
         organization = organizationRepository.save(
                 new Organization("Test Organization"));
+        owner = recruiterRepository.findByEmailIgnoreCase(OWNER).orElseThrow();
     }
 
     @Test
@@ -198,7 +209,7 @@ class JobPostingServiceTest {
     void createPostingSavesDraftWithCorrectOrganization() {
         CreateJobPostingRequest request = validRequest();
 
-        JobPosting created = jobPostingService.createPosting(request);
+        JobPosting created = jobPostingService.createPosting(request, OWNER);
 
         assertNotNull(created.getJobPostId());
         assertEquals("Cybersecurity Analyst", created.getTitle());
@@ -217,9 +228,26 @@ class JobPostingServiceTest {
     }
 
     @Test
+    void createPostingLinksTheRecruiterWhoCreatedIt() {
+        JobPosting created = jobPostingService.createPosting(validRequest(), "RILEY.CHEN@example.com");
+
+        JobPosting saved = jobPostingRepository.findById(created.getJobPostId()).orElseThrow();
+        assertEquals(owner.getUserId(), saved.getRecruiter().getUserId());
+    }
+
+    @Test
+    void createPostingRefusesAnAccountThatIsNotARecruiter() {
+        long before = jobPostingRepository.count();
+
+        assertThrows(PostingNotAllowedException.class,
+                () -> jobPostingService.createPosting(validRequest(), SampleDataLoader.SAMPLE_APPLICANT_EMAIL));
+        assertEquals(before, jobPostingRepository.count());
+    }
+
+    @Test
     void newlyCreatedDraftIsHiddenFromPublicSearch() {
         JobPosting created =
-                jobPostingService.createPosting(validRequest());
+                jobPostingService.createPosting(validRequest(), OWNER);
 
         assertFalse(jobPostingService.searchPostings(PostingSearchCriteria.ANY)
                 .stream()
@@ -247,7 +275,7 @@ class JobPostingServiceTest {
 
         InvalidPostingException rejected = assertThrows(
                 InvalidPostingException.class,
-                () -> jobPostingService.createPosting(request));
+                () -> jobPostingService.createPosting(request, OWNER));
 
         assertEquals("Job title is required", rejected.getMessage());
     }
@@ -268,7 +296,7 @@ class JobPostingServiceTest {
 
         InvalidPostingException rejected = assertThrows(
                 InvalidPostingException.class,
-                () -> jobPostingService.createPosting(request));
+                () -> jobPostingService.createPosting(request, OWNER));
 
         assertEquals("Application deadline must be today or later", rejected.getMessage());
     }
@@ -289,7 +317,7 @@ class JobPostingServiceTest {
 
         InvalidPostingException rejected = assertThrows(
                 InvalidPostingException.class,
-                () -> jobPostingService.createPosting(request));
+                () -> jobPostingService.createPosting(request, OWNER));
 
         assertEquals("Organization not found", rejected.getMessage());
 
@@ -312,7 +340,7 @@ class JobPostingServiceTest {
 
         InvalidPostingException rejected = assertThrows(
                 InvalidPostingException.class,
-                () -> jobPostingService.createPosting(request));
+                () -> jobPostingService.createPosting(request, OWNER));
 
         assertEquals("Location is too long", rejected.getMessage());
     }
@@ -360,4 +388,5 @@ class JobPostingServiceTest {
 
         return jobPostingRepository.save(posting);
     }
+
 }

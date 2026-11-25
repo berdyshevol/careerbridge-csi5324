@@ -727,6 +727,8 @@ decision (_approvedBy_, _approvedAt_, _reviewComment_) is cleared.
 
 - The Recruiter no longer has an active membership in the selected organization (extension *a): no postcondition holds.
 
+- A Draft or Returned posting submitted by its id was created by another Recruiter, or by none, as the sample postings are: no postcondition holds; the posting is unchanged. Only the Recruiter who created a posting may submit it (Recruiter 1 — * Job Posting in the domain model).
+
 #### UC-12 Approve Job Posting
 
 Figure 18 shows SSD-12, the system sequence diagram for the main success scenario of UC-12.
