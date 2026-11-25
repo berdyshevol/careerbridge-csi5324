@@ -28,7 +28,9 @@ public class LogInService {
     public static final String ROLE_CLAIM = "role";
 
     // The same answer for an unknown email and a wrong password, so the form does not reveal who has an account
-    static final String WRONG_CREDENTIALS = "The email or password is incorrect.";
+    static final String WRONG_CREDENTIALS = "The email or password is not right. Check both and try again.";
+    // Wording of the mockup visitor-login; the numbers are A15's, kept in User
+    static final String LOCKED = "This account is locked. Five failed log-ins within 15 minutes lock it for 15 minutes.";
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -50,7 +52,7 @@ public class LogInService {
         Instant now = clock.instant();
         Optional<User> found = Optional.ofNullable(email).map(String::trim).flatMap(userRepository::lockByEmail);
         if (found.isPresent() && found.get().isLockedAt(now)) {
-            throw new LogInRefusedException(locked(found.get(), now));
+            throw new LogInRefusedException(LOCKED);
         }
         // Every refusal below runs one BCrypt check, so none of them answers faster than another
         String hash = found.map(User::getPasswordHash).orElse(unknownUserHash);
@@ -61,7 +63,7 @@ public class LogInService {
         User user = found.get();
         if (!matches || user.getPasswordHash() == null) {
             user.recordFailedLogIn(now);
-            throw new LogInRefusedException(user.isLockedAt(now) ? locked(user, now) : WRONG_CREDENTIALS);
+            throw new LogInRefusedException(user.isLockedAt(now) ? LOCKED : WRONG_CREDENTIALS);
         }
         if (user.getAccountStatus() != AccountStatus.ACTIVE) {
             throw new LogInRefusedException("This account is not active yet.");
@@ -92,9 +94,4 @@ public class LogInService {
         return jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
     }
 
-    private static String locked(User user, Instant now) {
-        long minutes = (Duration.between(now, user.getLockedUntil()).toSeconds() + 59) / 60;
-        return "Too many failed log-ins. The account is locked; try again in " + minutes
-                + (minutes == 1 ? " minute." : " minutes.");
-    }
 }
