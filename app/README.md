@@ -27,6 +27,10 @@ Every database has one demo account per role ([ADR-0010](../spec/adr/0010-log-in
 | Applicant with none | `sam.rivera@example.com` | `Applicant-local-2` |
 | Recruiter | `riley.chen@example.com` | `Recruiter-local-1` |
 | Administrator | `admin@careerbridge.example` | `Administrator-local-1` |
+| Applicants with none, for demos | `applicant1@example.com` to `applicant3@example.com` | `Baylor@2026` |
+| Recruiters, for demos | `recruiter1@example.com`, `recruiter2@example.com` | `Baylor@2026` |
+
+The numbered accounts share `DEMO_NUMBERED_PASSWORD` on Neon.
 
 Log in at <http://localhost:3000/login>; posting approvals are at <http://localhost:3000/admin/postings> for the Administrator.
 

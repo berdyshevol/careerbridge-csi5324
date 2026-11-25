@@ -36,6 +36,11 @@ public class DemoUsers implements CommandLineRunner {
         return password.isBlank() && inMemory ? local : password;
     }
 
+    private static DemoUser numbered(int n, Supplier<User> kind, String password) {
+        String role = kind.get() instanceof Recruiter ? "Recruiter" : "Applicant";
+        return new DemoUser(role, String.valueOf(n), role.toLowerCase() + n + "@example.com", kind, password);
+    }
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final List<DemoUser> demoUsers;
@@ -45,12 +50,14 @@ public class DemoUsers implements CommandLineRunner {
                      @Value("${careerbridge.demo.second-applicant-password}") String secondApplicantPassword,
                      @Value("${careerbridge.demo.recruiter-password}") String recruiterPassword,
                      @Value("${careerbridge.demo.administrator-password}") String administratorPassword,
+                     @Value("${careerbridge.demo.numbered-password}") String numberedPassword,
                      @Value("${spring.datasource.url}") String databaseUrl,
                      @Value("${careerbridge.demo.local-passwords}") boolean localPasswordsAllowed) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         // The Docker image switches this off: an image that lost DATABASE_URL must not get known passwords
         boolean inMemory = localPasswordsAllowed && databaseUrl.startsWith("jdbc:h2:mem:");
+        String numbered = orLocal(numberedPassword, "Baylor@2026", inMemory);
         this.demoUsers = List.of(
                 new DemoUser("Jordan", "Lee", SampleDataLoader.SAMPLE_APPLICANT_EMAIL,
                         Applicant::new, orLocal(applicantPassword, "Applicant-local-1", inMemory)),
@@ -59,7 +66,13 @@ public class DemoUsers implements CommandLineRunner {
                 new DemoUser("Riley", "Chen", "riley.chen@example.com", Recruiter::new,
                         orLocal(recruiterPassword, "Recruiter-local-1", inMemory)),
                 new DemoUser("Avery", "Morgan", "admin@careerbridge.example", Administrator::new,
-                        orLocal(administratorPassword, "Administrator-local-1", inMemory)));
+                        orLocal(administratorPassword, "Administrator-local-1", inMemory)),
+                // Easy to say out loud in a demo; they share one password
+                numbered(1, Applicant::new, numbered),
+                numbered(2, Applicant::new, numbered),
+                numbered(3, Applicant::new, numbered),
+                numbered(1, Recruiter::new, numbered),
+                numbered(2, Recruiter::new, numbered));
     }
 
     @Override
