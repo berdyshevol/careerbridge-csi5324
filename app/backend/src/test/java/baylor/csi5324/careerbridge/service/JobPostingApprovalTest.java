@@ -1,6 +1,7 @@
 
 package baylor.csi5324.careerbridge.service;
 
+import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
 import baylor.csi5324.careerbridge.config.SampleDataLoader;
 import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.model.AccountStatus;
@@ -353,6 +354,77 @@ class JobPostingApprovalTest {
         assertNull(result.getApprovedBy());
         assertNull(result.getApprovedAt());
         assertNull(result.getReviewComment());
+    }
+
+    @Test
+    void aDraftIsReopenedAndChangedByItsRecruiter() {
+        JobPosting draft = createPosting(PostStatus.DRAFT, LocalDate.now().plusDays(10));
+
+        assertEquals(draft.getJobPostId(), jobPostingService.openPostingForEdit(draft.getJobPostId(), OWNER).getJobPostId());
+        jobPostingService.updatePosting(draft.getJobPostId(), details("Senior Software Engineer"), OWNER);
+
+        JobPosting saved = jobPostingRepository.findById(draft.getJobPostId()).orElseThrow();
+        assertEquals("Senior Software Engineer", saved.getTitle());
+        assertEquals("Remote", saved.getLocation());
+        assertEquals(3, saved.getNumberOfOpenings());
+        assertEquals(PostStatus.DRAFT, saved.getPostStatus());
+        assertEquals(organization.getOrganizationId(), saved.getOrganization().getOrganizationId());
+    }
+
+    @Test
+    void aReturnedPostingKeepsItsCommentUntilItIsSubmittedAgain() {
+        JobPosting returned = createPosting(PostStatus.RETURNED, LocalDate.now().plusDays(10));
+        returned.setReviewComment("Add the salary range");
+        jobPostingRepository.save(returned);
+
+        assertEquals("Add the salary range",
+                jobPostingService.openPostingForEdit(returned.getJobPostId(), OWNER).getReviewComment());
+        JobPosting changed = jobPostingService.updatePosting(returned.getJobPostId(), details("Software Engineer"), OWNER);
+        assertEquals(PostStatus.RETURNED, changed.getPostStatus());
+        assertEquals("Add the salary range", changed.getReviewComment());
+
+        JobPosting submitted = jobPostingService.submitJobPosting(returned.getJobPostId(), OWNER);
+        assertEquals(PostStatus.PENDING_APPROVAL, submitted.getPostStatus());
+        assertNull(submitted.getReviewComment());
+    }
+
+    @Test
+    void anotherRecruiterCannotOpenOrChangeThePosting() {
+        JobPosting draft = createPosting(PostStatus.DRAFT, LocalDate.now().plusDays(10));
+
+        assertThrows(PostingNotAllowedException.class,
+                () -> jobPostingService.openPostingForEdit(draft.getJobPostId(), "other@example.com"));
+        assertThrows(PostingNotAllowedException.class,
+                () -> jobPostingService.updatePosting(draft.getJobPostId(), details("Taken over"), "other@example.com"));
+        assertEquals("Software Engineer",
+                jobPostingRepository.findById(draft.getJobPostId()).orElseThrow().getTitle());
+    }
+
+    @Test
+    void onlyADraftOrAReturnedPostingCanBeChanged() {
+        JobPosting published = createPosting(PostStatus.PUBLISHED, LocalDate.now().plusDays(10));
+        JobPosting pending = createPosting(PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
+
+        assertThrows(PostingStateConflictException.class,
+                () -> jobPostingService.openPostingForEdit(published.getJobPostId(), OWNER));
+        assertThrows(PostingStateConflictException.class,
+                () -> jobPostingService.updatePosting(pending.getJobPostId(), details("Changed"), OWNER));
+    }
+
+    @Test
+    void anInvalidChangeIsRefusedAndNothingChanges() {
+        JobPosting draft = createPosting(PostStatus.DRAFT, LocalDate.now().plusDays(10));
+
+        InvalidPostingException refused = assertThrows(InvalidPostingException.class,
+                () -> jobPostingService.updatePosting(draft.getJobPostId(), details(" "), OWNER));
+        assertEquals("Job title is required", refused.getMessage());
+        assertEquals("Software Engineer",
+                jobPostingRepository.findById(draft.getJobPostId()).orElseThrow().getTitle());
+    }
+
+    private CreateJobPostingRequest details(String title) {
+        return new CreateJobPostingRequest(organization.getOrganizationId(), title, "Build and maintain applications",
+                "Java and Spring Boot", "Remote", "Full-time", null, 3, LocalDate.now().plusDays(20));
     }
 
     private JobPosting createPosting(

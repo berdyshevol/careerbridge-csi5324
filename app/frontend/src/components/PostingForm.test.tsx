@@ -55,12 +55,32 @@ describe("PostingForm", () => {
     expect(vi.mocked(createPosting).mock.calls[0][0]).toBe("recruiter-token");
   });
 
-  it("shows the backend's reason when it refuses the posting", async () => {
+  it("shows the backend's reason under the field it names", async () => {
     vi.mocked(createPosting).mockRejectedValue(new PostingRejected("Job title is required"));
 
     submitTheForm();
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Job title is required");
+    expect(await screen.findByText("Job title is required")).toBeInTheDocument();
+    expect(screen.getByLabelText("Title")).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("shows a reason that names no field above the buttons", async () => {
+    vi.mocked(createPosting).mockRejectedValue(new PostingRejected("Organization not found"));
+
+    submitTheForm();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Organization not found");
+  });
+
+  it("offers to edit the draft it saved", async () => {
+    vi.mocked(createPosting).mockResolvedValue(saved);
+
+    submitTheForm();
+
+    expect(await screen.findByRole("link", { name: "Edit draft" })).toHaveAttribute(
+      "href",
+      "/recruiter/postings/7/edit",
+    );
   });
 
   it.each([

@@ -10,7 +10,7 @@ test("an approved posting appears on the job board", async ({ page }, testInfo) 
 
   await logIn(page, ACCOUNTS.recruiter);
   await page.goto("/recruiter/postings/new");
-  await page.getByLabel("Job title").fill(title);
+  await page.getByLabel("Title", { exact: true }).fill(title);
   await page.getByLabel("Application deadline").fill(deadline);
   await page.getByRole("button", { name: "Save draft" }).click();
   await page.getByRole("button", { name: "Submit for approval" }).click();
