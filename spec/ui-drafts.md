@@ -94,7 +94,7 @@ match its mockup, and a screen that is not listed here is added before it is cod
 | Applicant | `/` home | Home · Find jobs · Applications · Profile | Account menu |
 | Recruiter, pending | `/recruiter/status` | none | Account menu (Log out) |
 | Recruiter | `/recruiter` | Home · Postings · Organizations | Organization switcher, account menu |
-| Administrator | `/admin` | Home · Posting approvals · Recruiter requests | Account menu |
+| Administrator | `/admin` | Home · Posting approvals · Recruiter requests · Users | Account menu |
 
 **Visitor**
 
@@ -144,6 +144,7 @@ is shown on that application's page; the desk and the Applications entry point t
 | [`admin-posting`](screens/admin-posting.html) | `/admin/postings/{id}` | Posting review | UC-12 | The posting as the public will see it, drawn by the same component as `/jobs/{id}` (technology variation 4a), and the organization's status. Approve, Return with comments, Reject with a reason. After a decision: back to the queue (step 8). The blocked cases 6a and 6b say why. |
 | [`admin-requests`](screens/admin-requests.html) | `/admin/requests` | Recruiter requests | UC-10 | Oldest first: request type (new organization, joining an existing organization, an additional organization), requester, organization, date, review flag. |
 | [`admin-request`](screens/admin-request.html) | `/admin/requests/{id}` | Request review | UC-10 | Requester (name, work email, job title, memberships), organization with a link to its website (5a), justification. Approve, Deny with a reason, Ask for information; for a duplicate organization, approve the membership in the existing one (5c). |
+| [`admin-users`](screens/admin-users.html) | `/admin/users` | Users | Administration (FR-ADM.1) | Every user with their name, email, role and account status, and the number of users in each role. Read only. |
 
 UC-13 Expire Job Posting has no screen: its results appear as Closed · Expired and Expired on the
 recruiter's postings and home.

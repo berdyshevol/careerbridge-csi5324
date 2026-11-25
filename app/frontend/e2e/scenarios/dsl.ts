@@ -337,6 +337,32 @@ Then(
   },
 );
 
+// Minimum scope Administrator 2: the users and their roles
+
+When("the administrator views the users", async ({ page }) => {
+  await system.openUsers(page);
+});
+
+When("{string} asks to see the users", async ({ page }, _alias: string) => {
+  await system.openUsers(page);
+});
+
+Then("{string} is listed as an applicant", async ({ page, cast }, alias: string) => {
+  await system.expectListedAs(page, cast.person(alias), "Applicant");
+});
+
+Then("{string} is listed as a recruiter", async ({ page, cast }, alias: string) => {
+  await system.expectListedAs(page, cast.person(alias), "Recruiter");
+});
+
+Then("the administrator is listed as an administrator", async ({ page }) => {
+  await system.expectListedAs(page, ADMINISTRATOR, "Administrator");
+});
+
+Then("{string} is refused because only an administrator sees the users", async ({ page }, _alias: string) => {
+  await system.expectUsersRefused(page);
+});
+
 // UC-11 Create Job Posting
 
 When("{string} saves the posting {string} as a draft", async ({ page, cast }, _alias: string, posting: string) => {

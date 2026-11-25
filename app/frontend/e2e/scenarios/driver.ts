@@ -441,6 +441,25 @@ export async function expectPostingDetails(page: Page, posting: Posting) {
   }
 }
 
+// Minimum scope Administrator 2: the users and their roles
+
+const userRow = (page: Page, person: Person) =>
+  page.getByRole("region", { name: "Users" }).getByRole("listitem").filter({ hasText: person.email });
+
+export async function openUsers(page: Page) {
+  await page.goto("/admin/users");
+}
+
+export async function expectListedAs(page: Page, person: Person, role: "Applicant" | "Recruiter" | "Administrator") {
+  await expect(userRow(page, person)).toContainText(person.fullName);
+  await expect(userRow(page, person)).toContainText(role);
+}
+
+export async function expectUsersRefused(page: Page) {
+  await expect(page.getByText(/Only an administrator sees the list of users/)).toBeVisible();
+  await expect(page.getByRole("region", { name: "Users" })).toHaveCount(0);
+}
+
 // UC-11 Create Job Posting and UC-12 Approve Job Posting
 
 const daysAway = (days: number) => new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);

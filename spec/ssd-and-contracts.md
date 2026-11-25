@@ -869,3 +869,8 @@ Figure 19 shows SSD-13, the system sequence diagram for the main success scenari
 - The posting's deadline has passed: no postcondition holds (409); the expiration job closes it with reason Expired at its next run.
 
 - No posting has that id: no postcondition holds (404).
+
+#### Administration
+
+viewUsers(), which lists every user with their role and account status (FR-ADM.1), is a query that
+changes nothing, so it has no contract.

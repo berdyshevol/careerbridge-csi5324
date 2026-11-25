@@ -109,6 +109,14 @@ class AccessByRoleTest {
     }
 
     @Test
+    void onlyTheAdministratorSeesTheUsers() throws Exception {
+        mockMvc.perform(get("/api/admin/users")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/admin/users").with(as("APPLICANT"))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/admin/users").with(as("RECRUITER"))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/admin/users").with(as("ADMINISTRATOR"))).andExpect(status().isOk());
+    }
+
+    @Test
     void onlyARecruiterCreatesAPosting() throws Exception {
         mockMvc.perform(post("/api/postings").with(as("APPLICANT"))
                         .contentType(MediaType.APPLICATION_JSON).content(blankPosting))

@@ -114,15 +114,18 @@ Feature: UC-02 Register as Applicant
 | [The administrator approves a posting and it opens on the job board](administrator-approve-posting.feature) | UC-12 main success scenario, steps 1-8 |
 | [The administrator returns a posting with a comment and it stays off the job board](administrator-return-posting.feature) | UC-12 extension 5a |
 | [The administrator rejects a posting, and it cannot be sent for approval again](administrator-reject-posting.feature) | UC-12 extension 5b |
+| [The administrator sees every user with their role](administrator-2-view-users.feature) | Administration, FR-ADM.1; minimum scope Administrator 2 |
+| [An applicant cannot see the list of users](administrator-2-view-users-refused.feature) | Administration, NFR-ADM.1; minimum scope Administrator 2, permissions by role |
 
 ## Coverage
 
 **Minimum scope.** Of the items that belong to these use cases, every one has a scenario: Applicant 1
 (register), 2 (log in), 3 (view and update own profile), 4 (browse and search jobs), 5 (view a job's
 details) and 7 (the resume that goes with an application, uploaded in UC-03), Recruiter 1 and
-Administrator 1 (log in), Recruiter 2 (create a job posting), and the viewing half of Recruiter 3 (own
-postings, UC-14 step 2). Approving a posting (UC-12) is not an item of the minimum scope, so its
-scenarios carry no scope tag. The system-wide requirements shown are input validation, meaningful errors,
+Administrator 1 (log in), Administrator 2 (view users and their roles), Recruiter 2 (create a job
+posting), and the viewing half of Recruiter 3 (own postings, UC-14 step 2). Approving a posting (UC-12)
+is not an item of the minimum scope, so its scenarios carry no scope tag. The system-wide requirements
+shown are input validation, meaningful errors,
 authentication and permissions by role. Applicant 6, 8 and 9 and the other recruiter and administrator
 items belong to UC-04 to UC-15.
 
