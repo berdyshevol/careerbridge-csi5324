@@ -17,11 +17,10 @@ tests (Vitest) and the end-to-end tests (Playwright).
 At least one test case per implemented feature, in the template's columns; the Actual Result is
 left empty until the case has run. Each member writes and runs the cases of their own use cases.
 
-**UC-11 to UC-13 (TC-11-…, TC-12-…, TC-13-…).** Written by Zeba Tusnia Towshi from the use cases
-and their extensions. AI assistance: Claude Code (Anthropic) drafted the cases and matched each to
-the automated JUnit test that checks it; Zeba Tusnia Towshi reviewed them. Each case was run through
-its JUnit test on November 25, 2026 (`./mvnw test` in `app/backend`); the Actual Result names that
-test. A case for a design that is not built yet is listed with the status Not run, so the gap shows.
+**UC-11 to UC-13.** Written and reviewed by Zeba Tusnia Towshi. Claude Code (Anthropic) helped
+draft the cases and match each one to its automated test. All cases were run on November 25, 2026;
+the Actual Result names the test that checked it. Cases for parts that are designed but not built
+yet are marked Not run.
 
 | Test Case ID | Assigned Tester | Scenario/Condition | Test Inputs | Expected Result | Actual Result | Test Status |
 | --- | --- | --- | --- | --- | --- | --- |

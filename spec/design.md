@@ -300,25 +300,15 @@ sequenceDiagram
 
 ### UC-11 Create Job Posting
 
-Creating a posting saves it as a Draft (SD-4, extension 3b); sending a Draft or a Returned posting
-to the Administrator is a second request by its id (SD-5, CO-11.1, extension 6a). The logged-in
-Recruiter is the subject of the session token (ADR-0010), and only the Recruiter role reaches
-`POST /api/postings` and `/api/postings/{postingId}/submit`.
+Creating a posting saves it as a Draft (SD-4). Submitting it to the Administrator is a second
+request (SD-5, CO-11.1). Only a logged-in Recruiter can make either request.
 
-Both requests first check that the Recruiter is an Active member of the posting's organization
-(precondition, extension \*a, BR-14): the service loads the Recruiter and their Active memberships
-and refuses with 403 when the organization is not among them. The new posting is then linked to its
-organization and to the Recruiter who created it (CO-11.1). The posting is linked to the Recruiter
-who created it, and only that Recruiter may submit it (`JobPosting.wasCreatedBy`, SCRUM-215). The
-membership lookup is drawn as designed; the code does not have it yet, because the Organization
-Membership entity arrives with UC-08 to UC-10. Until then a recruiter may create a posting for any
-organization that exists, but submits only their own.
+Both requests check that the Recruiter is an Active member of the posting's organization
+(extension \*a, BR-14), and refuse with 403 if not. The posting is linked to the Recruiter who
+created it, and only that Recruiter can submit it. The membership check is part of the design but
+not yet in the code: it needs the Organization Membership entity from UC-08 to UC-10.
 
-The fields are checked in the order of extension 5a: the organization exists, the title is present
-and at most 255 characters, the description, requirements, location, employment type and salary
-range fit their columns, the deadline is not in the past and there is at least one opening. Each
-refusal is an InvalidPostingException with a reason written for the recruiter, which the controller
-answers with 400.
+Invalid fields are refused with 400 and a reason for the recruiter (extensions 5a, 5b).
 
 ```mermaid
 sequenceDiagram
@@ -407,11 +397,10 @@ sequenceDiagram
 
 **Figure 32: SD-5 Submit a posting for approval (UC-11)**
 
-A saved Draft (extension 3b), or a posting the Administrator returned (extension 6a), is reopened
-and changed before it is submitted (SD-5b, CO-11.2, SCRUM-212). Opening it is a query; saving it
-runs the same field checks as creating. Only the Recruiter who created the posting may open or
-change it, and only while it is a Draft or Returned. The organization never changes, and a Returned
-posting keeps the Administrator's comment until it is submitted again.
+A Draft or a Returned posting can be opened and changed before it is submitted (SD-5b, CO-11.2,
+extensions 3b and 6a). Only the Recruiter who created it can do this, and only while it is a Draft
+or Returned. The same field checks apply as when creating. The organization does not change, and a
+Returned posting keeps the Administrator's comment until it is submitted again.
 
 ```mermaid
 sequenceDiagram
@@ -460,18 +449,14 @@ sequenceDiagram
 
 ### UC-12 Approve Job Posting
 
-The queue is a query (SD-6): Pending Approval postings, oldest first; an empty list is extension
-2a. A decision is one controller method and one service method per outcome (SD-7): approve, return
-or reject. Only the Administrator role reaches `/api/admin/**`, and each decision records the
-Administrator's name, taken from the session token, and the time. A posting that another
-Administrator decided meanwhile is refused with 409 and its current status (extension 6c).
+The Administrator opens the queue of pending postings, oldest first (SD-6), and approves, returns
+or rejects one (SD-7). Only an Administrator can do this. Each decision records who made it and
+when. A posting that another Administrator already decided is refused with 409 (extension 6c).
 
-Approving checks, in this order: the deadline has not passed, or the posting goes back to the
-recruiters as Returned with a request for a new deadline (6a); the organization is Active and the
-submitting Recruiter still has an Active membership in it, or nothing changes and the posting stays
-pending (6b, CO-12.1). The 6b check is drawn as designed and waits for the Organization Membership
-entity, as for UC-11. Returning and rejecting need a comment (5a, 5b). The notices to the
-organization's recruiters (step 7) are not built: there is no Notification yet.
+Approval returns the posting to the recruiter if its deadline has passed (6a). It is blocked if the
+organization or the submitting Recruiter is no longer active (6b); this check is designed but waits
+for Organization Membership, as in UC-11. Returning and rejecting need a comment. Notifications
+(step 7) are not built yet.
 
 ```mermaid
 sequenceDiagram
@@ -541,18 +526,12 @@ sequenceDiagram
 
 ### UC-13 Expire Job Posting
 
-The actor is the Scheduler, so there is no controller and no session: JobPostingExpirationScheduler
-starts a run when the application is ready and every 15 minutes after (FR-UC13.1). The service
-loads every Published, Pending Approval or Returned posting whose deadline date has passed in the
-earliest time zone, keeps those past 23:59 of the deadline in their organization's own time zone
-(`JobPosting.isPastDeadline`, NFR-UC13.5), and hands each one to the processor. The processor
-expires one posting in its own transaction, so one failure is logged and the run goes on, and the
-failed posting is tried again on the next run (extension 3b, NFR-UC13.3). A Published posting
-becomes Closed with the reason Expired and the time it closed (the Close Job Posting subfunction,
-FR-UC13.3); a Pending Approval or Returned posting, never published, becomes Expired (extension 2b).
-A posting already closed, for example filled, is left alone (3a), so a second run closes nothing
-again (NFR-UC13.1). The run is logged with its start, the number closed and the errors (FR-UC13.8).
-The notices of step 4 are not built: there is no Notification yet.
+The Scheduler starts a run every 15 minutes (SD-11). The service finds the postings whose deadline
+has passed in their organization's time zone and expires each one in its own transaction, so one
+failure does not stop the run; the failed posting is tried again next time (3b). A Published
+posting becomes Closed with the reason Expired. A Pending Approval or Returned posting becomes
+Expired (2b). A posting that is already closed is skipped (3a). Each run is logged. Notifications
+(step 4) are not built yet.
 
 ```mermaid
 sequenceDiagram
@@ -598,13 +577,11 @@ sequenceDiagram
 
 **Figure 36: SD-11 Expire job postings (UC-13)**
 
-The Recruiter who created a Published posting may also close it before its deadline (extension
-\*a, CO-13.2, SCRUM-213). The request runs the same Close Job Posting step, `JobPosting.close`,
-with the reason Closed by recruiter; applications already submitted keep their stages (A3). Only
-the RECRUITER role reaches `POST /api/postings/{postingId}/close`. The service refuses a posting
-another Recruiter created (403), one that is not Published (409), and one past its deadline (409),
-which the expiration job closes as Expired at its next run, so an expiry is never hidden. The
-notice to the recruiters (Close Job Posting step 4) is not built: there is no Notification yet.
+The Recruiter who created a Published posting can also close it before its deadline (SD-11b,
+extension \*a, CO-13.2). The posting is closed with the reason Closed by recruiter, and existing
+applications keep their stages (A3). The request is refused if another Recruiter created the
+posting (403), if it is not Published (409), or if its deadline has already passed (409); in that
+case the expiration job closes it as Expired.
 
 ```mermaid
 sequenceDiagram
@@ -677,23 +654,13 @@ UC-10.
 
 ### 7.2 Job-posting side: UC-11, UC-12 and UC-13
 
-Figure 38 shows the classes that realize SD-4 to SD-7, SD-5b, SD-11 and SD-11b. Creating, changing,
-submitting, closing and the Administrator's three decisions are methods of JobPostingService. The expiry job is split in three
-so that one failing posting does not undo the others: the scheduler only fires,
-JobPostingExpirationService finds the postings past their deadline, and JobPostingExpirationProcessor
-expires one posting in its own transaction.
+Figure 38 shows the classes behind SD-4 to SD-7, SD-5b, SD-11 and SD-11b. JobPostingService holds
+creating, changing, submitting, closing and the three decisions. The expiry job has three classes,
+so one failing posting does not undo the others.
 
-An association between two entities carries the multiplicities of the
-[domain model](domain-model.md) (section 5.3), written the same way in every view of the DCD: `1`
-for exactly one and `*` for any number. An Organization has any number of Job Postings and a Job
-Posting belongs to one Organization; a Recruiter creates any number of Job Postings and a Job
-Posting is created by one Recruiter; a Recruiter has a membership for each organization they
-recruit for, and each membership is in one Organization. A controller, a service or a repository
-only uses another class, so those dashed dependency arrows carry no multiplicity. Classes and
-members marked «designed» are not in the code yet. The link from a Job Posting to its Recruiter,
-`wasCreatedBy`, `RecruiterRepository` and the `recruiterEmail` parameters come with SCRUM-215;
-`closePosting` and `JobPosting.close` with SCRUM-213; `openPostingForEdit` and `updatePosting` with
-SCRUM-212. Getters and setters are left out.
+Associations between entities use the multiplicities of the [domain model](domain-model.md)
+(section 5.3), written as `1` and `*` in every view. Dashed arrows are dependencies and have no
+multiplicity. Items marked «designed» are not in the code yet. Getters and setters are left out.
 
 ```mermaid
 classDiagram
