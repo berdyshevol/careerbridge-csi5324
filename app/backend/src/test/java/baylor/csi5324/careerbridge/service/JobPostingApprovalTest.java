@@ -1,8 +1,8 @@
 
 package baylor.csi5324.careerbridge.service;
 
-import baylor.csi5324.careerbridge.config.SampleDataLoader;
 import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
+import baylor.csi5324.careerbridge.config.SampleDataLoader;
 import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;

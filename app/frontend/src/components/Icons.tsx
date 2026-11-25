@@ -62,6 +62,15 @@ export function ApplicationsIcon(props: IconProps) {
   );
 }
 
+export function UsersIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 20c1-3.5 3.8-5 7-5s6 1.5 7 5" />
+    </Icon>
+  );
+}
+
 export function PostingsIcon(props: IconProps) {
   return (
     <Icon {...props}>

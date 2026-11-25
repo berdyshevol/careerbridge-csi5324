@@ -47,11 +47,6 @@ public class JobPostingController {
         return jobPostingService.submitJobPosting(postingId, recruiter.getName());
     }
 
-    @PostMapping("/{postingId}/close")
-    public JobPosting closePosting(@PathVariable Long postingId, Principal recruiter) {
-        return jobPostingService.closePosting(postingId, recruiter.getName());
-    }
-
     @GetMapping("/{postingId}/edit")
     public JobPosting openPostingForEdit(@PathVariable Long postingId, Principal recruiter) {
         return jobPostingService.openPostingForEdit(postingId, recruiter.getName());
@@ -61,6 +56,11 @@ public class JobPostingController {
     public JobPosting updatePosting(
             @PathVariable Long postingId, @RequestBody CreateJobPostingRequest request, Principal recruiter) {
         return jobPostingService.updatePosting(postingId, request, recruiter.getName());
+    }
+
+    @PostMapping("/{postingId}/close")
+    public JobPosting closePosting(@PathVariable Long postingId, Principal recruiter) {
+        return jobPostingService.closePosting(postingId, recruiter.getName());
     }
 
     // Only these three exceptions: any other failure is the server's, not the recruiter's
