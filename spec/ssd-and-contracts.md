@@ -806,3 +806,8 @@ Figure 19 shows SSD-13, the system sequence diagram for the main success scenari
 - One posting fails to close (extension 3b): the other postings are still processed, and the failed posting is retried on the next run.
 
 - The Notification Service is unavailable (extension 4a): the postconditions still hold, and each Notification keeps _status_ Pending until the service accepts it.
+
+#### Administration
+
+viewUsers(), which lists every user with their role and account status (FR-ADM.1), is a query that
+changes nothing, so it has no contract.
