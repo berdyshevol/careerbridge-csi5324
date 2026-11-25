@@ -22,7 +22,7 @@ test("given a wrong password, when someone logs in, then the backend's reason is
   await page.getByLabel("Password").fill("not-the-password-1");
   await page.getByRole("button", { name: "Log in" }).click();
 
-  await expect(page.getByRole("main").getByRole("alert")).toHaveText("The email or password is incorrect.");
+  await expect(page.getByRole("main").getByRole("alert")).toHaveText("The email or password is not right. Check both and try again.");
   // The log-in page's header offers only Register (mockup visitor-login)
   await expect(page.getByRole("banner").getByRole("link", { name: "Register", exact: true })).toBeVisible();
   await expect(page.getByRole("banner").getByRole("link", { name: "Log in", exact: true })).toHaveCount(0);

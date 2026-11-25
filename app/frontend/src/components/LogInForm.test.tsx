@@ -42,12 +42,12 @@ describe("LogInForm", () => {
   });
 
   it("shows the backend's reason and stays on the form", async () => {
-    vi.mocked(logIn).mockRejectedValue(new LogInRefused("The email or password is incorrect."));
+    vi.mocked(logIn).mockRejectedValue(new LogInRefused("The email or password is not right. Check both and try again."));
     render(<LogInForm />);
 
     submit("jordan.lee@example.com", "wrong");
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("The email or password is incorrect.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("The email or password is not right. Check both and try again.");
     expect(replace).not.toHaveBeenCalled();
     expect(readSession()).toBeNull();
     expect(screen.getByRole("button", { name: "Log in" })).toBeEnabled();

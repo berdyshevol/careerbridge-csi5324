@@ -79,6 +79,9 @@ test("a posting opens with its details, and a visitor logs in to apply and comes
 
   await page.getByRole("link", { name: "Log in to apply" }).click();
   await expect(page).toHaveURL(/\/login\?next=%2Fjobs%2F3$/);
+  await expect(
+    page.getByText("Log in to apply for Backend Developer at Brazos Analytics. You come back to it afterwards."),
+  ).toBeVisible();
   await page.getByLabel("Email").fill(ACCOUNTS.applicant.email);
   await page.getByLabel("Password").fill(ACCOUNTS.applicant.password);
   await page.getByRole("button", { name: "Log in" }).click();
