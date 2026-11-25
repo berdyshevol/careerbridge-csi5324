@@ -585,12 +585,12 @@ export async function viewOffer(token: string, applicationId: number): Promise<O
 export async function acceptOffer(
   token: string,
   applicationId: number,
-  expectedRevision?: number,
+  expectedRevision: number,
 ): Promise<OfferResponseResult> {
   const response = await backendFetch(`/api/applicant/applications/${applicationId}/offer/accept`, {
     method: "POST",
     headers: { ...bearer(token), "Content-Type": "application/json" },
-    body: JSON.stringify({ expectedRevision: expectedRevision ?? null }),
+    body: JSON.stringify({ expectedRevision }),
   });
   endedSession(response);
   await throwIfActionRefused(response);
@@ -613,15 +613,15 @@ export async function acceptOffer(
 export async function declineOffer(
   token: string,
   applicationId: number,
-  reason?: string,
-  expectedRevision?: number,
+  reason: string | undefined,
+  expectedRevision: number,
 ): Promise<OfferResponseResult> {
   const response = await backendFetch(`/api/applicant/applications/${applicationId}/offer/decline`, {
     method: "POST",
     headers: { ...bearer(token), "Content-Type": "application/json" },
     body: JSON.stringify({
       reason: reason?.trim() || null,
-      expectedRevision: expectedRevision ?? null,
+      expectedRevision,
     }),
   });
   endedSession(response);

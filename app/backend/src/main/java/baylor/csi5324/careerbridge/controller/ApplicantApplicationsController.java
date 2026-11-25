@@ -87,10 +87,12 @@ public class ApplicantApplicationsController {
     public ResponseEntity<?> acceptOffer(@PathVariable Long applicationId,
                                          @RequestBody(required = false) AcceptOfferRequest body,
                                          Principal applicant) {
+        if (body == null || body.expectedRevision() == null) {
+            return ResponseEntity.badRequest().body("Offer revision is required.");
+        }
         try {
-            Integer expectedRevision = body == null ? null : body.expectedRevision();
             return ResponseEntity.ok(OfferResponsePayload.from(
-                    applicationService.acceptOffer(applicationId, applicant.getName(), expectedRevision)));
+                    applicationService.acceptOffer(applicationId, applicant.getName(), body.expectedRevision())));
         } catch (OfferRevisedException revised) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(OfferRevisedResponse.from(revised));
         } catch (ApplicationActionRefusedException refused) {
@@ -102,11 +104,13 @@ public class ApplicantApplicationsController {
     public ResponseEntity<?> declineOffer(@PathVariable Long applicationId,
                                           @RequestBody(required = false) DeclineOfferRequest body,
                                           Principal applicant) {
+        if (body == null || body.expectedRevision() == null) {
+            return ResponseEntity.badRequest().body("Offer revision is required.");
+        }
         try {
-            String reason = body == null ? null : body.reason();
-            Integer expectedRevision = body == null ? null : body.expectedRevision();
             return ResponseEntity.ok(OfferResponsePayload.from(
-                    applicationService.declineOffer(applicationId, applicant.getName(), reason, expectedRevision)));
+                    applicationService.declineOffer(
+                            applicationId, applicant.getName(), body.reason(), body.expectedRevision())));
         } catch (OfferRevisedException revised) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(OfferRevisedResponse.from(revised));
         } catch (ApplicationActionRefusedException refused) {

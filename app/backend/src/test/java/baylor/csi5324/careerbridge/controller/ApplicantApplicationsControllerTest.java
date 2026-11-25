@@ -235,5 +235,17 @@ class ApplicantApplicationsControllerTest {
                 .andExpect(jsonPath("$.code").value("OFFER_REVISED"))
                 .andExpect(jsonPath("$.offer.salary").value("72,000 USD per year"))
                 .andExpect(jsonPath("$.offer.revision").value(2));
+
+        // Missing expectedRevision is refused with 400 so clients cannot bypass the revised-offer check (FR-UC07.11)
+        mockMvc.perform(post("/api/applicant/applications/15/offer/accept")
+                        .principal(() -> "jordan.lee@example.com")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/api/applicant/applications/15/offer/decline")
+                        .principal(() -> "jordan.lee@example.com")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"No thanks\"}"))
+                .andExpect(status().isBadRequest());
     }
 }

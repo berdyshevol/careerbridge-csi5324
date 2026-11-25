@@ -204,6 +204,9 @@ public class ApplicationService {
     }
 
     private Offer requireRespondableOffer(Application application, Instant now, Integer expectedRevision) {
+        if (expectedRevision == null) {
+            throw new IllegalArgumentException("Offer revision is required.");
+        }
         ApplicationStatus stage = application.getApplicationStatus();
         Offer offer = application.getOffer();
         if (stage != ApplicationStatus.OFFER || offer == null || offer.getStatus() != OfferStatus.PENDING) {
@@ -211,7 +214,7 @@ public class ApplicationService {
                     stage, "This offer is no longer open. Current stage: " + stage.getLabel() + ".");
         }
         JobPosting posting = application.getJobPosting();
-        if (posting.getPostStatus() == PostStatus.CLOSED && !"Expired".equalsIgnoreCase(posting.getClosingReason())) {
+        if (posting.getPostStatus() == PostStatus.CLOSED) {
             throw new ApplicationActionRefusedException(
                     stage, "This posting is closed and the offer can no longer be answered.");
         }
@@ -220,7 +223,7 @@ public class ApplicationService {
             throw new ApplicationActionRefusedException(
                     stage, "The response deadline has passed. This offer can no longer be accepted.");
         }
-        if (expectedRevision != null && !expectedRevision.equals(offer.getRevision())) {
+        if (!expectedRevision.equals(offer.getRevision())) {
             throw new OfferRevisedException(offer, now, zoneId);
         }
         return offer;

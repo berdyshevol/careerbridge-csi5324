@@ -73,11 +73,14 @@ export default function OfferResponsePanel({
 
   async function handleAccept(event: React.FormEvent) {
     event.preventDefault();
+    if (!currentOffer) {
+      return;
+    }
     setError("");
     setNotice("");
     setBusy(true);
     try {
-      await acceptOffer(token, applicationId, currentOffer?.revision);
+      await acceptOffer(token, applicationId, currentOffer.revision);
       lastDialogRef.current = null;
       setDialog(null);
       setConfirmed("Offer accepted. Your application is now in the Hired stage.");
@@ -104,11 +107,14 @@ export default function OfferResponsePanel({
 
   async function handleDecline(event: React.FormEvent) {
     event.preventDefault();
+    if (!currentOffer) {
+      return;
+    }
     setError("");
     setNotice("");
     setBusy(true);
     try {
-      const result = await declineOffer(token, applicationId, declineReason, currentOffer?.revision);
+      const result = await declineOffer(token, applicationId, declineReason, currentOffer.revision);
       lastDialogRef.current = null;
       setDialog(null);
       setDeclineReason("");
@@ -158,7 +164,7 @@ export default function OfferResponsePanel({
   }
 
   const isExpired = Boolean(currentOffer?.expired && currentOffer.status === "PENDING");
-  const showActions = !isExpired && !confirmed && (canAccept || canDecline);
+  const showActions = Boolean(currentOffer) && !isExpired && !confirmed && (canAccept || canDecline);
   const eyebrow = currentOffer
     ? isExpired
       ? `Offer · response deadline was ${formatDate(currentOffer.expirationDate)}`

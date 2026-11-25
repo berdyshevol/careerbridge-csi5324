@@ -159,10 +159,7 @@ public class Application {
         return switch (applicationStatus) {
             case APPLIED, SCREENING, INTERVIEW -> List.of("WITHDRAW");
             case OFFER -> {
-                boolean postingClosedNotExpired = jobPosting != null
-                        && jobPosting.getPostStatus() == PostStatus.CLOSED
-                        && !"Expired".equalsIgnoreCase(jobPosting.getClosingReason());
-                if (postingClosedNotExpired) {
+                if (jobPosting != null && jobPosting.getPostStatus() == PostStatus.CLOSED) {
                     yield List.of();
                 }
                 if (offer != null && !offer.canRespond(now, jobPosting.getOrganization().getZoneId())) {
