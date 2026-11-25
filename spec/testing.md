@@ -17,7 +17,7 @@ tests (Vitest) and the end-to-end tests (Playwright).
 At least one test case per implemented feature, in the template's columns; the Actual Result is
 left empty until the case has run. Each member writes and runs the cases of their own use cases.
 
-**UC-11 to UC-13.** Written and reviewed by Zeba Tusnia Towshi. Claude Code (Anthropic) helped
+**UC-11 to UC-13 and the administrator's list of users (TC-ADM).** Written and reviewed by Zeba Tusnia Towshi. Claude Code (Anthropic) helped
 draft the cases and match each one to its automated test. All cases were run on November 25, 2026;
 the Actual Result names the test that checked it. Cases for parts that are designed but not built
 yet are marked Not run.
@@ -63,3 +63,7 @@ yet are marked Not run.
 | TC-13-10 | Zeba Tusnia Towshi | CO-13.2: the posting is not Published | A Draft; a posting closed a moment earlier | Both refused with 409 naming the status; the Draft stays Draft | As expected (`JobPostingApprovalTest.onlyAPublishedPostingCanBeClosed`; `JobPostingControllerTest.closingAPostingThatIsNotPublishedIsAConflictWithItsReason`) | Pass |
 | TC-13-11 | Zeba Tusnia Towshi | CO-13.2: the deadline has already passed | Published posting whose deadline was 2 days ago | Refused with 409; stays Published for the expiration job to close as Expired | As expected (`JobPostingApprovalTest.aPostingPastItsDeadlineIsLeftToExpire`) | Pass |
 | TC-13-12 | Zeba Tusnia Towshi | Special requirement: only a Recruiter closes a posting | Close without a session, as an Applicant, as an Administrator | 401, 403, 403 | As expected (`AccessByRoleTest.onlyARecruiterCreatesAPosting`) | Pass |
+| TC-ADM-01 | Zeba Tusnia Towshi | FR-ADM.1: the administrator views the users | A new applicant Zoe Adams, the demo recruiter and administrator | Every user is listed with name, email, role and account status; administrators first, then recruiters, then applicants, each by name | As expected (`UserDirectoryServiceTest.listsEveryUserWithTheirRole`, `listsAdministratorsThenRecruitersThenApplicantsEachByName`) | Pass |
+| TC-ADM-02 | Zeba Tusnia Towshi | FR-ADM.1: the count of users in each role | One more applicant | The applicant count goes up by one; each count matches the list | As expected (`UserDirectoryServiceTest.countsTheUsersOfEachRole`) | Pass |
+| TC-ADM-03 | Zeba Tusnia Towshi | NFR-ADM.1: no password or log-in details are sent | A recruiter with a password hash | The answer has the user's details but no password hash | As expected (`AdminUserControllerTest.sendsEachUsersNameEmailRoleAndStatusButNeverThePassword`) | Pass |
+| TC-ADM-04 | Zeba Tusnia Towshi | NFR-ADM.1: only the administrator sees the users | Request without a session, as an Applicant, as a Recruiter, as the Administrator | 401, 403, 403, then 200 | As expected (`AccessByRoleTest.onlyTheAdministratorSeesTheUsers`; scenario `administrator-2-view-users-refused.feature`) | Pass |
