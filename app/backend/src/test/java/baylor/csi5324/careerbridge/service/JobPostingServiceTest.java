@@ -57,8 +57,8 @@ class JobPostingServiceTest {
     void replaceSampleData() {
         applicationRepository.deleteAll();
         jobPostingRepository.deleteAll();
-        organization = organizationRepository.save(
-                new Organization("Test Organization"));
+        // The recruiter acts for this one in the test configuration (RecruiterOrganization stand-in)
+        organization = organizationRepository.findByName("Waco Health Partners").orElseThrow();
         owner = recruiterRepository.findByEmailIgnoreCase(OWNER).orElseThrow();
     }
 

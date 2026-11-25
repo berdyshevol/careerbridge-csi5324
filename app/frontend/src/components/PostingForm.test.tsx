@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { createPosting, PostingRejected, type JobPosting } from "@/lib/api";
+import { createPosting, PostingRejected, viewRecruiterPostings, type JobPosting } from "@/lib/api";
 import PostingForm from "./PostingForm";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
@@ -7,6 +7,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/lib/api", async (importActual) => ({
   ...(await importActual<typeof import("@/lib/api")>()),
   createPosting: vi.fn(),
+  viewRecruiterPostings: vi.fn(),
 }));
 
 const saved: JobPosting = {
@@ -24,12 +25,21 @@ const saved: JobPosting = {
   organization: { organizationId: 1, name: "Brazos Analytics" },
 };
 
-function submitTheForm() {
+async function submitTheForm() {
   const { container } = render(<PostingForm token="recruiter-token" />);
+  await screen.findByText("Posting for Waco Health Partners");
   fireEvent.submit(container.querySelector("form")!);
 }
 
 describe("PostingForm", () => {
+  beforeEach(() => {
+    vi.mocked(viewRecruiterPostings).mockResolvedValue({
+      organizationId: 2,
+      organizationName: "Waco Health Partners",
+      postings: [],
+    });
+  });
+
   afterEach(() => {
     vi.mocked(createPosting).mockReset();
     vi.unstubAllGlobals();
@@ -49,7 +59,7 @@ describe("PostingForm", () => {
   it("confirms the draft the backend saved", async () => {
     vi.mocked(createPosting).mockResolvedValue(saved);
 
-    submitTheForm();
+    await submitTheForm();
 
     expect(await screen.findByRole("status")).toHaveTextContent("Backend Developer — Posting #7 (DRAFT)");
     expect(vi.mocked(createPosting).mock.calls[0][0]).toBe("recruiter-token");
@@ -58,7 +68,7 @@ describe("PostingForm", () => {
   it("shows the backend's reason under the field it names", async () => {
     vi.mocked(createPosting).mockRejectedValue(new PostingRejected("Job title is required"));
 
-    submitTheForm();
+    await submitTheForm();
 
     expect(await screen.findByText("Job title is required")).toBeInTheDocument();
     expect(screen.getByLabelText("Title")).toHaveAttribute("aria-invalid", "true");
@@ -67,7 +77,7 @@ describe("PostingForm", () => {
   it("shows a reason that names no field above the buttons", async () => {
     vi.mocked(createPosting).mockRejectedValue(new PostingRejected("Organization not found"));
 
-    submitTheForm();
+    await submitTheForm();
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Organization not found");
   });
@@ -75,7 +85,7 @@ describe("PostingForm", () => {
   it("offers to edit the draft it saved", async () => {
     vi.mocked(createPosting).mockResolvedValue(saved);
 
-    submitTheForm();
+    await submitTheForm();
 
     expect(await screen.findByRole("link", { name: "Edit draft" })).toHaveAttribute(
       "href",
@@ -89,7 +99,7 @@ describe("PostingForm", () => {
   ])("shows its own message for %s", async (_case, failure) => {
     vi.mocked(createPosting).mockRejectedValue(failure);
 
-    submitTheForm();
+    await submitTheForm();
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Unable to save the posting. Please try again.");
   });
@@ -101,11 +111,29 @@ describe("PostingForm", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    submitTheForm();
+    await submitTheForm();
     fireEvent.click(await screen.findByRole("button", { name: "Submit for approval" }));
 
     expect(await screen.findByText("Submitted for administrator review!")).toBeInTheDocument();
     expect(fetchMock.mock.calls[0][0]).toBe("http://localhost:8080/api/postings/7/submit");
     expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe("Bearer recruiter-token");
+  });
+
+  it("posts for the organization the recruiter acts for", async () => {
+    vi.mocked(createPosting).mockResolvedValue(saved);
+
+    await submitTheForm();
+
+    await screen.findByRole("status");
+    expect(vi.mocked(createPosting).mock.calls[0][1].organizationId).toBe(2);
+  });
+
+  it("cannot be saved by a recruiter who acts for no organization", async () => {
+    vi.mocked(viewRecruiterPostings).mockResolvedValue({ organizationId: null, organizationName: null, postings: [] });
+
+    render(<PostingForm token="recruiter-token" />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("You are not an active member of any organization yet");
+    expect(screen.getByRole("button", { name: "Save draft" })).toBeDisabled();
   });
 });

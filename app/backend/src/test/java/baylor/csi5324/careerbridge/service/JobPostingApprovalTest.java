@@ -64,8 +64,8 @@ class JobPostingApprovalTest {
         applicationRepository.deleteAll();
         jobPostingRepository.deleteAll();
 
-        organization = organizationRepository.save(
-                new Organization("UC12 Test Organization"));
+        // The recruiter acts for this one in the test configuration (RecruiterOrganization stand-in)
+        organization = organizationRepository.findByName("Waco Health Partners").orElseThrow();
         owner = recruiterRepository.findByEmailIgnoreCase(OWNER).orElseThrow();
     }
 
@@ -420,6 +420,55 @@ class JobPostingApprovalTest {
         assertEquals("Job title is required", refused.getMessage());
         assertEquals("Software Engineer",
                 jobPostingRepository.findById(draft.getJobPostId()).orElseThrow().getTitle());
+    }
+
+    @Test
+    void aRecruiterActsOnlyForTheOrganizationTheyAreAMemberOf() {
+        Organization brazos = organizationRepository.findByName("Brazos Analytics").orElseThrow();
+        CreateJobPostingRequest forBrazos = new CreateJobPostingRequest(brazos.getOrganizationId(), "Analyst",
+                "", "", "Remote", "Full-time", null, 1, LocalDate.now().plusDays(20));
+        JobPosting draft = createPosting(PostStatus.DRAFT, LocalDate.now().plusDays(10));
+        draft.setOrganization(brazos);
+        jobPostingRepository.save(draft);
+        JobPosting published = createPosting(PostStatus.PUBLISHED, LocalDate.now().plusDays(10));
+        published.setOrganization(brazos);
+        jobPostingRepository.save(published);
+
+        assertThrows(PostingNotAllowedException.class, () -> jobPostingService.createPosting(forBrazos, OWNER));
+        assertThrows(PostingNotAllowedException.class, () -> jobPostingService.submitJobPosting(draft.getJobPostId(), OWNER));
+        assertThrows(PostingNotAllowedException.class, () -> jobPostingService.openPostingForEdit(draft.getJobPostId(), OWNER));
+        assertThrows(PostingNotAllowedException.class, () -> jobPostingService.closePosting(published.getJobPostId(), OWNER));
+        assertEquals(PostStatus.DRAFT, jobPostingRepository.findById(draft.getJobPostId()).orElseThrow().getPostStatus());
+    }
+
+    @Test
+    void anInactiveOrganizationsPostingStaysPending() {
+        JobPosting pending = createPosting(PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
+        organization.setOrganizationStatus("SUSPENDED");
+        organizationRepository.save(organization);
+
+        assertThrows(PostingStateConflictException.class,
+                () -> jobPostingService.approveJobPosting(pending.getJobPostId(), "Test Administrator", null));
+        assertEquals(PostStatus.PENDING_APPROVAL,
+                jobPostingRepository.findById(pending.getJobPostId()).orElseThrow().getPostStatus());
+    }
+
+    @Test
+    void aPostingOfARecruiterNoLongerActiveStaysPending() {
+        Recruiter gone = new Recruiter();
+        gone.setFirstName("Lee");
+        gone.setLastName("Huang");
+        gone.setEmail("lee.huang@example.com");
+        gone.setAccountStatus(AccountStatus.PENDING_VERIFICATION);
+        recruiterRepository.save(gone);
+        JobPosting pending = createPosting(PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
+        pending.setRecruiter(gone);
+        jobPostingRepository.save(pending);
+
+        assertThrows(PostingStateConflictException.class,
+                () -> jobPostingService.approveJobPosting(pending.getJobPostId(), "Test Administrator", null));
+        assertEquals(PostStatus.PENDING_APPROVAL,
+                jobPostingRepository.findById(pending.getJobPostId()).orElseThrow().getPostStatus());
     }
 
     private CreateJobPostingRequest details(String title) {

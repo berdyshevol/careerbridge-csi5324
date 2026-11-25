@@ -29,7 +29,7 @@ class JobPostingSearchDeadlineTest {
 
     private final JobPostingRepository repository = mock(JobPostingRepository.class);
     private final JobPostingService service = new JobPostingService(
-            repository, mock(OrganizationRepository.class), mock(RecruiterRepository.class), Clock.fixed(NOW, ZoneOffset.UTC));
+            repository, mock(OrganizationRepository.class), mock(RecruiterRepository.class), mock(RecruiterOrganization.class), Clock.fixed(NOW, ZoneOffset.UTC));
 
     private static JobPosting posting(String title, String timeZone) {
         Organization organization = new Organization(title + " Inc");

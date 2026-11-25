@@ -7,7 +7,7 @@ import baylor.csi5324.careerbridge.service.RecruiterPostings;
 import java.util.List;
 import java.util.Map;
 
-public record RecruiterPostingsResponse(String organizationName, List<Posting> postings) {
+public record RecruiterPostingsResponse(Long organizationId, String organizationName, List<Posting> postings) {
 
     public record Posting(Long postingId, String title, String postStatus, String closingReason,
                           Map<ApplicationStatus, Long> applicationsByStage, boolean createdByYou) {
@@ -21,6 +21,7 @@ public record RecruiterPostingsResponse(String organizationName, List<Posting> p
 
     public static RecruiterPostingsResponse from(RecruiterPostings postings) {
         return new RecruiterPostingsResponse(
+                postings.organization() == null ? null : postings.organization().getOrganizationId(),
                 postings.organization() == null ? null : postings.organization().getName(),
                 postings.postings().stream().map(Posting::from).toList());
     }

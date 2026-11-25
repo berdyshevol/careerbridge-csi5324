@@ -8,8 +8,12 @@ Two terminals:
 
 ```bash
 cd app/backend
-./mvnw spring-boot:run        # backend on http://localhost:8080
+RECRUITER_ORGANIZATION="Waco Health Partners" ./mvnw spring-boot:run   # backend on http://localhost:8080
 ```
+
+`RECRUITER_ORGANIZATION` names the organization every recruiter acts for until organization memberships
+exist (a stand-in, SCRUM-198). Without it a recruiter sees no postings and cannot create one. Set it on
+the deployed backend too.
 
 ```bash
 cd app/frontend

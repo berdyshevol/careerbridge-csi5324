@@ -1,16 +1,16 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   createPosting,
   PostingRejected,
   SessionEnded,
   submitJobPosting as sendForApproval,
+  viewRecruiterPostings,
   type JobPosting,
 } from "@/lib/api";
 import { useEndSession } from "@/lib/useEndSession";
-import { SelectField } from "./FormField";
 import PostingFields, { EMPTY_DETAILS, editPostingPath, requestOf, type PostingDetails } from "./PostingFields";
 
 const SESSION_ENDED = "Your session has ended. Log in again as a recruiter.";
@@ -18,7 +18,26 @@ const SESSION_ENDED = "Your session has ended. Log in again as a recruiter.";
 // UC-11, for the logged-in Recruiter
 export default function PostingForm({ token }: { token: string }) {
   const endSession = useEndSession();
-  const [organizationId, setOrganizationId] = useState("1");
+  // The organization the recruiter acts for (UC-11 step 2); null when none, undefined while loading
+  const [organization, setOrganization] = useState<{ id: number; name: string } | null | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    viewRecruiterPostings(token)
+      .then((answer) => {
+        if (!cancelled) {
+          setOrganization(
+            answer.organizationId && answer.organizationName
+              ? { id: answer.organizationId, name: answer.organizationName }
+              : null,
+          );
+        }
+      })
+      .catch(() => !cancelled && setOrganization(null));
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
   const [details, setDetails] = useState<PostingDetails>(EMPTY_DETAILS);
 
   const [saving, setSaving] = useState(false);
@@ -37,7 +56,7 @@ export default function PostingForm({ token }: { token: string }) {
 
     try {
       const posting = await createPosting(token, {
-        organizationId: Number(organizationId),
+        organizationId: organization?.id ?? 0,
         ...requestOf(details),
       });
 
@@ -100,12 +119,12 @@ export default function PostingForm({ token }: { token: string }) {
         </p>
       </div>
 
-      <div className="alert alert-info text-sm">
-        <span>
-          Select the organization by hand: memberships (UC-08, UC-09) are not built yet, so
-          any recruiter can post for any organization.
-        </span>
-      </div>
+      {organization && <p className="text-muted">Posting for {organization.name}</p>}
+      {organization === null && (
+        <div role="alert" className="alert alert-warning">
+          <span>You are not an active member of any organization yet, so you cannot create a posting.</span>
+        </div>
+      )}
 
       {created && (
         <div
@@ -167,17 +186,6 @@ export default function PostingForm({ token }: { token: string }) {
         onSubmit={handleSubmit}
         className="card border border-base-300 bg-base-100 flex flex-col gap-6 p-5 md:p-8"
       >
-        <SelectField
-          id="organization"
-          label="Organization"
-          value={organizationId}
-          onChange={(event) => setOrganizationId(event.target.value)}
-          required
-        >
-          <option value="1">Brazos Analytics</option>
-          <option value="2">Waco Health Partners</option>
-        </SelectField>
-
         <PostingFields details={details} onChange={setDetails} refused={refused} />
 
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-base-300 pt-5">
@@ -187,7 +195,7 @@ export default function PostingForm({ token }: { token: string }) {
 
           <button
             type="submit"
-            disabled={saving || submitting}
+            disabled={saving || submitting || !organization}
             className="btn btn-primary"
           >
             {saving ? "Saving..." : "Save draft"}

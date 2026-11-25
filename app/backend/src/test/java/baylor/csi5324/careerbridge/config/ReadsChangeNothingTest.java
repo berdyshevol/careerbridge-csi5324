@@ -84,6 +84,7 @@ class ReadsChangeNothingTest {
         // Reopening a posting to edit it needs a Draft that the demo recruiter created (UC-11)
         JobPosting draft = publishedPosting();
         draft.setPostStatus(PostStatus.DRAFT);
+        draft.setOrganization(organizationRepository.findByName("Waco Health Partners").orElseThrow());
         draft.setRecruiter(recruiterRepository.findByEmailIgnoreCase(RECRUITER).orElseThrow());
         String draftId = String.valueOf(jobPostingRepository.save(draft).getJobPostId());
         List<String> reads = handlerMapping.getHandlerMethods().keySet().stream()

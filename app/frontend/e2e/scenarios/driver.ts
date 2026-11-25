@@ -14,7 +14,8 @@ const WRONG_PASSWORD = "not-the-password-1";
 const RESUME_PDF = path.join(__dirname, "..", "fixtures", "Pat_Kim_Resume.pdf");
 const RESUME_NAME = path.basename(RESUME_PDF);
 
-const ORGANIZATION = { id: 1, name: "Brazos Analytics" };
+// The demo recruiter acts for Waco Health Partners in the test configuration (RecruiterOrganization stand-in)
+const ORGANIZATION = { id: 2, name: "Waco Health Partners" };
 const POSTING_DETAILS = { location: "Hybrid", employmentType: "Contract", numberOfOpenings: 2 };
 
 export type Person = { firstName: string; lastName: string; fullName: string; email: string; password: string };
