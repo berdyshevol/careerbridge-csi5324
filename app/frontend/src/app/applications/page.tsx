@@ -94,10 +94,10 @@ export default async function ApplicationsPage({
                   key={item.id}
                   href={item.href}
                   aria-current={selected ? "true" : undefined}
-                  className={`inline-flex items-center rounded-full border px-3.5 py-1.5 text-sm font-medium ${
+                  className={`inline-flex items-center rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors duration-200 ${
                     selected
                       ? "border-primary bg-primary text-primary-content"
-                      : "border-base-300 bg-base-100 text-base-content hover:bg-base-200"
+                      : "border-base-300 bg-base-100 text-base-content hover:border-primary/40 hover:bg-secondary/60 active:bg-secondary"
                   }`}
                 >
                   {item.label}

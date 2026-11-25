@@ -61,6 +61,17 @@ export default async function ApplicationDetailPage({
   const canAcceptOffer = application.availableActions.includes("ACCEPT_OFFER");
   const canDeclineOffer = application.availableActions.includes("DECLINE_OFFER");
   const isOffer = application.applicationStatus === "Offer";
+  const timelineAccent =
+    application.applicationStatus === "Offer"
+      ? "border-l-accent"
+      : application.applicationStatus === "Interview"
+        ? "border-l-info"
+        : application.applicationStatus === "Rejected"
+          ? "border-l-error"
+          : application.applicationStatus === "Withdrawn" ||
+              application.applicationStatus === "Offer Declined"
+            ? "border-l-base-300"
+            : "border-l-primary";
 
   return (
     <div className="flex flex-col gap-5">
@@ -137,7 +148,9 @@ export default async function ApplicationDetailPage({
         </div>
 
         <aside className="flex flex-col gap-4">
-          <section className="flex flex-col gap-4 rounded-2xl border border-base-300 bg-base-100 p-5">
+          <section
+            className={`flex flex-col gap-4 rounded-2xl border border-base-300 border-l-4 bg-base-100 p-5 transition-colors duration-200 ${timelineAccent}`}
+          >
             <h2 className="font-display text-lg font-semibold">Stage history</h2>
             <StageTimeline entries={application.statusHistory} interviews={application.interviews} />
           </section>
