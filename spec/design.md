@@ -308,10 +308,11 @@ Recruiter is the subject of the session token (ADR-0010), and only the Recruiter
 Both requests first check that the Recruiter is an Active member of the posting's organization
 (precondition, extension \*a, BR-14): the service loads the Recruiter and their Active memberships
 and refuses with 403 when the organization is not among them. The new posting is then linked to its
-organization and to the Recruiter who created it (CO-11.1). The membership lookup and the link to
-the Recruiter are drawn as designed; the code on `main` does not have them yet, because the
-Organization Membership entity arrives with UC-08 to UC-10. Until then any recruiter may post for
-any organization that exists.
+organization and to the Recruiter who created it (CO-11.1). The posting is linked to the Recruiter
+who created it, and only that Recruiter may submit it (`JobPosting.wasCreatedBy`, SCRUM-215). The
+membership lookup is drawn as designed; the code does not have it yet, because the Organization
+Membership entity arrives with UC-08 to UC-10. Until then a recruiter may create a posting for any
+organization that exists, but submits only their own.
 
 The fields are checked in the order of extension 5a: the organization exists, the title is present
 and at most 255 characters, the description, requirements, location, employment type and salary
@@ -377,11 +378,16 @@ sequenceDiagram
         JS-->>JC: throw PostingNotFoundException
         JC-->>R: 404
     end
+    JS->>P: wasCreatedBy(recruiterEmail)
+    P-->>JS: boolean
     JS->>RR: findByEmailIgnoreCase(recruiterEmail)
     RR-->>JS: Recruiter
     JS->>MR: findByRecruiterAndStatus(recruiter, ACTIVE)
     MR-->>JS: List<OrganizationMembership>
-    alt posting's organization not among them (ext. *a, BR-14)
+    alt posting created by another recruiter, or by none (CO-11.1)
+        JS-->>JC: throw PostingNotAllowedException(reason)
+        JC-->>R: handleNotAllowed(): 403 and the reason, nothing changed
+    else posting's organization not among the Active memberships (ext. *a, BR-14)
         JS-->>JC: throw PostingNotAllowedException(reason)
         JC-->>R: 403 and the reason, nothing changed
     else postStatus is not DRAFT or RETURNED
@@ -559,8 +565,8 @@ the DCD must contain each of them.
 | SD-8 | `RegistrationController.register` | `RegistrationService.register`; `LogInService.startSession` | `UserRepository.findByEmailIgnoreCase`, `saveAndFlush` |
 | SD-9 | `ApplicantProfileController.viewProfile`, `updateProfile` | `ApplicantProfileService.viewProfile`, `updateProfile` | `ApplicantRepository.findByEmailIgnoreCase`, `save` |
 | SD-10 | `ApplicantProfileController.uploadResume` | `ApplicantProfileService.uploadResume` | `ApplicantRepository.findByEmailIgnoreCase`, `save`; `ResumeRepository.save`, `delete` |
-| SD-4 | `JobPostingController.createPosting` | `JobPostingService.createPosting` | `OrganizationRepository.findById`; `RecruiterRepository.findByEmailIgnoreCase`\*; `OrganizationMembershipRepository.findByRecruiterAndStatus`\*; `JobPostingRepository.save` |
-| SD-5 | `JobPostingController.submitJobPosting` | `JobPostingService.submitJobPosting` | `JobPostingRepository.findById`, `save`; `RecruiterRepository.findByEmailIgnoreCase`\*; `OrganizationMembershipRepository.findByRecruiterAndStatus`\* |
+| SD-4 | `JobPostingController.createPosting` | `JobPostingService.createPosting` | `OrganizationRepository.findById`; `RecruiterRepository.findByEmailIgnoreCase`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\*; `JobPostingRepository.save` |
+| SD-5 | `JobPostingController.submitJobPosting` | `JobPostingService.submitJobPosting`; `JobPosting.wasCreatedBy` | `JobPostingRepository.findById`, `save`; `RecruiterRepository.findByEmailIgnoreCase`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\* |
 | SD-6 | `AdminJobPostingController.openPostingApprovalQueue` | `JobPostingService.openPostingApprovalQueue` | `JobPostingRepository.findByPostStatusOrderByDatePostedAscJobPostIdAsc` |
 | SD-7 | `AdminJobPostingController.approveJobPosting`, `returnJobPosting`, `rejectJobPosting` | `JobPostingService.approveJobPosting`, `returnJobPosting`, `rejectJobPosting`; `JobPosting.isPastDeadline` | `JobPostingRepository.findById`, `save`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\* |
 | SD-11 | none: `JobPostingExpirationScheduler.runScheduledExpiration` | `JobPostingExpirationService.runExpirationJob`; `JobPostingExpirationProcessor.expirePosting`; `JobPosting.isPastDeadline` | `JobPostingRepository.findByPostStatusInAndApplicationDeadlineLessThanEqual`, `findById`, `saveAndFlush` |
@@ -583,9 +589,8 @@ Posting belongs to one Organization; a Recruiter creates any number of Job Posti
 Posting is created by one Recruiter; a Recruiter has a membership for each organization they
 recruit for, and each membership is in one Organization. A controller, a service or a repository
 only uses another class, so those dashed dependency arrows carry no multiplicity. Classes and
-members marked «designed» are not in the code on `main` yet, and neither are the `Principal` and
-`recruiterEmail` parameters of creating and submitting, which carry the logged-in Recruiter to the
-membership check. Getters and setters are left out.
+members marked «designed» are not in the code yet. The link from a Job Posting to its Recruiter,
+`wasCreatedBy`, `RecruiterRepository` and the `recruiterEmail` parameters come with SCRUM-215. Getters and setters are left out.
 
 ```mermaid
 classDiagram
@@ -631,7 +636,7 @@ classDiagram
     }
     class RecruiterRepository {
         <<interface>>
-        «designed» +findByEmailIgnoreCase(String) Optional~Recruiter~
+        +findByEmailIgnoreCase(String) Optional~Recruiter~
     }
     class OrganizationMembershipRepository {
         <<interface>>
@@ -658,6 +663,7 @@ classDiagram
         +isPastDeadline(Instant now) boolean
         +isOpen(Instant now) boolean
         +wasPublished() boolean
+        +wasCreatedBy(String recruiterEmail) boolean
     }
     class Organization {
         -Long organizationId
@@ -697,7 +703,7 @@ classDiagram
     JobPostingService ..> OrganizationMembershipRepository
 
     Organization "1" -- "*" JobPosting : organization
-    Recruiter "1" -- "*" JobPosting : recruiter «designed»
+    Recruiter "1" -- "*" JobPosting : recruiter
     Recruiter "1" -- "*" OrganizationMembership
     OrganizationMembership "*" -- "1" Organization
     JobPosting --> PostStatus
