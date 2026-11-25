@@ -1,6 +1,7 @@
 package baylor.csi5324.careerbridge.repository;
 
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -15,6 +16,9 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Long> {
     // Approval stamps datePosted with today, so postings approved the same day need the id to keep a fixed order
     List<JobPosting> findByPostStatusAndApplicationDeadlineGreaterThanEqualOrderByDatePostedDescJobPostIdDesc(
             PostStatus postStatus, LocalDate today);
+
+    // UC-14 step 2: every posting of the organization, in any status
+    List<JobPosting> findByOrganizationOrderByDatePostedDescJobPostIdDesc(Organization organization);
 
     List<JobPosting> findByPostStatusOrderByDatePostedAscJobPostIdAsc(PostStatus postStatus);
 

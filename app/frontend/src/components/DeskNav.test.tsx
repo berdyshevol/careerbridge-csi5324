@@ -56,7 +56,7 @@ describe("DeskNav", () => {
 
     expect(within(sideColumn()).getByRole("link", { name: "Postings" })).toHaveAttribute(
       "href",
-      "/recruiter/postings/new",
+      "/recruiter/postings",
     );
     expect(screen.queryByText("Find jobs")).toBeNull();
   });

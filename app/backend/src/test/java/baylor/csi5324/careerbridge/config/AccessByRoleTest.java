@@ -121,4 +121,12 @@ class AccessByRoleTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Job title is required"));
     }
+
+    @Test
+    void onlyARecruiterListsTheOrganizationsPostings() throws Exception {
+        mockMvc.perform(get("/api/recruiter/postings")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/recruiter/postings").with(as("APPLICANT"))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/recruiter/postings").with(as("ADMINISTRATOR"))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/recruiter/postings").with(as("RECRUITER"))).andExpect(status().isOk());
+    }
 }

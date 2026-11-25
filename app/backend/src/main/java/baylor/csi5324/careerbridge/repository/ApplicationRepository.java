@@ -4,6 +4,7 @@ import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.Organization;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -41,6 +42,15 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     default long countActiveByApplicant(Applicant applicant) {
         return countByApplicantAndApplicationStatusIn(applicant, ApplicationStatus.ACTIVE);
     }
+
+    // One grouped query for the whole organization, so a long list of postings costs one read (NFR-UC14.1)
+    @Query("SELECT new baylor.csi5324.careerbridge.repository.StageCount("
+            + "a.jobPosting.jobPostId, a.applicationStatus, COUNT(a)) "
+            + "FROM Application a WHERE a.jobPosting.organization = :organization "
+            + "AND a.applicationStatus IN :statuses "
+            + "GROUP BY a.jobPosting.jobPostId, a.applicationStatus")
+    List<StageCount> countByPostingAndStage(@Param("organization") Organization organization,
+                                            @Param("statuses") Collection<ApplicationStatus> statuses);
 
     // Any status counts, so a withdrawn application still blocks applying again (A5)
     boolean existsByApplicantAndJobPosting(Applicant applicant, JobPosting jobPosting);
