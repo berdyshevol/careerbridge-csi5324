@@ -1,6 +1,7 @@
 # An applicant logs in
 
-**Use cases:** Log In
+**Use case:** Log In: the user enters email and password, the system starts a session with the role  
+**Minimum scope:** Applicant 2 (log in)
 
 ## Scenario
 

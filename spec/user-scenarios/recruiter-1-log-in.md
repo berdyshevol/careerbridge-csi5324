@@ -1,6 +1,7 @@
 # A recruiter logs in
 
-**Use cases:** Log In
+**Use case:** Log In  
+**Minimum scope:** Recruiter 1 (log in)
 
 ## Scenario
 

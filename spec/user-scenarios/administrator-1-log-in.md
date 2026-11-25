@@ -1,6 +1,7 @@
 # The administrator logs in
 
-**Use cases:** Log In
+**Use case:** Log In: returns to the page that sent the user to log in  
+**Minimum scope:** Administrator 1 (log in)
 
 ## Scenario
 

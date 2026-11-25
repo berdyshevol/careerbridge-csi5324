@@ -1,6 +1,7 @@
 # An applicant views and updates the profile
 
-**Use cases:** UC-03
+**Use case:** UC-03 Update Applicant Profile: main success scenario, steps 1–4  
+**Minimum scope:** Applicant 3 (view and update own profile)
 
 ## Scenario
 
