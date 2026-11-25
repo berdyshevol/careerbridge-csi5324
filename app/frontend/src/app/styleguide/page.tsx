@@ -82,7 +82,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-
 const ROLE_SWATCHES = [
   ["Applicant and visitor", ROLE_THEMES.APPLICANT],
   ["Recruiter", ROLE_THEMES.RECRUITER],
