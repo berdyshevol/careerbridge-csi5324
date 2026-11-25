@@ -19,7 +19,7 @@ import StageTimeline from "@/components/StageTimeline";
 import UserList from "@/components/UserList";
 import { formatDate, type JobPosting } from "@/lib/api";
 import { ALL_STAGES, APPLICATION_LIMIT, STAGES, applications, offer } from "@/lib/sampleDesk";
-import type { SessionUser } from "@/lib/session";
+import { ROLE_THEMES, type SessionUser } from "@/lib/session";
 
 // Every block here is the real component, so this page cannot drift from the
 // screens (ADR-0004, rule 6).
@@ -82,6 +82,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+const ROLE_SWATCHES = [
+  ["Applicant and visitor", ROLE_THEMES.APPLICANT],
+  ["Recruiter", ROLE_THEMES.RECRUITER],
+  ["Administrator", ROLE_THEMES.ADMINISTRATOR],
+] as const;
+
 export default function StyleguidePage() {
   return (
     <div className="flex flex-col gap-5">
@@ -108,6 +114,20 @@ export default function StyleguidePage() {
           <p>Body text in the default face, for everything that is read.</p>
           <p className="text-muted">Secondary text, in text-muted.</p>
           <p className="text-sm font-semibold uppercase tracking-wider text-muted">An eyebrow label</p>
+        </Block>
+        <Block title="Role colors" use="ADR-0012: the layout sets the role's theme; a page never chooses one">
+          <ul className="grid gap-3 sm:grid-cols-3">
+            {ROLE_SWATCHES.map(([role, theme]) => (
+              <li key={role} data-theme={theme} className="flex flex-col gap-2 rounded-xl border border-base-300 bg-base-100 p-4">
+                <span className="font-semibold">{role}</span>
+                <span className="flex gap-2">
+                  <span className="btn btn-primary btn-sm">Main action</span>
+                  <span className="badge badge-secondary">Chip</span>
+                </span>
+                <code className="text-sm text-muted">{theme}</code>
+              </li>
+            ))}
+          </ul>
         </Block>
       </Section>
 

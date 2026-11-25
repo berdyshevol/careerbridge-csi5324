@@ -1,0 +1,11 @@
+package baylor.csi5324.careerbridge.model;
+
+public enum NotificationType {
+    EMAIL_VERIFICATION,
+    NEW_RECRUITER_REQUEST,
+    MEMBERSHIP_REQUEST,
+    REQUEST_CONFIRMATION,
+    REQUEST_APPROVED,
+    REQUEST_DENIED,
+    INFORMATION_REQUESTED
+}

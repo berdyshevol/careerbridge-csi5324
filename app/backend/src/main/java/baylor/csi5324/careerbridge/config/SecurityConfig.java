@@ -38,7 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole(Role.ADMINISTRATOR.name())
                         .requestMatchers("/api/postings/*/application").hasRole(Role.APPLICANT.name())
                         .requestMatchers("/api/applicant/**").hasRole(Role.APPLICANT.name())
-                        // UC-14: the recruiter's own view of applications
+                        // UC-09: the recruiter's own memberships; UC-14: the recruiter's own view of applications
                         .requestMatchers("/api/recruiter/**").hasRole(Role.RECRUITER.name())
                         // UC-11: creating and submitting a posting; UC-13 extension *a: closing it
                         .requestMatchers(HttpMethod.POST, "/api/postings", "/api/postings/*/submit",
