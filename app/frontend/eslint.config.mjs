@@ -12,6 +12,7 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    ".features-gen/**",
   ]),
   // A backend call whose answer nobody waits for can fail without the screen
   // knowing, so it must be awaited or handled.
@@ -77,6 +78,11 @@ const eslintConfig = defineConfig([
         },
       ],
     },
+  },
+  // A step definition takes every value its Gherkin step passes, even one it does not use
+  {
+    files: ["e2e/scenarios/**/*.ts"],
+    rules: { "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }] },
   },
 ]);
 

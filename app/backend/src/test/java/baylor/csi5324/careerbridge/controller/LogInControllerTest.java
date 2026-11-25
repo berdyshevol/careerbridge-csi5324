@@ -55,7 +55,7 @@ class LogInControllerTest {
                         .content("{\"email\": \"sam.rivera@example.com\", \"password\": \"nope\"}"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
-                .andExpect(content().string("The email or password is incorrect."));
+                .andExpect(content().string("The email or password is not right. Check both and try again."));
     }
 
     @Test

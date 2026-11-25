@@ -1,11 +1,14 @@
 package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.config.SampleDataLoader;
+import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.Interview;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.Offer;
+import baylor.csi5324.careerbridge.model.OfferStatus;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
@@ -446,6 +449,197 @@ class ApplicationServiceTest {
                 () -> applicationService.withdrawApplication(rejectedApp.getApplicationId(), JORDAN, null));
         assertEquals(ApplicationStatus.REJECTED, terminalRefused.getCurrentStage());
         assertEquals(ApplicationStatus.REJECTED, rejectedApp.getApplicationStatus());
+    }
+
+    @Test
+    void viewsAndAcceptsOpenOfferMovingApplicationToHiredAndFreeingSlot() {
+        JobPosting posting = save("Data Analyst", PostStatus.PUBLISHED, today.plusDays(14));
+        Application offered = submitWithOffer(posting, today.plusDays(7));
+        Long id = offered.getApplicationId();
+
+        Application viewed = applicationService.viewOffer(id, JORDAN);
+        assertEquals("68,000 USD per year", viewed.getOffer().getSalary());
+        assertThrows(ApplicationNotFoundException.class, () -> applicationService.viewOffer(id, SAM));
+
+        OfferResponseResult accepted = applicationService.acceptOffer(id, JORDAN, 1);
+        assertEquals(ApplicationStatus.HIRED, accepted.application().getApplicationStatus());
+        assertEquals(0, accepted.activeApplicationCount());
+
+        Application persisted = reloaded(id);
+        assertEquals(ApplicationStatus.HIRED, persisted.getApplicationStatus());
+        assertEquals(OfferStatus.ACCEPTED, persisted.getOffer().getStatus());
+        assertEquals(LocalDate.ofInstant(accepted.respondedAt(), organization.getZoneId()),
+                persisted.getOffer().getResponseDate());
+        assertEquals(ApplicationStatus.HIRED,
+                persisted.getStatusHistory().get(persisted.getStatusHistory().size() - 1).getStatus());
+    }
+
+    @Test
+    void declinesOpenOfferWithReasonFreesSlotAndLeavesPostingOpen() {
+        JobPosting posting = save("Product Analyst", PostStatus.PUBLISHED, today.plusDays(14));
+        Application offered = submitWithOffer(posting, today.plusDays(7));
+        Long id = offered.getApplicationId();
+
+        OfferResponseResult declined = applicationService.declineOffer(id, JORDAN, "Accepted another role", 1);
+        assertEquals(ApplicationStatus.OFFER_DECLINED, declined.application().getApplicationStatus());
+        assertEquals(0, declined.activeApplicationCount());
+
+        Application persisted = reloaded(id);
+        assertEquals(ApplicationStatus.OFFER_DECLINED, persisted.getApplicationStatus());
+        assertEquals(OfferStatus.DECLINED, persisted.getOffer().getStatus());
+        assertEquals(LocalDate.ofInstant(declined.respondedAt(), organization.getZoneId()),
+                persisted.getOffer().getResponseDate());
+        var lastEntry = persisted.getStatusHistory().get(persisted.getStatusHistory().size() - 1);
+        assertEquals(ApplicationStatus.OFFER_DECLINED, lastEntry.getStatus());
+        assertEquals("Accepted another role", lastEntry.getReason());
+        assertEquals(PostStatus.PUBLISHED, jobPostingRepository.findById(posting.getJobPostId()).orElseThrow().getPostStatus());
+    }
+
+    @Test
+    void refusesExpiredRevisedClosedAndNonOwnerOfferResponsesWithoutChangingData() {
+        JobPosting expiredPosting = save("Expired Offer Role", PostStatus.PUBLISHED, today.plusDays(14));
+        Application expiredApp = submitWithOffer(expiredPosting, today.minusDays(1));
+        assertThrows(ApplicationActionRefusedException.class,
+                () -> applicationService.acceptOffer(expiredApp.getApplicationId(), JORDAN, 1));
+        assertEquals(ApplicationStatus.OFFER, reloaded(expiredApp.getApplicationId()).getApplicationStatus());
+
+        JobPosting revisedPosting = save("Revised Offer Role", PostStatus.PUBLISHED, today.plusDays(14));
+        Application revisedApp = submitWithOffer(revisedPosting, today.plusDays(7));
+        revisedApp.getOffer().setSalary("75,000 USD per year");
+        revisedApp.getOffer().setRevision(2);
+        entityManager.flush();
+
+        OfferRevisedException revised = assertThrows(OfferRevisedException.class,
+                () -> applicationService.acceptOffer(revisedApp.getApplicationId(), JORDAN, 1));
+        assertEquals(2, revised.getOffer().getRevision());
+        assertEquals("75,000 USD per year", revised.getOffer().getSalary());
+        assertEquals(ApplicationStatus.OFFER, reloaded(revisedApp.getApplicationId()).getApplicationStatus());
+        assertThrows(ApplicationNotFoundException.class,
+                () -> applicationService.acceptOffer(revisedApp.getApplicationId(), SAM, 2));
+
+        JobPosting closedPosting = save("Closed Offer Role", PostStatus.PUBLISHED, today.plusDays(14));
+        Application closedApp = submitWithOffer(closedPosting, today.plusDays(7));
+        closedPosting.setPostStatus(PostStatus.CLOSED);
+        closedPosting.setClosingReason("Filled");
+        entityManager.flush();
+        assertThrows(ApplicationActionRefusedException.class,
+                () -> applicationService.acceptOffer(closedApp.getApplicationId(), JORDAN, 1));
+        assertEquals(ApplicationStatus.OFFER, reloaded(closedApp.getApplicationId()).getApplicationStatus());
+    }
+
+    @Test
+    void closesSingleOpeningPostingWhenFilledAndRejectsRemainingActiveApplications() {
+        JobPosting posting = save("Senior Engineer", PostStatus.PUBLISHED, today.plusDays(14));
+        posting.setNumberOfOpenings(1);
+        jobPostingRepository.save(posting);
+
+        Applicant third = new Applicant();
+        third.setFirstName("Alex");
+        third.setLastName("Chen");
+        third.setEmail("alex.chen@example.com");
+        third.setAccountStatus(AccountStatus.ACTIVE);
+        applicantRepository.save(third);
+        upload(SAM, "sam.pdf", "%PDF-1.4\nbody".getBytes());
+        upload("alex.chen@example.com", "alex.pdf", "%PDF-1.4\nbody".getBytes());
+
+        Application jordanOffer = submitWithOffer(posting, today.plusDays(7));
+        Application samOffer = submitWithOfferFor(posting, SAM, today.plusDays(7));
+        Application alexApplied = applicationService.submitApplication(posting.getJobPostId(), "alex.chen@example.com")
+                .application();
+        entityManager.flush();
+
+        OfferResponseResult accepted = applicationService.acceptOffer(jordanOffer.getApplicationId(), JORDAN, 1);
+        assertEquals(ApplicationStatus.HIRED, accepted.application().getApplicationStatus());
+
+        JobPosting reloadedPosting = jobPostingRepository.findById(posting.getJobPostId()).orElseThrow();
+        assertEquals(PostStatus.CLOSED, reloadedPosting.getPostStatus());
+        assertEquals("Filled", reloadedPosting.getClosingReason());
+        assertTrue(reloadedPosting.getClosedAt() != null);
+
+        // Other active applications are rejected with "Posting closed", freeing their active slots (FR-UC07.7, A3, BR-4)
+        Application samAfter = reloaded(samOffer.getApplicationId());
+        assertEquals(ApplicationStatus.REJECTED, samAfter.getApplicationStatus());
+        assertEquals("Posting closed", samAfter.getRejectionReason());
+        assertEquals(OfferStatus.RESCINDED, samAfter.getOffer().getStatus());
+        assertEquals(0, applicationService.viewApplications(SAM).activeApplicationCount());
+
+        Application alexAfter = reloaded(alexApplied.getApplicationId());
+        assertEquals(ApplicationStatus.REJECTED, alexAfter.getApplicationStatus());
+        assertEquals("Posting closed", alexAfter.getRejectionReason());
+        assertEquals(0, applicationService.viewApplications("alex.chen@example.com").activeApplicationCount());
+
+        // Second applicant can no longer accept their rescinded offer (ext 6a)
+        assertThrows(ApplicationActionRefusedException.class,
+                () -> applicationService.acceptOffer(samOffer.getApplicationId(), SAM, 1));
+
+        // Posting no longer accepts new applications once filled (FR-UC07.7, BR-10)
+        Applicant fourth = new Applicant();
+        fourth.setFirstName("Morgan");
+        fourth.setLastName("Patel");
+        fourth.setEmail("morgan.patel@example.com");
+        fourth.setAccountStatus(AccountStatus.ACTIVE);
+        applicantRepository.save(fourth);
+        upload("morgan.patel@example.com", "morgan.pdf", "%PDF-1.4\nbody".getBytes());
+        ApplicationRefusedException closedApply = assertThrows(ApplicationRefusedException.class,
+                () -> applicationService.submitApplication(posting.getJobPostId(), "morgan.patel@example.com"));
+        assertEquals(ApplicationRefusal.POSTING_CLOSED, closedApply.getReason());
+    }
+
+    @Test
+    void keepsMultiOpeningPostingOpenUntilLastOpeningIsFilled() {
+        JobPosting posting = save("Support Specialist", PostStatus.PUBLISHED, today.plusDays(14));
+        posting.setNumberOfOpenings(2);
+        jobPostingRepository.save(posting);
+
+        Applicant third = new Applicant();
+        third.setFirstName("Taylor");
+        third.setLastName("Brooks");
+        third.setEmail("taylor.brooks@example.com");
+        third.setAccountStatus(AccountStatus.ACTIVE);
+        applicantRepository.save(third);
+        upload(SAM, "sam.pdf", "%PDF-1.4\nbody".getBytes());
+        upload("taylor.brooks@example.com", "taylor.pdf", "%PDF-1.4\nbody".getBytes());
+
+        Application jordanOffer = submitWithOffer(posting, today.plusDays(7));
+        Application samOffer = submitWithOfferFor(posting, SAM, today.plusDays(7));
+        Application taylorActive = applicationService.submitApplication(posting.getJobPostId(), "taylor.brooks@example.com")
+                .application();
+        entityManager.flush();
+
+        // First hire leaves 1 opening remaining: posting stays PUBLISHED and other applications stay active
+        applicationService.acceptOffer(jordanOffer.getApplicationId(), JORDAN, 1);
+        assertEquals(PostStatus.PUBLISHED, jobPostingRepository.findById(posting.getJobPostId()).orElseThrow().getPostStatus());
+        assertEquals(ApplicationStatus.OFFER, reloaded(samOffer.getApplicationId()).getApplicationStatus());
+        assertEquals(ApplicationStatus.APPLIED, reloaded(taylorActive.getApplicationId()).getApplicationStatus());
+
+        // Second hire fills the last opening: posting closes as Filled and remaining active applicant is rejected
+        applicationService.acceptOffer(samOffer.getApplicationId(), SAM, 1);
+        JobPosting closed = jobPostingRepository.findById(posting.getJobPostId()).orElseThrow();
+        assertEquals(PostStatus.CLOSED, closed.getPostStatus());
+        assertEquals("Filled", closed.getClosingReason());
+        Application taylorAfter = reloaded(taylorActive.getApplicationId());
+        assertEquals(ApplicationStatus.REJECTED, taylorAfter.getApplicationStatus());
+        assertEquals("Posting closed", taylorAfter.getRejectionReason());
+    }
+
+    private Application submitWithOffer(JobPosting posting, LocalDate expirationDate) {
+        return submitWithOfferFor(posting, JORDAN, expirationDate);
+    }
+
+    private Application submitWithOfferFor(JobPosting posting, String email, LocalDate expirationDate) {
+        Application application = applicationService.submitApplication(posting.getJobPostId(), email).application();
+        application.setApplicationStatus(ApplicationStatus.OFFER);
+        application.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.OFFER, today));
+        application.setOffer(new Offer(
+                application,
+                today,
+                today.plusDays(30),
+                "68,000 USD per year",
+                "Hybrid after 90 days.",
+                expirationDate,
+                "Offer_Letter.pdf"));
+        entityManager.flush();
+        return application;
     }
 
     private void upload(String email, String fileName, byte[] content) {

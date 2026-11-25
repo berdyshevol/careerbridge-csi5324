@@ -78,11 +78,11 @@ class LogInServiceTest {
         }
         LogInRefusedException fifth = assertThrows(LogInRefusedException.class,
                 () -> logInService.logIn(email, "Wrong-password-1"));
-        assertTrue(fifth.getMessage().endsWith("try again in 15 minutes."), fifth.getMessage());
+        assertEquals(LogInService.LOCKED, fifth.getMessage());
 
         LogInRefusedException right = assertThrows(LogInRefusedException.class,
                 () -> logInService.logIn(email, PASSWORD));
-        assertTrue(right.getMessage().contains("try again in 15 minutes"), right.getMessage());
+        assertEquals(LogInService.LOCKED, right.getMessage());
     }
 
     @Test

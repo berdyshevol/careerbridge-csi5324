@@ -41,6 +41,7 @@ const baseDetail: ApplicationDetail = {
       location: "1200 Austin Ave, Waco",
     },
   ],
+  offer: null,
   rejectionReason: null,
   rejectedAtStage: null,
   rejectionDate: null,
@@ -100,19 +101,63 @@ describe("ApplicationDetailPage", () => {
     expect(screen.getByRole("link", { name: /All applications/ })).toHaveAttribute("href", "/applications");
   });
 
-  it("shows Offer actions when the application is at Offer (FR-UC05.5, ext 5b)", async () => {
+  it("shows Offer terms and actions when the application is at Offer (FR-UC05.5, FR-UC07.1)", async () => {
     vi.mocked(serverSession).mockResolvedValue(as("APPLICANT"));
     vi.mocked(viewApplication).mockResolvedValue({
       ...baseDetail,
       applicationStatus: "Offer",
+      offer: {
+        offerId: 5,
+        dateExtended: "2026-10-28",
+        startDate: "2027-07-19",
+        salary: "68,000 USD per year",
+        terms: "Hybrid after 90 days.",
+        expirationDate: "2027-06-30",
+        offerLetterFileName: "Brazos_Offer_Letter.pdf",
+        status: "PENDING",
+        responseDate: null,
+        revision: 1,
+        expired: false,
+        canRespond: true,
+      },
       availableActions: ["ACCEPT_OFFER", "DECLINE_OFFER"],
     });
     render(await ApplicationDetailPage({ params: Promise.resolve({ id: "12" }) }));
 
     expect(screen.getByText("Brazos Analytics offers you the Backend Developer position")).toBeInTheDocument();
+    expect(screen.getByText("68,000 USD per year")).toBeInTheDocument();
+    expect(screen.getByText("Hybrid after 90 days.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Accept offer" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Decline" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Withdraw application" })).not.toBeInTheDocument();
+  });
+
+  it("hides accept/decline buttons when the offer response deadline has passed (FR-UC07.6)", async () => {
+    vi.mocked(serverSession).mockResolvedValue(as("APPLICANT"));
+    vi.mocked(viewApplication).mockResolvedValue({
+      ...baseDetail,
+      applicationStatus: "Offer",
+      offer: {
+        offerId: 6,
+        dateExtended: "2026-10-28",
+        startDate: "2026-12-07",
+        salary: "68,000 USD per year",
+        terms: "Hybrid after 90 days.",
+        expirationDate: "2026-11-05",
+        offerLetterFileName: null,
+        status: "PENDING",
+        responseDate: null,
+        revision: 1,
+        expired: true,
+        canRespond: false,
+      },
+      availableActions: [],
+    });
+    render(await ApplicationDetailPage({ params: Promise.resolve({ id: "12" }) }));
+
+    expect(screen.getByText(/This offer can no longer be accepted\./)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Accept offer" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Decline" })).not.toBeInTheDocument();
   });
 
   it("shows rejection date, stage at rejection and reason when Rejected (FR-UC05.4, ext 4a, 4b)", async () => {

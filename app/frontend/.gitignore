@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+# generated from spec/user-scenarios by bddgen
+/.features-gen
 
 # next.js
 /.next/

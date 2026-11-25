@@ -21,16 +21,25 @@ import java.util.Optional;
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
     // Fetches the posting, its organization and stage history with each row; the list shows all three (CO-05.1)
-    @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization", "statusHistory"})
+    @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization", "statusHistory", "offer"})
     List<Application> findByApplicant(Applicant applicant);
 
-    @EntityGraph(attributePaths = {"applicant", "jobPosting", "jobPosting.organization", "statusHistory"})
+    @EntityGraph(attributePaths = {"applicant", "jobPosting", "jobPosting.organization", "statusHistory", "offer"})
     Optional<Application> findWithDetailsByApplicationId(Long applicationId);
 
     // Row lock without outer-join fetch so PostgreSQL accepts FOR UPDATE during state transitions (CO-06.2, CO-07.2)
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT a FROM Application a WHERE a.applicationId = :applicationId")
     Optional<Application> findByIdForUpdate(@Param("applicationId") Long applicationId);
+
+    // Non-locking posting lookup so acceptOffer locks JobPosting before Application to prevent deadlocks (FR-UC07.10)
+    @Query("SELECT a.jobPosting.jobPostId FROM Application a WHERE a.applicationId = :applicationId")
+    Optional<Long> findJobPostIdByApplicationId(@Param("applicationId") Long applicationId);
+
+    long countByJobPostingAndApplicationStatus(JobPosting jobPosting, ApplicationStatus status);
+
+    List<Application> findByJobPostingAndApplicationStatusIn(JobPosting jobPosting,
+                                                             Collection<ApplicationStatus> statuses);
 
     @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization", "statusHistory"})
     List<Application> findByApplicantAndApplicationStatusIn(Applicant applicant,

@@ -21,6 +21,7 @@ topic here before reading or adding text.
 | [design.md](design.md) | Design sequence diagrams (SD-n) and the design class diagram | Drawing an SD or the DCD | Mermaid diagrams from the code, one row each in §7.1 | 6, 7 |
 | [architecture.md](architecture.md) | Parts, layers, data, tests, deployment | Changing how the system is built | How it is built; decisions go in adr/ | 8 |
 | [testing.md](testing.md) | Test summary and test-case table | Writing or listing tests for a use case | Test cases in the template's columns; not test code | 9 |
+| [user-scenarios/](user-scenarios/README.md) | Acceptance scenarios in Gherkin (`.feature`), one per use-case outcome, run as end-to-end tests | Checking that the use cases still work, before a demo or a deliverable | Scenarios in the use cases' language; not use-case steps (use-cases.md) or test code (app/frontend/e2e/scenarios) | — |
 | [team.md](team.md) | Members, roles, use cases, contribution | Checking who owns what | People and ownership | 10 |
 | [adr/](adr/README.md) | One decision per record | Before changing a design choice | New decisions; replace a record, do not rewrite it | — |
 | [diagrams/](diagrams/) | Figures that are images | Changing such a figure | Images only; new diagrams are Mermaid in the text | — |

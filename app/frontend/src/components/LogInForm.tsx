@@ -1,12 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LogInRefused, logIn } from "@/lib/api";
 import { safeNext, saveSession } from "@/lib/session";
 import FormField from "./FormField";
-import PageTitle from "./PageTitle";
 
 export default function LogInForm({ next }: { next?: string }) {
   const router = useRouter();
@@ -33,16 +31,18 @@ export default function LogInForm({ next }: { next?: string }) {
   }
 
   return (
-    <section className="card mx-auto max-w-md border border-base-300 bg-base-100">
-      <form onSubmit={handleSubmit} className="card-body gap-4">
-        <PageTitle subtitle="Applicants, recruiters and administrators log in here.">Log in</PageTitle>
+    <>
+      {error && (
+        <div role="alert" className="alert alert-error">
+          <span>{error}</span>
+        </div>
+      )}
 
-        {error && (
-          <div role="alert" className="alert alert-error">
-            <span>{error}</span>
-          </div>
-        )}
-
+      <form
+        onSubmit={handleSubmit}
+        aria-label="Log in"
+        className="card card-body gap-4 border border-base-300 bg-base-100"
+      >
         <FormField
           id="login-email"
           label="Email"
@@ -61,16 +61,10 @@ export default function LogInForm({ next }: { next?: string }) {
           onChange={(event) => setPassword(event.target.value)}
           required
         />
-
-        <div className="flex flex-col-reverse gap-3 border-t border-base-300 pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <Link href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"} className="link link-primary">
-            New here? Register as an applicant
-          </Link>
-          <button type="submit" className="btn btn-primary" disabled={submitting}>
-            Log in
-          </button>
-        </div>
+        <button type="submit" className="btn btn-primary" disabled={submitting}>
+          Log in
+        </button>
       </form>
-    </section>
+    </>
   );
 }
