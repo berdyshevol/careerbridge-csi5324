@@ -16,3 +16,4 @@ decision gets a new record that names the one it replaces.
 | [0009](0009-postgresql-on-neon.md) | Data lives in PostgreSQL on Neon; tests run on PostgreSQL in Docker | Accepted |
 | [0010](0010-log-in-with-jwt.md) | Users log in for a signed token, and each endpoint asks for a role | Accepted |
 | [0011](0011-screens-are-built-from-mockups.md) | Every screen is built from its mockup in `spec/screens/` | Accepted |
+| [0012](0012-role-colors.md) | Each role has its own primary colors | Accepted |

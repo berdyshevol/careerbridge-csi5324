@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ACCOUNTS, logIn } from "./accounts";
+import { ACCOUNTS, logIn, logOut } from "./accounts";
 
 // The shell by role ("Navigation" in spec/ui-drafts.md), as Given / When / Then. The side column,
 // the tiles and the dock repeat one list; only the one that fits the width is visible.
@@ -56,4 +56,20 @@ test("given a logged-in recruiter, when they open the job board, then the naviga
   const navigation = page.locator(visibleNavigation);
   await expect(navigation.getByRole("link", { name: "Postings" })).toHaveAttribute("href", "/recruiter/postings/new");
   await expect(navigation.getByRole("link", { name: /Find jobs|Jobs/ })).toHaveCount(0);
+});
+
+test("given each role, when they log in, then the page takes that role's colors (ADR-0012)", async ({ page }) => {
+  await page.goto("/jobs");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "careerbridge");
+
+  await logIn(page, ACCOUNTS.recruiter, "/jobs");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "careerbridge-recruiter");
+  await logOut(page);
+
+  await logIn(page, ACCOUNTS.administrator, "/admin/postings");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "careerbridge-administrator");
+  await logOut(page);
+
+  await logIn(page, ACCOUNTS.applicant, "/jobs");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "careerbridge");
 });

@@ -1,4 +1,4 @@
-import { clearSession, parseSession, readSession, safeNext, sameSitePath, saveSession, type Session } from "./session";
+import { clearSession, parseSession, readSession, safeNext, sameSitePath, saveSession, themeOf, type Session } from "./session";
 
 const session: Session = {
   token: "a.b.c",
@@ -56,5 +56,12 @@ describe("session", () => {
     expect(sameSitePath("https://evil.example")).toBeNull();
     expect(sameSitePath("/login")).toBeNull();
     expect(sameSitePath(undefined)).toBeNull();
+  });
+
+  it("gives each role its own theme, and a visitor the original one (ADR-0012)", () => {
+    expect(themeOf(null)).toBe("careerbridge");
+    expect(themeOf("APPLICANT")).toBe("careerbridge");
+    expect(themeOf("RECRUITER")).toBe("careerbridge-recruiter");
+    expect(themeOf("ADMINISTRATOR")).toBe("careerbridge-administrator");
   });
 });

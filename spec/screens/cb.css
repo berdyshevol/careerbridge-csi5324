@@ -7,6 +7,9 @@
   box-sizing: border-box; width: 2826px; min-height: 100vh; padding: 40px; display: flex; gap: 48px; align-items: flex-start;
   background: #e2e6e0; color: var(--fg); font-family: "Figtree", system-ui, sans-serif; font-size: 15px; line-height: 1.45;
 }
+/* ADR-0012: the recruiter's and the administrator's colors */
+.board.recruiter { --pri: #1f4e8c; --sec: #e2eaf5; --sec-fg: #173c6b; }
+.board.administrator { --pri: #5b3a7a; --sec: #ece4f3; --sec-fg: #452c5e; }
 .board *, .board *::before, .board *::after { box-sizing: border-box; }
 .devwrap { display: flex; flex-direction: column; gap: 10px; flex: none; }
 .devlabel { font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
