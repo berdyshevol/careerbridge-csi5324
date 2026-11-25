@@ -6,8 +6,10 @@ import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
+import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
+import baylor.csi5324.careerbridge.repository.RecruiterRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,18 +34,24 @@ public class JobPostingService {
 
     private static final int MAX_COMMENT_LENGTH = 2000;
 
+    // UC-13 extension *a, the reason Close Job Posting records
+    static final String CLOSED_BY_RECRUITER = "Closed by recruiter";
+
     private static final ZoneOffset LATEST_ZONE = ZoneOffset.ofHours(-12);
 
     private final JobPostingRepository jobPostingRepository;
     private final OrganizationRepository organizationRepository;
+    private final RecruiterRepository recruiterRepository;
     private final Clock clock;
 
     public JobPostingService(
             JobPostingRepository jobPostingRepository,
             OrganizationRepository organizationRepository,
+            RecruiterRepository recruiterRepository,
             Clock clock) {
         this.jobPostingRepository = jobPostingRepository;
         this.organizationRepository = organizationRepository;
+        this.recruiterRepository = recruiterRepository;
         this.clock = clock;
     }
 
@@ -82,7 +90,7 @@ public class JobPostingService {
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
     }
 
-    public JobPosting createPosting(CreateJobPostingRequest request) {
+    public JobPosting createPosting(CreateJobPostingRequest request, String recruiterEmail) {
         if (request == null) {
             throw new InvalidPostingException("Posting details are required");
         }
@@ -96,64 +104,24 @@ public class JobPostingService {
                 .orElseThrow(() ->
                         new InvalidPostingException("Organization not found"));
 
-        if (request.title() == null || request.title().isBlank()) {
-            throw new InvalidPostingException("Job title is required");
-        }
+        validateDetails(request);
 
-        if (request.title().trim().length() > 255) {
-            throw new InvalidPostingException("Job title is too long");
-        }
-
-        if (request.description() != null
-                && request.description().length() > 10000) {
-            throw new InvalidPostingException("Description is too long");
-        }
-
-        if (request.jobRequirements() != null
-                && request.jobRequirements().length() > 2000) {
-            throw new InvalidPostingException("Job requirements are too long");
-        }
-
-        requireShortText(request.location(), "Location");
-        requireShortText(request.employmentType(), "Employment type");
-        requireShortText(request.salaryRange(), "Salary range");
-
-        if (request.applicationDeadline() == null
-                || request.applicationDeadline().isBefore(LocalDate.now())) {
-            throw new InvalidPostingException(
-                    "Application deadline must be today or later");
-        }
-
-        if (request.numberOfOpenings() < 1) {
-            throw new InvalidPostingException(
-                    "At least one opening is required");
-        }
+        Recruiter recruiter = recruiterOf(recruiterEmail);
 
         JobPosting posting = new JobPosting();
         posting.setOrganization(organization);
-        posting.setTitle(request.title().trim());
-        posting.setDescription(request.description());
-        posting.setJobRequirements(request.jobRequirements());
-        posting.setLocation(request.location());
-        posting.setEmploymentType(request.employmentType());
-        posting.setSalaryRange(request.salaryRange());
-        posting.setNumberOfOpenings(request.numberOfOpenings());
-        posting.setApplicationDeadline(request.applicationDeadline());
+        posting.setRecruiter(recruiter);
+        applyDetails(posting, request);
         posting.setPostStatus(PostStatus.DRAFT);
         posting.setDatePosted(LocalDate.now());
 
         return jobPostingRepository.save(posting);
     }
 
-    public JobPosting submitJobPosting(Long postingId) {
-        JobPosting posting = findPosting(postingId);
-
-        if (posting.getPostStatus() != PostStatus.DRAFT
-                && posting.getPostStatus() != PostStatus.RETURNED) {
-            throw new PostingStateConflictException(
-                    "Only a draft or a returned posting can be submitted; this one is "
-                            + posting.getPostStatus().getLabel());
-        }
+    // One transaction, so the lazily loaded recruiter can be read
+    @Transactional
+    public JobPosting submitJobPosting(Long postingId, String recruiterEmail) {
+        JobPosting posting = findOwnDraftOrReturned(postingId, recruiterEmail, "submit", "submitted");
 
         LocalDate deadline = posting.getApplicationDeadline();
         LocalDate today = LocalDate.now();
@@ -168,6 +136,48 @@ public class JobPostingService {
         posting.setApprovedBy(null);
         posting.setApprovedAt(null);
         posting.setReviewComment(null);
+        return jobPostingRepository.save(posting);
+    }
+
+    // UC-11 extensions 3b and 6a: a query, so it has no contract
+    @Transactional(readOnly = true)
+    public JobPosting openPostingForEdit(Long postingId, String recruiterEmail) {
+        return findOwnDraftOrReturned(postingId, recruiterEmail, "change", "changed");
+    }
+
+    // CO-11.2: the organization stays, and a Returned posting keeps its comment until it is submitted again
+    @Transactional
+    public JobPosting updatePosting(Long postingId, CreateJobPostingRequest request, String recruiterEmail) {
+        JobPosting posting = findOwnDraftOrReturned(postingId, recruiterEmail, "change", "changed");
+        if (request == null) {
+            throw new InvalidPostingException("Posting details are required");
+        }
+        validateDetails(request);
+        applyDetails(posting, request);
+        return jobPostingRepository.save(posting);
+    }
+
+    // UC-13 extension *a, CO-13.2: the Recruiter who created a Published posting closes it early
+    @Transactional
+    public JobPosting closePosting(Long postingId, String recruiterEmail) {
+        JobPosting posting = findPosting(postingId);
+
+        if (!posting.wasCreatedBy(recruiterEmail)) {
+            throw new PostingNotAllowedException("Only the recruiter who created this posting can close it");
+        }
+        if (posting.getPostStatus() != PostStatus.PUBLISHED) {
+            throw new PostingStateConflictException(
+                    "Only a published posting can be closed; this one is " + posting.getPostStatus().getLabel());
+        }
+        Instant now = clock.instant();
+        // Past its deadline the posting is UC-13's to close as Expired, at the next run
+        if (posting.isPastDeadline(now)) {
+            throw new PostingStateConflictException(
+                    "The application deadline has passed, so this posting is closing as Expired");
+        }
+
+        // Applications keep their stages (A3): only the posting changes
+        posting.close(CLOSED_BY_RECRUITER, now);
         return jobPostingRepository.save(posting);
     }
 
@@ -203,6 +213,24 @@ public class JobPostingService {
         return jobPostingRepository.save(posting);
     }
 
+    private Recruiter recruiterOf(String email) {
+        return recruiterRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new PostingNotAllowedException("Only a recruiter can create or submit a posting"));
+    }
+
+    // Only the recruiter who created a posting changes or submits it, and only before the Administrator has it
+    private JobPosting findOwnDraftOrReturned(Long postingId, String recruiterEmail, String verb, String done) {
+        JobPosting posting = findPosting(postingId);
+        if (!posting.wasCreatedBy(recruiterEmail)) {
+            throw new PostingNotAllowedException("Only the recruiter who created this posting can " + verb + " it");
+        }
+        if (posting.getPostStatus() != PostStatus.DRAFT && posting.getPostStatus() != PostStatus.RETURNED) {
+            throw new PostingStateConflictException("Only a draft or a returned posting can be " + done
+                    + "; this one is " + posting.getPostStatus().getLabel());
+        }
+        return posting;
+    }
+
     private JobPosting findPosting(Long postingId) {
         return jobPostingRepository.findById(postingId)
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
@@ -234,6 +262,53 @@ public class JobPostingService {
                     "A reason is required to return or reject a posting");
         }
         return comment;
+    }
+
+    // UC-11 extensions 5a and 5b, the same for a new posting and a changed one
+    private static void validateDetails(CreateJobPostingRequest request) {
+        if (request.title() == null || request.title().isBlank()) {
+            throw new InvalidPostingException("Job title is required");
+        }
+
+        if (request.title().trim().length() > 255) {
+            throw new InvalidPostingException("Job title is too long");
+        }
+
+        if (request.description() != null
+                && request.description().length() > 10000) {
+            throw new InvalidPostingException("Description is too long");
+        }
+
+        if (request.jobRequirements() != null
+                && request.jobRequirements().length() > 2000) {
+            throw new InvalidPostingException("Job requirements are too long");
+        }
+
+        requireShortText(request.location(), "Location");
+        requireShortText(request.employmentType(), "Employment type");
+        requireShortText(request.salaryRange(), "Salary range");
+
+        if (request.applicationDeadline() == null
+                || request.applicationDeadline().isBefore(LocalDate.now())) {
+            throw new InvalidPostingException(
+                    "Application deadline must be today or later");
+        }
+
+        if (request.numberOfOpenings() < 1) {
+            throw new InvalidPostingException(
+                    "At least one opening is required");
+        }
+    }
+
+    private static void applyDetails(JobPosting posting, CreateJobPostingRequest request) {
+        posting.setTitle(request.title().trim());
+        posting.setDescription(request.description());
+        posting.setJobRequirements(request.jobRequirements());
+        posting.setLocation(request.location());
+        posting.setEmploymentType(request.employmentType());
+        posting.setSalaryRange(request.salaryRange());
+        posting.setNumberOfOpenings(request.numberOfOpenings());
+        posting.setApplicationDeadline(request.applicationDeadline());
     }
 
     // Longer text does not fit its column, and the database would answer with a server error

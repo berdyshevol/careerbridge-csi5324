@@ -727,6 +727,39 @@ decision (_approvedBy_, _approvedAt_, _reviewComment_) is cleared.
 
 - The Recruiter no longer has an active membership in the selected organization (extension *a): no postcondition holds.
 
+- A Draft or Returned posting submitted by its id was created by another Recruiter, or by none, as the sample postings are: no postcondition holds; the posting is unchanged. Only the Recruiter who created a posting may submit it (Recruiter 1 — * Job Posting in the domain model).
+
+- The logged-in account is not a Recruiter: no postcondition holds (403).
+
+#### CO-11.2: updatePosting
+
+**Operation:** updatePosting(postingId, postingData)
+
+**Cross-references:** UC-11 extensions 3b (a Draft reopened) and 6a (a Returned posting revised), 5a, 5b; FR-UC11.7, FR-UC11.8
+
+openPostingForEdit(postingId), which opens the form with the posting's details and, for a Returned
+posting, the Administrator's comment, changes nothing, so it has no contract.
+
+**Preconditions:**
+
+- The Recruiter is authenticated.
+
+- The specified posting exists, is a Draft or Returned, and was created by this Recruiter.
+
+**Postconditions:**
+
+- The Job Posting's _title_, _description_, _jobRequirements_, _location_, _employmentType_, _salaryRange_, _applicationDeadline_ and _numberOfOpenings_ became the values in postingData.
+
+- Its _postStatus_, its Organization and, for a Returned posting, its _reviewComment_ stayed as they were; submitting it (CO-11.1) clears the comment.
+
+**Exceptions:**
+
+- Invalid posting data (extensions 5a, 5b): no postcondition holds; the reason is returned (400).
+
+- The posting was created by another Recruiter, or by none: no postcondition holds (403).
+
+- The posting is not a Draft or Returned, for example already submitted: no postcondition holds; the current status is shown (409).
+
 #### UC-12 Approve Job Posting
 
 Figure 18 shows SSD-12, the system sequence diagram for the main success scenario of UC-12.
@@ -806,6 +839,36 @@ Figure 19 shows SSD-13, the system sequence diagram for the main success scenari
 - One posting fails to close (extension 3b): the other postings are still processed, and the failed posting is retried on the next run.
 
 - The Notification Service is unavailable (extension 4a): the postconditions still hold, and each Notification keeps _status_ Pending until the service accepts it.
+
+#### CO-13.2: closePosting
+
+**Operation:** closePosting(postingId)
+
+**Cross-references:** UC-13 extension \*a; Close Job Posting; FR-UC13.9
+
+**Preconditions:**
+
+- The Recruiter is authenticated.
+
+- The specified posting exists.
+
+**Postconditions:**
+
+- The Job Posting's _postStatus_ became Closed, its _closingReason_ became "Closed by recruiter" and its _closedAt_ became the current time.
+
+- The Applications to it kept their _applicationStatus_ (A3).
+
+**Output:** The closed Job Posting.
+
+**Exceptions:**
+
+- The posting was created by another Recruiter, or by none: no postcondition holds (403).
+
+- The posting is not Published, for example already closed or still pending: no postcondition holds; the current status is shown (409).
+
+- The posting's deadline has passed: no postcondition holds (409); the expiration job closes it with reason Expired at its next run.
+
+- No posting has that id: no postcondition holds (404).
 
 #### Administration
 

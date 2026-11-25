@@ -14,8 +14,7 @@ type NavItem = {
 
 // Each role sees only its own entries ("Navigation" in spec/ui-drafts.md). An entry joins its list
 // when its page is built: the recruiter's Home and Organizations and the administrator's Home and
-// Recruiter requests are still missing. Until the recruiter's postings list exists, Postings opens
-// the posting form, the only recruiter page there is.
+// Recruiter requests are still missing.
 const navigation: Record<Role, { caption: string; items: NavItem[] }> = {
   APPLICANT: {
     caption: "Your desk",
@@ -28,7 +27,7 @@ const navigation: Record<Role, { caption: string; items: NavItem[] }> = {
   },
   RECRUITER: {
     caption: "Recruiting",
-    items: [{ href: "/recruiter/postings/new", label: "Postings", shortLabel: "Postings", Icon: PostingsIcon }],
+    items: [{ href: "/recruiter/postings", label: "Postings", shortLabel: "Postings", Icon: PostingsIcon }],
   },
   ADMINISTRATOR: {
     caption: "Administration",
