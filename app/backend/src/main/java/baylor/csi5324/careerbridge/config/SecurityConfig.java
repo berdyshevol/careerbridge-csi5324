@@ -41,6 +41,9 @@ public class SecurityConfig {
                         // UC-11: creating and submitting a posting
                         .requestMatchers(HttpMethod.POST, "/api/postings", "/api/postings/*/submit")
                         .hasRole(Role.RECRUITER.name())
+                        // UC-11 extensions 3b and 6a: reopening and changing the recruiter's own posting
+                        .requestMatchers(HttpMethod.GET, "/api/postings/*/edit").hasRole(Role.RECRUITER.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/postings/*").hasRole(Role.RECRUITER.name())
                         .requestMatchers("/api/auth/me").authenticated()
                         .anyRequest().permitAll())
                 .oauth2ResourceServer(server -> server
@@ -56,10 +59,13 @@ public class SecurityConfig {
                 PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/postings/**"),
                 PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/postings"),
                 PathPatternRequestMatcher.withDefaults().matcher("/api/auth/login"));
-        // Starting an application is a GET under /api/postings too, but it is the applicant's own (UC-04)
-        RequestMatcher applicantsOwn = PathPatternRequestMatcher.withDefaults().matcher("/api/postings/*/application");
+        // Starting an application (UC-04) and reopening a posting to edit it (UC-11) are GETs under
+        // /api/postings too, but they are the user's own
+        RequestMatcher usersOwn = new OrRequestMatcher(
+                PathPatternRequestMatcher.withDefaults().matcher("/api/postings/*/application"),
+                PathPatternRequestMatcher.withDefaults().matcher("/api/postings/*/edit"));
         DefaultBearerTokenResolver resolver = new DefaultBearerTokenResolver();
-        return request -> publicReads.matches(request) && !applicantsOwn.matches(request)
+        return request -> publicReads.matches(request) && !usersOwn.matches(request)
                 ? null : resolver.resolve(request);
     }
 

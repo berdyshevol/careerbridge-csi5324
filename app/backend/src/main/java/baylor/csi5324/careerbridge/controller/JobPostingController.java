@@ -47,6 +47,17 @@ public class JobPostingController {
         return jobPostingService.submitJobPosting(postingId, recruiter.getName());
     }
 
+    @GetMapping("/{postingId}/edit")
+    public JobPosting openPostingForEdit(@PathVariable Long postingId, Principal recruiter) {
+        return jobPostingService.openPostingForEdit(postingId, recruiter.getName());
+    }
+
+    @PutMapping("/{postingId}")
+    public JobPosting updatePosting(
+            @PathVariable Long postingId, @RequestBody CreateJobPostingRequest request, Principal recruiter) {
+        return jobPostingService.updatePosting(postingId, request, recruiter.getName());
+    }
+
     // Only these three exceptions: any other failure is the server's, not the recruiter's
     @ExceptionHandler(InvalidPostingException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

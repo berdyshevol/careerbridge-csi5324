@@ -729,6 +729,35 @@ decision (_approvedBy_, _approvedAt_, _reviewComment_) is cleared.
 
 - A Draft or Returned posting submitted by its id was created by another Recruiter, or by none, as the sample postings are: no postcondition holds; the posting is unchanged. Only the Recruiter who created a posting may submit it (Recruiter 1 — * Job Posting in the domain model).
 
+#### CO-11.2: updatePosting
+
+**Operation:** updatePosting(postingId, postingData)
+
+**Cross-references:** UC-11 extensions 3b (a Draft reopened) and 6a (a Returned posting revised), 5a, 5b; FR-UC11.7, FR-UC11.8
+
+openPostingForEdit(postingId), which opens the form with the posting's details and, for a Returned
+posting, the Administrator's comment, changes nothing, so it has no contract.
+
+**Preconditions:**
+
+- The Recruiter is authenticated.
+
+- The specified posting exists, is a Draft or Returned, and was created by this Recruiter.
+
+**Postconditions:**
+
+- The Job Posting's _title_, _description_, _jobRequirements_, _location_, _employmentType_, _salaryRange_, _applicationDeadline_ and _numberOfOpenings_ became the values in postingData.
+
+- Its _postStatus_, its Organization and, for a Returned posting, its _reviewComment_ stayed as they were; submitting it (CO-11.1) clears the comment.
+
+**Exceptions:**
+
+- Invalid posting data (extensions 5a, 5b): no postcondition holds; the reason is returned (400).
+
+- The posting was created by another Recruiter, or by none: no postcondition holds (403).
+
+- The posting is not a Draft or Returned, for example already submitted: no postcondition holds; the current status is shown (409).
+
 #### UC-12 Approve Job Posting
 
 Figure 18 shows SSD-12, the system sequence diagram for the main success scenario of UC-12.

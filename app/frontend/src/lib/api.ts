@@ -232,17 +232,45 @@ export async function createPosting(token: string, posting: NewPosting): Promise
   return response.json();
 }
 
+// The details of a posting being changed: those of a new one but its organization, which stays
+export type PostingChanges = Omit<NewPosting, "organizationId">;
+
+// UC-11 extensions 3b and 6a: the recruiter's own Draft or Returned posting, with the Administrator's comment
+export async function openPostingForEdit(token: string, postingId: number): Promise<JobPosting> {
+  const response = await backendFetch(`/api/postings/${postingId}/edit`, { headers: bearer(token) });
+  if (response.status === 404) {
+    throw new PostingRejected("There is no posting at this address.");
+  }
+  return postingAnswer(response, [403, 409]);
+}
+
+// CO-11.2: saves the changes; the posting keeps its status until it is submitted
+export async function updatePosting(token: string, postingId: number, changes: PostingChanges): Promise<JobPosting> {
+  const response = await backendFetch(`/api/postings/${postingId}`, {
+    method: "PUT",
+    headers: { ...bearer(token), "Content-Type": "application/json" },
+    body: JSON.stringify(changes),
+  });
+  return postingAnswer(response, [400, 403, 409]);
+}
+
 // UC-11: a saved draft goes to the administrators' queue
 export async function submitJobPosting(token: string, postingId: number): Promise<JobPosting> {
   const response = await backendFetch(`/api/postings/${postingId}/submit`, {
     method: "POST",
     headers: bearer(token),
   });
-  endedSession(response);
-  const reason = await refusal(response, [400, 409]);
+  return postingAnswer(response, [400, 403, 409]);
+}
+
+// The reason is read first: a 403 that gives one is a posting refusing this recruiter (SCRUM-215),
+// while a 403 without one is the token refused, so the session has ended
+async function postingAnswer(response: Response, refusals: number[]): Promise<JobPosting> {
+  const reason = await refusal(response, refusals);
   if (reason !== null) {
     throw new PostingRejected(reason);
   }
+  endedSession(response);
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }
