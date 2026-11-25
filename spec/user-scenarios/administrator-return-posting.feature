@@ -1,4 +1,4 @@
-# UC-12 extension 5a; minimum scope item to confirm
+# UC-12 extension 5a; not a minimum-scope item
 @UC-12 @extension-5a
 Feature: UC-12 Approve Job Posting
 

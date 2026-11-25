@@ -1,4 +1,4 @@
-# UC-12 main success scenario, steps 1-8; minimum scope item to confirm
+# UC-12 main success scenario, steps 1-8; not a minimum-scope item
 @UC-12 @main-success-scenario
 Feature: UC-12 Approve Job Posting
 
