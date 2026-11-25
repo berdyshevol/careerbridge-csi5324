@@ -21,6 +21,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -63,7 +64,9 @@ public class SampleDataLoader implements CommandLineRunner {
         this.resumeRepository = resumeRepository;
     }
 
+    // The back-fill below walks lazy collections of applications already in the database
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
         if (jobPostingRepository.count() > 0) {
             // A database loaded before resumes or stage histories existed: keep Jordan's demo desk complete
