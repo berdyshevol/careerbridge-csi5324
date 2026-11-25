@@ -17,6 +17,17 @@ export type Session = { token: string; user: SessionUser };
 export const SESSION_COOKIE = "cb_session";
 const SESSION_SECONDS = 8 * 60 * 60; // as long as the backend's token
 
+// ADR-0012: the theme of each role (globals.css); a visitor and an applicant share the original one
+export const ROLE_THEMES: Record<Role, string> = {
+  APPLICANT: "careerbridge",
+  RECRUITER: "careerbridge-recruiter",
+  ADMINISTRATOR: "careerbridge-administrator",
+};
+
+export function themeOf(role: Role | null | undefined): string {
+  return role ? ROLE_THEMES[role] : "careerbridge";
+}
+
 export const ROLE_LABELS: Record<Role, string> = {
   APPLICANT: "Applicant",
   RECRUITER: "Recruiter",

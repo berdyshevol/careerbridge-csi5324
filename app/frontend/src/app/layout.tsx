@@ -4,6 +4,7 @@ import Link from "next/link";
 import AccountMenu from "@/components/AccountMenu";
 import DeskNav from "@/components/DeskNav";
 import { serverSession } from "@/lib/serverSession";
+import { themeOf } from "@/lib/session";
 import "./globals.css";
 
 const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"] });
@@ -21,7 +22,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const hasDesk = Boolean(session);
 
   return (
-    <html lang="en" data-theme="careerbridge" className={`${figtree.variable} ${bricolage.variable}`}>
+    <html lang="en" data-theme={themeOf(session?.user.role)} className={`${figtree.variable} ${bricolage.variable}`}>
       <body className="min-h-screen bg-base-200 font-sans text-base-content">
         <header className="border-b border-base-300 bg-base-100">
           <div className="flex h-16 items-center gap-3 px-4 md:px-6 lg:gap-7 lg:px-8">

@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: careerbridge --default;
+  themes: careerbridge --default, careerbridge-recruiter, careerbridge-administrator;
 }
 
 /* The CareerBridge look, in one place. Every daisyUI component (btn, card,
@@ -19,6 +19,82 @@
   --color-primary-content: #ffffff;
   --color-secondary: #e3eeea;
   --color-secondary-content: #174840;
+  --color-accent: #8a4a0e;
+  --color-accent-content: #ffffff;
+  --color-neutral: #1c2623;
+  --color-neutral-content: #ffffff;
+
+  --color-info: #2b4c7e;
+  --color-info-content: #ffffff;
+  --color-success: #1f5f56;
+  --color-success-content: #ffffff;
+  --color-warning: #fbeedc;
+  --color-warning-content: #8a4a0e;
+  --color-error: #a3271f;
+  --color-error-content: #ffffff;
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.625rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.275rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* ADR-0012: each role that logs in has its own primary and secondary colors, so a person can tell at a
+   glance which role they are in. Only these change; success, warning, error and info stay the same. */
+@plugin "daisyui/theme" {
+  name: "careerbridge-recruiter";
+  color-scheme: light;
+
+  --color-base-100: #ffffff;
+  --color-base-200: #f1f3ef;
+  --color-base-300: #dde2dc;
+  --color-base-content: #1c2623;
+
+  --color-primary: #1f4e8c;
+  --color-primary-content: #ffffff;
+  --color-secondary: #e2eaf5;
+  --color-secondary-content: #173c6b;
+  --color-accent: #8a4a0e;
+  --color-accent-content: #ffffff;
+  --color-neutral: #1c2623;
+  --color-neutral-content: #ffffff;
+
+  --color-info: #2b4c7e;
+  --color-info-content: #ffffff;
+  --color-success: #1f5f56;
+  --color-success-content: #ffffff;
+  --color-warning: #fbeedc;
+  --color-warning-content: #8a4a0e;
+  --color-error: #a3271f;
+  --color-error-content: #ffffff;
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.625rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.275rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: "careerbridge-administrator";
+  color-scheme: light;
+
+  --color-base-100: #ffffff;
+  --color-base-200: #f1f3ef;
+  --color-base-300: #dde2dc;
+  --color-base-content: #1c2623;
+
+  --color-primary: #5b3a7a;
+  --color-primary-content: #ffffff;
+  --color-secondary: #ece4f3;
+  --color-secondary-content: #452c5e;
   --color-accent: #8a4a0e;
   --color-accent-content: #ffffff;
   --color-neutral: #1c2623;
