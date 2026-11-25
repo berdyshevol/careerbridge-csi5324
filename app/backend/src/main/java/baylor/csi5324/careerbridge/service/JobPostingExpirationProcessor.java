@@ -29,9 +29,7 @@ public class JobPostingExpirationProcessor {
 
         return switch (posting.getPostStatus()) {
             case PUBLISHED -> {
-                posting.setPostStatus(PostStatus.CLOSED);
-                posting.setClosingReason("Expired");
-                posting.setClosedAt(now);
+                posting.close("Expired", now);
                 jobPostingRepository.saveAndFlush(posting);
                 yield true;
             }

@@ -7,6 +7,7 @@ import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.service.InvalidPostingException;
 import baylor.csi5324.careerbridge.service.PostingNotFoundException;
+import baylor.csi5324.careerbridge.service.PostingStateConflictException;
 import baylor.csi5324.careerbridge.service.JobPostingService;
 import baylor.csi5324.careerbridge.service.PostingNotAllowedException;
 import jakarta.servlet.ServletException;
@@ -110,6 +111,29 @@ class JobPostingControllerTest {
                 .andExpect(status().isForbidden())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
                 .andExpect(content().string("Only the recruiter who created this posting can submit it"));
+    }
+
+    @Test
+    void closingPassesTheLoggedInRecruiterAndAnswersWithThePosting() throws Exception {
+        JobPosting closed = approvedPosting();
+        closed.setPostStatus(PostStatus.CLOSED);
+        closed.setClosingReason("Closed by recruiter");
+        when(jobPostingService.closePosting(7L, "owner@example.com")).thenReturn(closed);
+
+        mockMvc.perform(post("/api/postings/7/close").principal(() -> "owner@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.postStatus").value("CLOSED"))
+                .andExpect(jsonPath("$.closingReason").value("Closed by recruiter"));
+    }
+
+    @Test
+    void closingAPostingThatIsNotPublishedIsAConflictWithItsReason() throws Exception {
+        when(jobPostingService.closePosting(7L, "owner@example.com"))
+                .thenThrow(new PostingStateConflictException("Only a published posting can be closed; this one is Draft"));
+
+        mockMvc.perform(post("/api/postings/7/close").principal(() -> "owner@example.com"))
+                .andExpect(status().isConflict())
+                .andExpect(content().string("Only a published posting can be closed; this one is Draft"));
     }
 
     @Test

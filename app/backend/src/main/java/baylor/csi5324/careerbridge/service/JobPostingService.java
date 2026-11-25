@@ -34,6 +34,9 @@ public class JobPostingService {
 
     private static final int MAX_COMMENT_LENGTH = 2000;
 
+    // UC-13 extension *a, the reason Close Job Posting records
+    static final String CLOSED_BY_RECRUITER = "Closed by recruiter";
+
     private static final ZoneOffset LATEST_ZONE = ZoneOffset.ofHours(-12);
 
     private final JobPostingRepository jobPostingRepository;
@@ -182,6 +185,30 @@ public class JobPostingService {
         posting.setApprovedBy(null);
         posting.setApprovedAt(null);
         posting.setReviewComment(null);
+        return jobPostingRepository.save(posting);
+    }
+
+    // UC-13 extension *a, CO-13.2: the Recruiter who created a Published posting closes it early
+    @Transactional
+    public JobPosting closePosting(Long postingId, String recruiterEmail) {
+        JobPosting posting = findPosting(postingId);
+
+        if (!posting.wasCreatedBy(recruiterEmail)) {
+            throw new PostingNotAllowedException("Only the recruiter who created this posting can close it");
+        }
+        if (posting.getPostStatus() != PostStatus.PUBLISHED) {
+            throw new PostingStateConflictException(
+                    "Only a published posting can be closed; this one is " + posting.getPostStatus().getLabel());
+        }
+        Instant now = clock.instant();
+        // Past its deadline the posting is UC-13's to close as Expired, at the next run
+        if (posting.isPastDeadline(now)) {
+            throw new PostingStateConflictException(
+                    "The application deadline has passed, so this posting is closing as Expired");
+        }
+
+        // Applications keep their stages (A3): only the posting changes
+        posting.close(CLOSED_BY_RECRUITER, now);
         return jobPostingRepository.save(posting);
     }
 

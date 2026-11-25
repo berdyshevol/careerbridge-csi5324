@@ -92,6 +92,13 @@ public class JobPosting {
                 && now.isBefore(closesAt());
     }
 
+    // Close Job Posting: the three fields change together; each caller checks its own precondition
+    public void close(String reason, Instant now) {
+        postStatus = PostStatus.CLOSED;
+        closingReason = reason;
+        closedAt = now;
+    }
+
     public boolean wasPublished() {
         return postStatus == PostStatus.PUBLISHED || postStatus == PostStatus.CLOSED;
     }
