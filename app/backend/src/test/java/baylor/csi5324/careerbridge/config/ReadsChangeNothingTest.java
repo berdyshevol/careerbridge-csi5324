@@ -12,6 +12,7 @@ import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
+import baylor.csi5324.careerbridge.repository.RecruiterRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,6 +33,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
@@ -43,6 +45,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 // so that no read is refused before it reaches the code that could write
 @WithMockUser(username = "jordan.lee@example.com", roles = {"APPLICANT", "RECRUITER", "ADMINISTRATOR"})
 class ReadsChangeNothingTest {
+
+    private static final String RECRUITER = "riley.chen@example.com";
 
     @Autowired
     private WebApplicationContext context;
@@ -65,6 +69,9 @@ class ReadsChangeNothingTest {
     @Autowired
     private ApplicationRepository applicationRepository;
 
+    @Autowired
+    private RecruiterRepository recruiterRepository;
+
     @Test
     void everyReadUnderApiLeavesTheDatabaseAsItWas() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
@@ -74,6 +81,11 @@ class ReadsChangeNothingTest {
         String postingId = String.valueOf(posting.getJobPostId());
         String applicationId = String.valueOf(sampleApplication(posting).getApplicationId());
         String offerApplicationId = String.valueOf(sampleOfferApplication(offerPosting).getApplicationId());
+        // Reopening a posting to edit it needs a Draft that the demo recruiter created (UC-11)
+        JobPosting draft = publishedPosting();
+        draft.setPostStatus(PostStatus.DRAFT);
+        draft.setRecruiter(recruiterRepository.findByEmailIgnoreCase(RECRUITER).orElseThrow());
+        String draftId = String.valueOf(jobPostingRepository.save(draft).getJobPostId());
         List<String> reads = handlerMapping.getHandlerMethods().keySet().stream()
                 // A mapping without a method answers GET too
                 .filter(info -> info.getMethodsCondition().getMethods().isEmpty()
@@ -82,14 +94,15 @@ class ReadsChangeNothingTest {
                 .filter(pattern -> pattern.startsWith("/api/"))
                 .map(pattern -> pattern
                         .replace("{applicationId}", pattern.endsWith("/offer") ? offerApplicationId : applicationId)
-                        .replaceAll("\\{[^}]+}", postingId))
+                        .replaceAll("\\{[^}]+}", pattern.endsWith("/edit") ? draftId : postingId))
                 .toList();
         assertFalse(reads.isEmpty());
 
         var before = everyTable();
         for (String read : reads) {
             // A refused read never reaches the code that could write
-            int status = mockMvc.perform(get(read)).andReturn().getResponse().getStatus();
+            var request = read.endsWith("/edit") ? get(read).with(user(RECRUITER).roles("RECRUITER")) : get(read);
+            int status = mockMvc.perform(request).andReturn().getResponse().getStatus();
             assertTrue(status < 400, "GET " + read + " answered " + status
                     + ": give this test a request that reaches the handler");
             var after = everyTable();
