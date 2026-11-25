@@ -1,10 +1,11 @@
 # User scenarios
 
 Acceptance scenarios for UC-01 Search Job Postings, UC-02 Register as Applicant, UC-03 Update
-Applicant Profile, UC-11 Create Job Posting, UC-12 Approve Job Posting and Log In, written in Gherkin (`.feature` files) and run as end-to-end tests with
+Applicant Profile, UC-11 Create Job Posting, UC-12 Approve Job Posting and Log In, written in Gherkin
+(`.feature` files) and run as end-to-end tests with
 [playwright-bdd](https://github.com/vitalets/playwright-bdd). Every scenario comes from a use case in
 [use-cases.md](../use-cases.md), its main success scenario or one of its extensions, and names the item
-of the course's minimum scope for the final iteration that it shows. The owner of another use case adds
+of the course's minimum scope for the final iteration that it shows, where it has one. The owner of another use case adds
 its scenarios the same way; the `user-scenario` skill (`.claude/skills/user-scenario/`) writes or audits
 them in this order.
 
