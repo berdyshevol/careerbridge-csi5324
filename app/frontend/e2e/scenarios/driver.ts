@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
 import { ACCOUNTS, logIn, logOut, tokenOf } from "../accounts";
@@ -15,6 +15,8 @@ const RESUME_PDF = path.join(__dirname, "..", "fixtures", "Pat_Kim_Resume.pdf");
 const RESUME_NAME = path.basename(RESUME_PDF);
 
 const ORGANIZATION = { id: 1, name: "Brazos Analytics" };
+// Every recruiter acts for this one until memberships exist: the test backend's stand-in (SCRUM-198)
+const RECRUITERS_ORGANIZATION = { id: 2, name: "Waco Health Partners" };
 const POSTING_DETAILS = { location: "Hybrid", employmentType: "Contract", numberOfOpenings: 2 };
 
 export type Person = { firstName: string; lastName: string; fullName: string; email: string; password: string };
@@ -129,13 +131,19 @@ export async function setPhoneByApi(request: APIRequestContext, cast: Cast, appl
 }
 
 // The demo recruiter submits a posting; the administrator approves it when it is to be open
-export async function postingByApi(request: APIRequestContext, cast: Cast, alias: string, open: boolean) {
+export async function postingByApi(
+  request: APIRequestContext,
+  cast: Cast,
+  alias: string,
+  open: boolean,
+  ofTheRecruitersOrganization = false,
+) {
   const recruiter = await cast.token(request, ACCOUNTS.recruiter);
   const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const created = await request.post(`${API}/api/postings`, {
     headers: recruiter,
     data: {
-      organizationId: ORGANIZATION.id,
+      organizationId: (ofTheRecruitersOrganization ? RECRUITERS_ORGANIZATION : ORGANIZATION).id,
       title: cast.postingTitle(alias),
       description: `What the ${alias} does all day.`,
       jobRequirements: `What a ${alias} needs to know.`,
@@ -152,6 +160,18 @@ export async function postingByApi(request: APIRequestContext, cast: Cast, alias
       (await request.post(`${API}/api/admin/postings/${posting.id}/approve`, { headers: administrator })).ok(),
     ).toBeTruthy();
   }
+}
+
+export async function applyByApi(request: APIRequestContext, cast: Cast, applicant: Person, posting: Posting) {
+  await registerByApi(request, applicant);
+  const headers = await cast.token(request, applicant);
+  const resume = await request.post(`${API}/api/applicant/resume`, {
+    headers,
+    multipart: { file: { name: RESUME_NAME, mimeType: "application/pdf", buffer: readFileSync(RESUME_PDF) } },
+  });
+  expect(resume.ok(), await resume.text()).toBeTruthy();
+  const applied = await request.post(`${API}/api/postings/${posting.id}/application`, { headers });
+  expect(applied.ok(), await applied.text()).toBeTruthy();
 }
 
 export async function isWaitingForApproval(request: APIRequestContext, cast: Cast, posting: Posting) {
@@ -419,4 +439,17 @@ export async function expectPostingDetails(page: Page, posting: Posting) {
   ]) {
     await expect(main.getByText(detail).first()).toBeVisible();
   }
+}
+
+// UC-14 Screen Applications
+
+export async function openRecruiterPostings(page: Page) {
+  await navigation(page).getByRole("link", { name: "Postings" }).first().click();
+  await expect(page.getByRole("heading", { level: 1, name: "Postings" })).toBeVisible();
+}
+
+export async function expectApplicationsAtStage(page: Page, posting: Posting, count: number, stage: string) {
+  // The count line reads "2 Applied, 1 Screening"
+  const row = page.getByRole("listitem").filter({ hasText: posting.title });
+  await expect(row.getByText(new RegExp(`(^|, )${count} ${stage}(,|$)`))).toBeVisible();
 }

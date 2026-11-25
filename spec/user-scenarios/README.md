@@ -1,7 +1,7 @@
 # User scenarios
 
 Acceptance scenarios for UC-01 Search Job Postings, UC-02 Register as Applicant, UC-03 Update
-Applicant Profile and Log In, written in Gherkin (`.feature` files) and run as end-to-end tests with
+Applicant Profile, UC-14 Screen Applications (steps 1-2 so far) and Log In, written in Gherkin (`.feature` files) and run as end-to-end tests with
 [playwright-bdd](https://github.com/vitalets/playwright-bdd). Every scenario comes from a use case in
 [use-cases.md](../use-cases.md), its main success scenario or one of its extensions, and names the item
 of the course's minimum scope for the final iteration that it shows. The owner of another use case adds
@@ -104,6 +104,7 @@ Feature: UC-02 Register as Applicant
 | [An applicant with no resume puts one on file](applicant-7-upload-resume.feature) | UC-03 steps 5-7; minimum scope Applicant 7 (UC-04 sends a copy of this resume with each application) |
 | [A resume that is not a PDF or DOCX is refused and the current resume is kept](applicant-7-upload-resume-wrong-file.feature) | UC-03 extension 6a; minimum scope Applicant 7, input validation |
 | [A recruiter logs in and reaches only the recruiter's work](recruiter-1-log-in.feature) | Log In; minimum scope Recruiter 1 |
+| [A recruiter sees every posting of the organization with its applications at each stage](recruiter-3-view-postings.feature) | UC-14 main success scenario, steps 1-2; minimum scope Recruiter 3 (view own postings), permissions by role |
 | [The administrator logs in and reaches the posting approval queue](administrator-1-log-in.feature) | Log In: a session with the Administrator role, which UC-12 requires (FR-UC12.1); minimum scope Administrator 1 |
 
 ## Coverage
@@ -111,7 +112,7 @@ Feature: UC-02 Register as Applicant
 **Minimum scope.** Of the items that belong to these use cases, every one has a scenario: Applicant 1
 (register), 2 (log in), 3 (view and update own profile), 4 (browse and search jobs), 5 (view a job's
 details) and 7 (the resume that goes with an application, uploaded in UC-03), Recruiter 1 and
-Administrator 1 (log in). The system-wide requirements shown are input validation, meaningful errors,
+Administrator 1 (log in), and the viewing half of Recruiter 3 (own postings, UC-14 step 2). The system-wide requirements shown are input validation, meaningful errors,
 authentication and permissions by role. Applicant 6, 8 and 9 and the other recruiter and administrator
 items belong to UC-04 to UC-15.
 
@@ -126,6 +127,9 @@ up on its own, except:
 | UC-01, UC-02, UC-03 | \*a: the system fails | Needs the backend to fail in the middle of a request. |
 | UC-01 | No applicant or application data on public pages (special requirement) | A check that something is absent from a page proves little; left to review. |
 | Log In | A recruiter in Pending Approval sees only the request's status | Needs UC-08, not on main yet. |
+| UC-14 | Steps 3-7 and extensions 2a, 3a, 5a-5d, 6a | Not built yet: only steps 1-2 are (SCRUM-195). |
+| UC-14 | \*a: a posting of an organization the recruiter is not a member of | Every recruiter acts for one stand-in organization until memberships exist (SCRUM-198). Step 2 already checks that another organization's posting is not listed. |
+| UC-14 | 7a: the Notification Service is unavailable | Needs the backend to fail in the middle of a request. |
 
 The UC-02 extension 1a scenario checks that the visitor is handed to recruiter registration; that page
 does the registration only once UC-08 is on main.
