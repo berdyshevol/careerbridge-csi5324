@@ -8,12 +8,12 @@ Two terminals:
 
 ```bash
 cd app/backend
-RECRUITER_ORGANIZATION="Waco Health Partners" ./mvnw spring-boot:run   # backend on http://localhost:8080
+./mvnw spring-boot:run        # backend on http://localhost:8080
 ```
 
-`RECRUITER_ORGANIZATION` names the organization every recruiter acts for until organization memberships
-exist (a stand-in, SCRUM-198). Without it a recruiter sees no postings and cannot create one. Set it on
-the deployed backend too.
+A recruiter works on the postings of the organizations they are an Active member of. One with several
+works in the organization named by the optional `RECRUITER_ORGANIZATION`, or else the one joined first,
+until the header gets its organization switcher (UC-09).
 
 ```bash
 cd app/frontend

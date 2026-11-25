@@ -225,22 +225,18 @@ public class JobPostingService {
                 .orElseThrow(() -> new PostingNotAllowedException("Only a recruiter can create or submit a posting"));
     }
 
-    // UC-11 extension *a, BR-14. STAND-IN until OrganizationMembership (UC-09, SCRUM-198): the
-    // organization the recruiter acts for comes from RecruiterOrganization, as on the postings list
+    // UC-11 extension *a, BR-14: only an Active member of the organization works on its postings
     private void requireActiveMember(String recruiterEmail, Organization organization) {
-        Organization actsFor = recruiterOrganization.activeOrganizationOf(recruiterEmail)
-                .orElseThrow(() -> new PostingNotAllowedException(
-                        "You are not an active member of any organization yet"));
-        if (!actsFor.getOrganizationId().equals(organization.getOrganizationId())) {
+        if (!recruiterOrganization.isActiveMember(recruiterEmail, organization)) {
             throw new PostingNotAllowedException("You are not an active member of " + organization.getName());
         }
     }
 
     // UC-12 extension 6b, CO-12.1: nothing is published for an organization or a recruiter that is no
-    // longer active; the posting stays pending. Organizations with no status recorded count as active.
+    // longer active; the posting stays pending
     private void requireStillActive(JobPosting posting) {
         Organization organization = posting.getOrganization();
-        if (organization.getOrganizationStatus() != null && !"ACTIVE".equals(organization.getOrganizationStatus())) {
+        if (!organization.isRegistered()) {
             throw new PostingStateConflictException(
                     organization.getName() + " is no longer active, so the posting stays pending");
         }
@@ -248,10 +244,8 @@ public class JobPostingService {
         if (recruiter == null) {
             return;
         }
-        boolean member = recruiterOrganization.activeOrganizationOf(recruiter.getEmail())
-                .map(actsFor -> actsFor.getOrganizationId().equals(organization.getOrganizationId()))
-                .orElse(false);
-        if (recruiter.getAccountStatus() != AccountStatus.ACTIVE || !member) {
+        if (recruiter.getAccountStatus() != AccountStatus.ACTIVE
+                || !recruiterOrganization.isActiveMember(recruiter.getEmail(), organization)) {
             throw new PostingStateConflictException("The recruiter who submitted it is no longer an active member of "
                     + organization.getName() + ", so the posting stays pending");
         }

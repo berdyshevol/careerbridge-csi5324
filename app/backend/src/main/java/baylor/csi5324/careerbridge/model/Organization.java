@@ -2,6 +2,8 @@ package baylor.csi5324.careerbridge.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -21,9 +23,16 @@ public class Organization {
     @Column(nullable = false, unique = true)
     private String name;
 
-    private String organizationStatus;
+    // Null for an organization loaded before statuses existed: those were all registered
+    @Enumerated(EnumType.STRING)
+    private OrganizationStatus organizationStatus;
     private String website;
     private String description;
+    // UC-08 step 3
+    private String industry;
+    private String headquarters;
+    @Column(name = "organization_size")
+    private String size;
 
     // An organization with no recorded zone counts its deadlines in UTC
     @Column(length = 100)
@@ -52,12 +61,41 @@ public class Organization {
         this.name = name;
     }
 
-    public String getOrganizationStatus() {
+    public OrganizationStatus getOrganizationStatus() {
         return organizationStatus;
     }
 
-    public void setOrganizationStatus(String organizationStatus) {
+    public void setOrganizationStatus(OrganizationStatus organizationStatus) {
         this.organizationStatus = organizationStatus;
+    }
+
+    // Approved by an Administrator (UC-10), so recruiters may find and join it (UC-08 4c, UC-09)
+    public boolean isRegistered() {
+        return organizationStatus == null || organizationStatus == OrganizationStatus.ACTIVE;
+    }
+
+    public String getIndustry() {
+        return industry;
+    }
+
+    public void setIndustry(String industry) {
+        this.industry = industry;
+    }
+
+    public String getHeadquarters() {
+        return headquarters;
+    }
+
+    public void setHeadquarters(String headquarters) {
+        this.headquarters = headquarters;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
     }
 
     public String getWebsite() {
