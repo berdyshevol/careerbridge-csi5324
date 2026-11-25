@@ -17,8 +17,9 @@ export default function ClosePostingAction({
   postingId: number;
   title: string;
   onClosed: (closed: JobPosting) => void;
-  // The posting changed meanwhile (closed elsewhere, past its deadline): the list reloads
-  onRefused: () => void;
+  // The posting changed meanwhile (closed elsewhere, past its deadline): the list keeps the reason and
+  // reloads, and the reload may take this row's Close away, so the reason cannot live here
+  onRefused: (reason: string) => void;
   onSessionEnded: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -52,13 +53,12 @@ export default function ClosePostingAction({
         return;
       }
       // A refusal is final: retrying would be refused again, so the confirmation goes and the reason stays
-      setRefusal(
-        err instanceof PostingRejected && err.message ? err.message : "The posting could not be closed. Try again.",
-      );
       restoreFocusRef.current = true;
       setOpen(false);
       if (err instanceof PostingRejected) {
-        onRefused();
+        onRefused(err.message || "The posting could not be closed.");
+      } else {
+        setRefusal("The posting could not be closed. Try again.");
       }
     } finally {
       setBusy(false);

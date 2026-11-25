@@ -55,6 +55,8 @@ export default function RecruiterPostingList({ token }: { token: string }) {
   const [error, setError] = useState("");
   // Bumped when a refusal shows the list is out of date, so it loads again
   const [reload, setReload] = useState(0);
+  // A refused close, by posting: kept here so the reason outlives the reload that may change the row
+  const [refusals, setRefusals] = useState<Record<number, string>>({});
 
   function updateRow(postingId: number, postStatus: string, closingReason: string | null) {
     setPostings(
@@ -150,9 +152,17 @@ export default function RecruiterPostingList({ token }: { token: string }) {
                     postingId={row.postingId}
                     title={row.title}
                     onClosed={(closed) => updateRow(row.postingId, closed.postStatus, closed.closingReason ?? null)}
-                    onRefused={() => setReload((count) => count + 1)}
+                    onRefused={(reason) => {
+                      setRefusals((current) => ({ ...current, [row.postingId]: reason }));
+                      setReload((count) => count + 1);
+                    }}
                     onSessionEnded={() => setEnded(true)}
                   />
+                )}
+                {refusals[row.postingId] && (
+                  <div role="alert" className="alert alert-error w-full md:basis-full">
+                    <span>{refusals[row.postingId]}</span>
+                  </div>
                 )}
               </li>
             );
