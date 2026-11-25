@@ -4,9 +4,12 @@ import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
+import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.service.InvalidPostingException;
 import baylor.csi5324.careerbridge.service.PostingNotFoundException;
+import baylor.csi5324.careerbridge.service.PostingStateConflictException;
 import baylor.csi5324.careerbridge.service.JobPostingService;
+import baylor.csi5324.careerbridge.service.PostingNotAllowedException;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
@@ -89,7 +92,7 @@ class JobPostingControllerTest {
 
     @Test
     void anInvalidPostingIsABadRequestWithItsReason() throws Exception {
-        when(jobPostingService.createPosting(any()))
+        when(jobPostingService.createPosting(any(), any()))
                 .thenThrow(new InvalidPostingException("Job title is required"));
 
         mockMvc.perform(aPosting())
@@ -100,8 +103,57 @@ class JobPostingControllerTest {
     }
 
     @Test
+    void anotherRecruitersPostingIsForbiddenWithItsReason() throws Exception {
+        when(jobPostingService.submitJobPosting(7L, "other@example.com"))
+                .thenThrow(new PostingNotAllowedException("Only the recruiter who created this posting can submit it"));
+
+        mockMvc.perform(post("/api/postings/7/submit").principal(() -> "other@example.com"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
+                .andExpect(content().string("Only the recruiter who created this posting can submit it"));
+    }
+
+    @Test
+    void closingPassesTheLoggedInRecruiterAndAnswersWithThePosting() throws Exception {
+        JobPosting closed = approvedPosting();
+        closed.setPostStatus(PostStatus.CLOSED);
+        closed.setClosingReason("Closed by recruiter");
+        when(jobPostingService.closePosting(7L, "owner@example.com")).thenReturn(closed);
+
+        mockMvc.perform(post("/api/postings/7/close").principal(() -> "owner@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.postStatus").value("CLOSED"))
+                .andExpect(jsonPath("$.closingReason").value("Closed by recruiter"));
+    }
+
+    @Test
+    void closingAPostingThatIsNotPublishedIsAConflictWithItsReason() throws Exception {
+        when(jobPostingService.closePosting(7L, "owner@example.com"))
+                .thenThrow(new PostingStateConflictException("Only a published posting can be closed; this one is Draft"));
+
+        mockMvc.perform(post("/api/postings/7/close").principal(() -> "owner@example.com"))
+                .andExpect(status().isConflict())
+                .andExpect(content().string("Only a published posting can be closed; this one is Draft"));
+    }
+
+    @Test
+    void theRecruiterIsNeverSentWithAPosting() throws Exception {
+        JobPosting posting = approvedPosting();
+        Recruiter recruiter = new Recruiter();
+        recruiter.setEmail("owner@example.com");
+        recruiter.setPasswordHash("secret-hash");
+        posting.setRecruiter(recruiter);
+        when(jobPostingService.createPosting(any(), any())).thenReturn(posting);
+
+        mockMvc.perform(aPosting())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.recruiter").doesNotExist())
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("secret-hash"))));
+    }
+
+    @Test
     void anyOtherFailureIsNotBlamedOnTheRecruiter() {
-        when(jobPostingService.createPosting(any()))
+        when(jobPostingService.createPosting(any(), any()))
                 .thenThrow(new IllegalArgumentException("internal detail"));
 
         assertThrows(ServletException.class, () -> mockMvc.perform(aPosting()));
@@ -110,7 +162,8 @@ class JobPostingControllerTest {
     private static MockHttpServletRequestBuilder aPosting() {
         return post("/api/postings")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"organizationId\": 1, \"title\": \"\", \"numberOfOpenings\": 1}");
+                .content("{\"organizationId\": 1, \"title\": \"\", \"numberOfOpenings\": 1}")
+                .principal(() -> "owner@example.com");
     }
 
     private static JobPosting approvedPosting() {
