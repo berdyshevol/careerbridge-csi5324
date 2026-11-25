@@ -321,3 +321,99 @@ Then(
     await system.expectPostingDetails(page, cast.posting(posting));
   },
 );
+
+// UC-11 Create Job Posting
+
+When("{string} saves the posting {string} as a draft", async ({ page, cast }, _alias: string, posting: string) => {
+  await system.saveDraftOnScreen(page, cast, posting);
+});
+
+When("{string} submits it for approval", async ({ page }, _alias: string) => {
+  await system.submitForApprovalOnScreen(page);
+});
+
+When(
+  "{string} saves the posting {string} with a deadline more than 90 days away",
+  async ({ page, cast }, _alias: string, posting: string) => {
+    await system.saveDraftMoreThan90DaysAway(page, cast, posting);
+  },
+);
+
+When("{string} saves a posting with no title", async ({ page }, _alias: string) => {
+  await system.saveWithoutTitle(page);
+});
+
+Then("the posting is sent to the administrator for approval", async ({ page }) => {
+  await system.expectSubmittedForApproval(page);
+});
+
+Then("the posting is kept as a draft", async ({ page }) => {
+  await system.expectSavedAsDraft(page);
+});
+
+Then("the posting is refused because the title is missing", async ({ page }) => {
+  await system.expectTitleRefused(page);
+});
+
+Then("no posting is saved", async ({ page }) => {
+  await system.expectNothingSaved(page);
+});
+
+Then("the submission is refused because the deadline must be 1 to 90 days away", async ({ page }) => {
+  await system.expectDeadlineRefused(page);
+});
+
+Then("{string} is waiting for approval", async ({ request, cast }, posting: string) => {
+  expect(await system.isWaitingForApproval(request, cast, cast.posting(posting))).toBeTruthy();
+});
+
+Then("{string} is not waiting for approval", async ({ request, cast }, posting: string) => {
+  expect(await system.isWaitingForApproval(request, cast, cast.posting(posting))).toBeFalsy();
+});
+
+Then("{string} is not on the job board", async ({ request, cast }, posting: string) => {
+  expect(await system.isOnJobBoard(request, cast.posting(posting))).toBeFalsy();
+});
+
+// UC-12 Approve Job Posting
+
+When("the administrator approves {string}", async ({ page, cast }, posting: string) => {
+  await system.approveOnScreen(page, cast.posting(posting));
+});
+
+When(
+  "the administrator returns {string} with the comment {string}",
+  async ({ page, cast }, posting: string, comment: string) => {
+    await system.returnOnScreen(page, cast.posting(posting), comment);
+  },
+);
+
+When(
+  "the administrator rejects {string} with the reason {string}",
+  async ({ page, cast }, posting: string, reason: string) => {
+    await system.rejectOnScreen(page, cast.posting(posting), reason);
+  },
+);
+
+Then("the administrator is told {string} is published", async ({ page, cast }, posting: string) => {
+  await system.expectDecision(page, cast.posting(posting), "published");
+});
+
+Then(
+  "the administrator is told {string} is returned with the comment {string}",
+  async ({ page, cast }, posting: string, comment: string) => {
+    await system.expectDecision(page, cast.posting(posting), "returned", comment);
+  },
+);
+
+Then("the administrator is told {string} is rejected", async ({ page, cast }, posting: string) => {
+  await system.expectDecision(page, cast.posting(posting), "rejected");
+});
+
+Then("{string} is on the job board", async ({ request, cast }, posting: string) => {
+  expect(await system.isOnJobBoard(request, cast.posting(posting))).toBeTruthy();
+});
+
+Then("{string} cannot be submitted again", async ({ request, cast }, posting: string) => {
+  expect(await system.submitAgainByApi(request, cast, cast.posting(posting))).toBe(409);
+});
