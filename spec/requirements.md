@@ -54,6 +54,8 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC14.1:** The system shall present every posting of the organization the Recruiter is acting for, each with the number of applications at each stage. (A10; UC-14 steps 1–2)
 
+  *Interim (SCRUM-195):* until UC-09's Active membership is merged (SCRUM-198), one organization named in the setting `careerbridge.standin.recruiter-organization` (environment variable `RECRUITER_ORGANIZATION`) stands for every Recruiter. With no name set, or one that matches no organization, the Recruiter acts for none and sees no postings. SCRUM-198 removes the setting.
+
 - **FR-UC14.2:** The system shall present an application's resume copy, the applicant's profile details and the application's stage history, and nothing about the applicant's other applications. (A6, BR-15; UC14 steps 3–4)
 
 - **FR-UC14.3:** The system shall let the Recruiter add an optional internal note and advance an application only to the next stage of the fixed pipeline, and shall record the new stage, the date and the Recruiter. (BR-8; UC-14 steps 5–6)

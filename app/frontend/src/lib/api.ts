@@ -780,6 +780,32 @@ export async function openPostingApprovalQueue(token: string): Promise<JobPostin
   return response.json();
 }
 
+// UC-14 steps 1-2: the postings of the organization the recruiter acts for, with their applications per active stage
+export type ActiveStage = "APPLIED" | "SCREENING" | "INTERVIEW" | "OFFER";
+
+export type RecruiterPostingRow = {
+  postingId: number;
+  title: string;
+  postStatus: string;
+  closingReason: string | null;
+  applicationsByStage: Record<ActiveStage, number>;
+};
+
+export type RecruiterPostings = {
+  // Null when the recruiter acts for no organization
+  organizationName: string | null;
+  postings: RecruiterPostingRow[];
+};
+
+export async function viewRecruiterPostings(token: string): Promise<RecruiterPostings> {
+  const response = await backendFetch("/api/recruiter/postings", { headers: bearer(token) });
+  endedSession(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
 export type ReviewAction = "approve" | "return" | "reject";
 
 export async function reviewPosting(

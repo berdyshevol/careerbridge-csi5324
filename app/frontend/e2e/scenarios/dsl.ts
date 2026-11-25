@@ -53,6 +53,21 @@ Given("an open posting {string}", async ({ request, cast }, alias: string) => {
   await system.postingByApi(request, cast, alias, true);
 });
 
+Given("an open posting {string} of the organization {string} acts for", async ({ request, cast }, alias: string, _recruiter: string) => {
+  await system.postingByApi(request, cast, alias, true, true);
+});
+
+Given("an open posting {string} of another organization", async ({ request, cast }, alias: string) => {
+  await system.postingByApi(request, cast, alias, true);
+});
+
+Given(
+  "a posting {string} of the organization {string} acts for, waiting for approval",
+  async ({ request, cast }, alias: string, _recruiter: string) => {
+    await system.postingByApi(request, cast, alias, false, true);
+  },
+);
+
 Given("a posting {string} waiting for approval", async ({ request, cast }, alias: string) => {
   await system.postingByApi(request, cast, alias, false);
 });
@@ -321,3 +336,24 @@ Then(
     await system.expectPostingDetails(page, cast.posting(posting));
   },
 );
+
+// UC-14 Screen Applications
+
+Given("an applicant {string} has applied to {string}", async ({ request, cast }, alias: string, posting: string) => {
+  await system.applyByApi(request, cast, cast.person(alias), cast.posting(posting));
+});
+
+When("{string} asks to review the applications to the organization's postings", async ({ page }, _alias: string) => {
+  await system.openRecruiterPostings(page);
+});
+
+Then(
+  /^"(.*)" is shown with (\d+) applications? at (Applied|Screening|Interview|Offer)$/,
+  async ({ page, cast }, posting: string, count: string, stage: string) => {
+    await system.expectApplicationsAtStage(page, cast.posting(posting), Number(count), stage);
+  },
+);
+
+Then("{string} is shown as waiting for approval", async ({ page, cast }, posting: string) => {
+  await system.expectPostingStatus(page, cast.posting(posting), "waiting for approval");
+});

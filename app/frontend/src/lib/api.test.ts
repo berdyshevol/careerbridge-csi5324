@@ -13,6 +13,7 @@ import { SessionEnded,
   submitApplication,
   viewApplication,
   viewApplications,
+  viewRecruiterPostings,
   updatePosting,
   updateProfile,
   viewProfile,
@@ -819,5 +820,32 @@ describe("uploadResume", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 403 })));
 
     await expect(uploadResume("t", file)).rejects.toBeInstanceOf(SessionEnded);
+  });
+});
+
+describe("viewRecruiterPostings", () => {
+  it("sends the recruiter's token and returns the organization with its postings", async () => {
+    const body = { organizationName: "Waco Health Partners", postings: [] };
+    const fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(body) });
+    vi.stubGlobal("fetch", fetch);
+
+    expect(await viewRecruiterPostings("t")).toEqual(body);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/recruiter/postings"),
+      expect.objectContaining({ headers: { Authorization: "Bearer t" } }),
+    );
+  });
+
+  it("says the session ended when the backend refuses the token", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 403 }));
+
+    await expect(viewRecruiterPostings("t")).rejects.toBeInstanceOf(SessionEnded);
+  });
+
+  it("fails loudly on any other answer", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
+
+    await expect(viewRecruiterPostings("t")).rejects.toThrow("Backend answered 500");
   });
 });
