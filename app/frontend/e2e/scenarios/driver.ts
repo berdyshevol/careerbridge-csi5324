@@ -14,11 +14,9 @@ const WRONG_PASSWORD = "not-the-password-1";
 const RESUME_PDF = path.join(__dirname, "..", "fixtures", "Pat_Kim_Resume.pdf");
 const RESUME_NAME = path.basename(RESUME_PDF);
 
-// Every recruiter acts for this one until memberships exist: the test backend's stand-in
-// (RecruiterOrganization), and a recruiter may only post for their own organization (SCRUM-220)
-const ORGANIZATION = { id: 2, name: "Waco Health Partners" };
-// What the test backend's other recruiter acts for
-const OTHER_ORGANIZATION = { id: 1, name: "Brazos Analytics" };
+const ORGANIZATION = { id: 1, name: "Brazos Analytics" };
+// Every recruiter acts for this one until memberships exist: the test backend's stand-in (SCRUM-198)
+const RECRUITERS_ORGANIZATION = { id: 2, name: "Waco Health Partners" };
 const POSTING_DETAILS = { location: "Hybrid", employmentType: "Contract", numberOfOpenings: 2 };
 
 export type Person = { firstName: string; lastName: string; fullName: string; email: string; password: string };
@@ -132,21 +130,20 @@ export async function setPhoneByApi(request: APIRequestContext, cast: Cast, appl
   expect(answer.ok(), await answer.text()).toBeTruthy();
 }
 
-// The demo recruiter submits a posting, or the other recruiter for another organization; the
-// administrator approves it when it is to be open
+// The demo recruiter submits a posting; the administrator approves it when it is to be open
 export async function postingByApi(
   request: APIRequestContext,
   cast: Cast,
   alias: string,
   open: boolean,
-  ofAnotherOrganization = false,
+  ofTheRecruitersOrganization = false,
 ) {
-  const recruiter = await cast.token(request, ofAnotherOrganization ? ACCOUNTS.otherRecruiter : ACCOUNTS.recruiter);
+  const recruiter = await cast.token(request, ACCOUNTS.recruiter);
   const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const created = await request.post(`${API}/api/postings`, {
     headers: recruiter,
     data: {
-      organizationId: (ofAnotherOrganization ? OTHER_ORGANIZATION : ORGANIZATION).id,
+      organizationId: (ofTheRecruitersOrganization ? RECRUITERS_ORGANIZATION : ORGANIZATION).id,
       title: cast.postingTitle(alias),
       description: `What the ${alias} does all day.`,
       jobRequirements: `What a ${alias} needs to know.`,

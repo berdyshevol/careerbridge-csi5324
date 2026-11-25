@@ -54,17 +54,17 @@ Given("an open posting {string}", async ({ request, cast }, alias: string) => {
 });
 
 Given("an open posting {string} of the organization {string} acts for", async ({ request, cast }, alias: string, _recruiter: string) => {
-  await system.postingByApi(request, cast, alias, true);
+  await system.postingByApi(request, cast, alias, true, true);
 });
 
 Given("an open posting {string} of another organization", async ({ request, cast }, alias: string) => {
-  await system.postingByApi(request, cast, alias, true, true);
+  await system.postingByApi(request, cast, alias, true);
 });
 
 Given(
   "a posting {string} of the organization {string} acts for, waiting for approval",
   async ({ request, cast }, alias: string, _recruiter: string) => {
-    await system.postingByApi(request, cast, alias, false);
+    await system.postingByApi(request, cast, alias, false, true);
   },
 );
 

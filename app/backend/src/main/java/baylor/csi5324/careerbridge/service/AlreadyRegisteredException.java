@@ -4,6 +4,11 @@ package baylor.csi5324.careerbridge.service;
 public class AlreadyRegisteredException extends RuntimeException {
 
     public AlreadyRegisteredException() {
-        super("An account already exists for this email address. Log in instead.");
+        this("An account already exists for this email address. Log in instead.");
+    }
+
+    // UC-08 extension 4b: an approved recruiter is pointed to UC-09 instead
+    public AlreadyRegisteredException(String message) {
+        super(message);
     }
 }

@@ -5,8 +5,6 @@ export const ACCOUNTS = {
   applicant: { email: "jordan.lee@example.com", password: "Applicant-test-1", name: "Jordan Lee" },
   secondApplicant: { email: "sam.rivera@example.com", password: "Applicant-test-2", name: "Sam Rivera" },
   recruiter: { email: "riley.chen@example.com", password: "Recruiter-test-1", name: "Riley Chen" },
-  // Acts for Brazos Analytics, not the stand-in organization (recruiter-organization-exceptions)
-  otherRecruiter: { email: "recruiter2@example.com", password: "Numbered-test-1", name: "Recruiter Two" },
   administrator: { email: "admin@careerbridge.example", password: "Administrator-test-1", name: "Avery Morgan" },
 };
 

@@ -12,12 +12,13 @@ import {
   type JobPosting,
   type ReviewAction,
 } from "@/lib/api";
-import { ROLE_LABELS, type Session } from "@/lib/session";
+import type { Session } from "@/lib/session";
 import { useEndSession } from "@/lib/useEndSession";
 
 const SESSION_ENDED = "Your session has ended. Log in again as an administrator.";
 
-export default function ApprovalQueue({ session }: { session: Session | null }) {
+// The page lets only an administrator in (app/admin/postings/page.tsx)
+export default function ApprovalQueue({ session }: { session: Session }) {
   const endSession = useEndSession();
   const [ended, setEnded] = useState(false);
   const [postings, setPostings] = useState<JobPosting[]>([]);
@@ -28,13 +29,8 @@ export default function ApprovalQueue({ session }: { session: Session | null }) 
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const loggedOut = !session || ended;
-  const administrator = !loggedOut && session.user.role === "ADMINISTRATOR" ? session : null;
-
   useEffect(() => {
-    if (administrator) {
-      void loadPending();
-    }
+    void loadPending();
     // Once, on arrival: the session does not change while the page is open
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -52,7 +48,7 @@ export default function ApprovalQueue({ session }: { session: Session | null }) 
     setMessage("");
 
     try {
-      setPostings(await openPostingApprovalQueue(administrator?.token ?? ""));
+      setPostings(await openPostingApprovalQueue(session.token));
       setConnected(true);
     } catch (err) {
       if (err instanceof SessionEnded) {
@@ -92,7 +88,7 @@ export default function ApprovalQueue({ session }: { session: Session | null }) 
     setMessage("");
 
     try {
-      const decided = await sendReview(administrator?.token ?? "", postingId, action, comment);
+      const decided = await sendReview(session.token, postingId, action, comment);
       setPostings((current) => current.filter((posting) => posting.jobPostId !== postingId));
       setMessage(
         `Posting #${postingId} ${
@@ -153,20 +149,14 @@ export default function ApprovalQueue({ session }: { session: Session | null }) 
         </div>
       )}
 
-      {!administrator ? (
+      {ended ? (
         <section className="card max-w-xl border border-base-300 bg-base-100">
           <div className="card-body gap-4">
             <h2 className="text-xl font-semibold">Administrators only</h2>
-            <p className="text-muted">
-              {loggedOut
-                ? "Log in as an administrator to review submitted postings."
-                : `You are logged in as ${session.user.firstName} ${session.user.lastName}, ${ROLE_LABELS[session.user.role].toLowerCase()}. Only an administrator reviews postings.`}
-            </p>
-            {loggedOut && (
-              <Link href="/login?next=/admin/postings" className="btn btn-primary self-start">
-                Log in
-              </Link>
-            )}
+            <p className="text-muted">Log in as an administrator to review submitted postings.</p>
+            <Link href="/login?next=/admin/postings" className="btn btn-primary self-start">
+              Log in
+            </Link>
           </div>
         </section>
       ) : !connected ? (

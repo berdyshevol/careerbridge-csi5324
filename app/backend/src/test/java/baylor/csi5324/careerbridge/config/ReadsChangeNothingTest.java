@@ -1,9 +1,12 @@
 package baylor.csi5324.careerbridge.config;
 
+import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.MembershipRequestType;
+import baylor.csi5324.careerbridge.model.MembershipStatus;
 import baylor.csi5324.careerbridge.model.Offer;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
@@ -11,8 +14,10 @@ import baylor.csi5324.careerbridge.model.ResumeSnapshot;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
+import baylor.csi5324.careerbridge.repository.OrganizationMembershipRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
 import baylor.csi5324.careerbridge.repository.RecruiterRepository;
+import baylor.csi5324.careerbridge.service.MembershipFixtures;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -72,6 +77,9 @@ class ReadsChangeNothingTest {
     @Autowired
     private RecruiterRepository recruiterRepository;
 
+    @Autowired
+    private OrganizationMembershipRepository membershipRepository;
+
     @Test
     void everyReadUnderApiLeavesTheDatabaseAsItWas() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
@@ -87,6 +95,8 @@ class ReadsChangeNothingTest {
         draft.setOrganization(organizationRepository.findByName("Waco Health Partners").orElseThrow());
         draft.setRecruiter(recruiterRepository.findByEmailIgnoreCase(RECRUITER).orElseThrow());
         String draftId = String.valueOf(jobPostingRepository.save(draft).getJobPostId());
+        // The same for the Administrator's view of one recruiter request (UC-10)
+        String requestId = String.valueOf(pendingRequest());
         List<String> reads = handlerMapping.getHandlerMethods().keySet().stream()
                 // A mapping without a method answers GET too
                 .filter(info -> info.getMethodsCondition().getMethods().isEmpty()
@@ -95,7 +105,8 @@ class ReadsChangeNothingTest {
                 .filter(pattern -> pattern.startsWith("/api/"))
                 .map(pattern -> pattern
                         .replace("{applicationId}", pattern.endsWith("/offer") ? offerApplicationId : applicationId)
-                        .replaceAll("\\{[^}]+}", pattern.endsWith("/edit") ? draftId : postingId))
+                        .replaceAll("\\{[^}]+}", pattern.startsWith("/api/admin/requests/") ? requestId
+                                : pattern.endsWith("/edit") ? draftId : postingId))
                 .toList();
         assertFalse(reads.isEmpty());
 
@@ -127,6 +138,12 @@ class ReadsChangeNothingTest {
         }
         assertFalse(tables.isEmpty(), "found no tables to compare");
         return tables;
+    }
+
+    private Long pendingRequest() {
+        MembershipFixtures fixtures = new MembershipFixtures(recruiterRepository, organizationRepository, membershipRepository);
+        return fixtures.membership(fixtures.recruiter(AccountStatus.PENDING_APPROVAL), fixtures.registeredOrganization(),
+                MembershipStatus.PENDING, MembershipRequestType.NEW_RECRUITER_EXISTING_ORGANIZATION).getMembershipId();
     }
 
     private JobPosting publishedPosting() {

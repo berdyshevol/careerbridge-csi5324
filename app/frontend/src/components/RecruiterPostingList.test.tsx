@@ -173,6 +173,35 @@ describe("RecruiterPostingList", () => {
     await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
   });
 
+  it("keeps the reason when the reload shows the posting already closed", async () => {
+    const closedMeanwhile = {
+      ...answer,
+      postings: answer.postings.map((p) =>
+        p.postingId === 1 ? { ...p, postStatus: "CLOSED", closingReason: "Expired" } : p,
+      ),
+    };
+    fetchMock
+      .mockResolvedValueOnce(reply(200, answer))
+      .mockResolvedValueOnce(
+        new Response("Only a published posting can be closed; this one is Closed", {
+          status: 409,
+          headers: { "Content-Type": "text/plain" },
+        }),
+      )
+      .mockResolvedValueOnce(reply(200, closedMeanwhile));
+    render(<RecruiterPostingList token="t" />);
+
+    fireEvent.click(within(await findRow("Data Analyst")).getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close posting, final" }));
+
+    // The reload turns the row Closed, which takes its Close away; the reason stays
+    expect(await within(row("Data Analyst")).findByText("Closed · Expired")).toBeInTheDocument();
+    expect(within(row("Data Analyst")).queryByRole("button", { name: "Close" })).toBeNull();
+    expect(within(row("Data Analyst")).getByRole("alert")).toHaveTextContent(
+      "Only a published posting can be closed; this one is Closed",
+    );
+  });
+
   it("offers no actions on a posting another recruiter created", async () => {
     fetchMock.mockResolvedValueOnce(reply(200, answer));
     render(<RecruiterPostingList token="t" />);
