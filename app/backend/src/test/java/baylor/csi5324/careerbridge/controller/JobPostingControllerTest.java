@@ -137,7 +137,9 @@ class JobPostingControllerTest {
         mockMvc.perform(post("/api/postings/7/close").principal(() -> "owner@example.com"))
                 .andExpect(status().isConflict())
                 .andExpect(content().string("Only a published posting can be closed; this one is Draft"));
+    }
 
+    @Test
     void reopeningAPostingSendsTheAdministratorsComment() throws Exception {
         JobPosting returned = approvedPosting();
         returned.setPostStatus(PostStatus.RETURNED);

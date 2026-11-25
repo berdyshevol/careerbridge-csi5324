@@ -160,6 +160,8 @@ public class JobPostingService {
 
         // Applications keep their stages (A3): only the posting changes
         posting.close(CLOSED_BY_RECRUITER, now);
+        return jobPostingRepository.save(posting);
+    }
 
     // UC-11 extensions 3b and 6a: a query, so it has no contract
     @Transactional(readOnly = true)

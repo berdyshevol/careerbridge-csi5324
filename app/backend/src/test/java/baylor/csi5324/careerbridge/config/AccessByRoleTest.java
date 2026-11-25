@@ -118,7 +118,6 @@ class AccessByRoleTest {
         mockMvc.perform(post("/api/postings/1/close").with(as("APPLICANT"))).andExpect(status().isForbidden());
         mockMvc.perform(post("/api/postings/1/close").with(as("ADMINISTRATOR"))).andExpect(status().isForbidden());
         mockMvc.perform(post("/api/postings/1/close")).andExpect(status().isUnauthorized());
-
         mockMvc.perform(get("/api/postings/1/edit").with(as("APPLICANT"))).andExpect(status().isForbidden());
         mockMvc.perform(get("/api/postings/1/edit")).andExpect(status().isUnauthorized());
         mockMvc.perform(put("/api/postings/1").with(as("ADMINISTRATOR"))
