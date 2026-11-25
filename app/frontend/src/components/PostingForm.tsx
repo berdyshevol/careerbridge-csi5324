@@ -102,8 +102,8 @@ export default function PostingForm({ token }: { token: string }) {
 
       <div className="alert alert-info text-sm">
         <span>
-          Select the organization by hand: memberships (UC-08, UC-09) are not built yet, so
-          any recruiter can post for any organization.
+          Select the organization by hand: memberships (UC-08, UC-09) are built, but this
+          form does not use them until UC-11 does, so any recruiter can post for any organization.
         </span>
       </div>
 
