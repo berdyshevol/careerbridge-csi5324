@@ -25,8 +25,8 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   projects: [
-    { name: "laptop", testDir: "./e2e", use: { ...devices["Desktop Chrome"] } },
-    { name: "phone", testDir: "./e2e", use: { ...devices["Pixel 7"] } },
+    { name: "laptop", use: { ...devices["Desktop Chrome"] } },
+    { name: "phone", use: { ...devices["Pixel 7"] } },
     // Laptop only: they check what the system does, which the screen width does not change
     { name: "scenarios", testDir: scenariosDir, use: { ...devices["Desktop Chrome"] } },
   ],

@@ -4,6 +4,6 @@ Feature: UC-02 Register as Applicant
 
   Scenario: A visitor who wants a recruiter account is handed to recruiter and organization registration
     Given a visitor "Casey" who is not logged in
-    When "Casey" starts to register as an applicant and chooses a recruiter account instead
+    When "Casey" fills in the applicant registration and then chooses a recruiter account instead
     Then "Casey" is handed to registering a recruiter and an organization
     And no applicant account exists for "Casey"

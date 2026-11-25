@@ -1,35 +1,10 @@
-import { writeFileSync } from "node:fs";
 import { expect } from "@playwright/test";
 import { createBdd, test as base } from "playwright-bdd";
-import { ACCOUNTS } from "../accounts";
-import {
-  accountMenu,
-  Cast,
-  editProfileField,
-  fillRegistration,
-  isWaitingForApproval,
-  logInByApi,
-  logInOnScreen,
-  logOutOnScreen,
-  navigationEntries,
-  openPostingsMatching,
-  PASSWORD,
-  postingByApi,
-  postingCard,
-  profileOf,
-  registerByApi,
-  RESUME_PDF,
-  SCREEN,
-  searchJobBoard,
-  setPhoneByApi,
-  signedInAs,
-  submitLogIn,
-  today,
-  uploadResume,
-} from "./driver";
+import * as system from "./driver";
+import { ADMINISTRATOR, Cast } from "./driver";
 
 // The vocabulary of spec/user-scenarios/*.feature: each step says what happens in the words of the
-// use cases and leaves the screens to the driver. Every scenario gets its own cast of people and postings.
+// use cases and calls the driver, which alone knows the screens. Every scenario gets its own cast.
 
 export const test = base.extend<{ cast: Cast }>({
   cast: async ({}, provide) => provide(new Cast()),
@@ -37,45 +12,36 @@ export const test = base.extend<{ cast: Cast }>({
 
 const { Given, When, Then } = createBdd(test);
 
-const RECRUITER = "Riley";
-const APPLICANT_ENTRIES = ["Home", "Find jobs", "Applications", "Profile"];
-
 // People
 
 Given("a visitor {string} who is not logged in", async ({ page, cast }, alias: string) => {
   cast.person(alias);
-  await page.goto("/");
-  await expect(accountMenu(page)).toHaveCount(0);
+  await system.arriveAsVisitor(page);
 });
 
 Given("an applicant {string} is registered", async ({ request, cast }, alias: string) => {
-  await registerByApi(request, cast.person(alias));
+  await system.registerByApi(request, cast.person(alias));
 });
 
 Given("an applicant {string} is registered and logged in", async ({ page, request, cast }, alias: string) => {
-  const person = cast.person(alias);
-  await registerByApi(request, person);
-  await logInOnScreen(page, person.email, person.password);
+  await system.registerByApi(request, cast.person(alias));
+  await system.logInOnScreen(page, cast.person(alias));
 });
 
 Given(
   "an applicant {string} is registered with the phone number {string}",
   async ({ request, cast }, alias: string, phone: string) => {
-    const person = cast.person(alias);
-    await registerByApi(request, person);
-    await setPhoneByApi(request, person, phone);
+    await system.registerByApi(request, cast.person(alias));
+    await system.setPhoneByApi(request, cast, cast.person(alias), phone);
   },
 );
 
 Given("{string} is logged in", async ({ page, cast }, alias: string) => {
-  const person = cast.person(alias);
-  await logInOnScreen(page, person.email, person.password);
+  await system.logInOnScreen(page, cast.person(alias));
 });
 
-// The system cannot create recruiters yet (UC-08), so Riley is the demo recruiter
 Given("a recruiter {string} with an active account", async ({ cast }, alias: string) => {
-  void cast;
-  expect(alias).toBe(RECRUITER);
+  cast.castAsDemoRecruiter(alias);
 });
 
 // The administrator is set up with the system, not created by anyone
@@ -84,15 +50,15 @@ Given("the administrator", async () => {});
 // Postings
 
 Given("an open posting {string}", async ({ request, cast }, alias: string) => {
-  await postingByApi(request, cast, alias, true);
+  await system.postingByApi(request, cast, alias, true);
 });
 
 Given("a posting {string} waiting for approval", async ({ request, cast }, alias: string) => {
-  await postingByApi(request, cast, alias, false);
+  await system.postingByApi(request, cast, alias, false);
 });
 
 Given("no open posting mentions {string}", async ({ request }, keyword: string) => {
-  expect(await openPostingsMatching(request, keyword)).toEqual([]);
+  expect(await system.openPostingsMatching(request, keyword)).toEqual([]);
 });
 
 // UC-02 Register as Applicant
@@ -100,295 +66,258 @@ Given("no open posting mentions {string}", async ({ request }, keyword: string) 
 When(
   "{string} registers as an applicant with a full name, a new email address and a password that meets the policy",
   async ({ page, cast }, alias: string) => {
-    const person = cast.person(alias);
-    await fillRegistration(page, person.fullName, person.email, person.password);
+    await system.registerOnScreen(page, cast.person(alias));
   },
 );
 
 When(
   "{string} registers as an applicant with a full name that has no last name and a password that does not meet the policy",
   async ({ page, cast }, alias: string) => {
-    await fillRegistration(page, alias, cast.person(alias).email, "short");
+    await system.registerWithOneWordNameAndWeakPassword(page, cast.person(alias));
   },
 );
 
 When("a visitor registers as an applicant with the email address of {string}", async ({ page, cast }, alias: string) => {
-  await fillRegistration(page, "Other Person", cast.person(alias).email, `Another-${PASSWORD}`);
+  await system.registerWithTheEmailOf(page, cast.person(alias));
 });
 
 When(
-  "{string} starts to register as an applicant and chooses a recruiter account instead",
-  async ({ page }, _alias: string) => {
-    await page.goto("/register");
-    await page.getByRole("link", { name: "Register your organization" }).click();
+  "{string} fills in the applicant registration and then chooses a recruiter account instead",
+  async ({ page, cast }, alias: string) => {
+    await system.fillRegistrationThenChooseRecruiter(page, cast.person(alias));
   },
 );
 
 Then("{string} is invited to add a resume, with no resume on file", async ({ page }, _alias: string) => {
-  await expect(page).toHaveURL(/\/profile$/);
-  await expect(page.getByText(SCREEN.noResume)).toBeVisible();
+  await system.expectInvitedToAddResume(page);
 });
 
 Then("the registration is refused because the full name needs a last name", async ({ page }) => {
-  await expect(page.getByText(SCREEN.lastNameNeeded)).toBeVisible();
+  await system.expectRegistrationRefused(page, "last name");
 });
 
 Then(
   "the registration is refused because the password needs at least 10 characters, including a letter and a number",
   async ({ page }) => {
-    await expect(page.getByLabel("Password")).toHaveAccessibleDescription(SCREEN.passwordPolicy);
-    await expect(page).toHaveURL(/\/register/);
+    await system.expectRegistrationRefused(page, "password policy");
   },
 );
 
 Then("the registration is refused because an account already exists for that email", async ({ page }) => {
-  await expect(page.getByLabel("Email")).toHaveAccessibleDescription(SCREEN.emailTaken);
-  await expect(accountMenu(page)).toHaveCount(0);
+  await system.expectRegistrationRefused(page, "email taken");
 });
 
 Then("the visitor is offered to log in instead", async ({ page }) => {
-  await expect(page.getByRole("main").getByRole("link", { name: "Log in instead" })).toBeVisible();
+  await system.expectOfferedToLogInInstead(page);
 });
 
 Then("{string} still has only the original account", async ({ request, cast }, alias: string) => {
-  const person = cast.person(alias);
-  expect((await logInByApi(request, person.email, `Another-${PASSWORD}`)).status()).toBe(401);
-  expect((await logInByApi(request, person.email, person.password)).ok()).toBeTruthy();
+  expect(await system.hasOnlyItsOwnPassword(request, cast.person(alias))).toBeTruthy();
 });
 
-// No account: registering that email now succeeds, which it would not if one existed
+// Registering that email now succeeds, which it would not if an account existed
 Then(/^no (?:applicant )?account exists for "(.*)"$/, async ({ request, cast }, alias: string) => {
-  await registerByApi(request, cast.person(alias));
+  await system.registerByApi(request, cast.person(alias));
 });
 
 Then("{string} is handed to registering a recruiter and an organization", async ({ page }, _alias: string) => {
-  await expect(page).toHaveURL(/\/recruiter\/register$/);
+  await system.expectOnRecruiterRegistration(page);
 });
 
 // Log In
 
 When("{string} logs in", async ({ page, cast }, alias: string) => {
-  if (alias === RECRUITER) {
-    await logInOnScreen(page, ACCOUNTS.recruiter.email, ACCOUNTS.recruiter.password);
-  } else {
-    const person = cast.person(alias);
-    await logInOnScreen(page, person.email, person.password);
-  }
+  await system.logInOnScreen(page, cast.person(alias));
 });
 
 When("the administrator logs in", async ({ page }) => {
-  await logInOnScreen(page, ACCOUNTS.administrator.email, ACCOUNTS.administrator.password);
+  await system.logInOnScreen(page, ADMINISTRATOR);
 });
 
 When("{string} logs out and logs in again with that email address and password", async ({ page, cast }, alias: string) => {
-  const person = cast.person(alias);
-  await logOutOnScreen(page);
-  await logInOnScreen(page, person.email, person.password);
+  await system.logOutOnScreen(page);
+  await system.logInOnScreen(page, cast.person(alias));
 });
 
 When("{string} logs out", async ({ page }, _alias: string) => {
-  await logOutOnScreen(page);
+  await system.logOutOnScreen(page);
 });
 
 When("someone logs in as {string} with a wrong password", async ({ page, cast }, alias: string) => {
-  await submitLogIn(page, cast.person(alias).email, "not-the-password-1");
+  await system.tryWrongPassword(page, cast.person(alias));
 });
 
 When("someone logs in with an email address that has no account", async ({ page, cast }) => {
-  await submitLogIn(page, cast.strangerEmail, "not-the-password-1");
+  await system.tryWrongPassword(page, cast.stranger);
 });
 
 When("someone fails to log in as {string} five times", async ({ request, cast }, alias: string) => {
-  for (let attempt = 0; attempt < 5; attempt++) {
-    expect((await logInByApi(request, cast.person(alias).email, "not-the-password-1")).status()).toBe(401);
-  }
+  await system.failLogIns(request, cast.person(alias), 5);
 });
 
 When("{string} then logs in with the right password", async ({ page, cast }, alias: string) => {
-  const person = cast.person(alias);
-  await submitLogIn(page, person.email, person.password);
+  const applicant = cast.person(alias);
+  await system.tryToLogIn(page, applicant.email, applicant.password);
 });
 
 Then("{string} is logged in as an applicant", async ({ page, cast }, alias: string) => {
-  await expect(signedInAs(page, cast.person(alias).fullName, "Applicant")).toBeVisible();
+  await system.expectLoggedInAs(page, cast.person(alias), "Applicant");
 });
 
-Then("{string} is logged in as a recruiter", async ({ page }, _alias: string) => {
-  await expect(signedInAs(page, ACCOUNTS.recruiter.name, "Recruiter")).toBeVisible();
+Then("{string} is logged in as a recruiter", async ({ page, cast }, alias: string) => {
+  await system.expectLoggedInAs(page, cast.person(alias), "Recruiter");
 });
 
 Then("the administrator is logged in as the administrator", async ({ page }) => {
-  await expect(signedInAs(page, ACCOUNTS.administrator.name, "Administrator")).toBeVisible();
+  await system.expectLoggedInAs(page, ADMINISTRATOR, "Administrator");
 });
 
 Then("the log-in is refused because the email or password is not right", async ({ page }) => {
-  await expect(page.getByRole("main").getByRole("alert")).toHaveText(SCREEN.wrongCredentials);
+  await system.expectLogInRefused(page, "credentials");
 });
 
 Then("the log-in is refused because the account is locked", async ({ page }) => {
-  await expect(page.getByRole("main").getByRole("alert")).toHaveText(SCREEN.locked);
+  await system.expectLogInRefused(page, "locked");
 });
 
 Then("nobody is logged in", async ({ page }) => {
-  await expect(accountMenu(page)).toHaveCount(0);
+  await system.expectNobodyLoggedIn(page);
 });
 
 // What each role reaches
 
 When("{string} asks to review the postings waiting for approval", async ({ page }, _alias: string) => {
-  await page.goto("/admin/postings");
+  await system.openApprovalQueue(page);
 });
 
 Then("{string} is refused because only an administrator reviews postings", async ({ page }, _alias: string) => {
-  await expect(page.getByText(SCREEN.onlyAdministrator)).toBeVisible();
+  await system.expectOnlyAdministratorNotice(page);
 });
 
 Then("{string} is not shown {string}", async ({ page, cast }, _alias: string, posting: string) => {
-  await expect(page.getByText(cast.posting(posting).title)).toHaveCount(0);
+  await system.expectPostingNotShown(page, cast.posting(posting));
 });
 
 Then("{string} is still waiting for approval", async ({ request, cast }, posting: string) => {
-  expect(await isWaitingForApproval(request, cast.posting(posting))).toBeTruthy();
+  expect(await system.isWaitingForApproval(request, cast, cast.posting(posting))).toBeTruthy();
 });
 
 Then("{string} is offered only the applicant's own work", async ({ page }, _alias: string) => {
-  expect(await navigationEntries(page)).toEqual(APPLICANT_ENTRIES);
+  await system.expectNavigation(page, ["Home", "Find jobs", "Applications", "Profile"]);
 });
 
 Then("{string} can create a job posting", async ({ page }, _alias: string) => {
-  await page.goto("/recruiter/postings/new");
-  await expect(page.getByRole("heading", { level: 1, name: "Create job posting" })).toBeVisible();
+  await system.expectCanCreatePosting(page);
 });
 
 Then("{string} is offered nothing of an applicant's work", async ({ page }, _alias: string) => {
-  const entries = await navigationEntries(page);
-  expect(entries).not.toContain("Applications");
-  expect(entries).not.toContain("Profile");
+  await system.expectNavigationWithout(page, ["Find jobs", "Applications", "Profile"]);
 });
 
 Then("creating a job posting asks to log in first", async ({ page }) => {
-  await page.goto("/recruiter/postings/new");
-  await expect(page.getByText(SCREEN.recruitersOnlyLogIn)).toBeVisible();
+  await system.expectCreatingPostingAsksToLogIn(page);
 });
 
 Then("the administrator can review the postings waiting for approval", async ({ page }) => {
-  await page.goto("/admin/postings");
-  await expect(page.getByRole("heading", { name: "Pending review" })).toBeVisible();
+  await system.expectApprovalQueue(page);
 });
 
 // UC-03 Update Applicant Profile
 
 When("{string} views the profile", async ({ page }, _alias: string) => {
-  await page.goto("/profile");
+  await system.openProfile(page);
 });
 
-Then("{string} sees the name and email address {string} registered with", async ({ page, cast }, alias: string, _registeredAs: string) => {
-  const person = cast.person(alias);
-  const [firstName, lastName] = person.fullName.split(" ");
-  await expect(page.getByLabel("First name")).toHaveValue(firstName);
-  await expect(page.getByLabel("Last name")).toHaveValue(lastName);
-  await expect(page.getByLabel("Email")).toHaveValue(person.email);
-});
+Then(
+  "{string} sees the name and email address {string} registered with",
+  async ({ page, cast }, alias: string, _registeredAs: string) => {
+    await system.expectProfileOf(page, cast.person(alias));
+  },
+);
 
 Then("{string} sees that no resume is on file", async ({ page }, _alias: string) => {
-  await expect(page.getByText(SCREEN.noResume)).toBeVisible();
+  await system.expectNoResume(page);
 });
 
 When("{string} changes the headline to {string}", async ({ page }, _alias: string, headline: string) => {
-  await editProfileField(page, "Headline", headline);
+  await system.changeProfile(page, "Headline", headline);
 });
 
 When("{string} changes the phone number to {string}", async ({ page }, _alias: string, phone: string) => {
-  await editProfileField(page, "Phone", phone);
+  await system.changeProfile(page, "Phone", phone);
 });
 
 Then("the profile details are saved", async ({ page }) => {
-  await expect(page.getByRole("form", { name: "Details" }).getByRole("status")).toContainText(SCREEN.profileSaved);
+  await system.expectProfileSaved(page);
 });
 
 Then("the update is refused because the phone number is malformed", async ({ page }) => {
-  await expect(page.getByText(SCREEN.phoneMalformed)).toBeVisible();
+  await system.expectPhoneRefused(page);
 });
 
 Then("the profile of {string} has the headline {string}", async ({ request, cast }, alias: string, headline: string) => {
-  expect((await profileOf(request, cast.person(alias))).headline).toBe(headline);
+  expect((await system.profileOf(request, cast, cast.person(alias))).headline).toBe(headline);
 });
 
 Then("the profile of {string} has the phone number {string}", async ({ request, cast }, alias: string, phone: string) => {
-  expect((await profileOf(request, cast.person(alias))).phone).toBe(phone);
+  expect((await system.profileOf(request, cast, cast.person(alias))).phone).toBe(phone);
 });
 
 When(/^"(.*)" (?:uploads|has uploaded) a PDF resume$/, async ({ page }, _alias: string) => {
-  await uploadResume(page, RESUME_PDF);
-  await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
+  await system.uploadPdfResume(page);
 });
 
 When("{string} uploads a plain-text file as the resume", async ({ page }, _alias: string) => {
-  const file = test.info().outputPath("notes.txt");
-  writeFileSync(file, "Not a resume.");
-  await uploadResume(page, file);
+  await system.uploadPlainTextResume(page, test.info().outputDir);
 });
 
 Then("the resume is on file with its file name and today's date", async ({ page }) => {
-  await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
-  await expect(page.getByText(`Uploaded ${today()}`)).toBeVisible();
+  await system.expectResumeOnFile(page, true);
 });
 
 Then("the resume is still on file when {string} views the profile again", async ({ page }, _alias: string) => {
-  await page.reload();
-  await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
+  await system.openProfile(page);
+  await system.expectResumeOnFile(page);
 });
 
 Then("the file is refused because only a PDF or DOCX of at most 5 MB is accepted", async ({ page }) => {
-  const refusal = page.getByRole("main").getByRole("alert");
-  await expect(refusal).toContainText("notes.txt was not uploaded.");
-  await expect(refusal).toContainText(SCREEN.resumeRefused);
+  await system.expectPlainTextResumeRefused(page);
 });
 
 Then("the PDF resume is still on file", async ({ page }) => {
-  await expect(page.getByText("Pat_Kim_Resume.pdf")).toBeVisible();
+  await system.expectResumeOnFile(page);
 });
 
 // UC-01 Search Job Postings
 
-When("a visitor searches the open postings for {string}", async ({ page }, keyword: string) => {
-  await searchJobBoard(page, keyword);
+When("a visitor searches the open postings for {string}", async ({ page, cast }, keyword: string) => {
+  cast.lastKeyword = keyword;
+  await system.search(page, keyword);
 });
 
 When("a visitor views the details of {string}", async ({ page, cast }, posting: string) => {
-  await page.goto(`/jobs/${cast.posting(posting).id}`);
+  await system.openPosting(page, cast.posting(posting));
 });
 
-Then(
-  "{string} is returned with its organization, location and employment type",
-  async ({ page, cast }, posting: string) => {
-    await expect(postingCard(page, cast.posting(posting).title)).toContainText("Brazos Analytics · Hybrid · Contract");
-  },
-);
+Then("{string} is returned with its organization, location and employment type", async ({ page, cast }, posting: string) => {
+  await system.expectReturnedWithSummary(page, cast.posting(posting));
+});
 
 Then("{string} is not returned", async ({ page, cast }, posting: string) => {
-  await expect(page.getByRole("link", { name: cast.posting(posting).title })).toHaveCount(0);
+  await system.expectNotReturned(page, cast.posting(posting));
 });
 
 Then("the visitor is told that no posting matches the criteria", async ({ page }) => {
-  await expect(page.getByText(SCREEN.noMatch)).toBeVisible();
+  await system.expectNoMatch(page);
 });
 
-Then("the criteria are kept for another search", async ({ page }) => {
-  await expect(page.getByRole("main").getByRole("searchbox", { name: "Keywords" })).not.toHaveValue("");
+Then("the criteria are kept for another search", async ({ page, cast }) => {
+  await system.expectKeywordKept(page, cast.lastKeyword);
 });
 
 Then(
   "the visitor sees the title, organization, location, employment type, openings, description and requirements of {string}",
-  async ({ page, cast }, alias: string) => {
-    const main = page.getByRole("main");
-    await expect(main.getByRole("heading", { level: 1, name: cast.posting(alias).title })).toBeVisible();
-    for (const detail of ["Brazos Analytics", "Hybrid", "Contract", "2 openings", `What the ${alias} does all day.`, `What a ${alias} needs to know.`]) {
-      await expect(main.getByText(detail, { exact: false }).first()).toBeVisible();
-    }
+  async ({ page, cast }, posting: string) => {
+    await system.expectPostingDetails(page, cast.posting(posting));
   },
 );
-
-Then("no applicant data is shown", async ({ page }) => {
-  await expect(page.getByRole("main")).not.toContainText("@");
-});

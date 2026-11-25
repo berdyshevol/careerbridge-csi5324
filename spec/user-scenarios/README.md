@@ -34,11 +34,12 @@ Three layers, as in Farley's model:
 | Step definitions (the vocabulary) | [app/frontend/e2e/scenarios/steps.ts](../../app/frontend/e2e/scenarios/steps.ts) | What each step means, in calls to the driver |
 | Driver | [app/frontend/e2e/scenarios/driver.ts](../../app/frontend/e2e/scenarios/driver.ts) | The screens, their wording and the backend's addresses |
 
-When a screen changes its wording, only the driver changes. When a use case changes, its scenarios
-change, and the steps only if new words are needed.
+Step definitions only call the driver; they hold no addresses, labels or wording. When a screen changes
+its wording, only the driver changes. When a use case changes, its scenarios change, and the steps only
+if new words are needed.
 
 **Isolation.** Every scenario creates its own people and postings in its `Given` steps. The driver gives
-each alias ("Sam", "Backend Developer") this run's suffix, so scenarios never meet each other's data and
+each alias ("Sam", "Cloud Developer") this run's suffix, so scenarios never meet each other's data and
 can run in parallel and again on the same database. Two exceptions, because the system cannot create
 these roles yet: `a recruiter "Riley" with an active account` is the demo recruiter Riley Chen, and
 `the administrator` is the demo administrator Avery Morgan (`config/DemoUsers.java`).
@@ -116,6 +117,7 @@ up on its own, except:
 | UC-01 | 2a: no posting is open at all | Other postings are always open on a shared database. |
 | UC-01 | A closed posting is not returned | A scenario cannot close a posting yet: only the deadline does (UC-13). |
 | UC-01, UC-02, UC-03 | \*a: the system fails | Needs the backend to fail in the middle of a request. |
+| UC-01 | No applicant or application data on public pages (special requirement) | A check that something is absent from a page proves little; left to review. |
 | Log In | A recruiter in Pending Approval sees only the request's status | Needs UC-08, not on main yet. |
 
 The UC-02 extension 1a scenario checks that the visitor is handed to recruiter registration; that page

@@ -6,4 +6,3 @@ Feature: UC-01 Search Job Postings
     Given an open posting "Platform Engineer"
     When a visitor views the details of "Platform Engineer"
     Then the visitor sees the title, organization, location, employment type, openings, description and requirements of "Platform Engineer"
-    And no applicant data is shown

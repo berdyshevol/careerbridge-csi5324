@@ -1,40 +1,71 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
-import { ACCOUNTS } from "../accounts";
+import { ACCOUNTS, logIn, logOut, tokenOf } from "../accounts";
 
 // The protocol driver of the user scenarios (spec/user-scenarios): the only place that knows the
 // screens, their wording and the backend's addresses. The step definitions speak the use cases'
 // language and call this; when a screen changes, only this file does.
 
 const API = "http://localhost:8080";
-export const PASSWORD = "Sunrise-2026x";
-export const RESUME_PDF = `${__dirname}/../fixtures/Pat_Kim_Resume.pdf`;
+const PASSWORD = "Sunrise-2026x";
+const OTHER_PASSWORD = "Another-Sunrise-2026x";
+const WRONG_PASSWORD = "not-the-password-1";
+const RESUME_PDF = path.join(__dirname, "..", "fixtures", "Pat_Kim_Resume.pdf");
+const RESUME_NAME = path.basename(RESUME_PDF);
 
-export type Person = { alias: string; fullName: string; email: string; password: string };
-export type Posting = { alias: string; title: string; id: number };
+const ORGANIZATION = { id: 1, name: "Brazos Analytics" };
+const POSTING_DETAILS = { location: "Hybrid", employmentType: "Contract", numberOfOpenings: 2 };
 
-// Every alias gets this run's suffix, so a scenario never meets the data of another scenario or run
+export type Person = { firstName: string; lastName: string; fullName: string; email: string; password: string };
+export type Posting = { title: string; id: number; description: string; requirements: string };
+
+const person = (firstName: string, lastName: string, email: string, password: string): Person => ({
+  firstName,
+  lastName,
+  fullName: `${firstName} ${lastName}`,
+  email,
+  password,
+});
+
+const fromAccount = (account: { name: string; email: string; password: string }) => {
+  const [firstName, lastName] = account.name.split(" ");
+  return person(firstName, lastName, account.email, account.password);
+};
+
+export const ADMINISTRATOR = fromAccount(ACCOUNTS.administrator);
+
+// One per scenario. Every alias gets this run's suffix, so a scenario never meets the data of another
+// scenario or run; the demo recruiter and administrator are the only shared accounts.
 export class Cast {
   private readonly run = `${Date.now().toString(36)}${Math.floor(Math.random() * 1e6).toString(36)}`;
   private readonly people = new Map<string, Person>();
   private readonly postings = new Map<string, Posting>();
-  // A stand-in for an email address nobody has registered
-  readonly strangerEmail = `nobody.${this.run}@example.com`;
+  private readonly tokens = new Map<string, Promise<{ Authorization: string }>>();
+  readonly stranger = person("Nobody", "Known", `nobody.${this.run}@example.com`, WRONG_PASSWORD);
+  lastKeyword = "";
 
   person(alias: string): Person {
-    let person = this.people.get(alias);
-    if (!person) {
-      person = { alias, fullName: `${alias} Tester`, email: `${alias.toLowerCase()}.${this.run}@example.com`, password: PASSWORD };
-      this.people.set(alias, person);
+    if (!this.people.has(alias)) {
+      this.people.set(alias, person(alias, "Tester", `${alias.toLowerCase()}.${this.run}@example.com`, PASSWORD));
     }
-    return person;
+    return this.people.get(alias)!;
   }
 
-  postingTitle(alias: string) {
-    return `${alias} ${this.run}`;
+  // The system cannot create recruiters yet (UC-08), so a recruiter is the demo recruiter
+  castAsDemoRecruiter(alias: string) {
+    this.people.set(alias, fromAccount(ACCOUNTS.recruiter));
   }
 
-  remember(posting: Posting) {
-    this.postings.set(posting.alias, posting);
+  addPosting(alias: string, id: number): Posting {
+    const posting = {
+      title: `${alias} ${this.run}`,
+      id,
+      description: `What the ${alias} does all day.`,
+      requirements: `What a ${alias} needs to know.`,
+    };
+    this.postings.set(alias, posting);
+    return posting;
   }
 
   posting(alias: string): Posting {
@@ -44,75 +75,88 @@ export class Cast {
     }
     return posting;
   }
+
+  postingTitle(alias: string) {
+    return `${alias} ${this.run}`;
+  }
+
+  token(request: APIRequestContext, account: { email: string; password: string }) {
+    if (!this.tokens.has(account.email)) {
+      this.tokens.set(account.email, tokenOf(request, account));
+    }
+    return this.tokens.get(account.email)!;
+  }
 }
 
-// Backend calls, for setting up the Given and reading the system's state
+// Backend: setting up the Given and reading what the system kept
 
-export async function registerByApi(request: APIRequestContext, person: Person) {
+export async function registerByApi(request: APIRequestContext, applicant: Person) {
   const answer = await request.post(`${API}/api/applicants`, {
-    data: { fullName: person.fullName, email: person.email, password: person.password },
+    data: { fullName: applicant.fullName, email: applicant.email, password: applicant.password },
   });
   expect(answer.ok(), await answer.text()).toBeTruthy();
 }
 
-export async function logInByApi(request: APIRequestContext, email: string, password: string) {
-  return request.post(`${API}/api/auth/login`, { data: { email, password } });
+export async function logInAccepted(request: APIRequestContext, email: string, password: string) {
+  return (await request.post(`${API}/api/auth/login`, { data: { email, password } })).ok();
 }
 
-async function tokenOf(request: APIRequestContext, email: string, password: string) {
-  const answer = await logInByApi(request, email, password);
-  expect(answer.ok(), await answer.text()).toBeTruthy();
-  return { Authorization: `Bearer ${(await answer.json()).token}` };
+export async function hasOnlyItsOwnPassword(request: APIRequestContext, applicant: Person) {
+  return (
+    (await logInAccepted(request, applicant.email, applicant.password)) &&
+    !(await logInAccepted(request, applicant.email, OTHER_PASSWORD))
+  );
 }
 
-export async function profileOf(request: APIRequestContext, person: Person) {
-  const answer = await request.get(`${API}/api/applicant/profile`, {
-    headers: await tokenOf(request, person.email, person.password),
-  });
+export async function failLogIns(request: APIRequestContext, applicant: Person, times: number) {
+  for (let attempt = 0; attempt < times; attempt++) {
+    expect(await logInAccepted(request, applicant.email, WRONG_PASSWORD)).toBeFalsy();
+  }
+}
+
+export async function profileOf(request: APIRequestContext, cast: Cast, applicant: Person) {
+  const answer = await request.get(`${API}/api/applicant/profile`, { headers: await cast.token(request, applicant) });
   expect(answer.ok()).toBeTruthy();
   return answer.json();
 }
 
-export async function setPhoneByApi(request: APIRequestContext, person: Person, phone: string) {
-  const [firstName, lastName] = person.fullName.split(" ");
+export async function setPhoneByApi(request: APIRequestContext, cast: Cast, applicant: Person, phone: string) {
   const answer = await request.put(`${API}/api/applicant/profile`, {
-    headers: await tokenOf(request, person.email, person.password),
-    data: { firstName, lastName, phone },
+    headers: await cast.token(request, applicant),
+    data: { firstName: applicant.firstName, lastName: applicant.lastName, phone },
   });
   expect(answer.ok(), await answer.text()).toBeTruthy();
 }
 
-// The demo recruiter submits a posting; the demo administrator approves it when it is to be open
+// The demo recruiter submits a posting; the administrator approves it when it is to be open
 export async function postingByApi(request: APIRequestContext, cast: Cast, alias: string, open: boolean) {
-  const recruiter = await tokenOf(request, ACCOUNTS.recruiter.email, ACCOUNTS.recruiter.password);
+  const recruiter = await cast.token(request, ACCOUNTS.recruiter);
   const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const created = await request.post(`${API}/api/postings`, {
     headers: recruiter,
     data: {
-      organizationId: 1,
+      organizationId: ORGANIZATION.id,
       title: cast.postingTitle(alias),
       description: `What the ${alias} does all day.`,
       jobRequirements: `What a ${alias} needs to know.`,
-      location: "Hybrid",
-      employmentType: "Contract",
-      numberOfOpenings: 2,
+      ...POSTING_DETAILS,
       applicationDeadline: deadline,
     },
   });
   expect(created.ok(), await created.text()).toBeTruthy();
-  const id: number = (await created.json()).jobPostId;
-  expect((await request.post(`${API}/api/postings/${id}/submit`, { headers: recruiter })).ok()).toBeTruthy();
+  const posting = cast.addPosting(alias, (await created.json()).jobPostId);
+  expect((await request.post(`${API}/api/postings/${posting.id}/submit`, { headers: recruiter })).ok()).toBeTruthy();
   if (open) {
-    const administrator = await tokenOf(request, ACCOUNTS.administrator.email, ACCOUNTS.administrator.password);
-    expect((await request.post(`${API}/api/admin/postings/${id}/approve`, { headers: administrator })).ok()).toBeTruthy();
+    const administrator = await cast.token(request, ACCOUNTS.administrator);
+    expect(
+      (await request.post(`${API}/api/admin/postings/${posting.id}/approve`, { headers: administrator })).ok(),
+    ).toBeTruthy();
   }
-  cast.remember({ alias, title: cast.postingTitle(alias), id });
 }
 
-export async function isWaitingForApproval(request: APIRequestContext, posting: Posting) {
-  const administrator = await tokenOf(request, ACCOUNTS.administrator.email, ACCOUNTS.administrator.password);
+export async function isWaitingForApproval(request: APIRequestContext, cast: Cast, posting: Posting) {
   const pending: { jobPostId: number }[] = await (
-    await request.get(`${API}/api/admin/postings/pending`, { headers: administrator })
+    await request.get(`${API}/api/admin/postings/pending`, { headers: await cast.token(request, ACCOUNTS.administrator) })
   ).json();
   return pending.some((each) => each.jobPostId === posting.id);
 }
@@ -121,83 +165,247 @@ export async function openPostingsMatching(request: APIRequestContext, keyword: 
   return (await request.get(`${API}/api/postings?keyword=${encodeURIComponent(keyword)}`)).json();
 }
 
-// Screens
+// Screens: what a person sees and does
 
-export const SCREEN = {
-  wrongCredentials: "The email or password is not right. Check both and try again.",
-  locked: "This account is locked. Five failed log-ins within 15 minutes lock it for 15 minutes.",
-  lastNameNeeded: "Enter your first and last name.",
-  passwordPolicy: "The password needs at least 10 characters, including a letter and a number.",
-  emailTaken: "An account already exists for this email. Log in instead",
-  phoneMalformed: "Enter a phone number like (254) 555-0142.",
-  noResume: "No resume on file.",
-  profileSaved: "Profile saved.",
-  noMatch: "No matching postings.",
-  resumeRefused: "Use a PDF or DOCX file of 5 MB or less.",
-  onlyAdministrator: /Only an administrator reviews postings/,
-  recruitersOnlyLogIn: "Log in as a recruiter to create a job posting.",
-};
+const accountMenu = (page: Page) => page.getByRole("button", { name: /^Account menu for / });
+const refusal = (page: Page) => page.getByRole("main").getByRole("alert");
+const navigation = (page: Page) => page.getByRole("navigation", { name: "Navigation" });
+const keywords = (page: Page) => page.getByRole("main").getByRole("searchbox", { name: "Keywords" });
 
-export async function fillRegistration(page: Page, fullName: string, email: string, password: string) {
+export async function arriveAsVisitor(page: Page) {
+  await page.goto("/");
+  await expectNobodyLoggedIn(page);
+}
+
+export async function expectNobodyLoggedIn(page: Page) {
+  await expect(accountMenu(page)).toHaveCount(0);
+}
+
+async function fillRegistration(page: Page, fullName: string, email: string, password: string) {
   await page.goto("/register");
   await page.getByLabel("Full name").fill(fullName);
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
+}
+
+export async function registerOnScreen(page: Page, applicant: Person) {
+  await fillRegistration(page, applicant.fullName, applicant.email, applicant.password);
   await page.getByRole("button", { name: "Create account" }).click();
 }
 
-export async function submitLogIn(page: Page, email: string, password: string, next?: string) {
-  await page.goto(next ? `/login?next=${encodeURIComponent(next)}` : "/login");
+export async function registerWithOneWordNameAndWeakPassword(page: Page, applicant: Person) {
+  await fillRegistration(page, applicant.firstName, applicant.email, "short");
+  await page.getByRole("button", { name: "Create account" }).click();
+}
+
+export async function registerWithTheEmailOf(page: Page, applicant: Person) {
+  await fillRegistration(page, "Other Person", applicant.email, OTHER_PASSWORD);
+  await page.getByRole("button", { name: "Create account" }).click();
+}
+
+// UC-02 extension 1a: the applicant form is filled in, then left for recruiter registration
+export async function fillRegistrationThenChooseRecruiter(page: Page, applicant: Person) {
+  await fillRegistration(page, applicant.fullName, applicant.email, applicant.password);
+  await page.getByRole("link", { name: "Register your organization" }).click();
+}
+
+export async function expectOnRecruiterRegistration(page: Page) {
+  await expect(page).toHaveURL(/\/recruiter\/register$/);
+}
+
+export async function expectInvitedToAddResume(page: Page) {
+  await expect(page).toHaveURL(/\/profile$/);
+  await expect(page.getByText("No resume on file.")).toBeVisible();
+}
+
+export async function expectRegistrationRefused(page: Page, reason: "last name" | "password policy" | "email taken") {
+  if (reason === "last name") {
+    await expect(page.getByText("Enter your first and last name.")).toBeVisible();
+  } else if (reason === "password policy") {
+    await expect(page.getByLabel("Password")).toHaveAccessibleDescription(
+      "The password needs at least 10 characters, including a letter and a number.",
+    );
+  } else {
+    await expect(page.getByLabel("Email")).toHaveAccessibleDescription(
+      "An account already exists for this email. Log in instead",
+    );
+  }
+  await expect(page).toHaveURL(/\/register/);
+  await expectNobodyLoggedIn(page);
+}
+
+export async function expectOfferedToLogInInstead(page: Page) {
+  await expect(page.getByRole("main").getByRole("link", { name: "Log in instead" })).toBeVisible();
+}
+
+export async function logInOnScreen(page: Page, account: Person) {
+  await logIn(page, account);
+}
+
+// Leaves the form as the system answered, without waiting for a session
+export async function tryToLogIn(page: Page, email: string, password: string) {
+  await page.goto("/login");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
 }
 
-export async function logInOnScreen(page: Page, email: string, password: string) {
-  await submitLogIn(page, email, password);
-  await expect(page.getByRole("button", { name: /^Account menu for / })).toBeVisible();
+export async function tryWrongPassword(page: Page, account: Person) {
+  await tryToLogIn(page, account.email, WRONG_PASSWORD);
 }
 
 export async function logOutOnScreen(page: Page) {
-  await page.getByRole("button", { name: /^Account menu for / }).click();
-  await page.getByRole("button", { name: "Log out" }).click();
-  await expect(page.getByRole("button", { name: /^Account menu for / })).toHaveCount(0);
+  await logOut(page);
+  await expectNobodyLoggedIn(page);
 }
 
-export function signedInAs(page: Page, fullName: string, role: string) {
-  return page.getByLabel(`${fullName}, ${role}`);
+export async function expectLoggedInAs(page: Page, account: Person, role: "Applicant" | "Recruiter" | "Administrator") {
+  await expect(page.getByLabel(`${account.fullName}, ${role}`)).toBeVisible();
 }
 
-export function accountMenu(page: Page) {
-  return page.getByRole("button", { name: /^Account menu for / });
+export async function expectLogInRefused(page: Page, reason: "credentials" | "locked") {
+  await expect(refusal(page)).toHaveText(
+    reason === "credentials"
+      ? "The email or password is not right. Check both and try again."
+      : "This account is locked. Five failed log-ins within 15 minutes lock it for 15 minutes.",
+  );
+  await expectNobodyLoggedIn(page);
 }
 
-export async function navigationEntries(page: Page) {
-  return page.getByRole("navigation", { name: "Navigation" }).getByRole("link").allInnerTexts();
+export async function openApprovalQueue(page: Page) {
+  await page.goto("/admin/postings");
 }
 
-export async function searchJobBoard(page: Page, keyword: string) {
+export async function expectApprovalQueue(page: Page) {
+  await openApprovalQueue(page);
+  await expect(page.getByRole("heading", { name: "Pending review" })).toBeVisible();
+}
+
+export async function expectOnlyAdministratorNotice(page: Page) {
+  await expect(page.getByText(/Only an administrator reviews postings/)).toBeVisible();
+}
+
+export async function expectPostingNotShown(page: Page, posting: Posting) {
+  await expect(page.getByText(posting.title)).toHaveCount(0);
+}
+
+export async function expectNavigation(page: Page, entries: string[]) {
+  await expect(navigation(page).getByRole("link")).toHaveText(entries);
+}
+
+export async function expectNavigationWithout(page: Page, entries: string[]) {
+  await expect(navigation(page)).toBeVisible();
+  for (const entry of entries) {
+    await expect(navigation(page).getByRole("link", { name: entry, exact: true })).toHaveCount(0);
+  }
+}
+
+export async function expectCanCreatePosting(page: Page) {
+  await page.goto("/recruiter/postings/new");
+  await expect(page.getByRole("heading", { level: 1, name: "Create job posting" })).toBeVisible();
+}
+
+export async function expectCreatingPostingAsksToLogIn(page: Page) {
+  await page.goto("/recruiter/postings/new");
+  await expect(page.getByText("Log in as a recruiter to create a job posting.")).toBeVisible();
+}
+
+export async function openProfile(page: Page) {
+  await page.goto("/profile");
+}
+
+export async function expectProfileOf(page: Page, applicant: Person) {
+  await expect(page.getByLabel("First name")).toHaveValue(applicant.firstName);
+  await expect(page.getByLabel("Last name")).toHaveValue(applicant.lastName);
+  await expect(page.getByLabel("Email")).toHaveValue(applicant.email);
+}
+
+export async function expectNoResume(page: Page) {
+  await expect(page.getByText("No resume on file.")).toBeVisible();
+}
+
+export async function changeProfile(page: Page, detail: "Headline" | "Phone", value: string) {
+  await openProfile(page);
+  await page.getByLabel(detail).fill(value);
+  await page.getByRole("button", { name: "Save details" }).click();
+}
+
+export async function expectProfileSaved(page: Page) {
+  await expect(page.getByRole("form", { name: "Details" }).getByRole("status")).toContainText("Profile saved.");
+}
+
+export async function expectPhoneRefused(page: Page) {
+  await expect(page.getByText("Enter a phone number like (254) 555-0142.")).toBeVisible();
+}
+
+export async function uploadPdfResume(page: Page) {
+  await openProfile(page);
+  await page.getByLabel("Choose a file").setInputFiles(RESUME_PDF);
+  await expectResumeOnFile(page);
+}
+
+export async function uploadPlainTextResume(page: Page, folder: string) {
+  mkdirSync(folder, { recursive: true });
+  const file = path.join(folder, "notes.txt");
+  writeFileSync(file, "Not a resume.");
+  await openProfile(page);
+  await page.getByLabel("Choose a file").setInputFiles(file);
+}
+
+export async function expectResumeOnFile(page: Page, uploadedToday = false) {
+  await expect(page.getByText(RESUME_NAME)).toBeVisible();
+  if (uploadedToday) {
+    const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    await expect(page.getByText(`Uploaded ${today}`)).toBeVisible();
+  }
+}
+
+export async function expectPlainTextResumeRefused(page: Page) {
+  await expect(refusal(page)).toContainText("notes.txt was not uploaded.");
+  await expect(refusal(page)).toContainText("Use a PDF or DOCX file of 5 MB or less.");
+}
+
+export async function search(page: Page, keyword: string) {
   await page.goto("/jobs");
-  await page.getByRole("main").getByRole("searchbox", { name: "Keywords" }).fill(keyword);
+  await keywords(page).fill(keyword);
   await page.getByRole("button", { name: "Search" }).click();
   await expect(page).toHaveURL(new RegExp(`keyword=${encodeURIComponent(keyword)}`));
 }
 
-export function postingCard(page: Page, title: string) {
-  return page.getByRole("listitem").filter({ has: page.getByRole("link", { name: title }) });
+export async function expectReturnedWithSummary(page: Page, posting: Posting) {
+  const card = page.getByRole("listitem").filter({ has: page.getByRole("link", { name: posting.title }) });
+  await expect(card).toContainText(
+    `${ORGANIZATION.name} · ${POSTING_DETAILS.location} · ${POSTING_DETAILS.employmentType}`,
+  );
 }
 
-export async function editProfileField(page: Page, label: string, value: string) {
-  await page.goto("/profile");
-  await page.getByLabel(label).fill(value);
-  await page.getByRole("button", { name: "Save details" }).click();
+export async function expectNotReturned(page: Page, posting: Posting) {
+  await expect(page.getByRole("link", { name: posting.title })).toHaveCount(0);
 }
 
-export async function uploadResume(page: Page, file: string) {
-  await page.goto("/profile");
-  await page.getByLabel("Choose a file").setInputFiles(file);
+export async function expectNoMatch(page: Page) {
+  await expect(page.getByText("No matching postings.")).toBeVisible();
 }
 
-export function today() {
-  return new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+export async function expectKeywordKept(page: Page, keyword: string) {
+  await expect(keywords(page)).toHaveValue(keyword);
+}
+
+export async function openPosting(page: Page, posting: Posting) {
+  await page.goto(`/jobs/${posting.id}`);
+}
+
+export async function expectPostingDetails(page: Page, posting: Posting) {
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { level: 1, name: posting.title })).toBeVisible();
+  for (const detail of [
+    ORGANIZATION.name,
+    POSTING_DETAILS.location,
+    POSTING_DETAILS.employmentType,
+    `${POSTING_DETAILS.numberOfOpenings} openings`,
+    posting.description,
+    posting.requirements,
+  ]) {
+    await expect(main.getByText(detail).first()).toBeVisible();
+  }
 }
