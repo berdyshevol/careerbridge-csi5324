@@ -36,9 +36,10 @@ public class DemoUsers implements CommandLineRunner {
         return password.isBlank() && inMemory ? local : password;
     }
 
-    private static DemoUser numbered(int n, Supplier<User> kind, String password) {
-        String role = kind.get() instanceof Recruiter ? "Recruiter" : "Applicant";
-        return new DemoUser(role, String.valueOf(n), role.toLowerCase() + n + "@example.com", kind, password);
+    private static final List<String> NUMBERS = List.of("One", "Two", "Three");
+
+    private static DemoUser numbered(String role, int n, Supplier<User> kind, String password) {
+        return new DemoUser(role, NUMBERS.get(n - 1), role.toLowerCase() + n + "@example.com", kind, password);
     }
 
     private final UserRepository userRepository;
@@ -68,11 +69,11 @@ public class DemoUsers implements CommandLineRunner {
                 new DemoUser("Avery", "Morgan", "admin@careerbridge.example", Administrator::new,
                         orLocal(administratorPassword, "Administrator-local-1", inMemory)),
                 // Easy to say out loud in a demo; they share one password
-                numbered(1, Applicant::new, numbered),
-                numbered(2, Applicant::new, numbered),
-                numbered(3, Applicant::new, numbered),
-                numbered(1, Recruiter::new, numbered),
-                numbered(2, Recruiter::new, numbered));
+                numbered("Applicant", 1, Applicant::new, numbered),
+                numbered("Applicant", 2, Applicant::new, numbered),
+                numbered("Applicant", 3, Applicant::new, numbered),
+                numbered("Recruiter", 1, Recruiter::new, numbered),
+                numbered("Recruiter", 2, Recruiter::new, numbered));
     }
 
     @Override
