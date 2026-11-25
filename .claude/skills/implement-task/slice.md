@@ -6,6 +6,9 @@
 - [ ] JUnit for the service, Vitest for the page and `lib/api.ts`, and a Playwright test for the
       slice's flow, all against the real backend.
 - [ ] Each FR, step and extension in its `Covers:` line is built and tested.
+- [ ] Each step and extension in its `Covers:` line has an acceptance scenario in
+      `spec/user-scenarios/`, or is listed there as not covered with the reason: run the
+      `user-scenario` skill in write mode.
 - [ ] Each page of its `Screen:` line matches its mockup in `spec/screens/`; a deliberate
       difference is drawn in the mockup in this pull request.
 - [ ] screen-review has run and its "must fix" findings are fixed.
