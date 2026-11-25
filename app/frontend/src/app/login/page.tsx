@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BackendDown from "@/components/BackendDown";
 import LogInForm from "@/components/LogInForm";
 import PageTitle from "@/components/PageTitle";
 import { queryValue, viewPosting, type PageQuery } from "@/lib/api";
@@ -11,7 +12,13 @@ async function postingToReturnTo(next: string | undefined) {
 
 export default async function LogInPage({ searchParams }: { searchParams: Promise<PageQuery> }) {
   const next = queryValue((await searchParams).next);
-  const posting = await postingToReturnTo(next);
+  let posting;
+  try {
+    posting = await postingToReturnTo(next);
+  } catch {
+    // Logging in needs the same backend, so the page says it is waking instead of offering a form that would fail
+    return <BackendDown />;
+  }
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-5">
       <PageTitle

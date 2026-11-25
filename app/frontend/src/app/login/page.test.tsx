@@ -41,6 +41,14 @@ describe("log-in page", () => {
     ).toBeInTheDocument();
   });
 
+  it("says the server is waking when the posting cannot be read", async () => {
+    vi.mocked(viewPosting).mockRejectedValue(new Error("Backend answered 503"));
+    await renderWith("/jobs/3");
+
+    expect(screen.getByRole("alert")).toHaveTextContent("is not answering");
+    expect(screen.queryByRole("form", { name: "Log in" })).not.toBeInTheDocument();
+  });
+
   it("has no subtitle for a page that is not a posting, or a posting that is gone", async () => {
     await renderWith("/applications");
     expect(viewPosting).not.toHaveBeenCalled();
