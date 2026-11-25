@@ -203,7 +203,7 @@ Then("{string} is still waiting for approval", async ({ request, cast }, posting
 });
 
 Then("{string} is offered only the applicant's own work", async ({ page }, _alias: string) => {
-  await system.expectNavigation(page, ["Home", "Find jobs", "Applications", "Profile"]);
+  await system.expectApplicantNavigation(page);
 });
 
 Then("{string} can create a job posting", async ({ page }, _alias: string) => {
@@ -211,7 +211,7 @@ Then("{string} can create a job posting", async ({ page }, _alias: string) => {
 });
 
 Then("{string} is offered nothing of an applicant's work", async ({ page }, _alias: string) => {
-  await system.expectNavigationWithout(page, ["Find jobs", "Applications", "Profile"]);
+  await system.expectNoApplicantNavigation(page);
 });
 
 Then("creating a job posting asks to log in first", async ({ page }) => {
@@ -240,11 +240,11 @@ Then("{string} sees that no resume is on file", async ({ page }, _alias: string)
 });
 
 When("{string} changes the headline to {string}", async ({ page }, _alias: string, headline: string) => {
-  await system.changeProfile(page, "Headline", headline);
+  await system.changeHeadline(page, headline);
 });
 
 When("{string} changes the phone number to {string}", async ({ page }, _alias: string, phone: string) => {
-  await system.changeProfile(page, "Phone", phone);
+  await system.changePhone(page, phone);
 });
 
 Then("the profile details are saved", async ({ page }) => {

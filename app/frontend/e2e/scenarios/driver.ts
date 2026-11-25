@@ -289,13 +289,16 @@ export async function expectPostingNotShown(page: Page, posting: Posting) {
   await expect(page.getByText(posting.title)).toHaveCount(0);
 }
 
-export async function expectNavigation(page: Page, entries: string[]) {
-  await expect(navigation(page).getByRole("link")).toHaveText(entries);
+const APPLICANT_ENTRIES = ["Home", "Find jobs", "Applications", "Profile"];
+
+export async function expectApplicantNavigation(page: Page) {
+  await expect(navigation(page).getByRole("link")).toHaveText(APPLICANT_ENTRIES);
 }
 
-export async function expectNavigationWithout(page: Page, entries: string[]) {
+// Home is every role's; the rest is the applicant's own
+export async function expectNoApplicantNavigation(page: Page) {
   await expect(navigation(page)).toBeVisible();
-  for (const entry of entries) {
+  for (const entry of APPLICANT_ENTRIES.slice(1)) {
     await expect(navigation(page).getByRole("link", { name: entry, exact: true })).toHaveCount(0);
   }
 }
@@ -324,10 +327,18 @@ export async function expectNoResume(page: Page) {
   await expect(page.getByText("No resume on file.")).toBeVisible();
 }
 
-export async function changeProfile(page: Page, detail: "Headline" | "Phone", value: string) {
+async function changeProfile(page: Page, label: string, value: string) {
   await openProfile(page);
-  await page.getByLabel(detail).fill(value);
+  await page.getByLabel(label).fill(value);
   await page.getByRole("button", { name: "Save details" }).click();
+}
+
+export async function changeHeadline(page: Page, headline: string) {
+  await changeProfile(page, "Headline", headline);
+}
+
+export async function changePhone(page: Page, phone: string) {
+  await changeProfile(page, "Phone", phone);
 }
 
 export async function expectProfileSaved(page: Page) {

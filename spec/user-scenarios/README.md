@@ -21,8 +21,8 @@ npx bddgen && npx playwright test --project=scenarios --grep @scope-applicant-1 
 ```
 
 `bddgen` turns the `.feature` files into Playwright tests in `app/frontend/.features-gen/` (not committed).
-They run on the laptop project only, against a backend on a fresh database, like the other end-to-end
-tests. A scenario passes when every `Then` holds. Each one can also be walked by hand on the running app.
+They run in their own Playwright project, `scenarios`, at laptop width only, against a backend on a fresh
+database, like the other end-to-end tests. A scenario passes when every `Then` holds. Each one can also be walked by hand on the running app.
 
 ## How it is built
 
