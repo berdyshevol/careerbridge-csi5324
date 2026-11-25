@@ -238,6 +238,8 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC13.8:** The system shall log each expiration run, including start time, postings closed, and errors. (UC-13 step 5)
 
+- **FR-UC13.9:** The system shall let the Recruiter who created a Published posting close it before its deadline, with reason Closed by recruiter: the posting leaves public listings and accepts no new applications, and applications already submitted keep their stages. It shall refuse a posting that is not Published, that is past its deadline, or that another recruiter created. (A3; UC-13 extension \*a)
+
 ### 3.2 Non-functional Requirements
 
 #### UC-01 Search Job Postings
@@ -519,6 +521,7 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC13.6|UC-13 extension 3a|runExpirationJob()|CO-13.1|
 |FR-UC13.7|UC-13 step 4|runExpirationJob()|CO-13.1|
 |FR-UC13.8|UC-13 step 5|runExpirationJob()|CO-13.1|
+|FR-UC13.9|UC-13 extension \*a|closePosting(postingId)|CO-13.2|
 |FR-UC14.1|UC-14 steps 1–2|listPostings()|query (no contract)|
 |FR-UC14.2|UC-14 steps 3–4|reviewApplication(applicationId)|CO-14.1|
 |FR-UC14.3|UC-14 steps 5–6|advanceApplication(applicationId, note)|CO-14.2|

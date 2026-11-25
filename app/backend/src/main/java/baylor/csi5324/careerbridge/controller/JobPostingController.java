@@ -47,6 +47,11 @@ public class JobPostingController {
         return jobPostingService.submitJobPosting(postingId, recruiter.getName());
     }
 
+    @PostMapping("/{postingId}/close")
+    public JobPosting closePosting(@PathVariable Long postingId, Principal recruiter) {
+        return jobPostingService.closePosting(postingId, recruiter.getName());
+    }
+
     // Only these three exceptions: any other failure is the server's, not the recruiter's
     @ExceptionHandler(InvalidPostingException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
