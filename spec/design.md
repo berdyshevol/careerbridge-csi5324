@@ -407,6 +407,57 @@ sequenceDiagram
 
 **Figure 32: SD-5 Submit a posting for approval (UC-11)**
 
+A saved Draft (extension 3b), or a posting the Administrator returned (extension 6a), is reopened
+and changed before it is submitted (SD-5b, CO-11.2, SCRUM-212). Opening it is a query; saving it
+runs the same field checks as creating. Only the Recruiter who created the posting may open or
+change it, and only while it is a Draft or Returned. The organization never changes, and a Returned
+posting keeps the Administrator's comment until it is submitted again.
+
+```mermaid
+sequenceDiagram
+    actor R as Recruiter
+    participant JC as JobPosting<br/>Controller
+    participant JS as JobPosting<br/>Service
+    participant JR as JobPosting<br/>Repository
+    participant P as :JobPosting
+
+    R->>JC: GET /api/postings/{postingId}/edit<br/>with the session token
+    JC->>JS: openPostingForEdit(postingId, recruiterEmail)
+    JS->>JS: findOwnDraftOrReturned(postingId, recruiterEmail)
+    JS->>JR: findById(postingId)
+    JR-->>JS: Optional<JobPosting>
+    alt no such posting
+        JS-->>JC: throw PostingNotFoundException
+        JC-->>R: 404
+    else created by another recruiter, or by none
+        JS-->>JC: throw PostingNotAllowedException(reason)
+        JC-->>R: 403 and the reason
+    else not a Draft or Returned
+        JS-->>JC: throw PostingStateConflictException(current status)
+        JC-->>R: 409 and the status
+    else the recruiter's own Draft or Returned posting
+        JS-->>JC: JobPosting
+        JC-->>R: 200, JobPosting with its reviewComment
+    end
+
+    R->>JC: PUT /api/postings/{postingId} (CreateJobPostingRequest)
+    JC->>JS: updatePosting(postingId, request, recruiterEmail)
+    JS->>JS: findOwnDraftOrReturned(postingId, recruiterEmail)<br/>(the same refusals as above)
+    JS->>JS: validateDetails(request) (ext. 5a, 5b)
+    alt a field is missing or invalid
+        JS-->>JC: throw InvalidPostingException(reason)
+        JC-->>R: 400 and the reason, nothing changed
+    else valid
+        JS->>P: applyDetails(posting, request)<br/>(organization, status and comment stay)
+        JS->>JR: save(posting)
+        JR-->>JS: JobPosting
+        JS-->>JC: JobPosting
+        JC-->>R: 200, the saved posting
+    end
+```
+
+**Figure 33: SD-5b Reopen and change a posting (UC-11 extensions 3b, 6a)**
+
 ### UC-12 Approve Job Posting
 
 The queue is a query (SD-6): Pending Approval postings, oldest first; an empty list is extension
@@ -437,7 +488,7 @@ sequenceDiagram
     AC-->>A: 200 List<JobPosting> (empty: ext. 2a)
 ```
 
-**Figure 33: SD-6 Open the posting approval queue (UC-12)**
+**Figure 34: SD-6 Open the posting approval queue (UC-12)**
 
 ```mermaid
 sequenceDiagram
@@ -486,7 +537,7 @@ sequenceDiagram
     AC-->>A: 200, JobPosting with its new status
 ```
 
-**Figure 34: SD-7 Approve, return or reject a posting (UC-12)**
+**Figure 35: SD-7 Approve, return or reject a posting (UC-12)**
 
 ### UC-13 Expire Job Posting
 
@@ -545,7 +596,7 @@ sequenceDiagram
     ES-->>SC: number of postings closed
 ```
 
-**Figure 35: SD-11 Expire job postings (UC-13)**
+**Figure 36: SD-11 Expire job postings (UC-13)**
 
 The Recruiter who created a Published posting may also close it before its deadline (extension
 \*a, CO-13.2, SCRUM-213). The request runs the same Close Job Posting step, `JobPosting.close`,
@@ -593,7 +644,7 @@ sequenceDiagram
     end
 ```
 
-**Figure 36: SD-11b Recruiter closes a posting (UC-13 extension \*a)**
+**Figure 37: SD-11b Recruiter closes a posting (UC-13 extension \*a)**
 
 ## 7. Design Class Diagram (DCD)
 
@@ -615,6 +666,7 @@ the DCD must contain each of them.
 | SD-10 | `ApplicantProfileController.uploadResume` | `ApplicantProfileService.uploadResume` | `ApplicantRepository.findByEmailIgnoreCase`, `save`; `ResumeRepository.save`, `delete` |
 | SD-4 | `JobPostingController.createPosting` | `JobPostingService.createPosting` | `OrganizationRepository.findById`; `RecruiterRepository.findByEmailIgnoreCase`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\*; `JobPostingRepository.save` |
 | SD-5 | `JobPostingController.submitJobPosting` | `JobPostingService.submitJobPosting`; `JobPosting.wasCreatedBy` | `JobPostingRepository.findById`, `save`; `RecruiterRepository.findByEmailIgnoreCase`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\* |
+| SD-5b | `JobPostingController.openPostingForEdit`, `updatePosting` | `JobPostingService.openPostingForEdit`, `updatePosting`; `JobPosting.wasCreatedBy` | `JobPostingRepository.findById`, `save` |
 | SD-6 | `AdminJobPostingController.openPostingApprovalQueue` | `JobPostingService.openPostingApprovalQueue` | `JobPostingRepository.findByPostStatusOrderByDatePostedAscJobPostIdAsc` |
 | SD-7 | `AdminJobPostingController.approveJobPosting`, `returnJobPosting`, `rejectJobPosting` | `JobPostingService.approveJobPosting`, `returnJobPosting`, `rejectJobPosting`; `JobPosting.isPastDeadline` | `JobPostingRepository.findById`, `save`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\* |
 | SD-11 | none: `JobPostingExpirationScheduler.runScheduledExpiration` | `JobPostingExpirationService.runExpirationJob`; `JobPostingExpirationProcessor.expirePosting`; `JobPosting.isPastDeadline`, `close` | `JobPostingRepository.findByPostStatusInAndApplicationDeadlineLessThanEqual`, `findById`, `saveAndFlush` |
@@ -625,8 +677,8 @@ UC-10.
 
 ### 7.2 Job-posting side: UC-11, UC-12 and UC-13
 
-Figure 37 shows the classes that realize SD-4 to SD-7, SD-11 and SD-11b. Creating, submitting,
-closing and the Administrator's three decisions are methods of JobPostingService. The expiry job is split in three
+Figure 38 shows the classes that realize SD-4 to SD-7, SD-5b, SD-11 and SD-11b. Creating, changing,
+submitting, closing and the Administrator's three decisions are methods of JobPostingService. The expiry job is split in three
 so that one failing posting does not undo the others: the scheduler only fires,
 JobPostingExpirationService finds the postings past their deadline, and JobPostingExpirationProcessor
 expires one posting in its own transaction.
@@ -640,7 +692,8 @@ recruit for, and each membership is in one Organization. A controller, a service
 only uses another class, so those dashed dependency arrows carry no multiplicity. Classes and
 members marked «designed» are not in the code yet. The link from a Job Posting to its Recruiter,
 `wasCreatedBy`, `RecruiterRepository` and the `recruiterEmail` parameters come with SCRUM-215;
-`closePosting` and `JobPosting.close` with SCRUM-213. Getters and setters are left out.
+`closePosting` and `JobPosting.close` with SCRUM-213; `openPostingForEdit` and `updatePosting` with
+SCRUM-212. Getters and setters are left out.
 
 ```mermaid
 classDiagram
@@ -650,6 +703,8 @@ classDiagram
         +createPosting(CreateJobPostingRequest, Principal) JobPosting
         +submitJobPosting(Long postingId, Principal) JobPosting
         +closePosting(Long postingId, Principal) JobPosting
+        +openPostingForEdit(Long postingId, Principal) JobPosting
+        +updatePosting(Long postingId, CreateJobPostingRequest, Principal) JobPosting
     }
     class AdminJobPostingController {
         +openPostingApprovalQueue() List~JobPosting~
@@ -661,6 +716,8 @@ classDiagram
         +createPosting(CreateJobPostingRequest, String recruiterEmail) JobPosting
         +submitJobPosting(Long postingId, String recruiterEmail) JobPosting
         +closePosting(Long postingId, String recruiterEmail) JobPosting
+        +openPostingForEdit(Long postingId, String recruiterEmail) JobPosting
+        +updatePosting(Long postingId, CreateJobPostingRequest, String recruiterEmail) JobPosting
         +openPostingApprovalQueue() List~JobPosting~
         +approveJobPosting(Long postingId, String administrator, String comment) JobPosting
         +returnJobPosting(Long postingId, String administrator, String comment) JobPosting
@@ -762,4 +819,4 @@ classDiagram
     JobPosting --> PostStatus
 ```
 
-**Figure 37: DCD, job-posting side (UC-11 to UC-13)**
+**Figure 38: DCD, job-posting side (UC-11 to UC-13)**
