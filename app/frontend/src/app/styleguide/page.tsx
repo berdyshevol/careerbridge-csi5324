@@ -16,6 +16,7 @@ import ResumeOnFile from "@/components/ResumeOnFile";
 import SlotMeter from "@/components/SlotMeter";
 import { StageBadge, StageProgress } from "@/components/StageBadge";
 import StageTimeline from "@/components/StageTimeline";
+import UserList from "@/components/UserList";
 import { formatDate, type JobPosting } from "@/lib/api";
 import { ALL_STAGES, APPLICATION_LIMIT, STAGES, applications, offer } from "@/lib/sampleDesk";
 import type { SessionUser } from "@/lib/session";
@@ -246,6 +247,18 @@ export default function StyleguidePage() {
               <ApplicationRow key={application.applicationId} application={application} />
             ))}
           </ul>
+        </Block>
+        <Block title="User list" use="<UserList directory={…} /> — the administrator's list of users, with the count of each role">
+          <UserList
+            directory={{
+              usersByRole: { APPLICANT: 2, RECRUITER: 1, ADMINISTRATOR: 1 },
+              users: [
+                { userId: 1, firstName: "Avery", lastName: "Morgan", email: "admin@careerbridge.example", role: "ADMINISTRATOR", accountStatus: "ACTIVE" },
+                { userId: 2, firstName: "Riley", lastName: "Chen", email: "riley.chen@example.com", role: "RECRUITER", accountStatus: "PENDING_VERIFICATION" },
+                { userId: 3, firstName: "Jordan", lastName: "Lee", email: "jordan.lee@example.com", role: "APPLICANT", accountStatus: "ACTIVE" },
+              ],
+            }}
+          />
         </Block>
         <Block title="Action row" use="<ActionRow title description href action primary? /> — a role's actions on its home, in a ul with flex flex-col gap-3; primary on one only">
           <ul className="flex flex-col gap-3">

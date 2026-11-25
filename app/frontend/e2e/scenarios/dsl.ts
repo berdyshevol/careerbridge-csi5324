@@ -53,6 +53,21 @@ Given("an open posting {string}", async ({ request, cast }, alias: string) => {
   await system.postingByApi(request, cast, alias, true);
 });
 
+Given("an open posting {string} of the organization {string} acts for", async ({ request, cast }, alias: string, _recruiter: string) => {
+  await system.postingByApi(request, cast, alias, true);
+});
+
+Given("an open posting {string} of another organization", async ({ request, cast }, alias: string) => {
+  await system.postingByApi(request, cast, alias, true, true);
+});
+
+Given(
+  "a posting {string} of the organization {string} acts for, waiting for approval",
+  async ({ request, cast }, alias: string, _recruiter: string) => {
+    await system.postingByApi(request, cast, alias, false);
+  },
+);
+
 Given("a posting {string} waiting for approval", async ({ request, cast }, alias: string) => {
   await system.postingByApi(request, cast, alias, false);
 });
@@ -322,6 +337,32 @@ Then(
   },
 );
 
+// Minimum scope Administrator 2: the users and their roles
+
+When("the administrator views the users", async ({ page }) => {
+  await system.openUsers(page);
+});
+
+When("{string} asks to see the users", async ({ page }, _alias: string) => {
+  await system.openUsers(page);
+});
+
+Then("{string} is listed as an applicant", async ({ page, cast }, alias: string) => {
+  await system.expectListedAs(page, cast.person(alias), "Applicant");
+});
+
+Then("{string} is listed as a recruiter", async ({ page, cast }, alias: string) => {
+  await system.expectListedAs(page, cast.person(alias), "Recruiter");
+});
+
+Then("the administrator is listed as an administrator", async ({ page }) => {
+  await system.expectListedAs(page, ADMINISTRATOR, "Administrator");
+});
+
+Then("{string} is refused because only an administrator sees the users", async ({ page }, _alias: string) => {
+  await system.expectUsersRefused(page);
+});
+
 // UC-11 Create Job Posting
 
 When("{string} saves the posting {string} as a draft", async ({ page, cast }, _alias: string, posting: string) => {
@@ -447,4 +488,25 @@ When("{string} closes {string}", async ({ page, cast }, _alias: string, posting:
 
 Then("{string} shows as closed by its recruiter", async ({ page, cast }, posting: string) => {
   await system.expectClosedByRecruiter(page, cast.posting(posting));
+});
+
+// UC-14 Screen Applications
+
+Given("an applicant {string} has applied to {string}", async ({ request, cast }, alias: string, posting: string) => {
+  await system.applyByApi(request, cast, cast.person(alias), cast.posting(posting));
+});
+
+When("{string} asks to review the applications to the organization's postings", async ({ page }, _alias: string) => {
+  await system.openRecruiterPostings(page);
+});
+
+Then(
+  /^"(.*)" is shown with (\d+) applications? at (Applied|Screening|Interview|Offer)$/,
+  async ({ page, cast }, posting: string, count: string, stage: string) => {
+    await system.expectApplicationsAtStage(page, cast.posting(posting), Number(count), stage);
+  },
+);
+
+Then("{string} is shown as waiting for approval", async ({ page, cast }, posting: string) => {
+  await system.expectPostingStatus(page, cast.posting(posting), "waiting for approval");
 });

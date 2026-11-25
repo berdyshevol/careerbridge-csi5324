@@ -17,6 +17,7 @@ import { SessionEnded,
   updatePosting,
   updateProfile,
   viewProfile,
+  viewUsers,
   ApplicationActionRefused,
   ApplicationRefused,
   acceptOffer,
@@ -207,6 +208,28 @@ describe("createPosting", () => {
 
     expect(failed).not.toBeInstanceOf(PostingRejected);
     expect(failed.message).not.toContain("path");
+  });
+});
+
+describe("viewUsers", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("reads the users with the administrator's token", async () => {
+    const directory = { users: [], usersByRole: { APPLICANT: 0, RECRUITER: 0, ADMINISTRATOR: 1 } };
+    const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify(directory), { status: 200 }));
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(viewUsers("t")).resolves.toEqual(directory);
+
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toMatch(/\/api\/admin\/users$/);
+    expect(init.headers.Authorization).toBe("Bearer t");
+  });
+
+  it.each([401, 403])("ends the session when the backend refuses the token: %i", async (status) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("", { status })));
+
+    await expect(viewUsers("t")).rejects.toBeInstanceOf(SessionEnded);
   });
 });
 
