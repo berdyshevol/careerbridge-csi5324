@@ -15,6 +15,7 @@ import PostingDetails from "@/components/PostingDetails";
 import ResumeOnFile from "@/components/ResumeOnFile";
 import SlotMeter from "@/components/SlotMeter";
 import { StageBadge, StageProgress } from "@/components/StageBadge";
+import StageTimeline from "@/components/StageTimeline";
 import { formatDate, type JobPosting } from "@/lib/api";
 import { ALL_STAGES, APPLICATION_LIMIT, STAGES, applications, offer } from "@/lib/sampleDesk";
 import type { SessionUser } from "@/lib/session";
@@ -182,6 +183,26 @@ export default function StyleguidePage() {
             {STAGES.map((stage) => (
               <StageProgress key={stage} stage={stage} />
             ))}
+          </div>
+        </Block>
+        <Block title="Stage timeline" use="<StageTimeline entries={…} interviews? />">
+          <div className="max-w-sm rounded-2xl border border-base-300 bg-base-100 p-5">
+            <StageTimeline
+              entries={[
+                { status: "Applied", date: "2026-10-01" },
+                { status: "Screening", date: "2026-10-08" },
+                { status: "Interview", date: "2026-10-15" },
+              ]}
+              interviews={[
+                {
+                  interviewId: 1,
+                  roundNumber: 1,
+                  scheduledTime: "2026-10-21T14:00:00",
+                  format: "On-site",
+                  location: "1200 Austin Ave, Waco",
+                },
+              ]}
+            />
           </div>
         </Block>
         <Block title="Slot meter" use="<SlotMeter used={…} total={APPLICATION_LIMIT} caption? compact? />">

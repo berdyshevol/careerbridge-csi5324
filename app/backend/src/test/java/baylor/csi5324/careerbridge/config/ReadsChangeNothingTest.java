@@ -1,8 +1,13 @@
 package baylor.csi5324.careerbridge.config;
 
+import baylor.csi5324.careerbridge.model.Applicant;
+import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
+import baylor.csi5324.careerbridge.model.ResumeSnapshot;
+import baylor.csi5324.careerbridge.repository.ApplicantRepository;
+import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
 import org.junit.jupiter.api.Test;
@@ -52,18 +57,27 @@ class ReadsChangeNothingTest {
     @Autowired
     private OrganizationRepository organizationRepository;
 
+    @Autowired
+    private ApplicantRepository applicantRepository;
+
+    @Autowired
+    private ApplicationRepository applicationRepository;
+
     @Test
     void everyReadUnderApiLeavesTheDatabaseAsItWas() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
-        // A posting of its own: other tests share the database and may have removed the sample ones
-        String postingId = String.valueOf(publishedPosting().getJobPostId());
+        // A posting and an application of their own: other tests share the database and may have removed the sample ones
+        JobPosting posting = publishedPosting();
+        String postingId = String.valueOf(posting.getJobPostId());
+        String applicationId = String.valueOf(sampleApplication(posting).getApplicationId());
         List<String> reads = handlerMapping.getHandlerMethods().keySet().stream()
                 // A mapping without a method answers GET too
                 .filter(info -> info.getMethodsCondition().getMethods().isEmpty()
                         || info.getMethodsCondition().getMethods().contains(RequestMethod.GET))
                 .flatMap(info -> info.getPatternValues().stream())
                 .filter(pattern -> pattern.startsWith("/api/"))
-                .map(pattern -> pattern.replaceAll("\\{[^}]+}", postingId))
+                .map(pattern -> pattern.replace("{applicationId}", applicationId)
+                        .replaceAll("\\{[^}]+}", postingId))
                 .toList();
         assertFalse(reads.isEmpty());
 
@@ -105,5 +119,15 @@ class ReadsChangeNothingTest {
         posting.setApplicationDeadline(LocalDate.now().plusDays(30));
         posting.setPostStatus(PostStatus.PUBLISHED);
         return jobPostingRepository.save(posting);
+    }
+
+    private Application sampleApplication(JobPosting posting) {
+        Applicant jordan = applicantRepository.findByEmailIgnoreCase(SampleDataLoader.SAMPLE_APPLICANT_EMAIL)
+                .orElseThrow();
+        return applicationRepository.save(new Application(
+                jordan,
+                posting,
+                new ResumeSnapshot("read-only.pdf", "application/pdf", 1024L),
+                LocalDate.now()));
     }
 }

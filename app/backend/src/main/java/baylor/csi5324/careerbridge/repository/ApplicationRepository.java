@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
@@ -17,6 +18,9 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     // Fetches the posting, its organization and stage history with each row; the list shows all three (CO-05.1)
     @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization", "statusHistory"})
     List<Application> findByApplicant(Applicant applicant);
+
+    @EntityGraph(attributePaths = {"applicant", "jobPosting", "jobPosting.organization", "statusHistory"})
+    Optional<Application> findWithDetailsByApplicationId(Long applicationId);
 
     @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization", "statusHistory"})
     List<Application> findByApplicantAndApplicationStatusIn(Applicant applicant,
