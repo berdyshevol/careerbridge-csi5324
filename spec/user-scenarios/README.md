@@ -104,7 +104,7 @@ Feature: UC-02 Register as Applicant
 | [An applicant with no resume puts one on file](applicant-7-upload-resume.feature) | UC-03 steps 5-7; minimum scope Applicant 7 (UC-04 sends a copy of this resume with each application) |
 | [A resume that is not a PDF or DOCX is refused and the current resume is kept](applicant-7-upload-resume-wrong-file.feature) | UC-03 extension 6a; minimum scope Applicant 7, input validation |
 | [A recruiter logs in and reaches only the recruiter's work](recruiter-1-log-in.feature) | Log In; minimum scope Recruiter 1 |
-| [A recruiter sees every posting of the organization with its applications at each stage](recruiter-3-view-postings.feature) | UC-14 main success scenario, steps 1-2; minimum scope Recruiter 3 (view own postings), permissions by role |
+| [A recruiter sees every posting of the organization, whatever its status, with its applications at each stage](recruiter-3-view-postings.feature) | UC-14 main success scenario, steps 1-2; minimum scope Recruiter 3 (view own postings), permissions by role |
 | [The administrator logs in and reaches the posting approval queue](administrator-1-log-in.feature) | Log In: a session with the Administrator role, which UC-12 requires (FR-UC12.1); minimum scope Administrator 1 |
 
 ## Coverage

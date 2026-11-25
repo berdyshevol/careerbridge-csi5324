@@ -453,3 +453,10 @@ export async function expectApplicationsAtStage(page: Page, posting: Posting, co
   const row = page.getByRole("listitem").filter({ hasText: posting.title });
   await expect(row.getByText(new RegExp(`(^|, )${count} ${stage}(,|$)`))).toBeVisible();
 }
+
+const POSTING_STATUS_LABELS = { "waiting for approval": "Pending approval" };
+
+export async function expectPostingStatus(page: Page, posting: Posting, status: keyof typeof POSTING_STATUS_LABELS) {
+  const row = page.getByRole("listitem").filter({ hasText: posting.title });
+  await expect(row.getByText(POSTING_STATUS_LABELS[status], { exact: true })).toBeVisible();
+}
