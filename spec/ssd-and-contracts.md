@@ -729,6 +729,8 @@ decision (_approvedBy_, _approvedAt_, _reviewComment_) is cleared.
 
 - A Draft or Returned posting submitted by its id was created by another Recruiter, or by none, as the sample postings are: no postcondition holds; the posting is unchanged. Only the Recruiter who created a posting may submit it (Recruiter 1 — * Job Posting in the domain model).
 
+- The logged-in account is not a Recruiter: no postcondition holds (403).
+
 #### UC-12 Approve Job Posting
 
 Figure 18 shows SSD-12, the system sequence diagram for the main success scenario of UC-12.
