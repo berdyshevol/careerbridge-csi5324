@@ -305,8 +305,9 @@ request (SD-5, CO-11.1). Only a logged-in Recruiter can make either request.
 
 Both requests check that the Recruiter is an Active member of the posting's organization
 (extension \*a, BR-14), and refuse with 403 if not. The posting is linked to the Recruiter who
-created it, and only that Recruiter can submit it. The membership check is part of the design but
-not yet in the code: it needs the Organization Membership entity from UC-08 to UC-10.
+created it, and only that Recruiter can submit it. Until the Organization Membership entity of
+UC-08 to UC-10 exists, the code takes the organization the recruiter acts for from a stand-in
+(`RecruiterOrganization`, SCRUM-220); the diagram shows the membership lookup that replaces it.
 
 Invalid fields are refused with 400 and a reason for the recruiter (extensions 5a, 5b).
 
@@ -454,8 +455,8 @@ or rejects one (SD-7). Only an Administrator can do this. Each decision records 
 when. A posting that another Administrator already decided is refused with 409 (extension 6c).
 
 Approval returns the posting to the recruiter if its deadline has passed (6a). It is blocked if the
-organization or the submitting Recruiter is no longer active (6b); this check is designed but waits
-for Organization Membership, as in UC-11. Returning and rejecting need a comment. Notifications
+organization or the submitting Recruiter is no longer active (6b), checked against the same
+stand-in as in UC-11 (SCRUM-220). Returning and rejecting need a comment. Notifications
 (step 7) are not built yet.
 
 ```mermaid
