@@ -162,23 +162,63 @@ public class ApplicationService {
         return application;
     }
 
-    // CO-07.2: accepts an active offer, moving the application to Hired (FR-UC07.2-7.4, 7.6, 7.11)
+    // CO-07.2: accepts an active offer, closes the posting when filled, and prevents over-hiring (FR-UC07.2-7.4, 7.6-7.7, 7.10-7.11)
     public OfferResponseResult acceptOffer(Long applicationId, String applicantEmail, Integer expectedRevision) {
         Applicant applicant = applicant(applicantEmail);
+        Long jobPostId = applicationRepository.findJobPostIdByApplicationId(applicationId)
+                .orElseThrow(() -> new ApplicationNotFoundException(applicationId));
+        // Lock posting before application so concurrent acceptances serialize without lock-order deadlocks (FR-UC07.10)
+        JobPosting posting = jobPostingRepository.findByIdForUpdate(jobPostId)
+                .orElseThrow(() -> new ApplicationNotFoundException(applicationId));
         Application application = ownedApplicationForUpdate(applicationId, applicant);
         Instant now = clock.instant();
         Offer offer = requireRespondableOffer(application, now, expectedRevision);
-        LocalDate responseDate = LocalDate.ofInstant(now, application.getJobPosting().getOrganization().getZoneId());
 
+        long alreadyHired = applicationRepository.countByJobPostingAndApplicationStatus(posting, ApplicationStatus.HIRED);
+        if (alreadyHired >= posting.getNumberOfOpenings()) {
+            throw new ApplicationActionRefusedException(
+                    application.getApplicationStatus(),
+                    "All openings for this posting have already been filled.");
+        }
+
+        LocalDate responseDate = LocalDate.ofInstant(now, posting.getOrganization().getZoneId());
         application.setApplicationStatus(ApplicationStatus.HIRED);
         application.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.HIRED, responseDate));
         offer.setStatus(OfferStatus.ACCEPTED);
         offer.setResponseDate(responseDate);
         applicationRepository.saveAndFlush(application);
-        application.getInterviews().size();
 
+        if (alreadyHired + 1 >= posting.getNumberOfOpenings()) {
+            closeFilledPosting(posting, responseDate, now);
+        }
+
+        application.getInterviews().size();
         int activeCount = (int) applicationRepository.countActiveByApplicant(applicant);
         return new OfferResponseResult(application, activeCount, now);
+    }
+
+    // Close Job Posting subfunction for UC-07 extension 6c (FR-UC07.7, A2, A3, BR-10, BR-11)
+    private void closeFilledPosting(JobPosting posting, LocalDate closedDate, Instant now) {
+        if (posting.getPostStatus() == PostStatus.CLOSED) {
+            return;
+        }
+        posting.setPostStatus(PostStatus.CLOSED);
+        posting.setClosingReason("Filled");
+        posting.setClosedAt(now);
+        jobPostingRepository.save(posting);
+
+        List<Application> remainingActive = applicationRepository
+                .findByJobPostingAndApplicationStatusIn(posting, ApplicationStatus.ACTIVE);
+        for (Application other : remainingActive) {
+            other.setApplicationStatus(ApplicationStatus.REJECTED);
+            other.setRejectionReason("Posting closed");
+            other.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.REJECTED, closedDate));
+            if (other.getOffer() != null && other.getOffer().getStatus() == OfferStatus.PENDING) {
+                other.getOffer().setStatus(OfferStatus.RESCINDED);
+            }
+            applicationRepository.save(other);
+        }
+        applicationRepository.flush();
     }
 
     // CO-07.3: declines an active offer with an optional reason and frees the active slot (FR-UC07.2-7.3, 7.5-7.6, 7.11)

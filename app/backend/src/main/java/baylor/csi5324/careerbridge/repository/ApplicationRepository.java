@@ -31,6 +31,15 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     @Query("SELECT a FROM Application a WHERE a.applicationId = :applicationId")
     Optional<Application> findByIdForUpdate(@Param("applicationId") Long applicationId);
 
+    // Non-locking posting lookup so acceptOffer locks JobPosting before Application to prevent deadlocks (FR-UC07.10)
+    @Query("SELECT a.jobPosting.jobPostId FROM Application a WHERE a.applicationId = :applicationId")
+    Optional<Long> findJobPostIdByApplicationId(@Param("applicationId") Long applicationId);
+
+    long countByJobPostingAndApplicationStatus(JobPosting jobPosting, ApplicationStatus status);
+
+    List<Application> findByJobPostingAndApplicationStatusIn(JobPosting jobPosting,
+                                                             Collection<ApplicationStatus> statuses);
+
     @EntityGraph(attributePaths = {"jobPosting", "jobPosting.organization", "statusHistory"})
     List<Application> findByApplicantAndApplicationStatusIn(Applicant applicant,
                                                             Collection<ApplicationStatus> statuses);
