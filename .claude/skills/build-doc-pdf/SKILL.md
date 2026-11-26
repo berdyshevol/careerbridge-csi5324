@@ -60,8 +60,9 @@ list's files), which of these to run now, in this order:
 Run each one chosen with the Skill tool, one after another. Each shows its own draft or report and
 waits for its own yes; an approved text reaches `spec/` through its own pull request
 (`implement-task`). The PDF shows `main`: build after those pull requests are merged, or say which
-approved text the PDF does not have yet. None chosen: go on to the build. Each skill also runs on
-its own, without this one.
+approved text the PDF does not have yet. None chosen: go on to the build. A skill that fails or is declined
+partway does not stop the build: go on, and name in the report (step 7) what was skipped and why.
+Each skill also runs on its own, without this one.
 
 ## 5. Build
 

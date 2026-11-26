@@ -68,7 +68,7 @@ graded one member at a time, so each member keeps their own up to date, through 
 
 | Section | File | What to keep right |
 | --- | --- | --- |
-| 4.2 Fully-dressed use cases | [use-cases.md](use-cases.md) | Your use cases as built, each with an **Author** line; a use case that is not built is not in the final document. |
+| 4.2 Fully-dressed use cases | [use-cases.md](use-cases.md) | Your use cases as built; the **Author** row of each names you (the template's format). A use case that is not built is not in the final document. |
 | 6 Sequence diagrams | [design.md](design.md) | One SD per use case, in Mermaid, by the rules at the top of the file (HTTP request, controller, the service operation, names from the code); it renders in the GitHub preview. |
 | 7 Design class diagram | [design.md](design.md) | Your classes' associations with the same multiplicities as the shared diagram (`dcd.py` checks). |
 | 9.2 Test cases | [testing.md](testing.md) | Your test cases in the existing table's columns: tester, inputs, expected and actual result (the test's name), status; credit AI help when you had it. |
