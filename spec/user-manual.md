@@ -89,8 +89,6 @@ instead; the administrator approves that request too.
 
 ### 12.3 Applicant
 
-![Figure 12-1: The job board, as an applicant sees it on a laptop](diagrams/fig-12-1-job-board.jpg)
-
 **Key features:** profile and resume, apply for a job, follow every application and its stage
 history, withdraw an application, accept or decline an offer.
 
