@@ -67,9 +67,12 @@ match its mockup, and a screen that is not listed here is added before it is cod
 2. **Nothing beyond the specification.** A screen shows what a use case step, an FR, a business
    rule or an assumption asks for, and nothing the system would have to compute or store besides:
    no dashboards, counts, badges or reminders that no requirement names. A feature the team wants
-   later is added to the specification first, then to the mockup.
+   later is added to the specification first, then to the mockup. The one exception is the
+   summary cards of principle 3.
 3. **Home is a short list of the role's actions**, as in the wireframes above: each one a link to
-   its use case, nothing computed.
+   its use case. Above them, a few summary cards count lists the role already sees on another
+   screen and link there; with no answer from the backend a card shows no number
+   ([ADR-0013](../adr/0013-home-summary-cards.md)).
 4. **Every use case has one place, and every hand-off is a link** (table "Hand-offs" below).
 5. **A screen of another role is closed, not only hidden.** A logged-in user who opens another
    role's address sees only a notice that names their role, with nothing of that page; a visitor
@@ -122,7 +125,7 @@ match its mockup, and a screen that is not listed here is added before it is cod
 
 | ID | Address | Screen | Use cases | Holds and leads to |
 | --- | --- | --- | --- | --- |
-| [`applicant-home`](applicant-home.html) | `/` | Home | UC-01, UC-05, UC-03 | The applicant's actions: Find jobs (UC-01), My applications (UC-05, with UC-06 and UC-07 on each application), Profile and resume (UC-03). |
+| [`applicant-home`](applicant-home.html) | `/` | Home | UC-01, UC-05, UC-03 | Summary cards: active applications "N of 5" and offers to answer, both to Applications. The applicant's actions: Find jobs (UC-01), My applications (UC-05, with UC-06 and UC-07 on each application), Profile and resume (UC-03). |
 | [`applicant-jobs`](applicant-jobs.html) | `/jobs` | Job board | UC-01 | As for the Visitor, inside the applicant's navigation. |
 | [`applicant-posting`](applicant-posting.html) | `/jobs/{id}` | Posting | UC-01, UC-04 | As for the Visitor. Apply leads to the Apply page, which says why when applying is not possible (UC-04 2b, 4c). |
 | [`applicant-apply`](applicant-apply.html) | `/jobs/{id}/apply` | Apply | UC-04 | Posting, contact details, resume on file with "Update resume" (3a), "3 of 5 active", the note that an application cannot be edited (BR-5), Submit. The blocked cases 1c, 2a, 2b and 4c each say what to do next. Done: "4 of 5 active" and a link to the new application. |
@@ -138,7 +141,7 @@ is shown on that application's page; the desk and the Applications entry point t
 | ID | Address | Screen | Use cases | Holds and leads to |
 | --- | --- | --- | --- | --- |
 | [`recruiter-status`](recruiter-status.html) | `/recruiter/status` | Request status | UC-08 \*a, BR-14 | For a recruiter without an Active membership: the request's state (email not verified, under review, information requested, denied with reason). Nothing else is reachable. |
-| [`recruiter-home`](recruiter-home.html) | `/recruiter` | Home | UC-11, UC-14, UC-09 | The recruiter's actions for the current organization: New posting (UC-11), Postings and their applicants (UC-11, UC-14, UC-15), Organizations (UC-09). |
+| [`recruiter-home`](recruiter-home.html) | `/recruiter` | Home | UC-11, UC-14, UC-09 | Summary cards for the current organization: postings Published, Pending approval and Returned, each to Postings. The recruiter's actions for the current organization: New posting (UC-11), Postings and their applicants (UC-11, UC-14, UC-15), Organizations (UC-09). Until `/recruiter` is built, `/` shows the cards above the open postings. |
 | [`recruiter-postings`](recruiter-postings.html) | `/recruiter/postings` | Postings | UC-11, UC-14 step 2 | Every posting of the organization with its status; a Published or Closed posting with the number of applications at each stage (FR-UC14.1), leaving out a stage with none unless every stage has none. New posting. Revise a Returned posting and Continue a Draft (UC-11 3b, 6a); Close a Published posting, after a confirmation that it cannot be undone (UC-13 \*a). |
 | [`recruiter-posting-form`](recruiter-posting-form.html) | `/recruiter/postings/new`, `/recruiter/postings/{id}/edit` | Posting form | UC-11 | "Posting for: organization"; start from an earlier posting (3a); Save draft (3b) or Submit for approval. On a Returned posting, the Administrator's comments above the form (6a). |
 | [`recruiter-posting`](recruiter-posting.html) | `/recruiter/postings/{id}` | Posting and its applicants | UC-14, UC-11 | Status, and the public page when Published. Applicants by active stage: Applied, Screening, Interview, Offer, with counts. Choose several and advance them together (5d). None yet: 3a. |
@@ -150,7 +153,7 @@ is shown on that application's page; the desk and the Applications entry point t
 
 | ID | Address | Screen | Use cases | Holds and leads to |
 | --- | --- | --- | --- | --- |
-| [`admin-home`](admin-home.html) | `/admin` | Home | UC-12, UC-10 | The Administrator's actions: Posting approvals (UC-12) and Recruiter requests (UC-10). |
+| [`admin-home`](admin-home.html) | `/admin` | Home | UC-12, UC-10 | Summary cards: postings to review, recruiter requests waiting and users, each to its screen. The Administrator's actions: Posting approvals (UC-12) and Recruiter requests (UC-10). Until `/admin` is built, `/` shows the cards above the open postings. |
 | [`admin-postings`](admin-postings.html) | `/admin/postings` | Posting approvals | UC-12 | Oldest first: title, organization, recruiter, submission date, deadline. On a laptop the list and the chosen posting side by side; on a phone the list opens the posting. |
 | [`admin-posting`](admin-posting.html) | `/admin/postings/{id}` | Posting review | UC-12 | The posting as the public will see it, drawn by the same component as `/jobs/{id}` (technology variation 4a), and the organization's status. Approve, Return with comments, Reject with a reason. After a decision: back to the queue (step 8). The blocked cases 6a and 6b say why. |
 | [`admin-requests`](admin-requests.html) | `/admin/requests` | Recruiter requests | UC-10 | Oldest first: request type (new organization, joining an existing organization, an additional organization), requester, organization, date, review flag. |

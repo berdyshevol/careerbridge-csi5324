@@ -4,7 +4,16 @@ import BackendDown from "@/components/BackendDown";
 import FormField, { SelectField } from "@/components/FormField";
 import PageTitle from "@/components/PageTitle";
 import PostingCard from "@/components/PostingCard";
-import { searchPostings, type JobPosting } from "@/lib/api";
+import SummaryCards, { type Summary } from "@/components/SummaryCards";
+import {
+  openPostingApprovalQueue,
+  openRecruiterRequestQueue,
+  searchPostings,
+  viewApplications,
+  viewRecruiterPostings,
+  viewUsers,
+  type JobPosting,
+} from "@/lib/api";
 import { LOCATIONS } from "@/lib/postingOptions";
 import { serverSession } from "@/lib/serverSession";
 
@@ -15,9 +24,60 @@ export default async function HomePage() {
     return <VisitorHome />;
   }
   if (session.user.role === "APPLICANT") {
-    return <ApplicantHome />;
+    return <ApplicantHome summary={await applicantSummary(session.token)} />;
   }
-  return <StaffHome firstName={session.user.firstName} postings={await openPostings()} />;
+  const summary =
+    session.user.role === "RECRUITER" ? await recruiterSummary(session.token) : await administratorSummary(session.token);
+  return <StaffHome firstName={session.user.firstName} summary={summary} postings={await openPostings()} />;
+}
+
+// null: the backend did not answer, or the session ended; the card then shows no number (ADR-0013)
+async function orNull<T>(call: Promise<T>): Promise<T | null> {
+  try {
+    return await call;
+  } catch {
+    return null;
+  }
+}
+
+async function applicantSummary(token: string): Promise<Summary[]> {
+  const applications = await orNull(viewApplications(token));
+  return [
+    {
+      label: "Active applications",
+      value: applications?.activeApplicationCount ?? null,
+      of: applications?.applicationLimit,
+      href: "/applications",
+    },
+    {
+      label: "Offers to answer",
+      value: applications ? applications.all.filter((application) => application.applicationStatus === "Offer").length : null,
+      href: "/applications",
+    },
+  ];
+}
+
+async function recruiterSummary(token: string): Promise<Summary[]> {
+  const postings = (await orNull(viewRecruiterPostings(token)))?.postings;
+  const count = (status: string) => postings?.filter((row) => row.postStatus === status).length ?? null;
+  return [
+    { label: "Published", value: count("PUBLISHED"), href: "/recruiter/postings" },
+    { label: "Pending approval", value: count("PENDING_APPROVAL"), href: "/recruiter/postings" },
+    { label: "Returned", value: count("RETURNED"), href: "/recruiter/postings" },
+  ];
+}
+
+async function administratorSummary(token: string): Promise<Summary[]> {
+  const [postings, requests, users] = await Promise.all([
+    orNull(openPostingApprovalQueue(token)),
+    orNull(openRecruiterRequestQueue(token)),
+    orNull(viewUsers(token)),
+  ]);
+  return [
+    { label: "Postings to review", value: postings?.length ?? null, href: "/admin/postings" },
+    { label: "Recruiter requests", value: requests?.length ?? null, href: "/admin/requests" },
+    { label: "Users", value: users?.users.length ?? null, href: "/admin/users" },
+  ];
 }
 
 // null: the backend is down, and the section says so
@@ -100,10 +160,11 @@ function WayIn({
   );
 }
 
-function ApplicantHome() {
+function ApplicantHome({ summary }: { summary: Summary[] }) {
   return (
     <div className="flex flex-col gap-5 lg:rounded-2xl lg:border lg:border-base-300 lg:bg-base-100 lg:p-8">
       <PageTitle>Welcome</PageTitle>
+      <SummaryCards items={summary} />
       <ul className="flex flex-col gap-3">
         <ActionRow
           title="Find jobs"
@@ -130,10 +191,19 @@ function ApplicantHome() {
 }
 
 // Recruiters and administrators keep this until their own homes (recruiter-home, admin-home) are built
-function StaffHome({ firstName, postings }: { firstName: string; postings: JobPosting[] | null }) {
+function StaffHome({
+  firstName,
+  summary,
+  postings,
+}: {
+  firstName: string;
+  summary: Summary[];
+  postings: JobPosting[] | null;
+}) {
   return (
     <div className="flex flex-col gap-5 lg:rounded-2xl lg:border lg:border-base-300 lg:bg-base-100 lg:p-8">
       <PageTitle subtitle="Here are the job postings open now.">Welcome back, {firstName}</PageTitle>
+      <SummaryCards items={summary} />
       <section className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between">
           <h2 className="text-lg font-semibold">Recently published</h2>

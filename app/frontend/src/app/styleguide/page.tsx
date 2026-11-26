@@ -16,6 +16,7 @@ import PostingCard from "@/components/PostingCard";
 import PostingDetails from "@/components/PostingDetails";
 import PostingStatusBadge from "@/components/PostingStatusBadge";
 import ResumeOnFile from "@/components/ResumeOnFile";
+import SummaryCards from "@/components/SummaryCards";
 import SlotMeter from "@/components/SlotMeter";
 import { StageBadge, StageProgress } from "@/components/StageBadge";
 import StageTimeline from "@/components/StageTimeline";
@@ -294,6 +295,15 @@ export default function StyleguidePage() {
                 { userId: 3, firstName: "Jordan", lastName: "Lee", email: "jordan.lee@example.com", role: "APPLICANT", accountStatus: "ACTIVE", deactivated: false },
               ],
             }}
+          />
+        </Block>
+        <Block title="Summary cards" use='<SummaryCards items={[{ label, value, of?, href }]} /> — on a role&apos;s home only, above its actions: a count the role already sees on the linked screen; value null shows "Not available" (ADR-0013)'>
+          <SummaryCards
+            items={[
+              { label: "Active applications", value: 3, of: 5, href: "/styleguide" },
+              { label: "Offers to answer", value: 1, href: "/styleguide" },
+              { label: "Published", value: null, href: "/styleguide" },
+            ]}
           />
         </Block>
         <Block title="Action row" use="<ActionRow title description href action primary? /> — a role's actions on its home, in a ul with flex flex-col gap-3; primary on one only">
