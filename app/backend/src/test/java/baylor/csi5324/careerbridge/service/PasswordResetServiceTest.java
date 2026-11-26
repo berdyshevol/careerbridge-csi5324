@@ -39,17 +39,17 @@ class PasswordResetServiceTest {
         when(userRepository.findByEmailIgnoreCase("pat@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.encode(anyString())).thenReturn("new-hash");
         return new PasswordResetService(userRepository, notificationService, passwordEncoder,
-                Clock.fixed(now, ZoneOffset.UTC), "https://careerbridge.example", demoLinks, false,
+                Clock.fixed(now, ZoneOffset.UTC), demoLinks, false,
                 "jdbc:postgresql://example/neondb");
     }
 
     @Test
-    void sendsTheLinkAsANotificationAndShowsItOnlyInADemo() {
+    void notifiesWithoutTheLinkAndShowsItOnlyInADemo() {
         Optional<String> shown = serviceAt(NOW, false).requestPasswordReset(" Pat@Example.com ");
 
         assertThat(shown).isEmpty();
         verify(notificationService).notify(eq(user), eq(NotificationType.PASSWORD_RESET),
-                argThat(message -> message.contains("https://careerbridge.example/reset-password?token=")));
+                argThat(message -> !message.contains("token")));
         assertThat(user.getPasswordResetExpiresAt()).isEqualTo(NOW.plus(PasswordResetService.RESET_LINK_LIFETIME));
     }
 

@@ -26,21 +26,19 @@ public class PasswordResetService {
     private final NotificationService notificationService;
     private final PasswordEncoder passwordEncoder;
     private final Clock clock;
-    private final String frontendOrigin;
     private final boolean showResetLinks;
 
     public PasswordResetService(UserRepository userRepository, NotificationService notificationService,
                                 PasswordEncoder passwordEncoder, Clock clock,
-                                @Value("${careerbridge.frontend-origins}") String frontendOrigins,
-                                @Value("${careerbridge.demo.verification-links}") boolean demoLinks,
+                                @Value("${careerbridge.demo.reset-links:false}") boolean demoLinks,
                                 @Value("${careerbridge.demo.local-passwords}") boolean localDemo,
                                 @Value("${spring.datasource.url}") String databaseUrl) {
         this.userRepository = userRepository;
         this.notificationService = notificationService;
         this.passwordEncoder = passwordEncoder;
         this.clock = clock;
-        this.frontendOrigin = frontendOrigins.split(",")[0].strip();
-        // The same switch as UC-08's verification link: there is no mail service, so a demo hands the link back
+        // There is no mail service, so a demo hands the link back. Its own switch, not UC-08's: whoever reads
+        // this link can take over the account, so it stays off wherever real people log in
         this.showResetLinks = demoLinks || localDemo && databaseUrl.startsWith("jdbc:h2:mem:");
     }
 
@@ -53,9 +51,10 @@ public class PasswordResetService {
         }
         OneTimeToken token = OneTimeToken.create();
         user.get().startPasswordReset(token.hash(), clock.instant().plus(RESET_LINK_LIFETIME));
+        // The stored and logged message leaves the link out (NFR-LI.1): a copy of either must open no account
         notificationService.notify(user.get(), NotificationType.PASSWORD_RESET,
-                "Open " + frontendOrigin + RESET_PATH + token.token()
-                        + " within 30 minutes to choose a new password. If you did not ask for it, ignore this message.");
+                "A link to choose a new password was sent to " + user.get().getEmail()
+                        + ". It works for 30 minutes. If you did not ask for it, ignore this message.");
         return showResetLinks ? Optional.of(RESET_PATH + token.token()) : Optional.empty();
     }
 

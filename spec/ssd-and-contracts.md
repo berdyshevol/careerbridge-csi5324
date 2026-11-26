@@ -885,14 +885,14 @@ two system operations.
 
 **Postconditions:**
 
-- If a User with that _email_ exists: the User's reset link hash and its expiry, 30 minutes ahead, were set,
-  replacing any earlier ones, and a Notification instance was created with _type_ Password reset and
-  associated with the User.
+- If a User with that _email_ and a password exists: the User's reset link hash and its expiry, 30 minutes
+  ahead, were set, replacing any earlier ones, and a Notification instance was created with _type_ Password
+  reset and associated with the User. The Notification's message does not hold the link (NFR-LI.1).
 
-- If no User has that _email_: nothing changed.
+- Otherwise: nothing changed.
 
 **Output:** The same answer in both cases. In a demonstration without mail, the link itself
-(`careerbridge.demo.verification-links`, as for UC-08).
+(`careerbridge.demo.reset-links`, off wherever real people log in, since the link hands over the account).
 
 #### CO-LI.2: resetPassword
 
@@ -910,7 +910,8 @@ two system operations.
 
 - The User's failed log-in count and lock were cleared.
 
-**Output:** Confirmation; the user logs in with the new password.
+**Output:** Confirmation; the user logs in with the new password. A session already open elsewhere lasts
+until it ends (8 hours at most, [ADR-0010](adr/0010-log-in-with-jwt.md)).
 
 **Exceptions:**
 
