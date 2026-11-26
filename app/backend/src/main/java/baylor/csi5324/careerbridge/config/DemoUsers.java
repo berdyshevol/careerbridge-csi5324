@@ -40,6 +40,10 @@ public class DemoUsers implements CommandLineRunner {
     record DemoUser(String firstName, String lastName, String email, Supplier<User> kind, String password) {
     }
 
+    // One password for every demo account, easy to say out loud in a demo (SCRUM-226); Neon gets the same
+    // value from DEMO_*_PASSWORD
+    static final String LOCAL_PASSWORD = "Baylor@2026";
+
     private static String orLocal(String password, String local, boolean inMemory) {
         return password.isBlank() && inMemory ? local : password;
     }
@@ -80,17 +84,16 @@ public class DemoUsers implements CommandLineRunner {
         this.passwordEncoder = passwordEncoder;
         // The Docker image switches this off: an image that lost DATABASE_URL must not get known passwords
         boolean inMemory = localPasswordsAllowed && databaseUrl.startsWith("jdbc:h2:mem:");
-        String numbered = orLocal(numberedPassword, "Baylor@2026", inMemory);
+        String numbered = orLocal(numberedPassword, LOCAL_PASSWORD, inMemory);
         this.demoUsers = List.of(
                 new DemoUser("Jordan", "Lee", SampleDataLoader.SAMPLE_APPLICANT_EMAIL,
-                        Applicant::new, orLocal(applicantPassword, "Applicant-local-1", inMemory)),
+                        Applicant::new, orLocal(applicantPassword, LOCAL_PASSWORD, inMemory)),
                 new DemoUser("Sam", "Rivera", "sam.rivera@example.com", Applicant::new,
-                        orLocal(secondApplicantPassword, "Applicant-local-2", inMemory)),
+                        orLocal(secondApplicantPassword, LOCAL_PASSWORD, inMemory)),
                 new DemoUser("Riley", "Chen", "riley.chen@example.com", Recruiter::new,
-                        orLocal(recruiterPassword, "Recruiter-local-1", inMemory)),
+                        orLocal(recruiterPassword, LOCAL_PASSWORD, inMemory)),
                 new DemoUser("Avery", "Morgan", "admin@careerbridge.example", Administrator::new,
-                        orLocal(administratorPassword, "Administrator-local-1", inMemory)),
-                // Easy to say out loud in a demo; they share one password
+                        orLocal(administratorPassword, LOCAL_PASSWORD, inMemory)),
                 numbered("Applicant", 1, Applicant::new, numbered),
                 numbered("Applicant", 2, Applicant::new, numbered),
                 numbered("Applicant", 3, Applicant::new, numbered),

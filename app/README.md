@@ -23,14 +23,14 @@ npm run dev                   # frontend on http://localhost:3000
 
 Open <http://localhost:3000>. The backend works on the shared Neon `dev` database when `app/backend/.env` exists (copy `.env.example` and ask Oleg for the values), and on an in-memory H2 database when it does not ([ADR-0009](../spec/adr/0009-postgresql-on-neon.md)); the H2 console is then at <http://localhost:8080/h2-console> (JDBC URL `jdbc:h2:mem:careerbridge`, user `sa`, no password). `./mvnw test` in `app/backend` runs the backend tests on PostgreSQL in Docker; when Docker is not running they run on in-memory H2 instead, and the pull request checks PostgreSQL.
 
-Every database has one demo account per role ([ADR-0010](../spec/adr/0010-log-in-with-jwt.md)), plus nine numbered ones for demos. On the in-memory H2 database their passwords are the ones below; on Neon they come from `DEMO_*_PASSWORD` in `.env` (Oleg hands them out).
+Every database has one demo account per role ([ADR-0010](../spec/adr/0010-log-in-with-jwt.md)), plus nine numbered ones for demos. Every one of them logs in with `Baylor@2026`: on the in-memory H2 database that is the default, and on Neon the `DEMO_*_PASSWORD` settings (in `.env` and on Render) hold the same value.
 
-| Role | Email | Password on H2 |
+| Role | Email | Password |
 | --- | --- | --- |
-| Applicant with three applications | `jordan.lee@example.com` | `Applicant-local-1` |
-| Applicant with none | `sam.rivera@example.com` | `Applicant-local-2` |
-| Recruiter | `riley.chen@example.com` | `Recruiter-local-1` |
-| Administrator | `admin@careerbridge.example` | `Administrator-local-1` |
+| Applicant with three applications | `jordan.lee@example.com` | `Baylor@2026` |
+| Applicant with none | `sam.rivera@example.com` | `Baylor@2026` |
+| Recruiter | `riley.chen@example.com` | `Baylor@2026` |
+| Administrator | `admin@careerbridge.example` | `Baylor@2026` |
 | Applicants with none, for demos | `applicant1@example.com` to `applicant3@example.com` | `Baylor@2026` |
 | Recruiters, for demos | `recruiter1@example.com` to `recruiter6@example.com` | `Baylor@2026` |
 
