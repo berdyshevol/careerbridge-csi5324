@@ -3,8 +3,9 @@
 What the system must do and how it is built. These files are the current version; they change
 together with the code. If code and specification disagree, fix one of them in the same pull request.
 
-Each file is one part of the documentation, in the order of the course template; the documentation
-PDF is built from them (`tools/build-pdf/`). Find the topic here before reading or adding text.
+The files with a section number are the parts of the documentation, in the order of the course
+template; the documentation PDF is built from them (`tools/build-pdf/`). The files with no section
+number are for the team and are not in the PDF. Find the topic here before reading or adding text.
 
 | File | Holds | Read when | Put here, not elsewhere | Section |
 | --- | --- | --- | --- | --- |
@@ -12,7 +13,7 @@ PDF is built from them (`tools/build-pdf/`). Find the topic here before reading 
 | [vision.md](vision.md) | Introduction, scope, product perspective, assumptions (A-n), dependencies | Asking why or what is in scope | Assumptions and scope; not requirements | 1, 2 |
 | [requirements.md](requirements.md) | FRs and NFRs per use case, clarifications, traceability matrix | Checking what the system must do | Testable requirements with IDs; not step flows | 3 |
 | [use-cases.md](use-cases.md) | Use-case diagram, the fully-dressed use cases, subfunctions | Building or naming a ticket for a use case | Steps and extensions; not operations | 4.1, 4.2 |
-| [ssd-and-contracts.md](ssd-and-contracts.md) | System sequence diagrams and operation contracts | Naming a service method | Pre/postconditions of operations; not UI | 4.3 |
+| [ssd-and-contracts.md](ssd-and-contracts.md) | The system operations of each use case and their contracts | Naming a service method | Pre/postconditions of operations; not UI | — |
 | [screens/](screens/README.md) | The catalog of screens by role (each with its ID, address and use cases) and one mockup per screen ID, at phone, tablet and laptop width, with its picture | Designing, building or changing a screen | Which screens exist, what they hold and how they look; changed with its page (ADR-0011) | — |
 | [domain-model.md](domain-model.md) | Conceptual classes, attributes, associations | Naming an entity or a field | What the data means; not tables or methods | 5 |
 | [design.md](design.md) | Design sequence diagrams (SD-n) and the design class diagram | Drawing an SD or the DCD | Mermaid diagrams from the code, one row each in §7.1 | 6, 7 |
@@ -31,7 +32,6 @@ PDF is built from them (`tools/build-pdf/`). Find the topic here before reading 
 | --- | --- | --- |
 | `UC-nn` | Use case | UC-04 Apply for Job |
 | `FR-UCnn.n`, `NFR-UCnn.n` | Functional / non-functional requirement of that use case | FR-UC04.1 |
-| `SSD-nn` | System sequence diagram of UC-nn | SSD-04 |
 | `CO-nn.n` | Operation contract of UC-nn | CO-04.1 submitApplication |
 | `BR-n` | Business rule | BR-4 |
 | `A-n` | Working assumption for the customer to confirm | A6 |
