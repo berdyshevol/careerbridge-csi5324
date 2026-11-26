@@ -46,7 +46,8 @@ PAGEBREAK
 ../careerbridge-spring/spec/user-manual.md
 ```
 
-A new deliverable needs a new list, not a new script.
+A new deliverable needs a new list, not a new script. In Claude Code, the `build-doc-pdf` skill (`.claude/skills/build-doc-pdf/`) runs
+the build for a deliverable's list and checks the result.
 
 ## The cover
 
