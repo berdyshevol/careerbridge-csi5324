@@ -39,6 +39,7 @@ const desk: Desk = {
   ],
   appliedPostingIds: [3, 7], // 7 was withdrawn
   refusal: null,
+  applicationLimit: 5,
   resume: { fileName: "Jordan_Lee_Resume.pdf", uploadDate: "2026-09-30T14:00:00" },
 };
 
@@ -193,5 +194,27 @@ describe("ApplyForm", () => {
     expect(screen.getByRole("status")).toHaveTextContent("5 active applications");
     expect(screen.getAllByRole("listitem")).toHaveLength(5);
     expect(screen.queryByRole("button", { name: "Submit application" })).not.toBeInTheDocument();
+  });
+
+  it("counts the slots against the limit the backend sends, not a number of its own (BR-4)", async () => {
+    backendAnswers({
+      ok: true,
+      status: 201,
+      json: () => Promise.resolve({ applicationId: 7, applicationStatus: "APPLIED", activeApplicationCount: 2 }),
+    });
+    const user = userEvent.setup();
+    render(<ApplyForm posting={posting} session={{ token: "applicant-token", user: jordan }} desk={{ ...desk, applicationLimit: 3 }} />);
+    expect(screen.getByText("of 3 in use")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: "Submit application" }));
+    expect(await screen.findByText(/2 of 3 active applications/)).toBeInTheDocument();
+  });
+
+  it("names the backend's limit when it is reached (FR-UC04.7)", () => {
+    render(
+      <ApplyForm posting={posting} session={{ token: "applicant-token", user: jordan }} desk={{ ...desk, applicationLimit: 3, refusal: "LIMIT_REACHED" }} />,
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("You have 3 active applications");
   });
 });

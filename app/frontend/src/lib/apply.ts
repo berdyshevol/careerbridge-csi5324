@@ -11,13 +11,14 @@ export type Desk = {
   appliedPostingIds: number[]; // every posting applied to, ended applications too
   resume: Resume | null; // the resume on file, from startApplication
   refusal: StartRefusalReason | null; // from startApplication
+  applicationLimit: number; // from startApplication
 };
 
 export type ApplicationCheck =
   | { kind: "ok" }
   | { kind: "closed" }
   | { kind: "no-resume" }
-  | { kind: "limit"; active: DeskApplication[] }
+  | { kind: "limit"; active: DeskApplication[]; limit: number }
   | { kind: "already-applied"; application?: DeskApplication }; // none when it has ended
 
 export function checkApplication(posting: JobPosting, desk: Desk): ApplicationCheck {
@@ -32,7 +33,7 @@ export function checkApplication(posting: JobPosting, desk: Desk): ApplicationCh
     return { kind: "already-applied", application: existing };
   }
   if (desk.refusal === "LIMIT_REACHED") {
-    return { kind: "limit", active: desk.applications };
+    return { kind: "limit", active: desk.applications, limit: desk.applicationLimit };
   }
   return { kind: "ok" };
 }
