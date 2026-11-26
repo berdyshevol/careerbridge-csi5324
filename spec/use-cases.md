@@ -18,28 +18,25 @@ When one use case hands the actor to another (for example, Screen Applications h
 
 **Table 5: Use-case index**
 
-|**ID**|**Use case**|**Primary actor**|
-|---|---|---|
-|UC-01|Search Job Postings|Visitor|
-|UC-02|Register as Applicant|Visitor|
-|UC-03|Update Applicant Profile|Applicant|
-|UC-04|Apply for Job|Applicant|
-|UC-05|Track Application Status|Applicant|
-|UC-06|Withdraw Application|Applicant|
-|UC-07|Respond to Job Offer|Applicant|
-
-|**ID**<br/>~~a~~<br/>|**Use case**|**Primary actor**|
-|---|---|---|
-|UC-08<br/>~~a~~<br/>~~a~~|Register Recruiter and Organization|Visitor|
-|UC-09<br/><br/>~~a~~|Join Additional Organization|Recruiter|
-|UC-10<br/>~~a~~|Approve Recruiter/Organization Request<br/>|Administrator<br/>|
-|UC-11<br/>|Create Job Posting<br/>~~P~~|Recruiter<br/>~~T~~|
-|UC-12<br/><br/>~~a~~|Approve Job Posting<br/>|Administrator<br/>|
-|UC-13<br/><br/>~~a~~|Expire Job Posting|Scheduler|
-|UC-14<br/>~~a~~|Screen Applications<br/>|Recruiter<br/>|
-|UC-15<br/>|Extend Job Offer<br/>|Recruiter<br/>|
-|—<br/>|Log In (subfunction)<br/>~~p~~|Applicant, Recruiter,<br/>Administrator<br/>|—<br/>~~p~~|
-|—<br/>|Close Job Posting (subfunction)<br/>|— (used by UC-07 and<br/>UC-13)<br/>|—<br/>|
+| ID | Use case | Primary actor |
+| --- | --- | --- |
+| UC-01 | Search Job Postings | Visitor |
+| UC-02 | Register as Applicant | Visitor |
+| UC-03 | Update Applicant Profile | Applicant |
+| UC-04 | Apply for Job | Applicant |
+| UC-05 | Track Application Status | Applicant |
+| UC-06 | Withdraw Application | Applicant |
+| UC-07 | Respond to Job Offer | Applicant |
+| UC-08 | Register Recruiter and Organization | Visitor |
+| UC-09 | Join Additional Organization | Recruiter |
+| UC-10 | Approve Recruiter/Organization Request | Administrator |
+| UC-11 | Create Job Posting | Recruiter |
+| UC-12 | Approve Job Posting | Administrator |
+| UC-13 | Expire Job Posting | Scheduler |
+| UC-14 | Screen Applications | Recruiter |
+| UC-15 | Extend Job Offer | Recruiter |
+| — | Log In (subfunction) | Applicant, Recruiter, Administrator |
+| — | Close Job Posting (subfunction) | — (used by UC-07 and UC-13) |
 
 #### Application pipeline (BR-8)
 
