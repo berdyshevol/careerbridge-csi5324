@@ -10,8 +10,10 @@ import FormField, { SelectField, TextAreaField } from "@/components/FormField";
 import OfferPanel from "@/components/OfferPanel";
 import PageTitle from "@/components/PageTitle";
 import Placeholder from "@/components/Placeholder";
+import MembershipBadge from "@/components/MembershipBadge";
 import PostingCard from "@/components/PostingCard";
 import PostingDetails from "@/components/PostingDetails";
+import PostingStatusBadge from "@/components/PostingStatusBadge";
 import ResumeOnFile from "@/components/ResumeOnFile";
 import SlotMeter from "@/components/SlotMeter";
 import { StageBadge, StageProgress } from "@/components/StageBadge";
@@ -113,6 +115,7 @@ export default function StyleguidePage() {
           <p className="font-display text-3xl font-semibold">A title in the display face</p>
           <p>Body text in the default face, for everything that is read.</p>
           <p className="text-muted">Secondary text, in text-muted.</p>
+          <p className="text-sm font-semibold">A form label, in text-sm font-semibold</p>
           <p className="text-sm font-semibold uppercase tracking-wider text-muted">An eyebrow label</p>
         </Block>
         <Block title="Role colors" use="ADR-0012: the layout sets the role's theme; a page never chooses one">
@@ -147,7 +150,7 @@ export default function StyleguidePage() {
             <AccountMenu user={sampleUser} />
           </div>
         </Block>
-        <Block title="Content card" use='<article className="card border border-base-300 bg-base-100"><div className="card-body gap-5">…</div></article>'>
+        <Block title="Content card" use='<article className="card border border-base-300 bg-base-100"><div className="card-body gap-5">…</div></article> — every card carries the soft shadow-lift; a list row gets shadow-lift, and hover-raise when the whole row leads somewhere'>
           <article className="card border border-base-300 bg-base-100">
             <div className="card-body gap-5">
               <p>The main content of a screen sits in one card like this.</p>
@@ -192,6 +195,15 @@ export default function StyleguidePage() {
       </Section>
 
       <Section title="Status">
+        <Block title="Status pill" use='Every status is a pill with a dot: <PostingStatusBadge postStatus closingReason? />, <StageBadge stage />, <MembershipBadge status label />; for another status, the pill class with a tone (bg-warning text-warning-content, …)'>
+          <div className="flex flex-wrap gap-3">
+            {["DRAFT", "PENDING_APPROVAL", "RETURNED", "PUBLISHED", "REJECTED", "EXPIRED", "CLOSED"].map((status) => (
+              <PostingStatusBadge key={status} postStatus={status} />
+            ))}
+            <MembershipBadge status="ACTIVE" label="Active" />
+            <MembershipBadge status="INFORMATION_REQUESTED" label="Information requested" />
+          </div>
+        </Block>
         <Block title="Stage badge" use="<StageBadge stage={…} onWarning? /> — stages come from ALL_STAGES in src/lib/sampleDesk.ts">
           <div className="flex flex-wrap gap-3">
             {ALL_STAGES.map((stage) => (
@@ -245,7 +257,7 @@ export default function StyleguidePage() {
       </Section>
 
       <Section title="Blocks">
-        <Block title="Posting card" use="<PostingCard posting={…} /> — in a ul with grid gap-3 lg:grid-cols-2">
+        <Block title="Posting card" use="<PostingCard posting={…} /> — in a ul with grid gap-3 lg:grid-cols-2; the whole card is the link and rises on hover (hover-raise)">
           <ul className="grid gap-3 lg:grid-cols-2">
             <PostingCard posting={samplePosting} />
           </ul>
@@ -351,7 +363,7 @@ export default function StyleguidePage() {
       <Section title="Forms">
         <Block title="Text input" use='<input className="input w-full" /> with a label; sr-only label when the placeholder says it all'>
           <div className="flex flex-col gap-2 md:w-80">
-            <label htmlFor="sg-name" className="font-medium">
+            <label htmlFor="sg-name" className="text-sm font-semibold">
               Organization
             </label>
             <input id="sg-name" type="text" className="input w-full" placeholder="Legal name" />
@@ -387,13 +399,13 @@ export default function StyleguidePage() {
           <form className="flex flex-col gap-4" onSubmit={undefined}>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="flex flex-col gap-2">
-                <label htmlFor="sg-title" className="font-medium">
+                <label htmlFor="sg-title" className="text-sm font-semibold">
                   Title
                 </label>
                 <input id="sg-title" type="text" className="input w-full" />
               </div>
               <div className="flex flex-col gap-2">
-                <label htmlFor="sg-deadline" className="font-medium">
+                <label htmlFor="sg-deadline" className="text-sm font-semibold">
                   Application deadline
                 </label>
                 <input id="sg-deadline" type="date" className="input w-full" />

@@ -12,9 +12,9 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
   }
   const { next } = await searchParams;
   return (
-    // The mockup keeps the form to the left half of the laptop column
-    <div className="mx-auto max-w-5xl">
-      <div className="flex flex-col gap-5 lg:w-1/2">
+    // Centered like Log in, so the two ways in look alike (mockup visitor-register)
+    <div className="mx-auto w-full max-w-md">
+      <div className="flex flex-col gap-5">
         <PageTitle eyebrow="Applicant account" subtitle="It is ready at once. Next you add a resume, then you can apply.">
           Create your account
         </PageTitle>

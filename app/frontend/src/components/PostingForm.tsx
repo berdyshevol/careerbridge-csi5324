@@ -129,7 +129,7 @@ export default function PostingForm({ token }: { token: string }) {
       {created && (
         <div
           role="status"
-          className="space-y-4 rounded-2xl border border-base-300 bg-base-100 p-5 shadow-sm"
+          className="space-y-4 rounded-2xl border border-base-300 bg-base-100 p-5 shadow-lift"
         >
           <div>
             <h2 className="text-lg font-semibold">

@@ -42,7 +42,7 @@ export default function ApplicationRow({ application }: { application: Applicati
 
   return (
     <li
-      className={`flex flex-col gap-2.5 rounded-xl border border-l-4 px-4 py-3.5 transition-colors duration-200 md:flex-row md:items-center md:gap-4 ${rowSurface(application.applicationStatus)}`}
+      className={`flex flex-col gap-2.5 rounded-xl border border-l-4 px-4 py-3.5 shadow-lift transition-colors duration-200 md:flex-row md:items-center md:gap-4 ${rowSurface(application.applicationStatus)}`}
     >
       <div className="min-w-0 grow">
         <p className="font-semibold">{application.title}</p>

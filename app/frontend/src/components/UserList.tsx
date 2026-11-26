@@ -16,7 +16,7 @@ export default function UserList({ directory, token }: { directory: UserDirector
     <div className="flex flex-col gap-4">
       <ul aria-label="Users by role" className="flex flex-wrap gap-2">
         {ROLES.map((role) => (
-          <li key={role} className="badge badge-outline font-semibold text-muted">
+          <li key={role} className="rounded-lg border border-base-300 bg-base-100 px-2.5 py-0.5 text-sm font-semibold text-muted">
             {count(role, directory.usersByRole[role] ?? 0)}
           </li>
         ))}

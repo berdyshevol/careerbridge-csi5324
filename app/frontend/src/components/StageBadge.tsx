@@ -1,14 +1,15 @@
 import { STAGES, type ApplicationStage, type Stage } from "@/lib/sampleDesk";
+import { TONES } from "./statusTones";
 
 const chipStyle: Record<ApplicationStage, string> = {
-  Applied: "bg-base-200 text-base-content",
-  Screening: "bg-secondary text-secondary-content",
-  Interview: "bg-secondary text-secondary-content",
-  Offer: "bg-warning text-warning-content",
-  Hired: "bg-secondary text-secondary-content",
-  Rejected: "bg-error/15 text-error",
-  Withdrawn: "border border-base-300 bg-transparent text-muted",
-  "Offer Declined": "border border-base-300 bg-transparent text-muted",
+  Applied: TONES.neutral,
+  Screening: TONES.good,
+  Interview: TONES.good,
+  Offer: TONES.attention,
+  Hired: TONES.good,
+  Rejected: TONES.bad,
+  Withdrawn: TONES.ended,
+  "Offer Declined": TONES.ended,
 };
 
 export function StageBadge({
@@ -23,7 +24,7 @@ export function StageBadge({
   const tone = onWarning ? "bg-base-100 text-warning-content" : chipStyle[stage];
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-lg px-2.5 py-1 text-center text-sm font-semibold whitespace-nowrap ${tone} ${className}`}
+      className={`pill ${tone} ${className}`}
     >
       {stage}
     </span>
