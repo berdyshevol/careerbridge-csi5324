@@ -31,7 +31,22 @@ repository, which holds no course materials; never copy them in.
 - `git status -sb`: say so if this repository is not on an up-to-date `main`, because the PDF shows
   the branch that is checked out.
 
-## 3. Build
+## 3. Run the document checks
+
+From this repository, on the list's spec files:
+
+```bash
+python3 tools/doc-check/figures.py --spec <contents.txt>   # Figure N / Table N numbered 1, 2, 3 … in list order
+python3 tools/doc-check/dcd.py                             # DCD multiplicities: views, whole DCD, domain model 5.3
+python3 tools/doc-check/manual-labels.py                   # bold labels of the user manual are on the screens
+```
+
+Each prints its problems with the file and line and exits 1. On any failure stop: show the
+problems as they were printed, say which spec file each fix goes in (a pull request to `spec/`),
+and ask "Build anyway?". Build only on a yes. A label that the screen puts together at run time
+(a status and its reason, such as `Closed · by recruiter`) can be a false alarm: say so instead of proposing a fix.
+
+## 4. Build
 
 From the list's folder (it takes about a minute):
 
@@ -43,15 +58,18 @@ cd <folder of contents.txt>
 If a Mermaid diagram fails, name the spec file and the diagram; the fix is a pull request to
 `spec/`.
 
-## 4. Check the result
+## 5. Check the result
 
 - `pdfinfo deliverable-N.pdf` for the page count.
 - Read the table of contents (the Read tool on the PDF, pages 3–4) and list the top-level sections.
   Every section 1–12 must be there; name a missing one and why (no `## N.` heading in its spec
   file, or the file is not in the list).
+- `python3 tools/doc-check/figures.py deliverable-N.pdf`: the captions of the built PDF, with
+  their page numbers. Report its problems; a figure that renders as an image may have lost its
+  caption.
 - Placeholder text a reader would see: `pdftotext deliverable-N.pdf - | grep -n "Not written yet\|TODO\|TBD"`.
 
-## 5. Report
+## 6. Report
 
-A few lines: the PDF path, the page count, the sections present, and what is missing or
-unfinished, with the spec file that holds it. Do not submit, upload or send the PDF.
+A few lines: the PDF path, the page count, the sections present, the result of each check, and
+what is missing or unfinished, with the spec file that holds it. Do not submit, upload or send the PDF.
