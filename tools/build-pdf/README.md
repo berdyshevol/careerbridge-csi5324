@@ -47,7 +47,9 @@ PAGEBREAK
 ```
 
 A new deliverable needs a new list, not a new script. In Claude Code, the `build-doc-pdf` skill (`.claude/skills/build-doc-pdf/`) runs
-the build for a deliverable's list and checks the result.
+the build for a deliverable's list and checks the result. Before and after the build it runs the
+checks of `tools/doc-check/` (`--help` on each): caption numbering (`figures.py`), DCD
+multiplicities (`dcd.py`) and the user manual's labels (`manual-labels.py`).
 
 ## The cover
 
