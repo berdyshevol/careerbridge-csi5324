@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AccessNotice from "@/components/AccessNotice";
 import ActionRow from "@/components/ActionRow";
 import BackendDown from "@/components/BackendDown";
 import FormField, { SelectField } from "@/components/FormField";
@@ -9,6 +10,7 @@ import {
   openPostingApprovalQueue,
   openRecruiterRequestQueue,
   searchPostings,
+  SessionEnded,
   viewApplications,
   viewRecruiterPostings,
   viewUsers,
@@ -23,19 +25,37 @@ export default async function HomePage() {
   if (!session) {
     return <VisitorHome />;
   }
-  if (session.user.role === "APPLICANT") {
-    return <ApplicantHome summary={await applicantSummary(session.token)} />;
+  try {
+    if (session.user.role === "APPLICANT") {
+      return <ApplicantHome summary={await applicantSummary(session.token)} />;
+    }
+    const [summary, postings] = await Promise.all([
+      session.user.role === "RECRUITER" ? recruiterSummary(session.token) : administratorSummary(session.token),
+      openPostings(),
+    ]);
+    return <StaffHome firstName={session.user.firstName} summary={summary} postings={postings} />;
+  } catch (err) {
+    // A backend restart without a fixed JWT_SECRET refuses tokens the browser still holds
+    if (err instanceof SessionEnded) {
+      return (
+        <AccessNotice title="Your session has ended" logInTo="/" ended>
+          Log in again to see your home.
+        </AccessNotice>
+      );
+    }
+    throw err;
   }
-  const summary =
-    session.user.role === "RECRUITER" ? await recruiterSummary(session.token) : await administratorSummary(session.token);
-  return <StaffHome firstName={session.user.firstName} summary={summary} postings={await openPostings()} />;
 }
 
-// null: the backend did not answer, or the session ended; the card then shows no number (ADR-0013)
+// null: the backend did not answer, so the card shows no number (ADR-0013). An ended session is
+// not "no answer": it goes up to the page, which asks to log in again.
 async function orNull<T>(call: Promise<T>): Promise<T | null> {
   try {
     return await call;
-  } catch {
+  } catch (err) {
+    if (err instanceof SessionEnded) {
+      throw err;
+    }
     return null;
   }
 }
@@ -58,13 +78,20 @@ async function applicantSummary(token: string): Promise<Summary[]> {
 }
 
 async function recruiterSummary(token: string): Promise<Summary[]> {
-  const postings = (await orNull(viewRecruiterPostings(token)))?.postings;
-  const count = (status: string) => postings?.filter((row) => row.postStatus === status).length ?? null;
-  return [
-    { label: "Published", value: count("PUBLISHED"), href: "/recruiter/postings" },
-    { label: "Pending approval", value: count("PENDING_APPROVAL"), href: "/recruiter/postings" },
-    { label: "Returned", value: count("RETURNED"), href: "/recruiter/postings" },
-  ];
+  const result = await orNull(viewRecruiterPostings(token));
+  // Acting for no organization: no counts to show, rather than zeros for an organization that is not there
+  const postings = result?.organizationId != null ? result.postings : null;
+  return (
+    [
+      ["Published", "PUBLISHED"],
+      ["Pending approval", "PENDING_APPROVAL"],
+      ["Returned", "RETURNED"],
+    ] as const
+  ).map(([label, status]) => ({
+    label,
+    value: postings ? postings.filter((row) => row.postStatus === status).length : null,
+    href: "/recruiter/postings",
+  }));
 }
 
 async function administratorSummary(token: string): Promise<Summary[]> {

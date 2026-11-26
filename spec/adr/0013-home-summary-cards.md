@@ -19,10 +19,11 @@ ask for. Zeba (PM) agreed the change for the team on November 26 (SCRUM-244).
      applications at the Offer stage (UC-05, UC-07); from `viewApplications`.
    - Recruiter: the organization's postings that are Published, Pending approval and Returned
      (UC-11, UC-12 6a); from `viewRecruiterPostings`.
-   - Administrator: postings waiting for review (UC-12), recruiter requests waiting (UC-10) and
+   - Administrator: postings waiting for review (UC-12), open recruiter requests (UC-10) and
      users (FR-ADM.1); from `openPostingApprovalQueue`, `openRecruiterRequestQueue`, `viewUsers`.
-2. **No number without data.** When the backend does not answer, a card says "Not available" and
-   shows no number. Nothing is stored or computed for the cards alone.
+2. **No number without data.** When the backend does not answer, or a recruiter acts for no
+   organization, a card says "Not available" and shows no number. An ended session asks to log in
+   again, as on every other screen. Nothing is stored or computed for the cards alone.
 3. **The cards sit above the role's actions**, which stay as they were. One block,
    `SummaryCards` in `src/components/`, draws them for every role.
 

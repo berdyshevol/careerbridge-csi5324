@@ -153,7 +153,7 @@ is shown on that application's page; the desk and the Applications entry point t
 
 | ID | Address | Screen | Use cases | Holds and leads to |
 | --- | --- | --- | --- | --- |
-| [`admin-home`](admin-home.html) | `/admin` | Home | UC-12, UC-10 | Summary cards: postings to review, recruiter requests waiting and users, each to its screen. The Administrator's actions: Posting approvals (UC-12) and Recruiter requests (UC-10). Until `/admin` is built, `/` shows the cards above the open postings. |
+| [`admin-home`](admin-home.html) | `/admin` | Home | UC-12, UC-10 | Summary cards: postings to review, open recruiter requests and users, each to its screen. The Administrator's actions: Posting approvals (UC-12) and Recruiter requests (UC-10). Until `/admin` is built, `/` shows the cards above the open postings. |
 | [`admin-postings`](admin-postings.html) | `/admin/postings` | Posting approvals | UC-12 | Oldest first: title, organization, recruiter, submission date, deadline. On a laptop the list and the chosen posting side by side; on a phone the list opens the posting. |
 | [`admin-posting`](admin-posting.html) | `/admin/postings/{id}` | Posting review | UC-12 | The posting as the public will see it, drawn by the same component as `/jobs/{id}` (technology variation 4a), and the organization's status. Approve, Return with comments, Reject with a reason. After a decision: back to the queue (step 8). The blocked cases 6a and 6b say why. |
 | [`admin-requests`](admin-requests.html) | `/admin/requests` | Recruiter requests | UC-10 | Oldest first: request type (new organization, joining an existing organization, an additional organization), requester, organization, date, review flag. |

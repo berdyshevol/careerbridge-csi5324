@@ -7,6 +7,7 @@ import {
   viewProfile,
   viewRecruiterPostings,
   viewUsers,
+  SessionEnded,
   type Applications,
   type RecruiterPostings,
 } from "@/lib/api";
@@ -15,6 +16,8 @@ import type { Role, Session } from "@/lib/session";
 import HomePage from "./page";
 
 vi.mock("@/lib/serverSession", () => ({ serverSession: vi.fn() }));
+// The ended-session notice clears the cookie through the router
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 vi.mock("@/lib/api", async (importActual) => ({
   ...(await importActual<typeof import("@/lib/api")>()),
   searchPostings: vi.fn(),
@@ -145,6 +148,24 @@ describe("home page", () => {
     expect(screen.getByRole("link", { name: "Published: 2" })).toHaveAttribute("href", "/recruiter/postings");
     expect(screen.getByRole("link", { name: "Pending approval: 1" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Returned: 0" })).toBeInTheDocument();
+  });
+
+  it("shows no counts for a recruiter who acts for no organization", async () => {
+    vi.mocked(serverSession).mockResolvedValue(as("RECRUITER"));
+    vi.mocked(viewRecruiterPostings).mockResolvedValue({ organizationId: null, organizationName: null, postings: [] });
+    render(await HomePage());
+
+    expect(screen.getByRole("link", { name: "Published: not available" })).toBeInTheDocument();
+  });
+
+  it("asks to log in again when the backend refuses the session, instead of empty cards", async () => {
+    vi.mocked(serverSession).mockResolvedValue(as("APPLICANT"));
+    vi.mocked(viewApplications).mockRejectedValue(new SessionEnded());
+    render(await HomePage());
+
+    expect(screen.getByRole("heading", { name: "Your session has ended" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/login?next=%2F");
+    expect(screen.queryByRole("list", { name: "Summary" })).not.toBeInTheDocument();
   });
 
   it("counts what waits for an administrator, and says so when one list does not load", async () => {
