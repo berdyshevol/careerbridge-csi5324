@@ -41,7 +41,9 @@ there is the shape of one request or one response:
 ### Data
 
 PostgreSQL on Neon ([ADR-0009](adr/0009-postgresql-on-neon.md)); the tests use PostgreSQL in Docker,
-and a backend started without `DATABASE_URL` falls back to in-memory H2. Into an empty database the
+and a backend started without `DATABASE_URL` falls back to in-memory H2. The tables come from the Flyway
+migrations in `app/backend/src/main/resources/db/migration`
+([ADR-0014](adr/0014-schema-from-flyway-migrations.md)). Into an empty database the
 backend loads sample job postings and applications from CSV files
 (`app/backend/src/main/resources/data/`).
 

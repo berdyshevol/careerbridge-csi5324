@@ -38,6 +38,10 @@ On H2, recruiter1 and recruiter2, like Riley, are members of Brazos Analytics an
 
 Log in at <http://localhost:3000/login>; posting approvals are at <http://localhost:3000/admin/postings> for the Administrator.
 
+## Changing the database
+
+The schema comes from the SQL migrations in `backend/src/main/resources/db/migration/common` ([ADR-0014](../spec/adr/0014-schema-from-flyway-migrations.md)). When you change an entity (a field, a column, a value of an enum), add `V<next number>__<what>.sql` there in the same pull request (in `db/migration/postgresql` if it is for PostgreSQL only); never edit a migration that is already on `main`. `MigrationsMatchEntitiesTest` fails and prints the difference while the migrations and the entities disagree, and the backend applies new migrations by itself when it starts, on Neon too.
+
 ## Deployment
 
 Deploying is a button: on GitHub open **Actions → Deploy → Run workflow** (branch `main`). A failed Render build turns the run red. Why a deploy is started by hand: [ADR-0003](../spec/adr/0003-pull-requests-and-manual-deploy.md).

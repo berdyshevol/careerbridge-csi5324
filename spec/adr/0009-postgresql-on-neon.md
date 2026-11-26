@@ -23,8 +23,8 @@ they did not check the database a deployment would use.
 - When Docker is not running, the same tests use an in-memory H2 database instead and log a
   warning (`TestDatabaseFallback` in the test sources; amended 2026-10-28). Not in CI (`CI=true`):
   there a missing Docker fails the run, so every merge and every deploy is checked on PostgreSQL.
-- Hibernate keeps creating and updating the tables (`ddl-auto=update`). Sample data loads only
-  into an empty database.
+- The tables come from Flyway migrations ([ADR-0014](0014-schema-from-flyway-migrations.md),
+  amended 2026-11-26). Sample data loads only into an empty database.
 
 ## Consequences
 
@@ -32,6 +32,4 @@ they did not check the database a deployment would use.
   have it, so a difference between H2 and PostgreSQL shows up in the pull request at the latest.
 - A member without `.env` works on H2 as before; H2 and PostgreSQL can differ, and only the tests
   catch that.
-- A change to an entity that `update` cannot apply (a new required column on a table with rows)
-  needs the `dev` branch reset, or a migration tool once the data matters.
 - Neon suspends an idle database after 5 minutes; the first query after that waits for it to wake.

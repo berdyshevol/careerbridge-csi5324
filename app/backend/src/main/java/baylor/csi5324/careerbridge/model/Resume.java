@@ -2,6 +2,8 @@
 package baylor.csi5324.careerbridge.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 
 @Entity
@@ -27,8 +29,10 @@ public class Resume {
     private LocalDateTime uploadDate;
 
     // bytea on PostgreSQL and varbinary on H2. Not @Lob: on PostgreSQL that is a large object, which
-    // outlives a deleted row. Nullable, as rows saved before uploads existed have no content.
+    // outlives a deleted row. VARBINARY is named because H2 would expect a blob at this length, and the
+    // migrations build the same column for both. Nullable, as rows saved before uploads existed have no content.
     @Column(length = MAX_FILE_SIZE)
+    @JdbcTypeCode(SqlTypes.VARBINARY)
     private byte[] content;
 
     public Resume() {

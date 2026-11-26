@@ -13,8 +13,9 @@ decision gets a new record that names the one it replaces.
 | [0006](0006-public-backend-is-read-only-without-login.md) | The public backend changes no data until users can log in | Replaced by [0010](0010-log-in-with-jwt.md) |
 | [0007](0007-administrator-signs-in-with-http-basic.md) | The Administrator signs in with HTTP Basic until Log In exists | Replaced by [0010](0010-log-in-with-jwt.md) |
 | [0008](0008-pull-requests-name-their-ticket.md) | A pull request names its ticket; Jira follows it; Claude reviews it | Accepted |
-| [0009](0009-postgresql-on-neon.md) | Data lives in PostgreSQL on Neon; tests run on PostgreSQL in Docker | Accepted |
+| [0009](0009-postgresql-on-neon.md) | Data lives in PostgreSQL on Neon; tests run on PostgreSQL in Docker | Accepted; its tables point replaced by [0014](0014-schema-from-flyway-migrations.md) |
 | [0010](0010-log-in-with-jwt.md) | Users log in for a signed token, and each endpoint asks for a role | Accepted |
 | [0011](0011-screens-are-built-from-mockups.md) | Every screen is built from its mockup in `spec/screens/` | Accepted |
 | [0012](0012-role-colors.md) | Each role has its own primary colors | Accepted |
 | [0013](0013-home-summary-cards.md) | A role's home shows a few counts it already has | Accepted |
+| [0014](0014-schema-from-flyway-migrations.md) | The database schema comes from Flyway migrations; Hibernate only checks it | Accepted |

@@ -2,6 +2,8 @@ package baylor.csi5324.careerbridge.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Embeddable
 public class ResumeSnapshot {
@@ -18,6 +20,7 @@ public class ResumeSnapshot {
     // A copy of the file, since a replaced Resume is deleted (A6). The same mapping as Resume.content;
     // nullable, as snapshots taken before uploads existed have no content.
     @Column(name = "resume_content", length = Resume.MAX_FILE_SIZE)
+    @JdbcTypeCode(SqlTypes.VARBINARY)
     private byte[] content;
 
     public ResumeSnapshot() {
