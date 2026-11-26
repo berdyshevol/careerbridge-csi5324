@@ -7,6 +7,7 @@ import BackendDown from "@/components/BackendDown";
 import EmptyState from "@/components/EmptyState";
 import FileDrop from "@/components/FileDrop";
 import FormField, { SelectField, TextAreaField } from "@/components/FormField";
+import Loading from "@/components/Loading";
 import OfferPanel from "@/components/OfferPanel";
 import PageTitle from "@/components/PageTitle";
 import Placeholder from "@/components/Placeholder";
@@ -310,7 +311,7 @@ export default function StyleguidePage() {
             />
           </div>
         </Block>
-        <Block title="Messages" use='<div role="status" className="alert alert-warning">…</div>; alert-info for a note, alert-error only for a failure'>
+        <Block title="Messages" use='<div role="status" className="alert alert-warning">…</div>; alert-info for a note, alert-error only for a failure. The icon of each kind comes from globals.css; a page never draws its own'>
           <div className="flex flex-col gap-3">
             <div role="status" className="alert alert-info">
               <span>A note the reader should see.</span>
@@ -341,7 +342,10 @@ export default function StyleguidePage() {
             </div>
           </div>
         </Block>
-        <Block title="Empty state" use="<EmptyState action? card?>…</EmptyState> — card when it stands in place of a list of cards">
+        <Block title="Loading" use='<Loading label="Loading postings…" rows? /> where a list or page is on its way; src/app/loading.tsx shows it for every page while its server data loads'>
+          <Loading label="Loading postings…" rows={2} />
+        </Block>
+        <Block title="Empty state" use="<EmptyState action? card?>…</EmptyState> — card, with the inbox icon, when it stands in place of a list of cards">
           <div className="flex flex-col gap-3">
             <EmptyState action={{ href: "/jobs", label: "See all open jobs" }}>
               No applications yet.

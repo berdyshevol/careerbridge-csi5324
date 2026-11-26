@@ -89,6 +89,11 @@ match its mockup, and a screen that is not listed here is added before it is cod
 11. **Every state the specification names is drawn.** Besides the main state, a mockup shows each
    extension's message or dialog as a separate block marked "When …", with the wording of the use
    case.
+12. **Waiting, empty and messages look the same everywhere.** While a page or a list loads, its
+   place shows gray placeholder cards and a line saying what is loading (`Loading`). An empty list
+   says so in a card with the inbox icon (`EmptyState`). Every message carries the icon of its
+   kind: note, success, warning or error. They are drawn once on `/styleguide`; a mockup shows the
+   loading state only where the screen loads its list itself (`recruiter-postings`).
 
 **Navigation**
 
