@@ -122,3 +122,20 @@ export function LockIcon(props: IconProps) {
     </Icon>
   );
 }
+
+// The CareerBridge mark in the header: a bridge in a soft square of the header's text color
+export function BrandMark() {
+  return (
+    <span className="grid size-8 place-items-center rounded-lg bg-primary-content/15 ring-1 ring-primary-content/20">
+      <BrandIcon />
+    </span>
+  );
+}
+
+function BrandIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M2 17h20M4 17v-4M20 17v-4M3 12c4-5 14-5 18 0M9 17v-3.2M15 17v-3.2M12 17v-3.6" />
+    </Icon>
+  );
+}

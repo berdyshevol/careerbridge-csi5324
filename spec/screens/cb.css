@@ -20,9 +20,11 @@
 .board a { color: inherit; text-decoration: none; }
 
 /* header */
-.hdr { background: var(--pri); color: #fff; }
+.hdr { background: var(--pri); color: #fff; box-shadow: var(--lift); position: relative; z-index: 1; }
 .hdr-in { display: flex; align-items: center; gap: 10px; height: 64px; padding: 0 16px; }
-.logo { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 20px; font-weight: 600; white-space: nowrap; }
+.logo { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 20px; font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 10px; letter-spacing: -0.01em; }
+/* The brand mark: a bridge in a soft white square, on every role's header color */
+.logo::before { content: ""; width: 32px; height: 32px; border-radius: 9px; flex: none; background: rgba(255, 255, 255, .16) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 17h20M4 17v-4M20 17v-4M3 12c4-5 14-5 18 0M9 17v-3.2M15 17v-3.2M12 17v-3.6'/%3E%3C/svg%3E") center / 20px no-repeat; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2); }
 .hsearch { display: none; flex: 1; max-width: 520px; align-items: center; gap: 8px; height: 42px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--b3); background: var(--b2); color: var(--muted); font-size: 14px; }
 .hsearch input, .input input { border: 0; background: transparent; font: inherit; color: var(--fg); flex: 1; min-width: 0; outline: none; padding: 0; }
 .hbtn { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 10px; color: var(--fg); flex: none; }
@@ -49,6 +51,7 @@
 .dock { display: flex; border-top: 1px solid var(--b3); background: var(--b1); }
 .dock a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 4px 14px; font-size: 11.5px; color: var(--muted); position: relative; }
 .dock a.on { color: var(--pri); font-weight: 600; }
+.dock a.on::before { content: ""; position: absolute; top: 0; left: calc(50% - 16px); width: 32px; height: 3px; border-radius: 0 0 3px 3px; background: var(--pri); }
 .dock .dot { position: absolute; top: 8px; right: calc(50% - 16px); }
 .ic { width: 20px; height: 20px; flex: none; }
 .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--acc); flex: none; }
@@ -185,7 +188,8 @@
   .shell { padding: 24px 24px 32px; }
   .nav-tiles { display: grid; grid-template-columns: repeat(var(--tiles, 4), minmax(0, 1fr)); gap: 12px; }
   .nav-tiles a { min-height: 84px; display: flex; flex-direction: column; justify-content: center; gap: 8px; border-radius: 16px; padding: 0 16px; border: 1px solid var(--b3); background: var(--b1); font-weight: 500; position: relative; }
-  .nav-tiles a.on { background: var(--sec); border-color: transparent; font-weight: 600; }
+  .nav-tiles a.on { background: var(--sec); border-color: var(--pri); box-shadow: inset 0 0 0 1px var(--pri); font-weight: 600; color: var(--sec-fg); }
+  .nav-tiles a.on .ic { color: var(--pri); }
   .nav-tiles .dot, .nav-tiles .cnt { position: absolute; top: 12px; right: 12px; }
   .dock { display: none; }
   .ftr { padding: 4px 24px 28px; }
@@ -206,7 +210,10 @@
   .nav-side { display: flex; flex-direction: column; gap: 6px; width: 236px; flex: none; }
   .nav-side .cap { padding: 4px 12px 8px; font-size: 12.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
   .nav-side a { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 12px; border-radius: 12px; }
-  .nav-side a.on { background: var(--sec); font-weight: 600; }
+  .nav-side a { position: relative; color: var(--muted); }
+  .nav-side a.on { background: var(--sec); font-weight: 600; color: var(--sec-fg); }
+  .nav-side a.on .ic { color: var(--pri); }
+  .nav-side a.on::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 3px; background: var(--pri); }
   .main { flex: 1; }
   .ftr { padding: 4px 32px 32px; }
   .h1 { font-size: 31px; }
