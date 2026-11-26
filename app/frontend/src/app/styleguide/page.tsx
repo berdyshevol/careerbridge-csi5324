@@ -342,7 +342,7 @@ export default function StyleguidePage() {
             </div>
           </div>
         </Block>
-        <Block title="Loading" use='<Loading label="Loading postings…" rows? /> where a list or page is on its way; src/app/loading.tsx shows it for every page while its server data loads'>
+        <Block title="Loading" use='<Loading label="Loading postings…" rows? /> where a component loads its own list; a server page needs none, it arrives whole'>
           <Loading label="Loading postings…" rows={2} />
         </Block>
         <Block title="Empty state" use="<EmptyState action? card?>…</EmptyState> — card, with the inbox icon, when it stands in place of a list of cards">

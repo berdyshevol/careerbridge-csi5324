@@ -1,4 +1,4 @@
-// While a page or a list is on its way: gray cards where the content will be, so the page does not
+// While a list is on its way: gray cards where the content will be, so the page does not
 // jump when it arrives. label is read out to screen readers and shown under the cards.
 export default function Loading({ label = "Loading…", rows = 3 }: { label?: string; rows?: number }) {
   return (
