@@ -25,23 +25,36 @@ export default async function HomePage() {
   if (!session) {
     return <VisitorHome />;
   }
+  const { token } = session;
+  const { role, firstName } = session.user;
+  const home = await sessionStillValid(() =>
+    role === "APPLICANT"
+      ? Promise.all([applicantSummary(token), null])
+      : Promise.all([role === "RECRUITER" ? recruiterSummary(token) : administratorSummary(token), openPostings()]),
+  );
+  if (!home) {
+    return (
+      <AccessNotice title="Your session has ended" logInTo="/" ended>
+        Log in again to see your home.
+      </AccessNotice>
+    );
+  }
+  const [summary, postings] = home;
+  return role === "APPLICANT" ? (
+    <ApplicantHome summary={summary} />
+  ) : (
+    <StaffHome firstName={firstName} summary={summary} postings={postings} />
+  );
+}
+
+// null when the backend refused the token: a backend restart without a fixed JWT_SECRET refuses
+// tokens the browser still holds
+async function sessionStillValid<T>(load: () => Promise<T>): Promise<T | null> {
   try {
-    if (session.user.role === "APPLICANT") {
-      return <ApplicantHome summary={await applicantSummary(session.token)} />;
-    }
-    const [summary, postings] = await Promise.all([
-      session.user.role === "RECRUITER" ? recruiterSummary(session.token) : administratorSummary(session.token),
-      openPostings(),
-    ]);
-    return <StaffHome firstName={session.user.firstName} summary={summary} postings={postings} />;
+    return await load();
   } catch (err) {
-    // A backend restart without a fixed JWT_SECRET refuses tokens the browser still holds
     if (err instanceof SessionEnded) {
-      return (
-        <AccessNotice title="Your session has ended" logInTo="/" ended>
-          Log in again to see your home.
-        </AccessNotice>
-      );
+      return null;
     }
     throw err;
   }
