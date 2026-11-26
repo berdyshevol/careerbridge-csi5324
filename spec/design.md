@@ -353,7 +353,7 @@ sequenceDiagram
             opt new organization
                 RS->>OR: save(organization PENDING_APPROVAL)
             end
-            RS->>M: new(recruiter, organization, AWAITING_VERIFICATION,<br/>requestType, now); setReviewFlag(..) (ext. 4d)
+            RS->>M: new(recruiter, organization, AWAITING_VERIFICATION,<br/>requestType, now), then setReviewFlag(..) (ext. 4d)
             RS->>MR: save(membership)
             RS->>NS: notify(recruiter, EMAIL_VERIFICATION, link)
             RS-->>RC: RecruiterRegistration(membership, link?)
