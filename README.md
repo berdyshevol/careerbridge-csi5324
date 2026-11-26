@@ -13,9 +13,7 @@ project of team CareerBridge for CSI 5324 Software Engineering (Baylor Universit
 
 | Folder | What it holds |
 | --- | --- |
-| [spec/](spec/README.md) | The specification, kept current with the code: [use cases](spec/use-cases.md), [requirements](spec/requirements.md), [domain model](spec/domain-model.md), [design](spec/design.md) (sequence and class diagrams), [architecture](spec/architecture.md), [testing](spec/testing.md) and [decision records](spec/adr/README.md). Its README says which file holds what. |
-| [spec/screens/](spec/screens/README.md) | One mockup per screen; every page is built to its mockup. |
-| [spec/user-scenarios/](spec/user-scenarios/README.md) | Acceptance scenarios in Gherkin, one per use-case outcome. |
+| [spec/](spec/README.md) | The specification of the project, kept current with the code. [spec/README.md](spec/README.md) says which file holds what. |
 | [app/backend/](app/backend/) | Spring Boot 4, Java 17, Maven, Spring Data JPA; PostgreSQL on Neon. |
 | [app/frontend/](app/frontend/) | Next.js (TypeScript), Tailwind and daisyUI. |
 | [tools/build-pdf/](tools/build-pdf/README.md) | Builds the documentation PDF from `spec/`. |
