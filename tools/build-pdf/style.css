@@ -1,29 +1,109 @@
+/* The layout of the course template, CSI5324_Project_Documentation_Template.docx: sizes, colours
+   and spacing are its Word styles (Normal, Heading 1-3, Title, Caption, TOC 1-2, Header, Footer). */
+:root {
+  --serif: "Times New Roman", Times, "Liberation Serif", serif;
+  --heading-1: #365f91;
+  --heading-2: #4f81bd;
+  --cover: #17365d;
+}
+
+/* Word puts the header 0.5in from the top edge with 12pt above and below its line, so the text
+   starts lower than the 0.75in top margin */
 @page {
   size: Letter;
-  margin: 2cm 2cm 2.2cm;
-  @bottom-center { content: counter(page); font-family: Helvetica, Arial, sans-serif; font-size: 9pt; color: #555; }
+  margin: 1.08in 1in 0.75in;
+  @top-center {
+    content: "Baylor CSI 5324 Software Engineering I";
+    font: 14pt Arial, Helvetica, sans-serif; color: #000; text-align: right;
+    vertical-align: bottom; padding-bottom: 2pt; margin-bottom: 12pt; border-bottom: 0.75pt solid #000;
+  }
+  @bottom-left { content: "Confidential"; text-align: left; vertical-align: bottom; padding-bottom: 0.5in; }
+  @bottom-center { content: "Baylor University"; text-align: center; vertical-align: bottom; padding-bottom: 0.5in; }
+  @bottom-right { content: "Page " counter(page); text-align: right; vertical-align: bottom; padding-bottom: 0.5in; }
 }
-/* The cover carries no page number */
-@page :first { @bottom-center { content: none; } }
-body { font-family: Helvetica, Arial, sans-serif; font-size: 10.5pt; line-height: 1.45; color: #111; max-width: none; }
-h1 { font-size: 20pt; margin-top: 0; }
-h2 { font-size: 15pt; margin-top: 1.4em; }
-h3 { font-size: 12.5pt; margin-top: 1.2em; }
-h4 { font-size: 11pt; }
-h2, h3, h4 { page-break-after: avoid; }
-table { border-collapse: collapse; width: 100%; margin: 0.8em 0; font-size: 9.5pt; page-break-inside: auto; }
-th, td { border: 1px solid #999; padding: 4px 6px; vertical-align: top; text-align: left; }
-th { background: #eee; }
-tr { page-break-inside: avoid; }
+/* The first page is the cover: the template's first-page header has its rule above the line, and
+   the cover has no footer */
+@page :first {
+  @top-center { border-bottom: none; border-top: 0.75pt solid #000; padding-top: 12pt; }
+  @bottom-left { content: none; }
+  @bottom-center { content: none; }
+  @bottom-right { content: none; }
+}
+/* Paged.js gives each side box a share of the width; the header and its rule span the line */
+.pagedjs_margin-top { grid-template-columns: 0 1fr 0 !important; }
+.pagedjs_margin-bottom > div { font: 11pt var(--serif); color: #000; }
+
+body {
+  font-family: var(--serif); font-size: 11pt; line-height: 1.15; color: #000;
+  max-width: none; margin: 0; padding: 0; hyphens: none;
+}
+p { margin: 0 0 10pt; }
+a { color: #0000ff; }
+
+/* Markdown "## 1. Introduction" is the template's Heading 1, "###" Heading 2, "####" Heading 3 */
+h1, h2, h3, h4, h5 { font-family: var(--serif); font-weight: bold; line-height: 1.15; margin: 0; break-after: avoid; }
+h1, h2 { font-size: 14pt; color: var(--heading-1); margin-top: 24pt; }
+h3 { font-size: 13pt; color: var(--heading-2); margin-top: 10pt; }
+h4 { font-size: 11pt; color: var(--heading-2); margin-top: 10pt; }
+h5 { font-size: 11pt; color: var(--heading-2); font-style: italic; margin-top: 10pt; }
+h1 + *, h2 + *, h3 + *, h4 + *, h5 + * { margin-top: 0; }
+h2 .num { display: inline-block; min-width: 0.27in; }
+
+/* Cover: the Title style, right-aligned, closed by a blue rule */
+section.cover { text-align: right; color: var(--cover); padding-top: 2.3in; }
+section.cover p { margin: 0 0 6pt; line-height: 1.15; letter-spacing: 0.25pt; }
+section.cover .cover-title { font-size: 24pt; margin-bottom: 40pt; }
+section.cover .cover-line { font-size: 14pt; }
+section.cover p:last-child { padding-bottom: 31pt; border-bottom: 1pt solid var(--heading-2); }
+
+/* Change logs: the title 14pt bold, the iterations 11pt bold, both black */
+.front-title { font-size: 14pt; font-weight: bold; margin: 0 0 10pt; }
+.front-heading { font-size: 11pt; font-weight: bold; margin: 10pt 0 0; break-after: avoid; }
+
+ul, ol { margin: 0 0 10pt; padding-left: 0.5in; }
+li { margin: 0; }
+li > p { margin: 0; }
+li > ul, li > ol { margin: 0; }
+
+/* Caption style: bold, 9pt, accent blue; a figure's caption is centred under it */
+p.caption { font-size: 9pt; font-weight: bold; color: var(--heading-2); line-height: 1; margin: 4pt 0 10pt; }
+p.caption.figure { text-align: center; }
+p.caption.table { break-after: avoid; }
+
+/* Table Grid: thin black lines; the header row light blue, as in the Iteration 1 document */
+table { border-collapse: collapse; width: 100%; margin: 0 0 10pt; font-size: 10pt; line-height: 1; break-inside: auto; }
+th, td { border: 0.5pt solid #000; padding: 2pt 4pt; vertical-align: top; text-align: left; }
+th { background: #dbe5f1; font-weight: bold; }
+tr { break-inside: avoid; }
+th p, td p { margin: 0; }
+
 /* A tall sequence diagram shrinks to one page rather than being cut */
-img { max-width: 100%; max-height: 8.6in; height: auto; display: block; margin: 0.6em auto; page-break-inside: avoid; }
+img { max-width: 100%; max-height: 8.6in; height: auto; display: block; margin: 6pt auto 0; break-inside: avoid; }
 code { font-size: 9.5pt; }
-pre { white-space: pre-wrap; font-size: 9pt; background: #f6f6f6; padding: 6px; }
-blockquote { margin-left: 0; padding-left: 1em; border-left: 3px solid #ccc; color: #444; }
-.page-break { page-break-after: always; }
-nav.toc ul { list-style: none; padding-left: 1.2em; }
-nav.toc > ul { padding-left: 0; }
-nav.toc a { color: #111; text-decoration: none; }
-nav.toc li { display: block; }
-nav.toc a { display: flex; }
-nav.toc a::after { content: target-counter(attr(href), page); margin-left: auto; padding-left: 1em; }
+pre { white-space: pre-wrap; font-size: 9pt; line-height: 1.2; background: #f6f6f6; padding: 6px; margin: 0 0 10pt; }
+blockquote { margin: 0 0 10pt; padding-left: 1em; border-left: 3px solid #ccc; color: #444; }
+.page-break { break-after: page; }
+
+/* Table of contents: TOC Heading, then TOC 1 (bold italic 12pt) and TOC 2 (bold, indented) with
+   dot leaders to the page number */
+nav.toc h1 { line-height: 1.5; margin: 0 0 6pt; }
+nav.toc ul { list-style: none; margin: 0; padding: 0; }
+nav.toc ul ul { padding-left: 11pt; }
+nav.toc ul ul ul { display: none; }
+nav.toc a { display: flex; align-items: baseline; color: #000; text-decoration: none; margin-top: 6pt; }
+nav.toc > ul > li > a { font-size: 12pt; font-weight: bold; font-style: italic; }
+nav.toc li li > a { font-size: 11pt; font-weight: bold; }
+nav.toc a .num { flex: none; width: 0.3in; }
+nav.toc a::before {
+  order: 1; flex: 1 1 0; overflow: hidden; white-space: nowrap; margin: 0 2pt; font-weight: normal; font-style: normal;
+  content: ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .";
+}
+nav.toc a::after { order: 2; content: target-counter(attr(href), page); }
+
+/* WATERMARK in the list writes this element's text (watermark.css); without it nothing shows */
+.pagedjs_pagebox::before {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-52deg);
+  font: bold 48pt Arial, Helvetica, sans-serif; color: #000; opacity: 0.06; white-space: nowrap;
+  pointer-events: none; z-index: 0;
+}
+.pagedjs_pagebox > .pagedjs_area { position: relative; z-index: 1; }

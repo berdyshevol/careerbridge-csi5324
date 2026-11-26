@@ -1,12 +1,18 @@
 ---
 name: implement-task
-description: The one way to build anything in CareerBridge. Use whenever someone intends to implement, build, add, fix or change code in this repository — "implement SCRUM-NN", "do this ticket", "implement UC-05", "build the withdraw screen", "add an endpoint for…", "fix the apply button", a Jira link, a list of FRs, or a described change — even when they do not name this skill. It classifies the request as a small task, a vertical slice or a whole use case, makes sure a Jira ticket exists, and takes the work through plan, implementation, tests, simplify and review to a pull request.
+description: The one way to build anything in CareerBridge. Use whenever someone asks to implement, build, add, fix or change code in this repository — "implement SCRUM-NN", "do this ticket", "implement UC-05", "build the withdraw screen", "add an endpoint for…", "fix the apply button", a Jira link, a list of FRs, or a described change — even when they do not name this skill. It classifies the request as a small task, a vertical slice or a whole use case, makes sure a Jira ticket exists, and takes the work through plan, implementation, tests, simplify and review to a pull request. Not for a request to research, compare, audit, brainstorm or explain, or to say whether something should change, even when it adds "and change it if needed": investigate and report first, and start this skill when the person then asks for the change.
 ---
 
 # Implement a task
 
 You take one request to an open pull request. The rules for the code are in `CLAUDE.md`; this file
 is the order of the steps. One ticket, one branch, one pull request.
+
+## 0. Is it a decision to build?
+
+If the request is to investigate, compare, audit or brainstorm, even with "and change it if needed",
+do that read-only and report what you found and what you would change, then ask "Shall I make this
+change?". Create no ticket, branch or edit before the answer is yes.
 
 ## 1. Check Jira
 
