@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { ACCOUNTS, logIn, logOut } from "./accounts";
 
-// The shell by role ("Navigation" in spec/ui-drafts.md), as Given / When / Then. The side column,
+// The shell by role ("Navigation" in spec/screens/README.md), as Given / When / Then. The side column,
 // the tiles and the dock repeat one list; only the one that fits the width is visible.
 const visibleNavigation = 'nav[aria-label="Navigation"]:visible';
 

@@ -5,7 +5,7 @@ import { serverSession } from "@/lib/serverSession";
 const HERE = "/admin/postings";
 
 // The session is read on the server, as the header reads it, so the page never renders without it.
-// Another role gets only the notice, without the administrator's page heading (ui-drafts, principle 5)
+// Another role gets only the notice, without the administrator's page heading (spec/screens/README.md, principle 5)
 export default async function AdminPostingsPage() {
   const session = await serverSession();
   if (!session) {

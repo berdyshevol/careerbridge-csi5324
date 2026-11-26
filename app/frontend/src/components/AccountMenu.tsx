@@ -46,7 +46,7 @@ export default function AccountMenu({ user }: { user: SessionUser | null }) {
 }
 
 // Who is logged in, and behind the avatar the account menu: rare actions stay out of the dock
-// (spec/ui-drafts.md, Navigation 9)
+// (spec/screens/README.md, Navigation 9)
 function SignedIn({ user }: { user: SessionUser }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);

@@ -12,7 +12,7 @@ type NavItem = {
   Icon: typeof StatusIcon;
 };
 
-// Each role sees only its own entries ("Navigation" in spec/ui-drafts.md). An entry joins its list
+// Each role sees only its own entries ("Navigation" in spec/screens/README.md). An entry joins its list
 // when its page is built: the recruiter's Home and the administrator's Home are still missing.
 const navigation: Record<Role, { caption: string; items: NavItem[] }> = {
   APPLICANT: {

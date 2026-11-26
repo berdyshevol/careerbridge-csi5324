@@ -7,7 +7,7 @@ theirs. No code and no pull request here.
 
 1. **Read** the use case in `spec/use-cases.md`, its FRs in `spec/requirements.md`, its SSD and
    contracts in `spec/ssd-and-contracts.md`, the entities in `spec/domain-model.md`, its screens in
-   the catalog ("Screens by role" in `spec/ui-drafts.md`) with their mockups in `spec/screens/`, and
+   the catalog ("Screens by role" in `spec/screens/README.md`) with their mockups in `spec/screens/`, and
    the code that already exists for it. A step the user sees that has no screen in the catalog is a
    gap: list it in the draft and say a screen must be added before that slice.
 2. **Read the epic** `UC-NN <name>` in Jira and every ticket under it, with their `Covers:` lines.

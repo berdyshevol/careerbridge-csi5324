@@ -8,7 +8,7 @@ import { searchPostings, type JobPosting } from "@/lib/api";
 import { LOCATIONS } from "@/lib/postingOptions";
 import { serverSession } from "@/lib/serverSession";
 
-// `/` is one address with a page per role: visitor-home and applicant-home in spec/ui-drafts.md
+// `/` is one address with a page per role: visitor-home and applicant-home in spec/screens/README.md
 export default async function HomePage() {
   const session = await serverSession();
   if (!session) {

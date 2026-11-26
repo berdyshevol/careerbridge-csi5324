@@ -16,7 +16,7 @@ do not edit unless asked.
    branch: `git diff main...<branch>`. Keep only files under `app/frontend/src/`; a changed component
    in `src/components/` counts as a change to every page that imports it
    (`grep -rl <Component> app/frontend/src/app`). If none, say so and stop. For each changed page,
-   find its screen ID by its address in the catalog ("Screens by role" in `spec/ui-drafts.md`); a
+   find its screen ID by its address in the catalog ("Screens by role" in `spec/screens/README.md`); a
    page that is not in the catalog is a "must fix" (ADR-0011).
 2. **Read the screen files in full**, not just the diff, plus the components they import.
 3. **Check each rule.** For every finding give the file, the line and the fix.
