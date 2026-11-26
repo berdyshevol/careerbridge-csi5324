@@ -2,6 +2,8 @@
 
 > Part of the CareerBridge specification — see the [index](README.md).
 
+## 10. Team Contribution
+
 CSI 5324 Software Engineering, Baylor University, Fall 2026.
 
 | Member | Role |
