@@ -17,9 +17,9 @@ tests (Vitest) and the end-to-end tests (Playwright).
 At least one test case per implemented feature, in the template's columns; the Actual Result is
 left empty until the case has run. Each member writes and runs the cases of their own use cases.
 
-**UC-11 to UC-13 and the administrator's list of users (TC-ADM).** Written and reviewed by Zeba Tusnia Towshi. Claude Code (Anthropic) helped
+**UC-11 to UC-13, the administrator's list of users (TC-ADM) and the forgotten password of Log In (TC-LI).** Written and reviewed by Zeba Tusnia Towshi. Claude Code (Anthropic) helped
 draft the cases and match each one to its automated test. All cases were rerun on November 25, 2026,
-on `main` after #121 to #133 merged (JUnit 265, Vitest 316, Playwright 150 passed); the Actual Result
+on `main` after #121 to #142 merged (JUnit 289, Vitest 323, Playwright 154 passed); the Actual Result
 names the test that checked it.
 
 | Test Case ID | Assigned Tester | Scenario/Condition | Test Inputs | Expected Result | Actual Result | Test Status |
@@ -69,3 +69,10 @@ names the test that checked it.
 | TC-ADM-02 | Zeba Tusnia Towshi | FR-ADM.1: the count of users in each role | One more applicant | The applicant count goes up by one; each count matches the list | As expected (`UserDirectoryServiceTest.countsTheUsersOfEachRole`) | Pass |
 | TC-ADM-03 | Zeba Tusnia Towshi | NFR-ADM.1: no password or log-in details are sent | A recruiter with a password hash | The answer has the user's details but no password hash | As expected (`AdminUserControllerTest.sendsEachUsersNameEmailRoleAndStatusButNeverThePassword`) | Pass |
 | TC-ADM-04 | Zeba Tusnia Towshi | NFR-ADM.1: only the administrator sees the users | Request without a session, as an Applicant, as a Recruiter, as the Administrator | 401, 403, 403, then 200 | As expected (`AccessByRoleTest.onlyTheAdministratorSeesTheUsers`; scenario `administrator-2-view-users-refused.feature`) | Pass |
+| TC-LI-01 | Zeba Tusnia Towshi | FR-LI.1, FR-LI.2: a user resets a forgotten password with the link | A new applicant asks for a reset link, opens it and saves "New-password-2" | The new password logs in; the old one is refused | As expected (`PasswordResetControllerTest.theLinkSetsANewPasswordAndTheOldOneStopsWorking`; `reset-password.spec.ts`) | Pass |
+| TC-LI-02 | Zeba Tusnia Towshi | FR-LI.1, NFR-LI.1: the answer does not reveal whether an account exists | Email with no account | 202 with the same answer and no link; no notification | As expected (`PasswordResetControllerTest.anUnknownEmailGetsTheSameAnswerWithoutALink`; `PasswordResetServiceTest.anUnknownEmailSendsNothing`) | Pass |
+| TC-LI-03 | Zeba Tusnia Towshi | FR-LI.3: a used or replaced link is refused | The same link twice; an earlier link after a newer one was sent | Refused with 404 and "Ask for a new link"; the password stays | As expected (`PasswordResetControllerTest.aLinkWorksOnlyOnce`, `aNewerLinkReplacesTheEarlierOne`; `reset-password.spec.ts`) | Pass |
+| TC-LI-04 | Zeba Tusnia Towshi | FR-LI.3: a link older than 30 minutes has expired | Link used 30 minutes after it was sent | Refused with 410; the password stays | As expected (`PasswordResetServiceTest.aLinkOlderThanThirtyMinutesHasExpired`) | Pass |
+| TC-LI-05 | Zeba Tusnia Towshi | FR-LI.3: a weak new password is refused and the link still works | "short", then "New-password-2" | 400 with the password rule; the second try succeeds | As expected (`PasswordResetControllerTest.aWeakPasswordIsRefusedAndTheLinkStillWorks`) | Pass |
+| TC-LI-06 | Zeba Tusnia Towshi | FR-LI.2: a reset unlocks a locked account | Five wrong passwords, then a reset | The new password logs in at once | As expected (`PasswordResetControllerTest.resettingUnlocksALockedAccount`) | Pass |
+| TC-LI-07 | Zeba Tusnia Towshi | NFR-LI.1: the saved notification holds no link | A reset for an existing account | The Password reset notification's message has no token | As expected (`PasswordResetServiceTest.notifiesWithoutTheLinkAndShowsItOnlyInADemo`) | Pass |
