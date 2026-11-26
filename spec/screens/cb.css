@@ -1,15 +1,15 @@
 /* The careerbridge daisyUI theme (app/frontend/src/app/globals.css), redrawn for mockups.
    Each device frame is a size container, so one markup shows phone, tablet and laptop. */
 .board {
-  --b1: #ffffff; --b2: #f1f3ef; --b3: #dde2dc; --fg: #1c2623; --muted: #55615c;
+  --b1: #ffffff; --b2: #e9f2ef; --b3: #d3e2dc; --fg: #1c2623; --muted: #55615c;
   --pri: #1f5f56; --sec: #e3eeea; --sec-fg: #174840; --acc: #8a4a0e;
   --warn: #fbeedc; --warn-fg: #8a4a0e; --err: #a3271f; --err-bg: #f6e3e1; --info: #2b4c7e; --neutral: #1c2623;
   box-sizing: border-box; width: 2826px; min-height: 100vh; padding: 40px; display: flex; gap: 48px; align-items: flex-start;
   background: #e2e6e0; color: var(--fg); font-family: "Figtree", system-ui, sans-serif; font-size: 15px; line-height: 1.45;
 }
 /* ADR-0012: the recruiter's and the administrator's colors */
-.board.recruiter { --pri: #1f4e8c; --sec: #e2eaf5; --sec-fg: #173c6b; }
-.board.administrator { --pri: #5b3a7a; --sec: #ece4f3; --sec-fg: #452c5e; }
+.board.recruiter { --pri: #1f4e8c; --sec: #e2eaf5; --sec-fg: #173c6b; --b2: #e8eef7; --b3: #d2dcec; }
+.board.administrator { --pri: #5b3a7a; --sec: #ece4f3; --sec-fg: #452c5e; --b2: #f0eaf5; --b3: #ddd2e8; }
 .board *, .board *::before, .board *::after { box-sizing: border-box; }
 .devwrap { display: flex; flex-direction: column; gap: 10px; flex: none; }
 .devlabel { font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
@@ -19,7 +19,7 @@
 .board a { color: inherit; text-decoration: none; }
 
 /* header */
-.hdr { background: var(--b1); border-bottom: 1px solid var(--b3); }
+.hdr { background: var(--pri); color: #fff; }
 .hdr-in { display: flex; align-items: center; gap: 10px; height: 64px; padding: 0 16px; }
 .logo { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 20px; font-weight: 600; white-space: nowrap; }
 .hsearch { display: none; flex: 1; max-width: 520px; align-items: center; gap: 8px; height: 42px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--b3); background: var(--b2); color: var(--muted); font-size: 14px; }
@@ -28,9 +28,13 @@
 .grow { flex: 1; }
 .who { display: none; text-align: right; font-size: 13px; line-height: 1.25; }
 .who b { display: block; font-weight: 500; font-size: 14px; }
-.who span { color: var(--muted); }
+.who span { opacity: .8; }
 .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--pri); color: #fff; display: grid; place-items: center; font-weight: 600; font-size: 14px; flex: none; }
-.hdr .btn { height: 40px; }
+.hdr .btn { height: 40px; border-color: transparent; color: var(--pri); }
+.hdr .btn.ghost { color: #fff; }
+.hdr .avatar { background: #fff; color: var(--pri); }
+.hdr .hbtn { color: #fff; }
+.hdr .orgsw { color: var(--fg); }
 .orgsw { display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 10px; border: 1px solid var(--b3); border-radius: 10px; font-weight: 600; font-size: 14px; background: var(--b1); white-space: nowrap; min-width: 0; }
 .olog { width: 28px; height: 28px; border-radius: 7px; background: var(--pri); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; flex: none; letter-spacing: .02em; }
 .olog.lg { width: 48px; height: 48px; border-radius: 12px; font-size: 16px; }

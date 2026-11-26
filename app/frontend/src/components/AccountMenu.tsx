@@ -29,12 +29,12 @@ export default function AccountMenu({ user }: { user: SessionUser | null }) {
       // The log-in and register pages offer only the other one (mockups visitor-login, visitor-register)
       <div className="flex items-center gap-2">
         {pathname !== "/login" && (
-          <Link href={`/login${next}`} onClick={withSearch} className="btn btn-ghost btn-sm">
+          <Link href={`/login${next}`} onClick={withSearch} className="btn btn-ghost btn-sm text-primary-content">
             Log in
           </Link>
         )}
         {pathname !== "/register" && (
-          <Link href="/register" className="btn btn-sm border-base-300 bg-base-100">
+          <Link href="/register" className="btn btn-sm border-0 bg-base-100 text-primary">
             Register
           </Link>
         )}
@@ -101,7 +101,7 @@ function SignedIn({ user }: { user: SessionUser }) {
     >
       <span className="hidden text-right text-sm leading-tight sm:block">
         <span className="block font-medium">{name}</span>
-        <span className="block text-muted">{ROLE_LABELS[user.role]}</span>
+        <span className="block opacity-80">{ROLE_LABELS[user.role]}</span>
       </span>
       <button
         ref={avatar}
@@ -110,14 +110,14 @@ function SignedIn({ user }: { user: SessionUser }) {
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen(!open)}
-        className="btn btn-circle btn-primary font-semibold"
+        className="btn btn-circle border-0 bg-base-100 font-semibold text-primary"
       >
         {initials}
       </button>
       {open && (
         <ul
           id={menuId}
-          className="menu absolute right-0 top-full z-10 mt-2 w-44 rounded-box border border-base-300 bg-base-100 p-2"
+          className="menu absolute right-0 top-full z-10 mt-2 w-44 rounded-box border border-base-300 bg-base-100 p-2 text-base-content"
         >
           <li>
             <button type="button" onClick={logOut}>
