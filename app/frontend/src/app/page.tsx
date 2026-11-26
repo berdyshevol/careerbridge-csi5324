@@ -1,10 +1,21 @@
 import Link from "next/link";
+import AccessNotice from "@/components/AccessNotice";
 import ActionRow from "@/components/ActionRow";
 import BackendDown from "@/components/BackendDown";
 import FormField, { SelectField } from "@/components/FormField";
 import PageTitle from "@/components/PageTitle";
 import PostingCard from "@/components/PostingCard";
-import { searchPostings, type JobPosting } from "@/lib/api";
+import SummaryCards, { type Summary } from "@/components/SummaryCards";
+import {
+  openPostingApprovalQueue,
+  openRecruiterRequestQueue,
+  searchPostings,
+  SessionEnded,
+  viewApplications,
+  viewRecruiterPostings,
+  viewUsers,
+  type JobPosting,
+} from "@/lib/api";
 import { LOCATIONS } from "@/lib/postingOptions";
 import { serverSession } from "@/lib/serverSession";
 
@@ -14,10 +25,99 @@ export default async function HomePage() {
   if (!session) {
     return <VisitorHome />;
   }
-  if (session.user.role === "APPLICANT") {
-    return <ApplicantHome />;
+  const { token } = session;
+  const { role, firstName } = session.user;
+  const home = await sessionStillValid(() =>
+    role === "APPLICANT"
+      ? Promise.all([applicantSummary(token), null])
+      : Promise.all([role === "RECRUITER" ? recruiterSummary(token) : administratorSummary(token), openPostings()]),
+  );
+  if (!home) {
+    return (
+      <AccessNotice title="Your session has ended" logInTo="/" ended>
+        Log in again to see your home.
+      </AccessNotice>
+    );
   }
-  return <StaffHome firstName={session.user.firstName} postings={await openPostings()} />;
+  const [summary, postings] = home;
+  return role === "APPLICANT" ? (
+    <ApplicantHome summary={summary} />
+  ) : (
+    <StaffHome firstName={firstName} summary={summary} postings={postings} />
+  );
+}
+
+// null when the backend refused the token: a backend restart without a fixed JWT_SECRET refuses
+// tokens the browser still holds
+async function sessionStillValid<T>(load: () => Promise<T>): Promise<T | null> {
+  try {
+    return await load();
+  } catch (err) {
+    if (err instanceof SessionEnded) {
+      return null;
+    }
+    throw err;
+  }
+}
+
+// null: the backend did not answer, so the card shows no number (ADR-0013). An ended session is
+// not "no answer": it goes up to the page, which asks to log in again.
+async function orNull<T>(call: Promise<T>): Promise<T | null> {
+  try {
+    return await call;
+  } catch (err) {
+    if (err instanceof SessionEnded) {
+      throw err;
+    }
+    return null;
+  }
+}
+
+async function applicantSummary(token: string): Promise<Summary[]> {
+  const applications = await orNull(viewApplications(token));
+  return [
+    {
+      label: "Active applications",
+      value: applications?.activeApplicationCount ?? null,
+      of: applications?.applicationLimit,
+      href: "/applications",
+    },
+    {
+      label: "Offers to answer",
+      value: applications ? applications.all.filter((application) => application.applicationStatus === "Offer").length : null,
+      href: "/applications",
+    },
+  ];
+}
+
+async function recruiterSummary(token: string): Promise<Summary[]> {
+  const result = await orNull(viewRecruiterPostings(token));
+  // Acting for no organization: no counts to show, rather than zeros for an organization that is not there
+  const postings = result?.organizationId != null ? result.postings : null;
+  return (
+    [
+      ["Published", "PUBLISHED"],
+      ["Pending approval", "PENDING_APPROVAL"],
+      ["Returned", "RETURNED"],
+    ] as const
+  ).map(([label, status]) => ({
+    label,
+    value: postings ? postings.filter((row) => row.postStatus === status).length : null,
+    href: "/recruiter/postings",
+  }));
+}
+
+async function administratorSummary(token: string): Promise<Summary[]> {
+  const [postings, requests, users] = await Promise.all([
+    orNull(openPostingApprovalQueue(token)),
+    orNull(openRecruiterRequestQueue(token)),
+    orNull(viewUsers(token)),
+  ]);
+  return [
+    { label: "Postings to review", value: postings?.length ?? null, href: "/admin/postings" },
+    { label: "Recruiter requests", value: requests?.length ?? null, href: "/admin/requests" },
+    { label: "Users", value: users?.users.length ?? null, href: "/admin/users" },
+  ];
 }
 
 // null: the backend is down, and the section says so
@@ -100,10 +200,11 @@ function WayIn({
   );
 }
 
-function ApplicantHome() {
+function ApplicantHome({ summary }: { summary: Summary[] }) {
   return (
     <div className="flex flex-col gap-5 lg:rounded-2xl lg:border lg:border-base-300 lg:bg-base-100 lg:p-8">
       <PageTitle>Welcome</PageTitle>
+      <SummaryCards items={summary} />
       <ul className="flex flex-col gap-3">
         <ActionRow
           title="Find jobs"
@@ -130,10 +231,19 @@ function ApplicantHome() {
 }
 
 // Recruiters and administrators keep this until their own homes (recruiter-home, admin-home) are built
-function StaffHome({ firstName, postings }: { firstName: string; postings: JobPosting[] | null }) {
+function StaffHome({
+  firstName,
+  summary,
+  postings,
+}: {
+  firstName: string;
+  summary: Summary[];
+  postings: JobPosting[] | null;
+}) {
   return (
     <div className="flex flex-col gap-5 lg:rounded-2xl lg:border lg:border-base-300 lg:bg-base-100 lg:p-8">
       <PageTitle subtitle="Here are the job postings open now.">Welcome back, {firstName}</PageTitle>
+      <SummaryCards items={summary} />
       <section className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between">
           <h2 className="text-lg font-semibold">Recently published</h2>

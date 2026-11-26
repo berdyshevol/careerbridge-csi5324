@@ -93,7 +93,8 @@ instead; the administrator approves that request too.
 history, withdraw an application, accept or decline an offer.
 
 **Navigation:** **Home**, **Find jobs**, **Applications**, **Profile**. The home page,
-**Welcome**, links to the same three tasks.
+**Welcome**, links to the same three tasks. Above them, two cards count your **Active applications**
+(out of 5) and your **Offers to answer**; each opens **Applications**.
 
 **Rules the screens enforce:**
 
@@ -193,7 +194,9 @@ Only the recruiter who created a posting sees **Revise**, **Continue** and **Clo
    details and the same two fields, and select **Send request**.
 4. The request waits for the administrator. While it waits you can **Cancel request**.
 
-Not yet available: a recruiter home page, a posting detail page, reviewing applications and
+After you log in, the start page shows three cards for the organization you act for, **Published**,
+**Pending approval** and **Returned**, each opening **Postings**, and below them the postings open
+now. Not yet available: a recruiter home page of its own, a posting detail page, reviewing applications and
 moving them through the stages (UC-14), extending offers (UC-15), and switching the
 organization you act for.
 
@@ -241,4 +244,6 @@ approval (a recruiter request not yet decided), Inactive (a denied request) or D
 
 Pending and denied recruiters have no button here: they are decided under **Recruiter requests**.
 
-Not yet available: an administrator home page.
+After you log in, the start page shows three cards, **Postings to review**, **Recruiter requests**
+and **Users**, each opening its list, and below them the postings open now. Not yet available: an
+administrator home page of its own.

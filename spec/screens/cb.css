@@ -170,6 +170,14 @@
 .qrow { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 14px 16px; border-bottom: 1px solid var(--b3); }
 .qrow:last-child { border-bottom: 0; }
 .qrow.on { background: var(--sec); }
+/* Summary cards on a role's home: a count the role already sees on the screen the card links to
+   (ADR-0013); with no answer from the backend the card shows no number (.na) */
+.stats { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.stat { display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--b3); border-radius: 14px; background: var(--b1); padding: 14px 16px; box-shadow: var(--lift); min-width: 0; }
+.stat .l { font-size: 13.5px; font-weight: 500; color: var(--muted); }
+.stat .n { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 28px; font-weight: 600; line-height: 1.1; letter-spacing: -0.01em; }
+.stat .n small { font-family: "Figtree", system-ui, sans-serif; font-size: 14px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+.stat.na .n { font-family: "Figtree", system-ui, sans-serif; font-size: 15px; font-weight: 500; line-height: 1.6; color: var(--muted); }
 .pager { display: flex; gap: 6px; align-items: center; font-size: 14px; color: var(--muted); }
 
 /* tablet */
@@ -187,6 +195,7 @@
   .ftr { padding: 4px 24px 28px; }
   .h1 { font-size: 28px; }
   .cols.t2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stats.s3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .item.rowy { flex-direction: row; align-items: center; gap: 18px; }
   .offer.rowy { flex-direction: row; align-items: center; gap: 20px; }
   .offer.rowy > .stack { flex: 1; }

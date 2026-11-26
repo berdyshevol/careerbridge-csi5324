@@ -1,15 +1,32 @@
 import { render, screen, within } from "@testing-library/react";
-import { searchPostings, viewApplications, viewProfile } from "@/lib/api";
+import {
+  openPostingApprovalQueue,
+  openRecruiterRequestQueue,
+  searchPostings,
+  viewApplications,
+  viewProfile,
+  viewRecruiterPostings,
+  viewUsers,
+  SessionEnded,
+  type Applications,
+  type RecruiterPostings,
+} from "@/lib/api";
 import { serverSession } from "@/lib/serverSession";
 import type { Role, Session } from "@/lib/session";
 import HomePage from "./page";
 
 vi.mock("@/lib/serverSession", () => ({ serverSession: vi.fn() }));
+// The ended-session notice clears the cookie through the router
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 vi.mock("@/lib/api", async (importActual) => ({
   ...(await importActual<typeof import("@/lib/api")>()),
   searchPostings: vi.fn(),
   viewApplications: vi.fn(),
   viewProfile: vi.fn(),
+  viewRecruiterPostings: vi.fn(),
+  openPostingApprovalQueue: vi.fn(),
+  openRecruiterRequestQueue: vi.fn(),
+  viewUsers: vi.fn(),
 }));
 
 function as(role: Role): Session {
@@ -92,15 +109,75 @@ describe("home page", () => {
       expect(screen.getByRole("link", { name: "Find jobs" })).toHaveClass("btn-primary");
     });
 
-    it("shows no desk widgets and asks the backend for nothing", async () => {
+    // ADR-0013: the counts Applications already shows, from the same call
+    it("counts their active applications against the limit and the offers to answer", async () => {
+      vi.mocked(viewApplications).mockResolvedValue({
+        all: [{ applicationStatus: "Offer" }, { applicationStatus: "Screening" }, { applicationStatus: "Rejected" }],
+        activeApplicationCount: 2,
+        applicationLimit: 5,
+      } as unknown as Applications);
       render(await HomePage());
 
+      expect(viewApplications).toHaveBeenCalledWith("t");
+      expect(screen.getByRole("link", { name: "Active applications: 2 of 5" })).toHaveAttribute("href", "/applications");
+      expect(screen.getByRole("link", { name: "Offers to answer: 1" })).toHaveAttribute("href", "/applications");
       expect(screen.queryByRole("heading", { name: "Recently published" })).not.toBeInTheDocument();
-      expect(screen.queryByRole("heading", { name: "Your applications" })).not.toBeInTheDocument();
       expect(searchPostings).not.toHaveBeenCalled();
-      expect(viewApplications).not.toHaveBeenCalled();
       expect(viewProfile).not.toHaveBeenCalled();
     });
+
+    it("shows no number when the backend does not answer", async () => {
+      vi.mocked(viewApplications).mockRejectedValue(new Error("down"));
+      render(await HomePage());
+
+      expect(screen.getByRole("link", { name: "Active applications: not available" })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Offers to answer: not available" })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Find jobs" })).toHaveClass("btn-primary");
+    });
+  });
+
+  it("counts a recruiter's postings by status, each a link to Postings", async () => {
+    vi.mocked(serverSession).mockResolvedValue(as("RECRUITER"));
+    vi.mocked(viewRecruiterPostings).mockResolvedValue({
+      organizationId: 1,
+      organizationName: "Pixel Labs",
+      postings: ["PUBLISHED", "PUBLISHED", "PENDING_APPROVAL", "CLOSED"].map((postStatus, index) => ({ postingId: index, postStatus })),
+    } as unknown as RecruiterPostings);
+    render(await HomePage());
+
+    expect(screen.getByRole("link", { name: "Published: 2" })).toHaveAttribute("href", "/recruiter/postings");
+    expect(screen.getByRole("link", { name: "Pending approval: 1" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Returned: 0" })).toBeInTheDocument();
+  });
+
+  it("shows no counts for a recruiter who acts for no organization", async () => {
+    vi.mocked(serverSession).mockResolvedValue(as("RECRUITER"));
+    vi.mocked(viewRecruiterPostings).mockResolvedValue({ organizationId: null, organizationName: null, postings: [] });
+    render(await HomePage());
+
+    expect(screen.getByRole("link", { name: "Published: not available" })).toBeInTheDocument();
+  });
+
+  it("asks to log in again when the backend refuses the session, instead of empty cards", async () => {
+    vi.mocked(serverSession).mockResolvedValue(as("APPLICANT"));
+    vi.mocked(viewApplications).mockRejectedValue(new SessionEnded());
+    render(await HomePage());
+
+    expect(screen.getByRole("heading", { name: "Your session has ended" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/login?next=%2F");
+    expect(screen.queryByRole("list", { name: "Summary" })).not.toBeInTheDocument();
+  });
+
+  it("counts what waits for an administrator, and says so when one list does not load", async () => {
+    vi.mocked(serverSession).mockResolvedValue(as("ADMINISTRATOR"));
+    vi.mocked(openPostingApprovalQueue).mockResolvedValue([{}, {}, {}] as never);
+    vi.mocked(openRecruiterRequestQueue).mockRejectedValue(new Error("down"));
+    vi.mocked(viewUsers).mockResolvedValue({ users: [{}, {}], usersByRole: {} } as never);
+    render(await HomePage());
+
+    expect(screen.getByRole("link", { name: "Postings to review: 3" })).toHaveAttribute("href", "/admin/postings");
+    expect(screen.getByRole("link", { name: "Recruiter requests: not available" })).toHaveAttribute("href", "/admin/requests");
+    expect(screen.getByRole("link", { name: "Users: 2" })).toHaveAttribute("href", "/admin/users");
   });
 
   it.each(["RECRUITER", "ADMINISTRATOR"] as const)(
