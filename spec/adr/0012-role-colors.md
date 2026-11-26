@@ -18,13 +18,13 @@ as. The team agreed at its November 25 meeting to give each role its own colors.
    (`base-200`) and borders (`base-300`); cards stay white and the accent color is shared. Fonts,
    spacing, corners, and the success, warning, error and info colors are the same for everyone, so a
    message means the same thing in every role.
-4. **The header carries the role's color** (SCRUM-229): a bar in the primary color with white text and a
-   white avatar. With only buttons and links in the role's color, the three workspaces still looked almost
-   the same; the header and the tinted page tell the role from any part of the screen.
 2. **The shared layout picks the variant** from the logged-in user's role (`themeOf` in
    `src/lib/session.ts`). Pages do not choose a theme and do not change.
 3. **The mockups follow.** `spec/screens/cb.css` has the same variants, and each recruiter and
    administrator mockup uses its role's colors. `/styleguide` shows the three.
+4. **The header carries the role's color** (SCRUM-229): a bar in the primary color with white text and a
+   white avatar. With only buttons and links in the role's color, the three workspaces still looked almost
+   the same; the header and the tinted page tell the role from any part of the screen.
 
 ## Consequences
 
