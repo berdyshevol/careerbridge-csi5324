@@ -24,7 +24,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en" data-theme={themeOf(session?.user.role)} className={`${figtree.variable} ${bricolage.variable}`}>
       <body className="min-h-screen bg-base-200 font-sans text-base-content">
-        <header className="border-b border-base-300 bg-base-100">
+        {/* ADR-0012: the header carries the role's color, so the role shows from any part of the screen */}
+        <header className="bg-primary text-primary-content">
           <div className="flex h-16 items-center gap-3 px-4 md:px-6 lg:gap-7 lg:px-8">
             <Link href="/" className="font-display text-xl font-semibold">
               CareerBridge
