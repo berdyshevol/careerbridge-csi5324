@@ -21,7 +21,7 @@ export default function PageTitle({
       )}
       {context && <p className="text-sm text-muted">{context}</p>}
       <h1 className={`mt-1 font-display font-semibold ${hero ? "text-4xl" : "text-2xl md:text-3xl"}`}>{children}</h1>
-      {subtitle && <p className="mt-1 text-muted">{subtitle}</p>}
+      {subtitle && <p className="mt-1.5 max-w-prose text-muted">{subtitle}</p>}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AccountChangeRefused, changeRecruiterAccount, SessionEnded, type UserRow } from "@/lib/api";
 import { ROLE_LABELS } from "@/lib/session";
+import { TONES } from "./statusTones";
 
 const STATUS_LABELS = {
   ACTIVE: "Active",
@@ -51,17 +52,19 @@ export default function UserItem({ user, token }: { user: UserRow; token: string
   }
 
   return (
-    <li className="flex flex-col gap-3 border-b border-base-300 px-4 py-3.5 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
+    <li className="flex flex-col gap-3 border-b border-base-300 px-4 py-3.5 transition-colors last:border-b-0 hover:bg-base-200/50 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-semibold">{name}</span>
-          <span className="badge badge-secondary font-semibold">{ROLE_LABELS[current.role]}</span>
+          <span className="rounded-lg bg-secondary px-2.5 py-0.5 text-sm font-semibold text-secondary-content">
+            {ROLE_LABELS[current.role]}
+          </span>
         </div>
         <span className="break-all text-sm text-muted">{current.email}</span>
         {current.accountStatus === "ACTIVE" ? (
           <span className="text-xs text-muted">Active</span>
         ) : (
-          <span className="badge badge-warning w-fit font-semibold">
+          <span className={`pill w-fit ${TONES.attention}`}>
             {current.deactivated ? "Deactivated" : STATUS_LABELS[current.accountStatus]}
           </span>
         )}

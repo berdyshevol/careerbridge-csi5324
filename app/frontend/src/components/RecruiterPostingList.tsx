@@ -129,7 +129,7 @@ export default function RecruiterPostingList({ token }: { token: string }) {
             return (
               <li
                 key={row.postingId}
-                className="flex flex-col flex-wrap gap-2.5 rounded-xl border border-base-300 bg-base-100 px-4 py-3.5 md:flex-row md:items-center md:gap-4"
+                className="flex flex-col flex-wrap gap-2.5 rounded-xl border border-base-300 bg-base-100 px-4 py-3.5 shadow-lift md:flex-row md:items-center md:gap-4"
               >
                 <div className="min-w-0 grow">
                   <p className="font-semibold">{row.title}</p>

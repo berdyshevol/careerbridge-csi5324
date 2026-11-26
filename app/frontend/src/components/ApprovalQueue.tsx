@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PostingStatusBadge from "./PostingStatusBadge";
 import {
   formatDate,
   openPostingApprovalQueue,
@@ -198,7 +199,7 @@ export default function ApprovalQueue({ session }: { session: Session }) {
               {postings.map((posting) => (
                 <article
                   key={posting.jobPostId}
-                  className="space-y-5 rounded-2xl border border-base-300 bg-base-100 p-5 shadow-sm md:p-7"
+                  className="space-y-5 rounded-2xl border border-base-300 bg-base-100 p-5 shadow-lift md:p-7"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -217,9 +218,7 @@ export default function ApprovalQueue({ session }: { session: Session }) {
                       </p>
                     </div>
 
-                    <span className="badge badge-warning">
-                      Pending approval
-                    </span>
+                    <PostingStatusBadge postStatus={posting.postStatus} />
                   </div>
 
                   <div className="grid gap-4 rounded-xl bg-base-200 p-4 text-sm md:grid-cols-3">

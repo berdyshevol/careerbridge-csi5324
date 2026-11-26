@@ -124,3 +124,72 @@
   --font-display: var(--font-bricolage), system-ui, sans-serif;
   --color-muted: #55615c;
 }
+
+/* Cards and rows sit a little above the tinted page; a row that leads somewhere rises on hover */
+@theme {
+  --shadow-lift: 0 1px 2px rgb(28 38 35 / 0.05), 0 1px 3px rgb(28 38 35 / 0.04);
+  --shadow-raise: 0 6px 16px rgb(28 38 35 / 0.08), 0 1px 3px rgb(28 38 35 / 0.06);
+}
+
+@layer base {
+  body {
+    -webkit-font-smoothing: antialiased;
+  }
+  .font-display {
+    letter-spacing: -0.01em;
+  }
+  /* currentColor: the same ring shows on the colored header and on white cards */
+  a:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card {
+    box-shadow: var(--shadow-lift);
+  }
+}
+
+@utility hover-raise {
+  box-shadow: var(--shadow-lift);
+  transition:
+    box-shadow 150ms ease,
+    border-color 150ms ease,
+    background-color 150ms ease,
+    transform 150ms ease;
+  &:hover,
+  &:focus-within {
+    box-shadow: var(--shadow-raise);
+    border-color: color-mix(in oklab, var(--color-primary) 35%, var(--color-base-300));
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+}
+
+/* A status (of a posting, an application, a membership, an account) is a pill with a dot in its own
+   color; the tone classes beside it pick the color */
+@utility pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  &::before {
+    content: "";
+    flex: none;
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 9999px;
+    background-color: currentColor;
+  }
+}
