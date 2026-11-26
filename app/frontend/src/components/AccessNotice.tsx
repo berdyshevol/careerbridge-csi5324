@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ROLE_LABELS, type SessionUser } from "@/lib/session";
 import EndSession from "./EndSession";
+import { LockIcon } from "./Icons";
 
 // A page that needs a log-in, or another role, says so and offers the way in (UC-01 extensions 6a, 6c)
 export default function AccessNotice({
@@ -25,6 +26,9 @@ export default function AccessNotice({
     <section className="card max-w-xl border border-base-300 bg-base-100">
       {ended && <EndSession />}
       <div className="card-body gap-4">
+        <span className="grid size-10 place-items-center rounded-full bg-secondary text-secondary-content">
+          <LockIcon />
+        </span>
         <h1 className="font-display text-2xl font-semibold">{title}</h1>
         <p className="text-muted">
           {user && (

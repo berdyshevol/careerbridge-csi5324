@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InboxIcon } from "./Icons";
 
 // card: when the empty state stands in place of a list of cards, as on the job board
 export default function EmptyState({
@@ -25,7 +26,12 @@ export default function EmptyState({
   );
   return card ? (
     <div className="card border border-base-300 bg-base-100">
-      <div className="card-body p-5">{text}</div>
+      <div className="card-body flex-row items-center gap-4 p-5">
+        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-base-200 text-muted">
+          <InboxIcon />
+        </span>
+        {text}
+      </div>
     </div>
   ) : (
     text

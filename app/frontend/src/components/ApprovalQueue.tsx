@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Loading from "./Loading";
 import PostingStatusBadge from "./PostingStatusBadge";
 import {
   formatDate,
@@ -161,7 +162,7 @@ export default function ApprovalQueue({ session }: { session: Session }) {
           </div>
         </section>
       ) : !connected ? (
-        <p className="text-muted">{loading ? "Loading pending postings..." : ""}</p>
+        loading && <Loading label="Loading pending postings…" />
       ) : (
         <div className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-4">

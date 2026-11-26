@@ -12,6 +12,7 @@ import {
 import { STAGES } from "@/lib/sampleDesk";
 import AccessNotice from "./AccessNotice";
 import EmptyState from "./EmptyState";
+import Loading from "./Loading";
 import PageTitle from "./PageTitle";
 import ClosePostingAction from "./ClosePostingAction";
 import { editPostingPath } from "./PostingFields";
@@ -115,7 +116,7 @@ export default function RecruiterPostingList({ token }: { token: string }) {
       )}
 
       {!postings ? (
-        !error && <p className="text-muted">Loading postings…</p>
+        !error && <Loading label="Loading postings…" />
       ) : !organizationName ? (
         <EmptyState card>You are not acting for an organization, so there are no postings to show.</EmptyState>
       ) : postings.postings.length === 0 ? (

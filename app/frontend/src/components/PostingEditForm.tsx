@@ -11,6 +11,7 @@ import {
 } from "@/lib/api";
 import AccessNotice from "./AccessNotice";
 import EmptyState from "./EmptyState";
+import Loading from "./Loading";
 import PageTitle from "./PageTitle";
 import PostingFields, { detailsOf, editPostingPath, requestOf, type PostingDetails } from "./PostingFields";
 
@@ -64,7 +65,7 @@ export default function PostingEditForm({ token, postingId }: { token: string; p
     return <EmptyState card>{unavailable}</EmptyState>;
   }
   if (!posting || !details) {
-    return <p className="text-muted">Loading the posting…</p>;
+    return <Loading label="Loading the posting…" rows={1} />;
   }
 
   async function save(andSubmit: boolean) {
