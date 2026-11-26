@@ -17,7 +17,8 @@ JSON. The backend lists the frontend addresses that may call it (CORS).
 
 ### Backend layers
 
-A layer calls only the layer below it.
+A layer calls only the layer below it, and only a controller knows about HTTP. The test
+`LayersTest` (`app/backend/src/test`) checks both on every pull request.
 
 | Layer | Package | Responsibility |
 | --- | --- | --- |
