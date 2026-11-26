@@ -17,15 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Base64;
-import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -48,7 +42,6 @@ public class RecruiterRegistrationService {
     private final Clock clock;
     private final String frontendOrigin;
     private final boolean showVerificationLinks;
-    private final SecureRandom random = new SecureRandom();
 
     public RecruiterRegistrationService(UserRepository userRepository, RecruiterRepository recruiterRepository,
                                         OrganizationRepository organizationRepository,
@@ -176,16 +169,14 @@ public class RecruiterRegistrationService {
         if (token == null || token.isBlank()) {
             throw new VerificationLinkException(false);
         }
-        return recruiterRepository.findByVerificationTokenHash(hash(token.strip()))
+        return recruiterRepository.findByVerificationTokenHash(OneTimeToken.hash(token.strip()))
                 .orElseThrow(() -> new VerificationLinkException(false));
     }
 
     private String startVerification(Recruiter recruiter) {
-        byte[] bytes = new byte[32];
-        random.nextBytes(bytes);
-        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-        recruiter.startVerification(hash(token), clock.instant().plus(VERIFICATION_LINK_LIFETIME));
-        return token;
+        OneTimeToken token = OneTimeToken.create();
+        recruiter.startVerification(token.hash(), clock.instant().plus(VERIFICATION_LINK_LIFETIME));
+        return token.token();
     }
 
     private void sendVerificationEmail(Recruiter recruiter, String token) {
@@ -201,12 +192,4 @@ public class RecruiterRegistrationService {
         return recruiter.getFirstName() + " " + recruiter.getLastName();
     }
 
-    private static String hash(String token) {
-        try {
-            return HexFormat.of().formatHex(
-                    MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
-    }
 }

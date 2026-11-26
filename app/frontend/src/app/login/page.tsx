@@ -30,12 +30,17 @@ export default async function LogInPage({ searchParams }: { searchParams: Promis
         Log in
       </PageTitle>
       <LogInForm next={next} />
-      <p className="text-sm">
-        New here?{" "}
-        <Link href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"} className="link link-primary">
-          Register as an applicant
+      <div className="flex flex-col gap-2 text-sm">
+        <Link href="/forgot-password" className="link link-primary self-start">
+          Forgot password?
         </Link>
-      </p>
+        <p>
+          New here?{" "}
+          <Link href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"} className="link link-primary">
+            Register as an applicant
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

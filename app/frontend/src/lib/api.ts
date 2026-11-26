@@ -1238,3 +1238,52 @@ export async function decideRecruiterRequest(
 export function formatInstantDay(instant: string): string {
   return new Date(instant).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
+
+// Log In, forgotten password. A reset link that expired, was replaced by a newer one, or was used
+export class ResetLinkRefused extends Error {
+  constructor(
+    readonly expired: boolean,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+export class NewPasswordRefused extends Error {
+  constructor(readonly password: string) {
+    super(password);
+  }
+}
+
+// CO-LI.1. The same answer whether or not the account exists; resetLink only where there is no mail service
+export async function requestPasswordReset(email: string): Promise<{ resetLink?: string }> {
+  const response = await backendFetch("/api/auth/password-reset", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+// CO-LI.2
+export async function resetPassword(token: string, password: string): Promise<void> {
+  const response = await backendFetch("/api/auth/password-reset/new-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, password }),
+  });
+  const fieldErrors = await fieldRefusal(response, ["password"]);
+  if (fieldErrors?.password) {
+    throw new NewPasswordRefused(fieldErrors.password);
+  }
+  if (response.status === 404 || response.status === 410) {
+    const body = await response.json();
+    throw new ResetLinkRefused(Boolean(body.expired), String(body.message));
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+}

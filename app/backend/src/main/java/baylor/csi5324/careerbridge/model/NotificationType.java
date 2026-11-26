@@ -2,6 +2,7 @@ package baylor.csi5324.careerbridge.model;
 
 public enum NotificationType {
     EMAIL_VERIFICATION,
+    PASSWORD_RESET,
     NEW_RECRUITER_REQUEST,
     MEMBERSHIP_REQUEST,
     REQUEST_CONFIRMATION,

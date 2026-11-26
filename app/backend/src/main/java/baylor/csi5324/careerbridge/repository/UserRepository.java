@@ -14,6 +14,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmailIgnoreCase(String email);
 
+    Optional<User> findByPasswordResetTokenHash(String passwordResetTokenHash);
+
     // A15: parallel attempts on one account wait for each other, so each failure is counted
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where lower(u.email) = lower(:email)")
