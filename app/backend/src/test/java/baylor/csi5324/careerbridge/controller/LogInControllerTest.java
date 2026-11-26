@@ -35,7 +35,7 @@ class LogInControllerTest {
     void logInReturnsATokenThatOpensTheCurrentUser() throws Exception {
         String body = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\": \"riley.chen@example.com\", \"password\": \"Recruiter-test-1\"}"))
+                        .content("{\"email\": \"riley.chen@example.com\", \"password\": \"Demo-test-1\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.user.role").value("RECRUITER"))
                 .andExpect(jsonPath("$.user.passwordHash").doesNotExist())
@@ -59,7 +59,7 @@ class LogInControllerTest {
         for (String[] account : accounts) {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"email\": \"" + account[0] + "\", \"password\": \"Numbered-test-1\"}"))
+                            .content("{\"email\": \"" + account[0] + "\", \"password\": \"Demo-test-1\"}"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.user.role").value(account[1]));
         }
@@ -83,7 +83,7 @@ class LogInControllerTest {
                 .andExpect(status().isNotFound());
         mockMvc.perform(post("/api/auth/login").header(HttpHeaders.AUTHORIZATION, "Bearer not-a-token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\": \"sam.rivera@example.com\", \"password\": \"Applicant-test-2\"}"))
+                        .content("{\"email\": \"sam.rivera@example.com\", \"password\": \"Demo-test-1\"}"))
                 .andExpect(status().isOk());
     }
 
@@ -98,7 +98,7 @@ class LogInControllerTest {
     void theAdministratorsTokenOpensTheApprovalQueue() throws Exception {
         String body = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\": \"admin@careerbridge.example\", \"password\": \"Administrator-test-1\"}"))
+                        .content("{\"email\": \"admin@careerbridge.example\", \"password\": \"Demo-test-1\"}"))
                 .andReturn().getResponse().getContentAsString();
         String token = JsonPath.read(body, "$.token");
 
@@ -110,7 +110,7 @@ class LogInControllerTest {
     void anApplicantsTokenDoesNotOpenTheApprovalQueue() throws Exception {
         String body = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\": \"sam.rivera@example.com\", \"password\": \"Applicant-test-2\"}"))
+                        .content("{\"email\": \"sam.rivera@example.com\", \"password\": \"Demo-test-1\"}"))
                 .andReturn().getResponse().getContentAsString();
         String token = JsonPath.read(body, "$.token");
 

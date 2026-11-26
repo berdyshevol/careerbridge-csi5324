@@ -2,10 +2,10 @@ import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
 // The demo accounts of the throw-away test database (app/backend/src/test/resources/config/application.properties)
 export const ACCOUNTS = {
-  applicant: { email: "jordan.lee@example.com", password: "Applicant-test-1", name: "Jordan Lee" },
-  secondApplicant: { email: "sam.rivera@example.com", password: "Applicant-test-2", name: "Sam Rivera" },
-  recruiter: { email: "riley.chen@example.com", password: "Recruiter-test-1", name: "Riley Chen" },
-  administrator: { email: "admin@careerbridge.example", password: "Administrator-test-1", name: "Avery Morgan" },
+  applicant: { email: "jordan.lee@example.com", password: "Demo-test-1", name: "Jordan Lee" },
+  secondApplicant: { email: "sam.rivera@example.com", password: "Demo-test-1", name: "Sam Rivera" },
+  recruiter: { email: "riley.chen@example.com", password: "Demo-test-1", name: "Riley Chen" },
+  administrator: { email: "admin@careerbridge.example", password: "Demo-test-1", name: "Avery Morgan" },
 };
 
 export async function logIn(page: Page, account: { email: string; password: string }, next?: string) {

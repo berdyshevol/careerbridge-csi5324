@@ -29,7 +29,7 @@ class DemoUsersTest {
         when(userRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenAnswer(call -> call.getArgument(0));
         return new DemoUsers(userRepository, mock(OrganizationRepository.class),
-                mock(OrganizationMembershipRepository.class), passwordEncoder, "", "", "", "", "", databaseUrl, true);
+                mock(OrganizationMembershipRepository.class), passwordEncoder, "", "", "", databaseUrl, true);
     }
 
     @Test

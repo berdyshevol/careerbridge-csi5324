@@ -47,7 +47,7 @@ class ResumeUploadLimitTest {
         HttpResponse<String> answer = client.send(HttpRequest.newBuilder(uri("/api/auth/login"))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(
-                        "{\"email\": \"sam.rivera@example.com\", \"password\": \"Applicant-test-2\"}"))
+                        "{\"email\": \"sam.rivera@example.com\", \"password\": \"Demo-test-1\"}"))
                 .build(), HttpResponse.BodyHandlers.ofString());
         Matcher token = Pattern.compile("\"token\"\\s*:\\s*\"([^\"]+)\"").matcher(answer.body());
         assertTrue(token.find(), answer.body());

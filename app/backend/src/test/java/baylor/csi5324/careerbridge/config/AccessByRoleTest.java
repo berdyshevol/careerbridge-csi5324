@@ -100,7 +100,7 @@ class AccessByRoleTest {
     @Test
     void loggingInAndRegisteringNeedNoToken() throws Exception {
         mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\": \"riley.chen@example.com\", \"password\": \"Recruiter-test-1\"}"))
+                        .content("{\"email\": \"riley.chen@example.com\", \"password\": \"Demo-test-1\"}"))
                 .andExpect(status().isOk());
         mockMvc.perform(post("/api/applicants").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"fullName\": \"Pat Kim\", \"email\": \"pat-role-" + System.nanoTime()

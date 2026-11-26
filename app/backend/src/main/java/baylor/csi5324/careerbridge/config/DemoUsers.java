@@ -40,8 +40,8 @@ public class DemoUsers implements CommandLineRunner {
     record DemoUser(String firstName, String lastName, String email, Supplier<User> kind, String password) {
     }
 
-    // One password for every demo account, easy to say out loud in a demo (SCRUM-226); Neon gets the same
-    // value from DEMO_*_PASSWORD
+    // Every demo account of a role shares that role's password, easy to say out loud in a demo (SCRUM-226);
+    // on Neon it comes from DEMO_<ROLE>_PASSWORD
     static final String LOCAL_PASSWORD = "Baylor@2026";
 
     private static String orLocal(String password, String local, boolean inMemory) {
@@ -72,10 +72,8 @@ public class DemoUsers implements CommandLineRunner {
     public DemoUsers(UserRepository userRepository, OrganizationRepository organizationRepository,
                      OrganizationMembershipRepository membershipRepository, PasswordEncoder passwordEncoder,
                      @Value("${careerbridge.demo.applicant-password}") String applicantPassword,
-                     @Value("${careerbridge.demo.second-applicant-password}") String secondApplicantPassword,
                      @Value("${careerbridge.demo.recruiter-password}") String recruiterPassword,
                      @Value("${careerbridge.demo.administrator-password}") String administratorPassword,
-                     @Value("${careerbridge.demo.numbered-password}") String numberedPassword,
                      @Value("${spring.datasource.url}") String databaseUrl,
                      @Value("${careerbridge.demo.local-passwords}") boolean localPasswordsAllowed) {
         this.userRepository = userRepository;
@@ -84,25 +82,23 @@ public class DemoUsers implements CommandLineRunner {
         this.passwordEncoder = passwordEncoder;
         // The Docker image switches this off: an image that lost DATABASE_URL must not get known passwords
         boolean inMemory = localPasswordsAllowed && databaseUrl.startsWith("jdbc:h2:mem:");
-        String numbered = orLocal(numberedPassword, LOCAL_PASSWORD, inMemory);
+        String applicant = orLocal(applicantPassword, LOCAL_PASSWORD, inMemory);
+        String recruiter = orLocal(recruiterPassword, LOCAL_PASSWORD, inMemory);
+        String administrator = orLocal(administratorPassword, LOCAL_PASSWORD, inMemory);
         this.demoUsers = List.of(
-                new DemoUser("Jordan", "Lee", SampleDataLoader.SAMPLE_APPLICANT_EMAIL,
-                        Applicant::new, orLocal(applicantPassword, LOCAL_PASSWORD, inMemory)),
-                new DemoUser("Sam", "Rivera", "sam.rivera@example.com", Applicant::new,
-                        orLocal(secondApplicantPassword, LOCAL_PASSWORD, inMemory)),
-                new DemoUser("Riley", "Chen", "riley.chen@example.com", Recruiter::new,
-                        orLocal(recruiterPassword, LOCAL_PASSWORD, inMemory)),
-                new DemoUser("Avery", "Morgan", "admin@careerbridge.example", Administrator::new,
-                        orLocal(administratorPassword, LOCAL_PASSWORD, inMemory)),
-                numbered("Applicant", 1, Applicant::new, numbered),
-                numbered("Applicant", 2, Applicant::new, numbered),
-                numbered("Applicant", 3, Applicant::new, numbered),
-                numbered("Recruiter", 1, Recruiter::new, numbered),
-                numbered("Recruiter", 2, Recruiter::new, numbered),
-                numbered("Recruiter", 3, Recruiter::new, numbered),
-                numbered("Recruiter", 4, Recruiter::new, numbered),
-                numbered("Recruiter", 5, Recruiter::new, numbered),
-                numbered("Recruiter", 6, Recruiter::new, numbered));
+                new DemoUser("Jordan", "Lee", SampleDataLoader.SAMPLE_APPLICANT_EMAIL, Applicant::new, applicant),
+                new DemoUser("Sam", "Rivera", "sam.rivera@example.com", Applicant::new, applicant),
+                new DemoUser("Riley", "Chen", "riley.chen@example.com", Recruiter::new, recruiter),
+                new DemoUser("Avery", "Morgan", "admin@careerbridge.example", Administrator::new, administrator),
+                numbered("Applicant", 1, Applicant::new, applicant),
+                numbered("Applicant", 2, Applicant::new, applicant),
+                numbered("Applicant", 3, Applicant::new, applicant),
+                numbered("Recruiter", 1, Recruiter::new, recruiter),
+                numbered("Recruiter", 2, Recruiter::new, recruiter),
+                numbered("Recruiter", 3, Recruiter::new, recruiter),
+                numbered("Recruiter", 4, Recruiter::new, recruiter),
+                numbered("Recruiter", 5, Recruiter::new, recruiter),
+                numbered("Recruiter", 6, Recruiter::new, recruiter));
     }
 
     @Override
