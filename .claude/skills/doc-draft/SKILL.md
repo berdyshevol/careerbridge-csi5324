@@ -20,6 +20,10 @@ system. No need to include any explanation about the iteration."
 2. Rewrite `## 1. Introduction` as an overview of the whole system: who uses it (the four roles),
    what problem it solves, what it does, in three or four short paragraphs. No iteration, no
    deliverable, no "this document is…", no plans. Keep the business rules it cites (BR-1).
+   **What it does lists only what works:** the features of the User Manual (§12) without its "Not
+   yet available" items, checked against the code on `main`. A use case that is designed but not
+   built (or built only in part) is not described as working; leave it out, or name it once as
+   planned. Never present a planned feature as a capability.
 3. In `## 2. Project Overview`, find every mention of an iteration or deliverable
    (`grep -n -i "iteration\|deliverable" spec/vision.md`) and propose wording without it ("outside
    the scope of Iteration 1" → "outside the scope of CareerBridge"). Change nothing else in §2.

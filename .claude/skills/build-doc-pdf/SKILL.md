@@ -44,7 +44,7 @@ python3 tools/doc-check/manual-labels.py                   # bold labels of the 
 Each prints its problems with the file and line and exits 1. On any failure stop: show the
 problems as they were printed, say which spec file each fix goes in (a pull request to `spec/`),
 and ask "Build anyway?". Build only on a yes. A label that the screen puts together at run time
-(a status and its reason, such as `Closed · by recruiter`) can be a false alarm: say so instead of proposing a fix.
+is reported as a note, not a failure; check it against the running app, not in the text.
 
 ## 4. Build
 
@@ -64,9 +64,9 @@ If a Mermaid diagram fails, name the spec file and the diagram; the fix is a pul
 - Read the table of contents (the Read tool on the PDF, pages 3–4) and list the top-level sections.
   Every section 1–12 must be there; name a missing one and why (no `## N.` heading in its spec
   file, or the file is not in the list).
-- `python3 tools/doc-check/figures.py deliverable-N.pdf`: the captions of the built PDF, with
-  their page numbers. Report its problems; a figure that renders as an image may have lost its
-  caption.
+- `python3 <this repository>/tools/doc-check/figures.py deliverable-N.pdf`, from the list's
+  folder where the PDF is: the captions of the built PDF, with their page numbers. Report its
+  problems; a figure that renders as an image may have lost its caption.
 - Placeholder text a reader would see: `pdftotext deliverable-N.pdf - | grep -n "Not written yet\|TODO\|TBD"`.
 
 ## 6. Report

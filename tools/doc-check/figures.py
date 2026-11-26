@@ -30,9 +30,13 @@ LIST_KEYWORDS = ("TOC", "PAGEBREAK", "WATERMARK")
 def captions_in_pdf(pdf):
     """Yield (kind, number, where, text) for each caption line of the PDF."""
     if not shutil.which("pdftotext"):
-        sys.exit("figures.py: pdftotext not found (brew install poppler)")
-    text = subprocess.run(["pdftotext", str(pdf), "-"], check=True,
-                          capture_output=True, text=True).stdout
+        fail("pdftotext not found (brew install poppler)")
+    if not pdf.is_file():
+        fail(f"{pdf}: no such file")
+    run = subprocess.run(["pdftotext", str(pdf), "-"], capture_output=True, text=True)
+    if run.returncode != 0:
+        fail(f"{pdf}: pdftotext could not read it: {run.stderr.strip()}")
+    text = run.stdout
     for page_no, page in enumerate(text.split("\f"), start=1):
         for line in page.splitlines():
             m = PDF_CAPTION.match(line)
@@ -40,8 +44,15 @@ def captions_in_pdf(pdf):
                 yield m.group(1), int(m.group(2)), f"page {page_no}", line.strip()
 
 
+def fail(message):
+    print(f"figures.py: {message}")
+    sys.exit(1)
+
+
 def files_of_list(contents):
     """The Markdown files of a build list, in order, resolved against the list's folder."""
+    if not contents.is_file():
+        fail(f"{contents}: no such list")
     base = contents.parent
     for raw in contents.read_text(encoding="utf-8").splitlines():
         line = raw.strip()
@@ -52,12 +63,13 @@ def files_of_list(contents):
 
 def captions_in_markdown(path):
     """Yield (kind, number, where, text) for each bold caption outside code blocks."""
-    fenced = False
+    fence = None  # the marker that opened the code block we are in, ``` or ~~~
     for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-        if line.lstrip().startswith("```"):
-            fenced = not fenced
+        marker = line.lstrip()[:3]
+        if marker in ("```", "~~~") and fence in (None, marker):
+            fence = None if fence else marker
             continue
-        if fenced:
+        if fence:
             continue
         m = MD_CAPTION.match(line.strip())
         if m:
@@ -79,7 +91,8 @@ def problems_of(captions):
                 problems.append(f"{where}: {kind} {n} out of order, after {kind} {last}: {text}")
             elif n > last + 1:
                 missing = f"{last + 1}" if n == last + 2 else f"{last + 1}-{n - 1}"
-                problems.append(f"{where}: {kind} {n} follows {kind} {last}; {kind} {missing} missing: {text}")
+                after = f"follows {kind} {last}" if last else f"is the first {kind.lower()}"
+                problems.append(f"{where}: {kind} {n} {after}; {kind} {missing} missing: {text}")
             seen.setdefault(n, where)
             last = max(last, n)
     return problems
@@ -111,6 +124,9 @@ def main():
         captions = list(captions_in_pdf(args.pdf))
         problems = problems_of(captions)
 
+    if not captions:
+        fail("no Figure N: or Table N: captions found; check the file or list, and that captions "
+             "are bold lines **Figure N: ...**")
     counts = ", ".join(f"{sum(1 for c in captions if c[0] == k)} {k.lower()}s" for k in KINDS)
     if problems:
         print(f"figures.py: {len(problems)} problem(s) in {counts}:")

@@ -53,10 +53,17 @@ def diagrams_in(design):
         line = lines[i]
         if line.startswith("#"):
             heading = line.lstrip("# ").strip()
-        if line.strip() == "```mermaid" and i + 1 < len(lines) and lines[i + 1].strip() == "classDiagram":
-            start, classes, assocs = i + 1, set(), []
-            i += 2
-            while i < len(lines) and lines[i].strip() != "```":
+        fence = line.strip()[:3]
+        if fence in ("```", "~~~") and line.strip()[3:].strip() == "mermaid":
+            j = i + 1
+            while j < len(lines) and (not lines[j].strip() or lines[j].strip().startswith("%%")):
+                j += 1  # blank lines and %% directives may come before the diagram type
+            if j >= len(lines) or lines[j].strip() != "classDiagram":
+                i += 1
+                continue
+            start, classes, assocs = j, set(), []
+            i = j + 1
+            while i < len(lines) and not lines[i].strip().startswith(fence):
                 m = CLASS.match(lines[i])
                 if m:
                     classes.add(m.group(1))
@@ -109,6 +116,9 @@ def main():
     parser.add_argument("--domain", type=Path, default=REPO / "spec/domain-model.md")
     args = parser.parse_args()
 
+    if not args.design.is_file():
+        print(f"dcd.py: {args.design}: no such file")
+        return 1
     blocks = diagrams_in(args.design)
     if not blocks:
         print(f"dcd.py: no classDiagram in {args.design}")

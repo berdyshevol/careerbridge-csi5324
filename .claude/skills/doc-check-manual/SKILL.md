@@ -56,9 +56,11 @@ applicant (§12.3), recruiter (§12.4), administrator (§12.5). Give each:
   applicant: `jordan.lee@example.com` for the existing applications and `applicant1@example.com`
   for a first application; recruiter: `riley.chen@example.com`; administrator:
   `admin@careerbridge.example`), with the password from step 2;
-- the task: follow every workflow step by step with Playwright (`chromium.launch()` from
-  `@playwright/test`, a script run from `app/frontend` so the package resolves, screenshots saved
-  outside the repository); for each step note whether the page, the labels, the order and the
+- the task: follow every workflow step by step with Playwright, in a script saved outside the
+  repository (with its screenshots). Node resolves packages from the script's folder, not the
+  working directory, so load it by its absolute path, `require("<repo>/app/frontend/node_modules/@playwright/test")`
+  in a `.cjs` file (`NODE_PATH` works for `require` only, not for `import`), then
+  `chromium.launch()`; for each step note whether the page, the labels, the order and the
   result are as the manual says;
 - the report: one line per mismatch with the manual's line, what the app shows, and the proposed
   manual text. A step the app cannot do at all is a finding for the code, not the manual: say so.
@@ -66,7 +68,9 @@ applicant (§12.3), recruiter (§12.4), administrator (§12.5). Give each:
 
 ## 4. Stop and report
 
-Stop both servers (`lsof -ti :8180 -ti :3100 | xargs kill`) and check the ports are free. Report:
+Stop both servers: stop the background jobs you started, or kill only the processes listening on
+the ports, `lsof -ti tcp:8180 -ti tcp:3100 -sTCP:LISTEN | xargs kill` (without `-sTCP:LISTEN`
+it also kills clients connected to them, such as a browser). Check the ports are free. Report:
 the label check, then per role the mismatches with the proposed text, then what could not be
 checked and why. Ask "Shall I make these changes to spec/user-manual.md?". On a yes, hand them to
 the `implement-task` skill.
