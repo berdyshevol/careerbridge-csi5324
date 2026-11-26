@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AccountMenu from "@/components/AccountMenu";
+import { BrandIcon } from "@/components/Icons";
 import ActionRow from "@/components/ActionRow";
 import ApplicationRow from "@/components/ApplicationRow";
 import ApplyPanel, { ApplyAction } from "@/components/ApplyPanel";
@@ -143,6 +144,14 @@ export default function StyleguidePage() {
             </PageTitle>
             <PageTitle context="The organization">A posting&apos;s title</PageTitle>
             <PageTitle hero eyebrow="The front page">A hero title</PageTitle>
+          </div>
+        </Block>
+        <Block title="Header and navigation" use="Drawn only by src/app/layout.tsx and <DeskNav role /> — a sticky header in the role's color with the bridge mark (BrandIcon); the current entry is tinted, with a bar in the role's color at its left edge (side column), a ring (tablet tiles) or a short bar above it (phone dock)">
+          <div className="flex items-center gap-2.5 rounded-xl bg-primary px-4 py-3 font-display text-xl font-semibold text-primary-content">
+            <span className="grid size-8 place-items-center rounded-lg bg-primary-content/15 ring-1 ring-primary-content/20">
+              <BrandIcon className="size-5" />
+            </span>
+            CareerBridge
           </div>
         </Block>
         <Block title="Account menu" use="<AccountMenu user={…} /> — in the header of src/app/layout.tsx only: Log in and Register for a visitor; the name, role and avatar for a logged-in user, with Log out behind the avatar">

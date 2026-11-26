@@ -132,6 +132,10 @@
 }
 
 @layer base {
+  /* The header is sticky: whatever a page scrolls into view stops below it, not under it */
+  html {
+    scroll-padding-top: 5rem;
+  }
   body {
     -webkit-font-smoothing: antialiased;
   }

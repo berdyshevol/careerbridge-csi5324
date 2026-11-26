@@ -67,11 +67,14 @@ export default function DeskNav({ role }: { role: Role | null }) {
             key={href}
             href={href}
             aria-current={isCurrent(href) ? "page" : undefined}
-            className={`flex min-h-12 items-center gap-3 rounded-xl px-3 py-2 ${
-              isCurrent(href) ? "bg-secondary font-semibold" : "hover:bg-base-100"
+            // The current entry: tinted, with a bar in the role's color at its left edge
+            className={`relative flex min-h-12 items-center gap-3 rounded-xl px-3 py-2 transition-colors ${
+              isCurrent(href)
+                ? "bg-secondary font-semibold text-secondary-content before:absolute before:inset-y-3 before:left-0 before:w-[3px] before:rounded-full before:bg-primary"
+                : "text-muted hover:bg-base-100 hover:text-base-content"
             }`}
           >
-            <Icon />
+            <Icon className={`size-5 ${isCurrent(href) ? "text-primary" : ""}`} />
             <span>{label}</span>
           </Link>
         ))}
@@ -83,11 +86,13 @@ export default function DeskNav({ role }: { role: Role | null }) {
             key={href}
             href={href}
             aria-current={isCurrent(href) ? "page" : undefined}
-            className={`flex min-h-24 flex-col justify-center gap-2 rounded-2xl px-4 ${
-              isCurrent(href) ? "bg-secondary font-semibold" : "border border-base-300 bg-base-100 font-medium"
+            className={`flex min-h-24 flex-col justify-center gap-2 rounded-2xl border px-4 ${
+              isCurrent(href)
+                ? "border-primary bg-secondary font-semibold text-secondary-content ring-1 ring-primary"
+                : "hover-raise border-base-300 bg-base-100 font-medium"
             }`}
           >
-            <Icon />
+            <Icon className={`size-5 ${isCurrent(href) ? "text-primary" : ""}`} />
             <span>{label}</span>
           </Link>
         ))}
@@ -99,8 +104,12 @@ export default function DeskNav({ role }: { role: Role | null }) {
             key={href}
             href={href}
             aria-current={isCurrent(href) ? "page" : undefined}
-            // daisyUI draws a bar under the dock entry with aria-current; the mockup marks it by colour and weight only
-            className={`after:hidden ${isCurrent(href) ? "font-semibold text-primary" : "text-muted"}`}
+            // daisyUI's own bar under the entry stays hidden; the mockup draws a short bar above it instead
+            className={`relative transition-colors after:hidden ${
+              isCurrent(href)
+                ? "font-semibold text-primary before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:h-[3px] before:w-8 before:rounded-b-full before:bg-primary"
+                : "text-muted hover:text-base-content"
+            }`}
           >
             <Icon />
             <span className="dock-label">{shortLabel}</span>

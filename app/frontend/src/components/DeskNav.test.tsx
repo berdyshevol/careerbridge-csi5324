@@ -29,16 +29,20 @@ describe("DeskNav", () => {
 
     expect(within(sideColumn()).getByRole("link", { name: "Find jobs" })).toHaveAttribute("aria-current", "page");
     expect(within(sideColumn()).getByRole("link", { name: "Home" })).not.toHaveAttribute("aria-current");
+    // The bar at the left edge goes with the current entry only
+    expect(within(sideColumn()).getByRole("link", { name: "Find jobs" })).toHaveClass("before:bg-primary");
+    expect(within(sideColumn()).getByRole("link", { name: "Home" })).not.toHaveClass("before:bg-primary");
   });
 
-  // jsdom has no daisyUI CSS, so whether the bar shows is checked in e2e/role-shell.spec.ts
-  it("marks the current dock entry by colour and weight", () => {
+  // jsdom has no CSS, so where the bars show is checked in e2e/role-shell.spec.ts
+  it("marks the current dock entry by colour, weight and a bar above it", () => {
     render(<DeskNav role="APPLICANT" />);
     const dock = screen.getAllByRole("navigation", { name: "Navigation" })[2];
     const current = within(dock).getByRole("link", { name: "Jobs" });
 
     expect(current).toHaveAttribute("aria-current", "page");
-    expect(current).toHaveClass("text-primary", "font-semibold");
+    expect(current).toHaveClass("text-primary", "font-semibold", "before:top-0");
+    expect(within(dock).getByRole("link", { name: "Home" })).not.toHaveClass("before:top-0");
   });
 
   it("gives an administrator only the administrator's entries", () => {

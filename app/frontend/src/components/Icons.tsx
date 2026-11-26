@@ -122,3 +122,12 @@ export function LockIcon(props: IconProps) {
     </Icon>
   );
 }
+
+// The CareerBridge mark in the header: a bridge
+export function BrandIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M2 17h20M4 17v-4M20 17v-4M3 12c4-5 14-5 18 0M9 17v-3.2M15 17v-3.2M12 17v-3.6" />
+    </Icon>
+  );
+}
