@@ -1,6 +1,6 @@
 ---
 name: build-doc-pdf
-description: Build the project documentation PDF from spec/ with tools/build-pdf, using a deliverable's list (contents.txt) and cover (cover.md), and check the result. Use when someone asks to build, make, export or regenerate the documentation PDF ("собери PDF", "сделай документацию", "export the PDF"), or before submitting a deliverable.
+description: The one way in to the project documentation PDF - check the spec, offer the drafting skills (Change Logs, Introduction, testing summary, user-manual check), then build the PDF from spec/ with tools/build-pdf using a deliverable's list (contents.txt) and cover (cover.md), and check the result. Use when someone asks to build, make, export or regenerate the documentation PDF ("собери PDF", "сделай документацию", "export the PDF"), or before submitting a deliverable.
 ---
 
 # Build the documentation PDF
@@ -46,7 +46,24 @@ problems as they were printed, say which spec file each fix goes in (a pull requ
 and ask "Build anyway?". Build only on a yes. A label that the screen puts together at run time
 is reported as a note, not a failure; check it against the running app, not in the text.
 
-## 4. Build
+## 4. Offer the drafts
+
+Before a final deliverable, some sections are written from the system as it is now. Ask once,
+listing what is still unfinished (from step 3 and a quick look for "Not written yet" in the
+list's files), which of these to run now, in this order:
+
+1. **Change Logs** — the `doc-changelog` skill.
+2. **Introduction** — the `doc-draft` skill with `intro`.
+3. **Testing summary (9.1)** — the `doc-draft` skill with `testing-summary`.
+4. **User manual against the app** — the `doc-check-manual` skill (the longest: it walks the app).
+
+Run each one chosen with the Skill tool, one after another. Each shows its own draft or report and
+waits for its own yes; an approved text reaches `spec/` through its own pull request
+(`implement-task`). The PDF shows `main`: build after those pull requests are merged, or say which
+approved text the PDF does not have yet. None chosen: go on to the build. Each skill also runs on
+its own, without this one.
+
+## 5. Build
 
 From the list's folder (it takes about a minute):
 
@@ -58,7 +75,7 @@ cd <folder of contents.txt>
 If a Mermaid diagram fails, name the spec file and the diagram; the fix is a pull request to
 `spec/`.
 
-## 5. Check the result
+## 6. Check the result
 
 - `pdfinfo deliverable-N.pdf` for the page count.
 - Read the table of contents (the Read tool on the PDF, pages 3–4) and list the top-level sections.
@@ -69,7 +86,7 @@ If a Mermaid diagram fails, name the spec file and the diagram; the fix is a pul
   problems; a figure that renders as an image may have lost its caption.
 - Placeholder text a reader would see: `pdftotext deliverable-N.pdf - | grep -n "Not written yet\|TODO\|TBD"`.
 
-## 6. Report
+## 7. Report
 
 A few lines: the PDF path, the page count, the sections present, the result of each check, and
 what is missing or unfinished, with the spec file that holds it. Do not submit, upload or send the PDF.

@@ -39,3 +39,45 @@ PDF is built from them (`tools/build-pdf/`). Find the topic here before reading 
 
 Names in the code follow these documents: entity classes and attributes come from the domain model,
 service methods are the system operations of the contracts.
+
+## The documentation PDF
+
+The documentation submitted for a deliverable is a PDF built from these files; nobody edits a Word
+or Google document.
+
+**Build and check it.** In Claude Code, in this repository, ask "build the documentation PDF"
+("собери PDF"). The `build-doc-pdf` skill:
+
+1. runs the checks in `tools/doc-check/`: figures and tables numbered 1, 2, 3… in order
+   (`figures.py`), the same multiplicities in every design class diagram (`dcd.py`), every bold
+   label of the user manual on the screens (`manual-labels.py`);
+2. offers the drafting skills, each of which shows a draft and changes nothing before a yes:
+   `doc-changelog` (Change Logs), `doc-draft intro` (section 1), `doc-draft testing-summary`
+   (section 9.1) and `doc-check-manual` (section 12 walked in the running app);
+3. builds the PDF with `tools/build-pdf` and checks that sections 1–12 are there and that no
+   "Not written yet" is left.
+
+Each of these skills also runs on its own, and each check runs alone:
+`python3 tools/doc-check/figures.py --spec <contents.txt>`, `python3 tools/doc-check/dcd.py`,
+`python3 tools/doc-check/manual-labels.py`. The deliverable's list of files and its cover are kept
+by the project librarian, outside this repository, so the librarian builds the PDF that is
+submitted.
+
+**What each member keeps right.** The use cases, the sequence diagrams and the test cases are
+graded one member at a time, so each member keeps their own up to date, through a pull request:
+
+| Section | File | What to keep right |
+| --- | --- | --- |
+| 4.2 Fully-dressed use cases | [use-cases.md](use-cases.md) | Your use cases as built, each with an **Author** line; a use case that is not built is not in the final document. |
+| 6 Sequence diagrams | [design.md](design.md) | One SD per use case, in Mermaid, by the rules at the top of the file (HTTP request, controller, the service operation, names from the code); it renders in the GitHub preview. |
+| 7 Design class diagram | [design.md](design.md) | Your classes' associations with the same multiplicities as the shared diagram (`dcd.py` checks). |
+| 9.2 Test cases | [testing.md](testing.md) | Your test cases in the existing table's columns: tester, inputs, expected and actual result (the test's name), status; credit AI help when you had it. |
+| 10 Team contribution | [team.md](team.md) | One page about your work, with your percentage. |
+| 12 User manual | [user-manual.md](user-manual.md) | When your change renames a menu entry, page title or button, or changes a workflow it describes, update it in the same pull request. |
+
+Use-case owners: Zeba Tusnia Towshi UC-11 to UC-13, Oleg Berdyshev UC-01 to UC-03, Josh Job Joseph
+UC-04, UC-14 and UC-15, Rabeya Nazara UC-05 to UC-07, Reagan Rubio UC-08 to UC-10.
+
+The librarian keeps the shared parts right before submission: the Change Logs, sections 1–2,
+the domain model, the shared class diagram, section 8, section 9.1, the figure numbers and the
+final build.
