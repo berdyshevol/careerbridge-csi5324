@@ -34,7 +34,7 @@ Every database has one demo account per role ([ADR-0010](../spec/adr/0010-log-in
 | Applicants with none, for demos | `applicant1@example.com` to `applicant3@example.com` | `Baylor@2026` |
 | Recruiters, for demos | `recruiter1@example.com` to `recruiter6@example.com` | `Baylor@2026` |
 
-On H2, recruiter1 and recruiter2, like Riley, are members of Brazos Analytics and Waco Health Partners; recruiter3 to recruiter6 each belong to one sample organization (Pixel Labs, Lone Star Robotics, Cloud Nine Software, Green Grid Energy) and created its postings (`data/jobs.csv`).
+On H2, recruiter1 and recruiter2, like Riley, are members of Brazos Analytics and Waco Health Partners; recruiter3 to recruiter6 each belong to one sample organization (Pixel Labs, Lone Star Robotics, Cloud Nine Software, Green Grid Energy) and created its postings (`data/jobs.csv`). On H2 and on Neon, every demo recruiter also has a posting that is published, one waiting for approval, one returned with a comment and one they closed (`data/demo-postings.csv`, added on each start when missing; `DEMO_POSTINGS=false` turns it off).
 
 Log in at <http://localhost:3000/login>; posting approvals are at <http://localhost:3000/admin/postings> for the Administrator.
 

@@ -36,7 +36,7 @@ public class JobPostingService {
     private static final int MAX_COMMENT_LENGTH = 2000;
 
     // UC-13 extension *a, the reason Close Job Posting records
-    static final String CLOSED_BY_RECRUITER = "Closed by recruiter";
+    public static final String CLOSED_BY_RECRUITER = "Closed by recruiter";
 
     private static final ZoneOffset LATEST_ZONE = ZoneOffset.ofHours(-12);
 

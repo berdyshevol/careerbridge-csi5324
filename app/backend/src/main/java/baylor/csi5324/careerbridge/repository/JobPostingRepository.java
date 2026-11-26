@@ -30,6 +30,9 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Long> {
     // UC-14 step 2: every posting of the organization, in any status
     List<JobPosting> findByOrganizationOrderByDatePostedDescJobPostIdDesc(Organization organization);
 
+    // A demo posting is added only once (config/DemoPostings.java)
+    boolean existsByOrganizationAndTitleIgnoreCase(Organization organization, String title);
+
     List<JobPosting> findByPostStatusOrderByDatePostedAscJobPostIdAsc(PostStatus postStatus);
 
     // UC-13: a coarse cut by date; the expiration processor decides each posting in its organization's zone

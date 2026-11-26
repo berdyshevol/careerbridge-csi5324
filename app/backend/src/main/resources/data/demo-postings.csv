@@ -1,0 +1,29 @@
+recruiterEmail,title,description,jobRequirements,location,employmentType,salaryRange,postStatus,reviewComment
+riley.chen@example.com,Data Platform Engineer,"Build the pipelines that feed our client reports.","Python, SQL, cloud basics",Hybrid,Full-time,"$95,000 - $115,000",Published,
+riley.chen@example.com,Business Intelligence Analyst,"Turn client data into clear weekly dashboards.","SQL, Tableau or Power BI",Hybrid,Full-time,"$70,000 - $85,000",Pending Approval,
+riley.chen@example.com,Machine Learning Engineer,"Build models.","Python",Hybrid,Full-time,,Returned,"Please add the salary range and the years of experience you need."
+riley.chen@example.com,Database Administrator,"Keep our databases fast and backed up.","PostgreSQL, Linux",On-site,Full-time,"$85,000 - $100,000",Closed,
+recruiter1@example.com,Cloud Platform Engineer,"Run our services on the cloud and keep costs low.","AWS or Azure, Linux",Remote,Full-time,"$100,000 - $120,000",Published,
+recruiter1@example.com,Reporting Analyst,"Write the monthly reports for our clients.","Excel, SQL",Hybrid,Full-time,"$60,000 - $72,000",Pending Approval,
+recruiter1@example.com,Analytics Engineer,"Work on data.","SQL",Hybrid,Full-time,,Returned,"The description is too short. Say what the engineer builds and which tools they use."
+recruiter1@example.com,Data Science Intern,"Help the team clean data and test simple models.","Python, statistics",On-site,Internship,,Closed,
+recruiter2@example.com,DevOps Engineer,"Automate our builds, tests and releases.","Docker, CI pipelines, scripting",Hybrid,Full-time,"$95,000 - $110,000",Published,
+recruiter2@example.com,ETL Developer,"Move data from client systems into our warehouse.","SQL, Python",Hybrid,Full-time,"$80,000 - $95,000",Pending Approval,
+recruiter2@example.com,Data Quality Engineer,"Check data.","SQL",Remote,Full-time,,Returned,"Please add the salary range and what the engineer checks each day."
+recruiter2@example.com,Junior Data Analyst,"Answer client questions with data.","Excel, SQL basics",On-site,Full-time,"$55,000 - $65,000",Closed,
+recruiter3@example.com,Frontend Developer,"Build the screens of our web apps.","React, TypeScript, CSS",Hybrid,Full-time,"$85,000 - $100,000",Published,
+recruiter3@example.com,Game Developer,"Build small mobile games with our design team.","Unity or Godot, C#",On-site,Full-time,"$75,000 - $90,000",Pending Approval,
+recruiter3@example.com,iOS Developer,"Make apps.","Swift",Hybrid,Full-time,,Returned,"Please add the salary range and the years of experience you need."
+recruiter3@example.com,UI Engineer,"Turn designs into reusable components.","HTML, CSS, JavaScript",Remote,Full-time,"$80,000 - $95,000",Closed,
+recruiter4@example.com,Controls Engineer,"Program the motion control of our warehouse robots.","PLC, C++, robotics basics",On-site,Full-time,"$90,000 - $105,000",Published,
+recruiter4@example.com,Robotics Technician,"Build and repair robot arms in our lab.","Hands-on electronics, reading schematics",On-site,Full-time,"$55,000 - $65,000",Pending Approval,
+recruiter4@example.com,Test Technician,"Run tests on robot arms.","Lab experience",On-site,Full-time,,Returned,"The description is too short. Say what the technician tests and the shift hours."
+recruiter4@example.com,Field Service Engineer,"Visit customer sites to set up and fix our robots.","Driving license, mechanical skills",Hybrid,Full-time,"$70,000 - $85,000",Closed,
+recruiter5@example.com,Site Reliability Engineer,"Keep our services running and fix outages.","Linux, scripting, monitoring",Remote,Full-time,"$105,000 - $125,000",Published,
+recruiter5@example.com,Full Stack Developer,"Build features from the database to the screen.","Java, React, SQL",Hybrid,Full-time,"$90,000 - $110,000",Pending Approval,
+recruiter5@example.com,Security Engineer,"Keep things safe.","Security",Remote,Full-time,,Returned,"Please add the salary range and which security tools the engineer uses."
+recruiter5@example.com,Support Engineer,"Help customers fix problems with our software.","Good writing, basic SQL",Remote,Full-time,"$60,000 - $70,000",Closed,
+recruiter6@example.com,Wind Energy Engineer,"Plan and check wind farm projects.","Mechanical or electrical engineering degree",Hybrid,Full-time,"$90,000 - $105,000",Published,
+recruiter6@example.com,Energy Data Analyst,"Track how much power our sites make.","Excel, Python",Hybrid,Full-time,"$65,000 - $78,000",Pending Approval,
+recruiter6@example.com,Power Systems Engineer,"Work on power.","Electrical engineering",On-site,Full-time,,Returned,"Please add the salary range and say what the engineer designs."
+recruiter6@example.com,Solar Field Technician,"Install and fix solar panels at our sites.","Electrical basics, can work outdoors",On-site,Full-time,"$50,000 - $60,000",Closed,

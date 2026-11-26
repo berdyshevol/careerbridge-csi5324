@@ -5,7 +5,9 @@ import baylor.csi5324.careerbridge.model.Administrator;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.MembershipRequestType;
 import baylor.csi5324.careerbridge.model.MembershipStatus;
+import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.OrganizationMembership;
+import baylor.csi5324.careerbridge.model.OrganizationStatus;
 import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.model.Role;
 import baylor.csi5324.careerbridge.model.User;
@@ -25,6 +27,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 // One account per role for demonstrations and the end-to-end tests. The passwords come from the
@@ -130,7 +133,12 @@ public class DemoUsers implements CommandLineRunner {
         }
         String own = OWN_ORGANIZATION.get(recruiter.getEmail().toLowerCase(Locale.ROOT));
         for (String name : own == null ? DEMO_RECRUITER_ORGANIZATIONS : List.of(own)) {
-            organizationRepository.findByName(name).ifPresent(organization -> {
+            // Their own organization comes from data/jobs.csv, which never loads into the live database
+            Optional<Organization> found = organizationRepository.findByName(name);
+            if (found.isEmpty() && own != null) {
+                found = Optional.of(organizationRepository.save(activeOrganization(name)));
+            }
+            found.ifPresent(organization -> {
                 OrganizationMembership membership = new OrganizationMembership(recruiter, organization,
                         MembershipStatus.ACTIVE, MembershipRequestType.NEW_RECRUITER_EXISTING_ORGANIZATION, Instant.now());
                 membership.setRole("Recruiter");
@@ -138,6 +146,12 @@ public class DemoUsers implements CommandLineRunner {
                 membershipRepository.save(membership);
             });
         }
+    }
+
+    private static Organization activeOrganization(String name) {
+        Organization organization = new Organization(name);
+        organization.setOrganizationStatus(OrganizationStatus.ACTIVE);
+        return organization;
     }
 
     private User create(DemoUser demo) {

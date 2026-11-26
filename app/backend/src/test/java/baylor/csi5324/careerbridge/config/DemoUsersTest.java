@@ -1,5 +1,7 @@
 package baylor.csi5324.careerbridge.config;
 
+import baylor.csi5324.careerbridge.model.Organization;
+import baylor.csi5324.careerbridge.model.OrganizationStatus;
 import baylor.csi5324.careerbridge.model.User;
 import baylor.csi5324.careerbridge.repository.OrganizationMembershipRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
@@ -24,11 +26,13 @@ class DemoUsersTest {
 
     private final UserRepository userRepository = mock(UserRepository.class);
     private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
+    private final OrganizationRepository organizationRepository = mock(OrganizationRepository.class);
 
     private DemoUsers demoUsersOn(String databaseUrl) {
         when(userRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenAnswer(call -> call.getArgument(0));
-        return new DemoUsers(userRepository, mock(OrganizationRepository.class),
+        when(organizationRepository.save(any(Organization.class))).thenAnswer(call -> call.getArgument(0));
+        return new DemoUsers(userRepository, organizationRepository,
                 mock(OrganizationMembershipRepository.class), passwordEncoder, "", "", "", databaseUrl, true);
     }
 
@@ -60,5 +64,18 @@ class DemoUsersTest {
 
         verify(passwordEncoder, atLeastOnce()).encode("Baylor@2026");
         verify(passwordEncoder, never()).encode(argThat(password -> !"Baylor@2026".equals(password)));
+    }
+
+    // The live database never loads data/jobs.csv, where these organizations come from (SCRUM-228)
+    @Test
+    void createsTheOwnOrganizationOfANumberedRecruiterWhenItIsMissing() {
+        demoUsersOn("jdbc:h2:mem:careerbridge").run();
+
+        ArgumentCaptor<Organization> saved = ArgumentCaptor.forClass(Organization.class);
+        verify(organizationRepository, atLeastOnce()).save(saved.capture());
+        assertThat(saved.getAllValues()).extracting(Organization::getName).containsExactlyInAnyOrder(
+                "Pixel Labs", "Lone Star Robotics", "Cloud Nine Software", "Green Grid Energy");
+        assertThat(saved.getAllValues()).extracting(Organization::getOrganizationStatus)
+                .containsOnly(OrganizationStatus.ACTIVE);
     }
 }
