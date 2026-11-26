@@ -77,9 +77,10 @@ as an applicant, register as a recruiter with an organization.
    **2 · Your organization** (**Legal name** and **Website** are required; industry,
    headquarters, size and a short description are optional). Select **Send for review**.
 3. The page says **Check your email**. The system sends no real email yet. When it runs on your
-   own computer (§11), the page also shows **Open the verification link**: select it, and the
-   page says **Your request is under review**. If the link has expired, select **Send a new
-   link**. On the online site the link is not shown, so use a demo recruiter account there.
+   own computer with the default in-memory database (§11.2), the page also shows **Open the
+   verification link**: select it, and the page says **Your request is under review**. If the
+   link has expired, select **Send a new link**. On the online site, or with a database set in
+   `.env`, the link is not shown, so use a demo recruiter account there.
 4. Wait for an administrator to approve the request (12.5). Until then, logging in shows where
    the request stands instead of opening the account.
 
