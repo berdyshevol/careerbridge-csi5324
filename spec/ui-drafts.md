@@ -106,7 +106,9 @@ match its mockup, and a screen that is not listed here is added before it is cod
 | [`visitor-posting`](screens/visitor-posting.html) | `/jobs/{id}` | Posting | UC-01, UC-04 1a | Every detail of the posting. Apply leads to Log In or Register and back to this posting. |
 | [`visitor-register`](screens/visitor-register.html) | `/register` | Register as applicant | UC-02 | Name, email, password with the policy shown. Done: the Profile with an invitation to add a resume. Link "Hiring? Register your organization" (1a). |
 | [`visitor-recruiter-register`](screens/visitor-recruiter-register.html) | `/recruiter/register` | Register recruiter and organization | UC-08 | Two parts, "You" and "Your organization". A known organization offers a membership request instead (4c). Done: "Check your email", then the request status. |
-| [`visitor-login`](screens/visitor-login.html) | `/login` | Log In | Log In | Returns to the page that sent the user here, or to the role's home. |
+| [`visitor-login`](screens/visitor-login.html) | `/login` | Log In | Log In | Returns to the page that sent the user here, or to the role's home. Link "Forgot password?". |
+| [`visitor-forgot-password`](screens/visitor-forgot-password.html) | `/forgot-password` | Forgot password | Log In | Email only. Done: "Check your email", the same whether or not the account exists; in a demonstration the link itself. |
+| [`visitor-reset-password`](screens/visitor-reset-password.html) | `/reset-password?token=…` | Choose a new password | Log In | New password with the policy shown. Done: "Your password is changed" and Log in. A link that no longer works offers a new one. |
 
 **Applicant**
 

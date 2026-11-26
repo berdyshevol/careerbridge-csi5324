@@ -54,6 +54,10 @@ public class User {
     private Instant firstFailedLogInAt;
     private Instant lockedUntil;
 
+    // Log In, forgotten password: only the hash of the one-time link, and when it stops working
+    private String passwordResetTokenHash;
+    private Instant passwordResetExpiresAt;
+
     public User() {
     }
 
@@ -134,5 +138,23 @@ public class User {
         firstFailedLogInAt = null;
         failedLogIns = 0;
         lockedUntil = null;
+    }
+
+    public Instant getPasswordResetExpiresAt() {
+        return passwordResetExpiresAt;
+    }
+
+    // A new link replaces any earlier one, so only the latest email works
+    public void startPasswordReset(String tokenHash, Instant expiresAt) {
+        this.passwordResetTokenHash = tokenHash;
+        this.passwordResetExpiresAt = expiresAt;
+    }
+
+    // The link is used up, and the lock ends: the user proved they own the email
+    public void resetPassword(String newPasswordHash) {
+        this.passwordHash = newPasswordHash;
+        this.passwordResetTokenHash = null;
+        this.passwordResetExpiresAt = null;
+        recordLogIn();
     }
 }

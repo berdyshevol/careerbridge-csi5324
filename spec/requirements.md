@@ -244,6 +244,14 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC13.9:** The system shall let the Recruiter who created a Published posting close it before its deadline, with reason Closed by recruiter: the posting leaves public listings and accepts no new applications, and applications already submitted keep their stages. It shall refuse a posting that is not Published, that is past its deadline, or that another recruiter created. (A3; UC-13 extension \*a)
 
+#### Log In
+
+- **FR-LI.1:** The system shall let a user who forgot their password ask for a reset link by email address, and shall give the same answer whether or not an account exists for it. For an account, it shall send a one-time link that works for 30 minutes and replaces any earlier link. (Log In)
+
+- **FR-LI.2:** The system shall let the holder of a valid reset link set a new password under the registration rules (A15). The old password and the link stop working, and a locked account is unlocked. (A15; Log In)
+
+- **FR-LI.3:** The system shall refuse an expired, replaced or used reset link, and a new password that breaks the rules, saying why and keeping the old password. (A15; Log In)
+
 #### Administration
 
 These are not part of a use case; they come from the minimum scope of the final iteration.
@@ -373,6 +381,10 @@ These are not part of a use case; they come from the minimum scope of the final 
 - **NFR-UC13.4 (Reliability):** If the Notification Service is unavailable, no recorded posting closure shall be lost, and every held notice is sent within 15 minutes after the service is available again.
 
 - **NFR-UC13.5 (Correctness):** A posting shall stop accepting applications at 23:59 on its deadline date in the organization's time zone, and shall leave public listings no more than 15 minutes later (one run interval).
+
+#### Log In
+
+- **NFR-LI.1 (Security):** The database shall keep only a hash of a reset link, never the link itself, and the forgot-password form shall not reveal whether an account exists.
 
 #### Administration
 
@@ -558,3 +570,6 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC15.8|UC-15 extensions 2a, 2b|startOffer(applicationId)|query (no contract)|
 |FR-UC15.9|UC-15 extension 5b|extendOffer(applicationId, offerTerms),<br/>reviseOffer(applicationId, offerTerms)|CO-15.1, CO-15.2|
 |FR-UC15.10|UC-15 extension *a|startOffer(applicationId)|query (no contract)|
+|FR-LI.1|Log In (forgotten password)|requestPasswordReset(email)|CO-LI.1|
+|FR-LI.2|Log In (forgotten password)|resetPassword(token, newPassword)|CO-LI.2|
+|FR-LI.3|Log In (forgotten password)|resetPassword(token, newPassword)|CO-LI.2|

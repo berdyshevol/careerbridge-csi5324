@@ -27,6 +27,13 @@ describe("log-in page", () => {
     expect(viewPosting).not.toHaveBeenCalled();
   });
 
+  // One page for every role, so applicants, recruiters and administrators all find it
+  it("links to the forgotten-password page", async () => {
+    await renderWith();
+
+    expect(screen.getByRole("link", { name: "Forgot password?" })).toHaveAttribute("href", "/forgot-password");
+  });
+
   it.each(["/jobs/3", "/jobs/3/apply"])("names the posting a visitor came from (%s)", async (next) => {
     vi.mocked(viewPosting).mockResolvedValue(posting);
     await renderWith(next);

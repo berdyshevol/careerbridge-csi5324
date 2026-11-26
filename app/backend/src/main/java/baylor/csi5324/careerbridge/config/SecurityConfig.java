@@ -61,7 +61,8 @@ public class SecurityConfig {
         RequestMatcher publicReads = new OrRequestMatcher(
                 PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/postings/**"),
                 PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/postings"),
-                PathPatternRequestMatcher.withDefaults().matcher("/api/auth/login"));
+                PathPatternRequestMatcher.withDefaults().matcher("/api/auth/login"),
+                PathPatternRequestMatcher.withDefaults().matcher("/api/auth/password-reset/**"));
         // Starting an application (UC-04) and reopening a posting to edit it (UC-11) are GETs under
         // /api/postings too, but they are the user's own
         RequestMatcher usersOwn = new OrRequestMatcher(
