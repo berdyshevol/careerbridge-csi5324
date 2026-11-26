@@ -18,7 +18,7 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
 # 1. Join the listed files in order
-python3 -I "$here/join.py" "$list" "$work/joined.md" "$work/after-toc.md"
+python3 -I "$here/join.py" "$list" "$work/joined.md" "$work/after-toc.md" "$work/watermark.css"
 
 # 2. Mermaid blocks become images (mermaid-cli writes them next to its output)
 npx -y @mermaid-js/mermaid-cli@11.4.2 -q -i "$work/joined.md" -o "$work/rendered.md" -e png -s 2 -b white \
@@ -29,9 +29,10 @@ npx -y @mermaid-js/mermaid-cli@11.4.2 -q -i "$work/joined.md" -o "$work/rendered
 pandoc "$work/after-toc.md" --from gfm --to html5 --id-prefix=s- --toc --toc-depth=3 --template "$here/toc-only.html" \
   -o "$work/toc.html"
 pandoc "$work/rendered.md" --from gfm --to html5 --id-prefix=s- --standalone --embed-resources --resource-path "$work" \
-  --css "$here/style.css" --metadata pagetitle="$(basename "$output" .pdf)" -o "$work/body.html"
-python3 -I "$here/place-toc.py" "$work/body.html" "$work/toc.html"
+  --css "$here/style.css" --css "$work/watermark.css" --metadata pagetitle="$(basename "$output" .pdf)" -o "$work/body.html"
+python3 -I "$here/finish-html.py" "$work/body.html" "$work/toc.html"
 
-# 4. Paged.js lays out the pages: page numbers in the footer and in the table of contents
-npx -y pagedjs-cli@0.4.3 "$work/body.html" -o "$output" > /dev/null
+# 4. Paged.js lays out the pages: header, footer, page numbers in the table of contents, and the
+# bookmarks from the numbered sections and their sub-sections
+npx -y pagedjs-cli@0.4.3 "$work/body.html" --outline-tags h2,h3 -o "$output" > /dev/null
 echo "built $output"
