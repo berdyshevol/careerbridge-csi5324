@@ -923,3 +923,39 @@ until it ends (8 hours at most, [ADR-0010](adr/0010-log-in-with-jwt.md)).
 
 viewUsers(), which lists every user with their role and account status (FR-ADM.1), is a query that
 changes nothing, so it has no contract.
+
+#### CO-ADM.1: deactivateRecruiter
+
+**Operation:** deactivateRecruiter(userId)
+
+**Cross-references:** Minimum scope, Administrator 3; FR-ADM.2
+
+**Preconditions:** The Administrator is logged in. The User is a Recruiter whose _account Status_ is Active.
+
+**Postconditions:**
+
+- The Recruiter's _account Status_ became Inactive. Their Organization Memberships and Job Postings did not change.
+
+**Output:** The Recruiter's row with its new status.
+
+**Exceptions:**
+
+- The User is not a Recruiter, or the account is not Active (pending, denied or already deactivated): nothing changes, and the reason is shown.
+
+#### CO-ADM.2: reactivateRecruiter
+
+**Operation:** reactivateRecruiter(userId)
+
+**Cross-references:** Minimum scope, Administrator 3; FR-ADM.2
+
+**Preconditions:** The Administrator is logged in. The User is a Recruiter whose _account Status_ is Inactive and who has an Active Organization Membership (deactivated, not denied).
+
+**Postconditions:**
+
+- The Recruiter's _account Status_ became Active.
+
+**Output:** The Recruiter's row with its new status.
+
+**Exceptions:**
+
+- The User is not a deactivated Recruiter: nothing changes, and the reason is shown. A denied request is not reopened here.

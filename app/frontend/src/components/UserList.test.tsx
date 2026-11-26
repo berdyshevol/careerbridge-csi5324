@@ -5,15 +5,15 @@ import UserList from "./UserList";
 const directory: UserDirectory = {
   usersByRole: { APPLICANT: 2, RECRUITER: 1, ADMINISTRATOR: 1 },
   users: [
-    { userId: 1, firstName: "Avery", lastName: "Morgan", email: "admin@careerbridge.example", role: "ADMINISTRATOR", accountStatus: "ACTIVE" },
-    { userId: 2, firstName: "Riley", lastName: "Chen", email: "riley.chen@example.com", role: "RECRUITER", accountStatus: "PENDING_VERIFICATION" },
-    { userId: 3, firstName: "Jordan", lastName: "Lee", email: "jordan.lee@example.com", role: "APPLICANT", accountStatus: "ACTIVE" },
+    { userId: 1, firstName: "Avery", lastName: "Morgan", email: "admin@careerbridge.example", role: "ADMINISTRATOR", accountStatus: "ACTIVE", deactivated: false },
+    { userId: 2, firstName: "Riley", lastName: "Chen", email: "riley.chen@example.com", role: "RECRUITER", accountStatus: "PENDING_VERIFICATION", deactivated: false },
+    { userId: 3, firstName: "Jordan", lastName: "Lee", email: "jordan.lee@example.com", role: "APPLICANT", accountStatus: "ACTIVE", deactivated: false },
   ],
 };
 
 describe("UserList", () => {
   it("shows how many users each role has", () => {
-    render(<UserList directory={directory} />);
+    render(<UserList directory={directory} token="t" />);
 
     expect(within(screen.getByRole("list", { name: "Users by role" })).getAllByRole("listitem").map((item) => item.textContent)).toEqual([
       "2 applicants",
@@ -23,7 +23,7 @@ describe("UserList", () => {
   });
 
   it("shows each user's name, role, email and account status in the order given", () => {
-    render(<UserList directory={directory} />);
+    render(<UserList directory={directory} token="t" />);
 
     const rows = within(screen.getByRole("region", { name: "Users" })).getAllByRole("listitem");
     expect(rows).toHaveLength(3);

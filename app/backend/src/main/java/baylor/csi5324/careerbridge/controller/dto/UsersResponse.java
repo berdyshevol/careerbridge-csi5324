@@ -11,16 +11,19 @@ import java.util.Map;
 // NFR-ADM.1: never the password hash or the log-in counters
 public record UsersResponse(List<UserRow> users, Map<Role, Long> usersByRole) {
 
+    // deactivated: an approved recruiter the administrator deactivated, not a denied request (FR-ADM.2)
     public record UserRow(Long userId, String firstName, String lastName, String email, Role role,
-                          AccountStatus accountStatus) {
+                          AccountStatus accountStatus, boolean deactivated) {
 
-        static UserRow from(User user) {
+        public static UserRow from(User user, boolean deactivated) {
             return new UserRow(user.getUserId(), user.getFirstName(), user.getLastName(), user.getEmail(),
-                    Role.of(user), user.getAccountStatus());
+                    Role.of(user), user.getAccountStatus(), deactivated);
         }
     }
 
     public static UsersResponse from(UserDirectory directory) {
-        return new UsersResponse(directory.users().stream().map(UserRow::from).toList(), directory.usersByRole());
+        return new UsersResponse(directory.users().stream()
+                .map(user -> UserRow.from(user, directory.deactivatedRecruiters().contains(user.getUserId())))
+                .toList(), directory.usersByRole());
     }
 }

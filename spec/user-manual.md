@@ -200,7 +200,7 @@ organization you act for.
 ### 12.5 Administrator
 
 **Key features:** approve, return or reject submitted postings; approve, question or deny
-recruiter and organization requests; see all users.
+recruiter and organization requests; see all users; deactivate and reactivate recruiter accounts.
 
 **Navigation:** **Posting approvals**, **Recruiter requests**, **Users**. After logging in, the
 administrator lands on **Job posting approvals**.
@@ -228,6 +228,17 @@ administrator lands on **Job posting approvals**.
    registered, the button approves membership in the existing one instead.
 
 **Workflow: see the users.** Open **Users**. The page counts the users of each role and lists
-everyone with name, role, email and whether the account is active or pending verification.
+everyone with name, role, email and account status: Active, Pending verification, Pending
+approval (a recruiter request not yet decided), Inactive (a denied request) or Deactivated.
+
+**Workflow: deactivate or reactivate a recruiter.**
+
+1. Open **Users** and find the recruiter. **Deactivate** appears next to an active recruiter.
+2. Select **Deactivate**. The status changes to "Deactivated". The recruiter can no longer log
+   in; the log-in page tells them "This account was deactivated by the administrator", and a
+   recruiter already logged in can no longer work with postings. Their postings stay as they are.
+3. To undo it, select **Reactivate** next to the recruiter. They can log in again at once.
+
+Pending and denied recruiters have no button here: they are decided under **Recruiter requests**.
 
 Not yet available: an administrator home page.

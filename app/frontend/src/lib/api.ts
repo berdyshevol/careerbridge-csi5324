@@ -791,14 +791,18 @@ export async function openPostingApprovalQueue(token: string): Promise<JobPostin
   return response.json();
 }
 
-// Minimum scope Administrator 2 (FR-ADM.1): every user with their role, read only
+// Minimum scope Administrator 2 (FR-ADM.1): every user with their role
+export type AccountStatus = "ACTIVE" | "PENDING_VERIFICATION" | "PENDING_APPROVAL" | "INACTIVE";
+
 export type UserRow = {
   userId: number;
   firstName: string;
   lastName: string;
   email: string;
   role: Role;
-  accountStatus: "ACTIVE" | "PENDING_VERIFICATION";
+  accountStatus: AccountStatus;
+  // A recruiter the administrator deactivated, not a denied request (FR-ADM.2)
+  deactivated: boolean;
 };
 
 export type UserDirectory = {
@@ -809,6 +813,30 @@ export type UserDirectory = {
 export async function viewUsers(token: string): Promise<UserDirectory> {
   const response = await backendFetch("/api/admin/users", { headers: bearer(token) });
   endedSession(response);
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
+// The backend's reason, e.g. a pending recruiter, who is decided under Recruiter requests instead
+export class AccountChangeRefused extends Error {}
+
+// Minimum scope Administrator 3 (FR-ADM.2), CO-ADM.1 and CO-ADM.2
+export async function changeRecruiterAccount(
+  token: string,
+  userId: number,
+  change: "deactivate" | "reactivate",
+): Promise<UserRow> {
+  const response = await backendFetch(`/api/admin/users/${userId}/${change}`, {
+    method: "POST",
+    headers: bearer(token),
+  });
+  endedSession(response);
+  const reason = await refusal(response, [404, 409]);
+  if (reason !== null) {
+    throw new AccountChangeRefused(reason);
+  }
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }

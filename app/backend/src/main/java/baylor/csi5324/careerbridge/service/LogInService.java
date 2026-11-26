@@ -112,6 +112,11 @@ public class LogInService {
                 membershipRepository.findByRecruiterOrderByRequestedAtAscMembershipIdAsc(recruiter);
         Optional<OrganizationMembership> latest = requests.stream()
                 .max(Comparator.comparing(OrganizationMembership::getRequestedAt));
+        // FR-ADM.2: approved once, then deactivated by the administrator
+        if (recruiter.getAccountStatus() == AccountStatus.INACTIVE
+                && requests.stream().anyMatch(request -> request.getStatus() == MembershipStatus.ACTIVE)) {
+            return "This account was deactivated by the administrator. Contact them to have it reactivated.";
+        }
         MembershipStatus status = latest.map(OrganizationMembership::getStatus).orElse(MembershipStatus.PENDING);
         return switch (status) {
             case INFORMATION_REQUESTED -> "Your request is under review. The administrator asked for more "
