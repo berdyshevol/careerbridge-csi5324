@@ -31,7 +31,7 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Long> {
     List<JobPosting> findByOrganizationOrderByDatePostedDescJobPostIdDesc(Organization organization);
 
     // A demo posting is added only once (config/DemoPostings.java)
-    boolean existsByOrganizationAndTitleIgnoreCase(Organization organization, String title);
+    Optional<JobPosting> findFirstByOrganizationAndTitleIgnoreCase(Organization organization, String title);
 
     List<JobPosting> findByPostStatusOrderByDatePostedAscJobPostIdAsc(PostStatus postStatus);
 
