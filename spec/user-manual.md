@@ -30,7 +30,8 @@ itself, so wait and do not reload.
 | --- | --- |
 | Administrator | admin@careerbridge.example |
 | Recruiter | riley.chen@example.com, recruiter1@example.com … recruiter6@example.com |
-| Applicant | jordan.lee@example.com, sam.rivera@example.com, applicant1@example.com … applicant3@example.com |
+| Applicant with three applications | jordan.lee@example.com |
+| Applicant with none | sam.rivera@example.com, applicant1@example.com … applicant3@example.com |
 
 **Logging in and out.** Select **Log in** in the header, enter the email and password, and
 select **Log in**. The header shows your name and role, and a navigation list for your role
@@ -46,8 +47,6 @@ link at the foot of every page lists the team and the project links.
 
 **Key features:** search the open job postings of every organization, read a posting, register
 as an applicant, register as a recruiter with an organization.
-
-![Figure 12-1: The job board, as an applicant sees it on a laptop](diagrams/fig-12-1-job-board.jpg)
 
 **Workflow: find a job.**
 
@@ -77,9 +76,10 @@ as an applicant, register as a recruiter with an organization.
 2. Fill in **1 · You** (full name, job title, work email, optional phone, password) and
    **2 · Your organization** (**Legal name** and **Website** are required; industry,
    headquarters, size and a short description are optional). Select **Send for review**.
-3. The page says **Check your email**. The demonstration sends no real email, so select
-   **Open the verification link**. The page then says **Your request is under review**. If the
-   link has expired, select **Send a new link**.
+3. The page says **Check your email**. The system sends no real email yet. When it runs on your
+   own computer (§11), the page also shows **Open the verification link**: select it, and the
+   page says **Your request is under review**. If the link has expired, select **Send a new
+   link**. On the online site the link is not shown, so use a demo recruiter account there.
 4. Wait for an administrator to approve the request (12.5). Until then, logging in shows where
    the request stands instead of opening the account.
 
@@ -87,6 +87,8 @@ If the organization is already registered, the form offers **Request membership*
 instead; the administrator approves that request too.
 
 ### 12.3 Applicant
+
+![Figure 12-1: The job board, as an applicant sees it on a laptop](diagrams/fig-12-1-job-board.jpg)
 
 **Key features:** profile and resume, apply for a job, follow every application and its stage
 history, withdraw an application, accept or decline an offer.
@@ -150,7 +152,7 @@ organization.
 **Create job posting**.
 
 A recruiter acts for one approved organization at a time. If you belong to several, the pages
-use the first one approved. A recruiter with no approved organization cannot create a posting.
+use the one you asked to join first. A recruiter with no approved organization cannot create a posting.
 
 **Workflow: create and submit a posting.**
 

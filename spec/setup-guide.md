@@ -47,24 +47,18 @@ Ports 8080 (backend) and 3000 (frontend) must be free.
    npm run dev
    ```
 
-4. **Open** <http://localhost:3000> and log in with a demo account. Every demo account uses the
-   password `Baylor@2026`:
-
-   | Role | Email |
-   | --- | --- |
-   | Administrator | `admin@careerbridge.example` |
-   | Recruiter | `riley.chen@example.com`, `recruiter1@example.com` to `recruiter6@example.com` |
-   | Applicant with three applications | `jordan.lee@example.com` |
-   | Applicant with none | `sam.rivera@example.com`, `applicant1@example.com` to `applicant3@example.com` |
-
-   You can also register a new applicant on the site. The User Manual (§12) explains what each role
-   can do.
+4. **Open** <http://localhost:3000> and log in with a demo account: every demo account uses the
+   password `Baylor@2026`, and §12.1 lists them. You can also register a new applicant. The User
+   Manual (§12) explains what each role can do.
 
 ### 11.3 Environment configuration
 
 None is needed for the steps above. Every setting has a default, and the in-memory database starts
 empty and is filled with the sample organizations, postings, applications and demo accounts on every
 start; what you change is gone when the backend stops.
+
+If a file `app/backend/.env` exists, the backend uses the database named in it instead of the
+in-memory one.
 
 To keep data, the backend can use a PostgreSQL database instead. Copy `app/backend/.env.example` to
 `app/backend/.env` and fill in:
