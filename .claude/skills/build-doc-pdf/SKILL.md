@@ -64,7 +64,7 @@ If a Mermaid diagram fails, name the spec file and the diagram; the fix is a pul
 - Read the table of contents (the Read tool on the PDF, pages 3–4) and list the top-level sections.
   Every section 1–12 must be there; name a missing one and why (no `## N.` heading in its spec
   file, or the file is not in the list).
-- `python3 <this repository>/tools/doc-check/figures.py deliverable-N.pdf`, from the list's
+- `python3 <this repository>/tools/doc-check/figures.py deliverable-N.pdf --spec contents.txt`, from the list's
   folder where the PDF is: the captions of the built PDF, with their page numbers. Report its
   problems; a figure that renders as an image may have lost its caption.
 - Placeholder text a reader would see: `pdftotext deliverable-N.pdf - | grep -n "Not written yet\|TODO\|TBD"`.

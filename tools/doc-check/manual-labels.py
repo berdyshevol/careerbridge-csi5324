@@ -50,6 +50,8 @@ JSX_TEXT = re.compile(r"(?<![=\-])>([^<>]+)<(?=[/A-Za-z>])")
 # What JSX text never holds; a match that holds it is code between a generic and a tag
 CODE = re.compile(r"[;=]|&&|\|\||\w\(")
 MODULE = re.compile(r"""\b(?:from|import|require\()\s*["'][^"']*["']""")
+# A string that only names something in code is not screen text: a class, test id, key or address
+NOT_SHOWN = re.compile(r"\b(?:className|data-testid|testId|id|key|href|src|role|type|name|htmlFor|variant)\s*=\s*\{?\s*$")
 EXPRESSION = re.compile(r"\{[^{}]*\}")
 
 
@@ -64,6 +66,8 @@ def shown_texts(src):
         code = re.sub(r"\{\s*([\"'])(.{0,3}?)\1\s*\}", r"\2", code)
         code = MODULE.sub("", code)  # module paths name files, not screen text
         for m in STRING.finditer(code):
+            if NOT_SHOWN.search(code[max(0, m.start() - 40):m.start()]):
+                continue
             literal = next(g for g in m.groups() if g is not None)
             texts.extend(re.split(r"\$\{[^}]*\}", literal))  # template parts around ${...}
         for m in JSX_TEXT.finditer(code):

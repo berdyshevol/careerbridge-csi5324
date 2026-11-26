@@ -105,10 +105,11 @@ def main():
                                             "renumber the captions after it, and the text that refers to them.")
     parser.add_argument("pdf", nargs="?", type=Path, help="the built documentation PDF")
     parser.add_argument("--spec", type=Path, metavar="CONTENTS_TXT",
-                        help="check the Markdown files of this build list instead of a PDF")
+                        help="check the Markdown files of this build list; with a PDF too, also check "
+                             "that every caption of the list made it into the PDF")
     args = parser.parse_args()
-    if bool(args.pdf) == bool(args.spec):
-        parser.error("give either a PDF or --spec <contents.txt>")
+    if not args.pdf and not args.spec:
+        parser.error("give a PDF, --spec <contents.txt>, or both")
 
     if args.spec:
         captions, missing_files = [], []
@@ -120,6 +121,11 @@ def main():
                 continue
             captions.extend(captions_in_markdown(path))
         problems = missing_files + problems_of(captions)
+        if args.pdf:
+            # A caption that pdftotext wraps or drops is not seen in the PDF: compare with the list
+            in_pdf = {(c[0], c[1]) for c in captions_in_pdf(args.pdf)}
+            problems += [f"{where}: {kind} {n} is not found in {args.pdf.name}: {text}"
+                         for kind, n, where, text in captions if (kind, n) not in in_pdf]
     else:
         captions = list(captions_in_pdf(args.pdf))
         problems = problems_of(captions)
