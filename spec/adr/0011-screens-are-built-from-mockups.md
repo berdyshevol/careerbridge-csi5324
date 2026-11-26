@@ -16,7 +16,7 @@ a person and Claude can both open from the repository.
 ## Decision
 
 1. **Every screen has an ID and a mockup.** The catalog of screens by role, with addresses, use
-   cases and hand-offs, is in [ui-drafts.md](../ui-drafts.md) ("Screens by role"). Each screen's
+   cases and hand-offs, is in [screens/README.md](../screens/README.md) ("Screens by role"). Each screen's
    mockup is `spec/screens/<id>.html`, at phone, tablet and laptop width, with a picture beside it
    ([spec/screens/README.md](../screens/README.md)).
 2. **A page is built to match its mockup**: the same blocks, order, wording, main action and

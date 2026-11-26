@@ -52,7 +52,7 @@ piece of UC-NN?"
 Work that adds or changes anything a user sees is built to its screen's mockup (ADR-0011). Skip
 this step only for backend-only or tooling work, and say so.
 
-1. **Find the screens** in the catalog, the "Screens by role" tables of `spec/ui-drafts.md`: by
+1. **Find the screens** in the catalog, the "Screens by role" tables of `spec/screens/README.md`: by
    the ticket's `Screen:` line, by screen ID, by address, or by use case (its "Use cases" column;
    one use case often has several screens, for several roles). A screen described in words: name
    the candidates and ask which one is meant.
@@ -61,7 +61,7 @@ this step only for backend-only or tooling work, and say so.
    what only that role may see, they must match. Where they differ, ask which is right and fix the
    other mockup in this pull request.
 3. **No screen in the catalog: stop.** Say: "There is no screen for <what> in the catalog. It
-   needs an ID, a mockup `spec/screens/<id>.html` and a row in `spec/ui-drafts.md` first, agreed
+   needs an ID, a mockup `spec/screens/<id>.html` and a row in the catalog of `spec/screens/README.md` first, agreed
    with the team." Do not invent a layout. Go on only if adding that screen is itself the request.
 4. **Read each screen:** its catalog row (address, use cases, what it holds, where it leads), the
    mockup `spec/screens/<id>.html` (blocks, order, wording and navigation at each width), its
