@@ -57,7 +57,8 @@ where each use case and each hand-off between use cases lives. It is the catalog
 screen has an ID, and its mockup at the three widths of [ADR-0004](../adr/0004-frontend.md) is
 `<ID>.html`, with a picture beside it (this folder). A page is built to
 match its mockup, and a screen that is not listed here is added before it is coded
-([ADR-0011](../adr/0011-screens-are-built-from-mockups.md)).
+([ADR-0011](../adr/0011-screens-are-built-from-mockups.md)). The frontend test
+`src/app/screenCatalog.test.ts` fails when a page's address is not in the Address column below.
 
 **Principles**
 
@@ -165,7 +166,7 @@ recruiter's postings and home.
 
 Two pages are not screens of any role and have no mockup: `/styleguide`, the blocks the pages are
 built from ([ADR-0004](../adr/0004-frontend.md)), and `/about`, the team page of the course project,
-linked from the footer.
+linked from the footer. The catalog test lists them too.
 
 **Hand-offs**
 
