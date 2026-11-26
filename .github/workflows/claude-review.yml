@@ -69,6 +69,14 @@ jobs:
                a decision in spec/adr/. When code and spec disagree, the pull request must change one.
                A changed menu entry, page title, button or workflow that spec/user-manual.md
                describes must be updated there in the same pull request.
+               A clear contradiction of an accepted ADR is always "Must fix": the code changes, or
+               the same pull request adds an ADR that replaces the decision (spec/adr/README.md says
+               how). Quote the ADR line and the line of the change that contradicts it. When the ADR
+               can be read two ways, or you are not sure, report it under "Should fix" as "possible
+               ADR conflict" with both quotes, for a person to decide. A common case: a changed
+               entity in app/backend/src/main/java/**/model/ that changes the schema (a field, a
+               column, an enum value) without a new migration in
+               app/backend/src/main/resources/db/migration/ contradicts ADR-0014.
             4. Screens: only if files under app/frontend/src/app/ or app/frontend/src/components/
                changed — apply the rule table of .claude/skills/screen-review/SKILL.md (ADR-0004) to
                the changed pages by reading the code. You cannot run lint, tests or take
