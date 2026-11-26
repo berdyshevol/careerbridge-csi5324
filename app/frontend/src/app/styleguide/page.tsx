@@ -319,12 +319,13 @@ export default function StyleguidePage() {
             <ActionRow title="Another action" description="What it is for, in one line." href="/styleguide" action="Open it" />
           </ul>
         </Block>
-        <Block title="Offer panel" use="<OfferPanel title organizationName respondBy /> — the only warning-colored panel on a screen">
+        <Block title="Offer panel" use="<OfferPanel title organizationName respondBy href /> — the only warning-colored panel on a screen">
           <div className="lg:w-80">
             <OfferPanel
               title={offer.title}
               organizationName={offer.organizationName}
               respondBy={formatDate(offer.expirationDate)}
+              href="/styleguide"
             />
           </div>
         </Block>
