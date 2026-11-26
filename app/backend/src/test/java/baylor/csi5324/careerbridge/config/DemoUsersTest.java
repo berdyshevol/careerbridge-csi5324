@@ -13,6 +13,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -28,7 +29,7 @@ class DemoUsersTest {
         when(userRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenAnswer(call -> call.getArgument(0));
         return new DemoUsers(userRepository, mock(OrganizationRepository.class),
-                mock(OrganizationMembershipRepository.class), passwordEncoder, "", "", "", "", "", databaseUrl, true);
+                mock(OrganizationMembershipRepository.class), passwordEncoder, "", "", "", databaseUrl, true);
     }
 
     @Test
@@ -49,5 +50,15 @@ class DemoUsersTest {
                 "recruiter1@example.com", "recruiter2@example.com", "recruiter3@example.com",
                 "recruiter4@example.com", "recruiter5@example.com", "recruiter6@example.com");
         verify(passwordEncoder, atLeastOnce()).encode("Baylor@2026");
+    }
+
+    @Test
+    void anInMemoryDatabaseGivesEveryDemoAccountTheSamePassword() {
+        when(passwordEncoder.encode(anyString())).thenReturn("hash");
+
+        demoUsersOn("jdbc:h2:mem:careerbridge").run();
+
+        verify(passwordEncoder, atLeastOnce()).encode("Baylor@2026");
+        verify(passwordEncoder, never()).encode(argThat(password -> !"Baylor@2026".equals(password)));
     }
 }

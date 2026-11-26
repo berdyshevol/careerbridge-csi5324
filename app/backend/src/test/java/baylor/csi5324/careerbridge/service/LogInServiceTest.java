@@ -97,12 +97,12 @@ class LogInServiceTest {
     @Test
     void theDemoUsersFromTheEnvironmentCanLogIn() {
         assertEquals(Role.APPLICANT, Role.of(logInService.logIn(
-                SampleDataLoader.SAMPLE_APPLICANT_EMAIL, "Applicant-test-1").user()));
-        assertEquals(Role.APPLICANT, Role.of(logInService.logIn("sam.rivera@example.com", "Applicant-test-2").user()));
-        assertEquals(Role.RECRUITER, Role.of(logInService.logIn("riley.chen@example.com", "Recruiter-test-1").user()));
+                SampleDataLoader.SAMPLE_APPLICANT_EMAIL, "Demo-test-1").user()));
+        assertEquals(Role.APPLICANT, Role.of(logInService.logIn("sam.rivera@example.com", "Demo-test-1").user()));
+        assertEquals(Role.RECRUITER, Role.of(logInService.logIn("riley.chen@example.com", "Demo-test-1").user()));
         assertEquals(Role.ADMINISTRATOR, Role.of(logInService.logIn(
-                "admin@careerbridge.example", "Administrator-test-1").user()));
+                "admin@careerbridge.example", "Demo-test-1").user()));
         assertFalse(userRepository.findByEmailIgnoreCase("riley.chen@example.com").orElseThrow()
-                .getPasswordHash().contains("Recruiter-test-1"));
+                .getPasswordHash().contains("Demo-test-1"));
     }
 }
