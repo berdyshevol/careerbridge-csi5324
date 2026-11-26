@@ -67,6 +67,8 @@ jobs:
             3. Specification and ADRs: entity and attribute names follow spec/domain-model.md,
                service methods are the operations of spec/ssd-and-contracts.md, nothing contradicts
                a decision in spec/adr/. When code and spec disagree, the pull request must change one.
+               A changed menu entry, page title, button or workflow that spec/user-manual.md
+               describes must be updated there in the same pull request.
             4. Screens: only if files under app/frontend/src/app/ or app/frontend/src/components/
                changed — apply the rule table of .claude/skills/screen-review/SKILL.md (ADR-0004) to
                the changed pages by reading the code. You cannot run lint, tests or take
