@@ -65,3 +65,13 @@ They read three repository secrets: `JIRA_EMAIL` and `JIRA_API_TOKEN` (an Atlass
 
 `tools/build-pdf/build.sh <list.txt> <output.pdf>` builds a deliverable's documentation from the
 Markdown in `spec/`, Mermaid diagrams included ([tools/build-pdf/README.md](../tools/build-pdf/README.md)).
+
+## Jira from Claude Code
+
+The repository carries the address of the Jira server for Claude Code (`.mcp.json`), so nobody has to configure it.
+
+1. Open Claude Code in the repository folder. The first time it asks whether to use the `atlassian` server: say yes.
+2. Type `/mcp`, choose `atlassian` and sign in with your Atlassian account in the browser. Once per computer.
+3. Then ask in plain words: "show my cards in the current sprint", "implement SCRUM-69", "create a ticket for UC-04".
+
+Claude acts in Jira as you, with your permissions. Nothing secret is stored in the repository.
