@@ -258,6 +258,8 @@ These are not part of a use case; they come from the minimum scope of the final 
 
 - **FR-ADM.1:** The system shall let the Administrator view every registered user with their name, email address, role and account status, and the number of users in each role.
 
+- **FR-ADM.2:** The system shall let the Administrator deactivate an active Recruiter account and reactivate a deactivated one. A deactivated Recruiter cannot log in, is told why, and can no longer act for any organization, even in a session already open; their postings stay as they are. Pending and denied requests are decided in UC-10 instead.
+
 ### 3.2 Non-functional Requirements
 
 #### UC-01 Search Job Postings
@@ -549,6 +551,7 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC13.8|UC-13 step 5|runExpirationJob()|CO-13.1|
 |FR-UC13.9|UC-13 extension \*a|closePosting(postingId)|CO-13.2|
 |FR-ADM.1|Minimum scope, Administrator 2|viewUsers()|query (no contract)|
+|FR-ADM.2|Minimum scope, Administrator 3|deactivateRecruiter(userId),<br/>reactivateRecruiter(userId)|CO-ADM.1, CO-ADM.2|
 |FR-UC14.1|UC-14 steps 1–2|listPostings()|query (no contract)|
 |FR-UC14.2|UC-14 steps 3–4|reviewApplication(applicationId)|CO-14.1|
 |FR-UC14.3|UC-14 steps 5–6|advanceApplication(applicationId, note)|CO-14.2|

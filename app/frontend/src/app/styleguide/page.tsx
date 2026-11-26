@@ -268,14 +268,17 @@ export default function StyleguidePage() {
             ))}
           </ul>
         </Block>
-        <Block title="User list" use="<UserList directory={…} /> — the administrator's list of users, with the count of each role">
+        <Block title="User list" use="<UserList directory={…} token={…} /> — the administrator's list of users, with the count of each role, and Deactivate or Reactivate on a recruiter">
           <UserList
+            token=""
             directory={{
-              usersByRole: { APPLICANT: 2, RECRUITER: 1, ADMINISTRATOR: 1 },
+              usersByRole: { APPLICANT: 1, RECRUITER: 3, ADMINISTRATOR: 1 },
               users: [
-                { userId: 1, firstName: "Avery", lastName: "Morgan", email: "admin@careerbridge.example", role: "ADMINISTRATOR", accountStatus: "ACTIVE" },
-                { userId: 2, firstName: "Riley", lastName: "Chen", email: "riley.chen@example.com", role: "RECRUITER", accountStatus: "PENDING_VERIFICATION" },
-                { userId: 3, firstName: "Jordan", lastName: "Lee", email: "jordan.lee@example.com", role: "APPLICANT", accountStatus: "ACTIVE" },
+                { userId: 1, firstName: "Avery", lastName: "Morgan", email: "admin@careerbridge.example", role: "ADMINISTRATOR", accountStatus: "ACTIVE", deactivated: false },
+                { userId: 2, firstName: "Riley", lastName: "Chen", email: "riley.chen@example.com", role: "RECRUITER", accountStatus: "ACTIVE", deactivated: false },
+                { userId: 4, firstName: "Ana", lastName: "Ruiz", email: "ana.ruiz@example.com", role: "RECRUITER", accountStatus: "INACTIVE", deactivated: true },
+                { userId: 5, firstName: "Lee", lastName: "Huang", email: "lee.huang@example.com", role: "RECRUITER", accountStatus: "PENDING_APPROVAL", deactivated: false },
+                { userId: 3, firstName: "Jordan", lastName: "Lee", email: "jordan.lee@example.com", role: "APPLICANT", accountStatus: "ACTIVE", deactivated: false },
               ],
             }}
           />

@@ -40,7 +40,7 @@ export default async function AdminUsersPage() {
     <div className="flex flex-col gap-5">
       <PageTitle subtitle="Everyone with an account, and the role it has.">Users</PageTitle>
       {directory ? (
-        <UserList directory={directory} />
+        <UserList directory={directory} token={session.token} />
       ) : (
         <div role="alert" className="alert alert-error">
           <span>The users could not be loaded. Try again in a moment.</span>

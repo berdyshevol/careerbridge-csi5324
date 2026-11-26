@@ -1,6 +1,7 @@
 package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.model.MembershipRequestType;
+import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.MembershipStatus;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.OrganizationMembership;
@@ -27,6 +28,7 @@ class RecruiterOrganizationTest {
     private final Organization logistics = organization(3L, "Lone Star Logistics");
 
     RecruiterOrganizationTest() {
+        riley.setAccountStatus(AccountStatus.ACTIVE);
         when(recruiters.findByEmailIgnoreCase("riley@example.com")).thenReturn(Optional.of(riley));
         when(memberships.findByRecruiterOrderByRequestedAtAscMembershipIdAsc(riley)).thenReturn(List.of(
                 membership(brazos, MembershipStatus.ACTIVE),
@@ -53,6 +55,15 @@ class RecruiterOrganizationTest {
         assertThat(lookup.isActiveMember("riley@example.com", logistics)).isFalse();
         assertThat(lookup.isActiveMember("nobody@example.com", waco)).isFalse();
         assertThat(lookup.activeOrganizationOf("nobody@example.com")).isEmpty();
+    }
+
+    @Test
+    void aDeactivatedRecruiterActsForNoOrganization() {
+        riley.setAccountStatus(AccountStatus.INACTIVE);
+        RecruiterOrganization lookup = lookup("");
+
+        assertThat(lookup.activeOrganizationOf("riley@example.com")).isEmpty();
+        assertThat(lookup.isActiveMember("riley@example.com", brazos)).isFalse();
     }
 
     private RecruiterOrganization lookup(String preferred) {

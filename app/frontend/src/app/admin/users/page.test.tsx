@@ -21,8 +21,8 @@ function as(role: Role): Session {
 const directory: UserDirectory = {
   usersByRole: { APPLICANT: 1, RECRUITER: 0, ADMINISTRATOR: 1 },
   users: [
-    { userId: 1, firstName: "Avery", lastName: "Morgan", email: "admin@careerbridge.example", role: "ADMINISTRATOR", accountStatus: "ACTIVE" },
-    { userId: 3, firstName: "Jordan", lastName: "Lee", email: "jordan.lee@example.com", role: "APPLICANT", accountStatus: "ACTIVE" },
+    { userId: 1, firstName: "Avery", lastName: "Morgan", email: "admin@careerbridge.example", role: "ADMINISTRATOR", accountStatus: "ACTIVE", deactivated: false },
+    { userId: 3, firstName: "Jordan", lastName: "Lee", email: "jordan.lee@example.com", role: "APPLICANT", accountStatus: "ACTIVE", deactivated: false },
   ],
 };
 

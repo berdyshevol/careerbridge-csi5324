@@ -1,5 +1,6 @@
 package baylor.csi5324.careerbridge.service;
 
+import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.MembershipStatus;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.OrganizationMembership;
@@ -44,7 +45,9 @@ public class RecruiterOrganization {
     }
 
     private List<Organization> activeOrganizations(String recruiterEmail) {
+        // FR-ADM.2: a deactivated recruiter acts for no organization, even in a session opened before
         return recruiterRepository.findByEmailIgnoreCase(recruiterEmail)
+                .filter(recruiter -> recruiter.getAccountStatus() == AccountStatus.ACTIVE)
                 .map(recruiter -> membershipRepository.findByRecruiterOrderByRequestedAtAscMembershipIdAsc(recruiter)
                         .stream()
                         .filter(membership -> membership.getStatus() == MembershipStatus.ACTIVE)
