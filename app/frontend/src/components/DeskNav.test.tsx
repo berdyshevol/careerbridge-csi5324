@@ -41,8 +41,8 @@ describe("DeskNav", () => {
     const current = within(dock).getByRole("link", { name: "Jobs" });
 
     expect(current).toHaveAttribute("aria-current", "page");
-    expect(current).toHaveClass("text-primary", "font-semibold", "before:top-0");
-    expect(within(dock).getByRole("link", { name: "Home" })).not.toHaveClass("before:top-0");
+    expect(current).toHaveClass("text-primary", "font-semibold", "before:-top-2");
+    expect(within(dock).getByRole("link", { name: "Home" })).not.toHaveClass("before:-top-2");
   });
 
   it("gives an administrator only the administrator's entries", () => {

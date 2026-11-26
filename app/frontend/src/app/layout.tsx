@@ -3,7 +3,7 @@ import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import Link from "next/link";
 import AccountMenu from "@/components/AccountMenu";
 import DeskNav from "@/components/DeskNav";
-import { BrandIcon } from "@/components/Icons";
+import { BrandMark } from "@/components/Icons";
 import { serverSession } from "@/lib/serverSession";
 import { themeOf } from "@/lib/session";
 import "./globals.css";
@@ -27,12 +27,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body className="min-h-screen bg-base-200 font-sans text-base-content">
         {/* ADR-0012: the header carries the role's color, so the role shows from any part of the screen */}
         {/* Sticky, so the role's color and the account menu stay in view on a long list */}
-        <header className="sticky top-0 z-30 bg-primary text-primary-content shadow-raise">
+        <header className="sticky top-0 z-30 bg-primary text-primary-content shadow-lift">
           <div className="flex h-16 items-center gap-3 px-4 md:px-6 lg:gap-7 lg:px-8">
             <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-semibold">
-              <span className="grid size-8 place-items-center rounded-lg bg-primary-content/15 ring-1 ring-primary-content/20">
-                <BrandIcon className="size-5" />
-              </span>
+              <BrandMark />
               CareerBridge
             </Link>
             <div className="grow" />

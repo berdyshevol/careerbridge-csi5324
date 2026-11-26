@@ -74,7 +74,7 @@ export default function DeskNav({ role }: { role: Role | null }) {
                 : "text-muted hover:bg-base-100 hover:text-base-content"
             }`}
           >
-            <Icon className={`size-5 ${isCurrent(href) ? "text-primary" : ""}`} />
+            <Icon className={isCurrent(href) ? "size-5 text-primary" : undefined} />
             <span>{label}</span>
           </Link>
         ))}
@@ -92,7 +92,7 @@ export default function DeskNav({ role }: { role: Role | null }) {
                 : "hover-raise border-base-300 bg-base-100 font-medium"
             }`}
           >
-            <Icon className={`size-5 ${isCurrent(href) ? "text-primary" : ""}`} />
+            <Icon className={isCurrent(href) ? "size-5 text-primary" : undefined} />
             <span>{label}</span>
           </Link>
         ))}
@@ -104,10 +104,11 @@ export default function DeskNav({ role }: { role: Role | null }) {
             key={href}
             href={href}
             aria-current={isCurrent(href) ? "page" : undefined}
-            // daisyUI's own bar under the entry stays hidden; the mockup draws a short bar above it instead
-            className={`relative transition-colors after:hidden ${
+            // daisyUI's own bar under the entry stays hidden; a short bar hangs from the dock's top edge instead
+            // (-top-2 undoes the dock's padding)
+            className={`transition-colors after:hidden ${
               isCurrent(href)
-                ? "font-semibold text-primary before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:h-[3px] before:w-8 before:rounded-b-full before:bg-primary"
+                ? "font-semibold text-primary before:absolute before:-top-2 before:left-1/2 before:-translate-x-1/2 before:h-[3px] before:w-8 before:rounded-b-full before:bg-primary"
                 : "text-muted hover:text-base-content"
             }`}
           >

@@ -32,7 +32,8 @@ test("given a logged-in applicant on a phone, when they open the job board, then
   expect(await current.evaluate((link) => getComputedStyle(link, "::after").display)).toBe("none");
   const bar = await current.evaluate((link) => getComputedStyle(link, "::before"));
   expect(bar.position).toBe("absolute");
-  expect(bar.top).toBe("0px");
+  // At the dock's top edge: daisyUI pads the dock by 0.5rem
+  expect(bar.top).toBe("-8px");
 });
 
 test("given a logged-in applicant, when they look at the header, then Log out waits in the account menu behind the avatar", async ({ page }) => {
