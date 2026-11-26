@@ -107,7 +107,9 @@ so Jira links the branch. Resuming earlier work: check out its branch instead.
 map of step 4. For a slice, show the plan and wait for an OK. For a task, write it in one line and
 go on.
 
-**c. Implement.** Only what the ticket asks for, with the tests `CLAUDE.md` requires.
+**c. Implement.** Only what the ticket asks for, with the tests `CLAUDE.md` requires. If the change
+renames a menu entry, page title or button, or changes a workflow that `spec/user-manual.md`
+describes, update the manual in the same pull request.
 
 **d. Tests green.** Before the first run, check the ports: if `lsof -i :3000 -i :8080` shows a
 program that is not this branch's server, stop and say which, because the end-to-end tests would

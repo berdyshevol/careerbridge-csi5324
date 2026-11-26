@@ -21,6 +21,8 @@ PDF is built from them (`tools/build-pdf/`). Find the topic here before reading 
 | [testing.md](testing.md) | Test summary and test-case table | Writing or listing tests for a use case | Test cases in the template's columns; not test code | 9 |
 | [user-scenarios/](user-scenarios/README.md) | Acceptance scenarios in Gherkin (`.feature`), one per use-case outcome, run as end-to-end tests | Checking that the use cases still work, before a demo or a deliverable | Scenarios in the use cases' language; not use-case steps (use-cases.md) or test code (app/frontend/e2e/scenarios) | — |
 | [team.md](team.md) | Members, roles, use cases, contribution | Checking who owns what | People and ownership | 10 |
+| [setup-guide.md](setup-guide.md) | Tools, configuration and the steps to run the system and its tests | Running the system on another computer | How to install and run; not deployment secrets (app/README.md) | 11 |
+| [user-manual.md](user-manual.md) | What each role can do and its typical workflows | Showing or learning how to use the system | How to use what works on `main`; not use-case steps (use-cases.md) | 12 |
 | [adr/](adr/README.md) | One decision per record | Before changing a design choice | New decisions; replace a record, do not rewrite it | — |
 | [diagrams/](diagrams/) | Figures that are images | Changing such a figure | Images only; new diagrams are Mermaid in the text | — |
 
