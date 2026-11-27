@@ -38,9 +38,7 @@ The rules for how a screen looks are in one place, [ADR-0004](../../spec/adr/000
 
 ## Sample data
 
-The desk page shows applications, an offer and a resume from `src/lib/sampleDesk.ts`, because the backend cannot answer those yet. Replace each piece with a call in `src/lib/api.ts` when its use case is implemented (UC-05, UC-07, UC-03).
-
-UC-04 Apply for Job (`/jobs/[id]/apply`) runs its checks in the browser against that sample desk, in `src/lib/apply.ts`, because the backend has no `submitApplication` yet. When it does, add the call to `src/lib/api.ts` and let `submitApplication` in `apply.ts` delegate to it; the screen stays as it is.
+`src/lib/sampleDesk.ts` only fills `/styleguide`; `npm run lint` refuses it in any other file. A screen takes its data from the backend through `src/lib/api.ts`, and the types the screens share are in `src/lib/api.ts` and `src/lib/stages.ts`. Anything the backend cannot answer yet is marked `STAND-IN` (ADR-0004 point 7).
 
 ## Adding your screen
 
