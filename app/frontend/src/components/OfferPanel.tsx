@@ -5,10 +5,12 @@ export default function OfferPanel({
   title,
   organizationName,
   respondBy,
+  href,
 }: {
   title: string;
   organizationName: string;
   respondBy: string; // already formatted for reading
+  href: string; // the application's page: an offer has no screen of its own
 }) {
   return (
     <section className="flex flex-col gap-3 rounded-2xl bg-warning p-5 text-warning-content md:flex-row md:items-center md:gap-5 lg:flex-col lg:items-stretch lg:gap-3">
@@ -19,7 +21,7 @@ export default function OfferPanel({
           {organizationName} · Respond by {respondBy}
         </p>
       </div>
-      <Link href="/offers" className="btn btn-neutral h-12">
+      <Link href={href} className="btn btn-neutral h-12">
         Review offer
       </Link>
     </section>

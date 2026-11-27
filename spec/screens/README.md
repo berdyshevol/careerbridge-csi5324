@@ -116,7 +116,7 @@ match its mockup, and a screen that is not listed here is added before it is cod
 | [`visitor-jobs`](visitor-jobs.html) | `/jobs` | Job board | UC-01 | Keywords, location, organization and employment type; results newest first; the empty texts of extensions 2a and 2b; the criteria kept after a failure (\*a). |
 | [`visitor-posting`](visitor-posting.html) | `/jobs/{id}` | Posting | UC-01, UC-04 1a | Every detail of the posting. Apply leads to Log In or Register and back to this posting. |
 | [`visitor-register`](visitor-register.html) | `/register` | Register as applicant | UC-02 | Name, email, password with the policy shown. Done: the Profile with an invitation to add a resume. Link "Hiring? Register your organization" (1a). |
-| [`visitor-recruiter-register`](visitor-recruiter-register.html) | `/recruiter/register` | Register recruiter and organization | UC-08 | Two parts, "You" and "Your organization". A known organization offers a membership request instead (4c). Done: "Check your email", then the request status. |
+| [`visitor-recruiter-register`](visitor-recruiter-register.html) | `/recruiter/register`, `/recruiter/verify?token=…` | Register recruiter and organization | UC-08 | Two parts, "You" and "Your organization". A known organization offers a membership request instead (4c). Done: "Check your email"; the link in it opens `/recruiter/verify`, which shows the request under review or, for an expired link, offers a new one (6a). |
 | [`visitor-login`](visitor-login.html) | `/login` | Log In | Log In | Returns to the page that sent the user here, or to the role's home. Link "Forgot password?". |
 | [`visitor-forgot-password`](visitor-forgot-password.html) | `/forgot-password` | Forgot password | Log In | Email only. Done: "Check your email", the same whether or not the account exists; in a demonstration the link itself. |
 | [`visitor-reset-password`](visitor-reset-password.html) | `/reset-password?token=…` | Choose a new password | Log In | New password with the policy shown. Done: "Your password is changed" and Log in. A link that no longer works offers a new one. |
@@ -162,6 +162,10 @@ is shown on that application's page; the desk and the Applications entry point t
 
 UC-13 Expire Job Posting has no screen: its results appear as Closed · Expired and Expired on the
 recruiter's postings and home.
+
+Two pages are not screens of any role and have no mockup: `/styleguide`, the blocks the pages are
+built from ([ADR-0004](../adr/0004-frontend.md)), and `/about`, the team page of the course project,
+linked from the footer.
 
 **Hand-offs**
 
