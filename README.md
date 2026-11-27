@@ -7,7 +7,7 @@ project of team CareerBridge for CSI 5324 Software Engineering (Baylor Universit
 
 - **Live application:** <https://careerbridge-csi5324.vercel.app> (the backend sleeps after 15 minutes
   without requests; the first page then takes about a minute)
-- **Team website:** <https://careerbridge-csi5324.vercel.app/about> (the team, its roles and use cases, and the project links)
+- **Team website:** <https://reaganbaylor.github.io/careerbridge-csi5324-hub/> (the team, its roles and use cases, and the deliverables)
 - **Scrum board:** <https://careerbridge-csi5324.atlassian.net/jira/software/projects/SCRUM/boards/1>
 
 ## Repository structure

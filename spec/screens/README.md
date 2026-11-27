@@ -164,8 +164,8 @@ UC-13 Expire Job Posting has no screen: its results appear as Closed · Expired 
 recruiter's postings and home.
 
 Two pages are not screens of any role and have no mockup: `/styleguide`, the blocks the pages are
-built from ([ADR-0004](../adr/0004-frontend.md)), and `/about`, the team page of the course project,
-linked from the footer.
+built from ([ADR-0004](../adr/0004-frontend.md)), and `/about`, a short note on the project
+linked from the footer, which points to the team website.
 
 **Hand-offs**
 
