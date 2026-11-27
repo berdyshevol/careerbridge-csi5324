@@ -1,6 +1,6 @@
 package baylor.csi5324.careerbridge.controller;
 
-import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.dto.PostingResponse;
 import baylor.csi5324.careerbridge.service.InvalidPostingException;
 import baylor.csi5324.careerbridge.service.JobPostingService;
 import baylor.csi5324.careerbridge.service.PostingStateConflictException;
@@ -28,35 +28,35 @@ public class AdminJobPostingController {
     }
 
     @GetMapping("/pending")
-    public List<JobPosting> openPostingApprovalQueue() {
-        return jobPostingService.openPostingApprovalQueue();
+    public List<PostingResponse> openPostingApprovalQueue() {
+        return jobPostingService.openPostingApprovalQueue().stream().map(PostingResponse::of).toList();
     }
 
     @PostMapping("/{postingId}/approve")
-    public JobPosting approveJobPosting(
+    public PostingResponse approveJobPosting(
             @PathVariable Long postingId,
             @RequestBody(required = false) DecisionRequest request,
             Authentication administrator) {
-        return jobPostingService.approveJobPosting(
-                postingId, administrator.getName(), request == null ? null : request.comment());
+        return PostingResponse.of(jobPostingService.approveJobPosting(
+                postingId, administrator.getName(), request == null ? null : request.comment()));
     }
 
     @PostMapping("/{postingId}/return")
-    public JobPosting returnJobPosting(
+    public PostingResponse returnJobPosting(
             @PathVariable Long postingId,
             @RequestBody DecisionRequest request,
             Authentication administrator) {
-        return jobPostingService.returnJobPosting(
-                postingId, administrator.getName(), request.comment());
+        return PostingResponse.of(jobPostingService.returnJobPosting(
+                postingId, administrator.getName(), request.comment()));
     }
 
     @PostMapping("/{postingId}/reject")
-    public JobPosting rejectJobPosting(
+    public PostingResponse rejectJobPosting(
             @PathVariable Long postingId,
             @RequestBody DecisionRequest request,
             Authentication administrator) {
-        return jobPostingService.rejectJobPosting(
-                postingId, administrator.getName(), request.comment());
+        return PostingResponse.of(jobPostingService.rejectJobPosting(
+                postingId, administrator.getName(), request.comment()));
     }
 
     @ExceptionHandler(InvalidPostingException.class)

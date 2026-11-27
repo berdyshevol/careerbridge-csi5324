@@ -13,13 +13,19 @@ jobs:
     name: Pull request names its ticket
     runs-on: ubuntu-latest
     steps:
-      # The title goes through env, not into the script, so a crafted title cannot run as code
+      # The title and branch go through env, not into the script, so a crafted one cannot run as code
       - env:
           TITLE: ${{ github.event.pull_request.title }}
+          BRANCH: ${{ github.head_ref }}
         run: |
           if [[ "$TITLE" =~ SCRUM-[0-9]+ ]]; then
             echo "Ticket: ${BASH_REMATCH[0]}"
           else
             echo "::error::The title has no Jira key. Start it with SCRUM-NN, for example: SCRUM-76 Add the startApplication endpoint"
+            exit 1
+          fi
+          # Jira links a branch to its ticket by the key in its name (ADR-0008)
+          if [[ ! "$BRANCH" =~ SCRUM-[0-9]+ ]]; then
+            echo "::error::The branch $BRANCH has no Jira key. Name it <name>/SCRUM-NN-<slug>, for example: oleg/SCRUM-76-start-application"
             exit 1
           fi

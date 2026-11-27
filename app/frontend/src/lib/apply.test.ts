@@ -37,6 +37,7 @@ const desk: Desk = {
   applications: [application(1), application(3), application(4)],
   appliedPostingIds: [1, 3, 4, 7], // 7 was withdrawn
   refusal: null,
+  applicationLimit: 5,
   resume: { fileName: "Jordan_Lee_Resume.pdf", uploadDate: "2026-09-30T14:00:00" },
 };
 

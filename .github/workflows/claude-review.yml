@@ -1,12 +1,12 @@
 name: Claude review
 
-# One review comment per pull request. The check turns red when the review lists a must-fix item,
-# so nobody misses it, but it is not a required check: a model can be wrong and must not block the
-# team. Runs on open, not on every push, to spare the subscription; re-run it from the Actions tab
-# after a fix or larger changes.
+# One review comment per run. The check turns red when the review lists a must-fix item, so nobody
+# misses it, but it is not a required check: a model can be wrong and must not block the team.
+# Runs on open and when the base branch changes (a stacked pull request retargeted to main is a new
+# diff), not on every push, to spare the subscription; re-run it from the Actions tab after a fix.
 on:
   pull_request:
-    types: [opened, reopened, ready_for_review]
+    types: [opened, reopened, ready_for_review, edited]
 
 permissions:
   contents: read
@@ -15,7 +15,10 @@ permissions:
 jobs:
   review:
     name: Review the pull request
-    if: github.event.pull_request.draft == false
+    # "edited" also fires for a new title or description; only a new base is a new diff
+    if: >-
+      github.event.pull_request.draft == false &&
+      (github.event.action != 'edited' || github.event.changes.base != null)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -40,9 +43,15 @@ jobs:
             echo '{}' > "$RUNNER_TEMP/ticket.json"
           fi
 
-      # Pinned to a commit: this action receives the subscription token
+      # Only a comment of this run is its verdict, not one left for an earlier diff
+      - name: Note the start
+        run: echo "SINCE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      # Pinned to a commit: this action receives the subscription token. A failed run goes on to the
+      # retry; the verdict step turns the check red if neither posted
       - uses: anthropics/claude-code-action@a26b07d8c778b0c43f64618e5fd29fd0f8af72e8 # v1.0.250
-        with:
+        continue-on-error: true
+        with: &review
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_args: >-
@@ -58,7 +67,7 @@ jobs:
             Read the change with `gh pr view` and `gh pr diff`. The Jira ticket named in the title
             is in ${{ runner.temp }}/ticket.json (`{}` when there is none).
 
-            Check four things, and report only real problems with file and line:
+            Check these things, and report only real problems with file and line:
             1. Code: correctness bugs in the changed lines — wrong logic, unhandled failures,
                broken tests, security holes. Not style.
             2. Ticket: does the change do what the ticket asks? Does it do more? If the ticket has
@@ -77,28 +86,52 @@ jobs:
                entity in app/backend/src/main/java/**/model/ that changes the schema (a field, a
                column, an enum value) without a new migration in
                app/backend/src/main/resources/db/migration/ contradicts ADR-0014.
-            4. Screens: only if files under app/frontend/src/app/ or app/frontend/src/components/
+            4. Layers: only if files under app/backend/src/main/ changed — check them against
+               "Backend layers" in spec/architecture.md and the refusal rule in spec/design.md
+               (section 6). A layer calls only the layer below it; a service, repository or entity
+               knows nothing of HTTP (no @ResponseStatus, ResponseEntity, HttpStatus, MultipartFile
+               or servlet types); a refusal is an exception the controller turns into a status; a
+               collection a response needs is fetched by the repository, not forced loaded in a
+               service or controller (a `.size()` or getter called only for its side effect). A
+               clear breach is "Must fix", with the line of spec/architecture.md or spec/design.md
+               it breaks.
+            5. Screens: only if files under app/frontend/src/app/ or app/frontend/src/components/
                changed — apply the rule table of .claude/skills/screen-review/SKILL.md (ADR-0004) to
                the changed pages by reading the code. You cannot run lint, tests or take
-               screenshots here; skip those rows and say so in one line under "Fine".
+               screenshots here; skip those rows and say so in one line under "Fine". Two cases
+               are always "Must fix" (CLAUDE.md, ADR-0011): a new page.tsx whose address is not in
+               "Screens by role" of spec/screens/README.md, and a pull request description without
+               a `## Screens` section.
 
             Post exactly one comment with `gh pr comment`, in plain English:
             "## Claude review", then sections "Must fix", "Should fix" and "Fine" (one line each
             for what passed), each finding as `file:line — what is wrong — the fix`. End with one
-            line: ready to merge, or not and why. For a pull request that changes a screen, say "ready
-            to merge once screen-review screenshots are attached" unless the description has a
-            `## Screens` section. If nothing is wrong, say so in one line. The very last line of the
+            line: ready to merge, or not and why. If nothing is wrong, say so in one line. The very last line of the
             comment is `<!-- must-fix: N -->`, where N is the number of items under "Must fix" (0 when
             there are none).
 
-      - name: Turn red on a must-fix item
-        env:
+      # The model sometimes ends without posting (PR #166); one more try before the check turns red
+      - name: Look for the comment
+        id: posted
+        env: &verdict-env
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
         run: |
           # Only the bot's own comments count: anyone could post a "## Claude review" with a 0
           body=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json comments \
-            --jq '[.comments[] | select(.author.login == "github-actions" and (.body | startswith("## Claude review")))] | last | .body // ""')
+            --jq '[.comments[] | select(.author.login == "github-actions" and .createdAt >= "'"$SINCE"'" and (.body | startswith("## Claude review")))] | last | .body // ""')
+          grep -qE '<!-- must-fix: [0-9]+ -->' <<<"$body" && echo "found=true" >> "$GITHUB_OUTPUT" || true
+
+      - name: Review again
+        if: steps.posted.outputs.found != 'true'
+        uses: anthropics/claude-code-action@a26b07d8c778b0c43f64618e5fd29fd0f8af72e8 # v1.0.250
+        with: *review
+
+      - name: Turn red on a must-fix item
+        env: *verdict-env
+        run: |
+          body=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json comments \
+            --jq '[.comments[] | select(.author.login == "github-actions" and .createdAt >= "'"$SINCE"'" and (.body | startswith("## Claude review")))] | last | .body // ""')
           count=$(grep -oE '<!-- must-fix: [0-9]+ -->' <<<"$body" | grep -oE '[0-9]+' | tail -n 1 || true)
           if [[ -z "$count" ]]; then
             echo "::error::The review left no verdict. Read the pull request yourself or re-run the review."

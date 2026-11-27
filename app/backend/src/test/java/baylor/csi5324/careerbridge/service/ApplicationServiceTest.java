@@ -22,7 +22,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
@@ -643,7 +642,7 @@ class ApplicationServiceTest {
     }
 
     private void upload(String email, String fileName, byte[] content) {
-        applicantProfileService.uploadResume(email, new MockMultipartFile("file", fileName, "application/pdf", content));
+        applicantProfileService.uploadResume(email, fileName, "application/pdf", content);
     }
 
     // From the database itself, so the snapshot went through its columns

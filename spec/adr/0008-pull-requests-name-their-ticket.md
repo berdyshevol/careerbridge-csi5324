@@ -14,8 +14,8 @@ rules.
 ## Decision
 
 - **Every pull request names its ticket.** Its title starts with `SCRUM-NN`; the branch is
-  `<name>/SCRUM-NN-<slug>`. The required **Ticket** check fails a title without a key. No ticket,
-  no pull request.
+  `<name>/SCRUM-NN-<slug>`. The required **Ticket** check fails a title or a branch without a key
+  (the branch since 2026-11-26, SCRUM-260). No ticket, no pull request.
 - **Jira follows the pull request.** The **Jira** workflow moves the ticket to In Review when the
   pull request opens (or its title is fixed) and to Done when it merges. Nobody moves statuses by
   hand. A workflow does it rather than a Jira automation rule, whose runs the free plan limits.
@@ -28,9 +28,12 @@ rules.
 - **Claude reviews every pull request:** one comment on bugs, the ticket, the specification and
   ADRs, and the screen rules, read from the code. A clear contradiction of an accepted ADR is a
   must-fix item unless the same pull request adds the ADR that replaces it; a doubtful one is left
-  to a person (amended 2026-11-26, SCRUM-252). Its check turns red when the comment lists a
-  must-fix item, so nobody misses it (amended 2026-10-28), but it is not a required check and never
-  blocks a merge, because a model can be wrong. It does not replace the `screen-review` skill,
+  to a person (amended 2026-11-26, SCRUM-252). A breach of the backend layers
+  ([architecture.md](../architecture.md), [design.md](../design.md)), a new page outside the screen
+  catalog, and a screen change without a `## Screens` section are must-fix items too (amended
+  2026-11-26, SCRUM-258). Its check turns red when the comment lists a must-fix item, so nobody
+  misses it (amended 2026-10-28), but it is not a required check and never blocks a merge, because
+  a model can be wrong. It does not replace the `screen-review` skill,
   which runs the screen and takes the screenshots.
 
 ## Consequences
@@ -43,4 +46,6 @@ rules.
   stay in environments that only `main` can use.
 - Status changes appear in Jira under the account of `JIRA_EMAIL`, not the pull request's author.
 - The review runs on Oleg's Claude subscription and counts toward its limits, so it runs when a
-  pull request opens, not on every push.
+  pull request opens or its base branch changes, not on every push. Only a comment of the same run
+  is its verdict, and a run that posts none tries once more before its check turns red (amended
+  2026-11-26, SCRUM-255).

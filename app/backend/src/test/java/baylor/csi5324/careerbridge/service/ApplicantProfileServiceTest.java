@@ -9,7 +9,6 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
@@ -184,9 +183,9 @@ class ApplicantProfileServiceTest {
 
     @Test
     void storesAnUploadedPdfAsTheResumeOnFile() throws Exception {
-        MockMultipartFile file = pdf("Jordan_Lee_CV.pdf", 2048);
+        Upload file = pdf("Jordan_Lee_CV.pdf", 2048);
 
-        Resume uploaded = applicantProfileService.uploadResume("Jordan.Lee@Example.com", file);
+        Resume uploaded = upload("Jordan.Lee@Example.com", file);
 
         assertNotNull(uploaded.getUploadDate());
         // From the database itself, so the content went through its column
@@ -196,7 +195,7 @@ class ApplicantProfileServiceTest {
         assertEquals("Jordan_Lee_CV.pdf", onFile.getFileName());
         assertEquals(PDF, onFile.getFileType());
         assertEquals(2048L, onFile.getFileSize());
-        assertArrayEquals(file.getBytes(), onFile.getContent());
+        assertArrayEquals(file.content(), onFile.getContent());
         assertEquals(uploaded.getUploadDate(), onFile.getUploadDate());
     }
 
@@ -204,7 +203,7 @@ class ApplicantProfileServiceTest {
     void storesAnUploadedDocx() {
         // A browser that does not know the type declares application/octet-stream
         for (String declaredType : new String[]{DOCX, "application/octet-stream"}) {
-            applicantProfileService.uploadResume(JORDAN, new MockMultipartFile("file", "Jordan Lee.DOCX",
+            upload(JORDAN, new Upload("Jordan Lee.DOCX",
                     declaredType, startingWith("PK\u0003\u0004", 4096)));
 
             Resume onFile = applicantProfileService.viewProfile(JORDAN).getResume();
@@ -215,7 +214,7 @@ class ApplicantProfileServiceTest {
 
     @Test
     void acceptsAFileOfExactly5MB() {
-        applicantProfileService.uploadResume(JORDAN, pdf("cv.pdf", Resume.MAX_FILE_SIZE));
+        upload(JORDAN, pdf("cv.pdf", Resume.MAX_FILE_SIZE));
         entityManager.flush();
         entityManager.clear();
 
@@ -224,17 +223,17 @@ class ApplicantProfileServiceTest {
 
     @Test
     void keepsOnlyTheFileNameOfAPath() {
-        applicantProfileService.uploadResume(JORDAN, pdf("C:\\Users\\jordan\\cv.pdf", 100));
+        upload(JORDAN, pdf("C:\\Users\\jordan\\cv.pdf", 100));
 
         assertEquals("cv.pdf", applicantProfileService.viewProfile(JORDAN).getResume().getFileName());
     }
 
     @Test
     void anUploadReplacesThePreviousResume() {
-        Resume first = applicantProfileService.uploadResume(JORDAN, pdf("first.pdf", 100));
+        Resume first = upload(JORDAN, pdf("first.pdf", 100));
         entityManager.flush();
 
-        Resume second = applicantProfileService.uploadResume(JORDAN, pdf("second.pdf", 200));
+        Resume second = upload(JORDAN, pdf("second.pdf", 200));
         entityManager.flush();
         entityManager.clear();
 
@@ -245,16 +244,16 @@ class ApplicantProfileServiceTest {
 
     @Test
     void refusesAFileThatIsNotAPdfOrDocx() {
-        assertResumeRefused(new MockMultipartFile("file", "notes.txt", "text/plain",
+        assertResumeRefused(new Upload("notes.txt", "text/plain",
                 "Jordan Lee".getBytes(StandardCharsets.UTF_8)), ApplicantProfileService.RESUME_WRONG_TYPE);
         // A renamed file: the name says PDF, the content does not
-        assertResumeRefused(new MockMultipartFile("file", "notes.pdf", PDF,
+        assertResumeRefused(new Upload("notes.pdf", PDF,
                 "Jordan Lee".getBytes(StandardCharsets.UTF_8)), ApplicantProfileService.RESUME_WRONG_TYPE);
         // The content is a PDF, but the browser says it is something else
-        assertResumeRefused(new MockMultipartFile("file", "cv.pdf", "text/plain", startingWith("%PDF-1.4", 100)),
+        assertResumeRefused(new Upload("cv.pdf", "text/plain", startingWith("%PDF-1.4", 100)),
                 ApplicantProfileService.RESUME_WRONG_TYPE);
         // A DOCX is a zip, but not every zip is a DOCX by name
-        assertResumeRefused(new MockMultipartFile("file", "cv.zip", "application/zip", startingWith("PK\u0003\u0004", 100)),
+        assertResumeRefused(new Upload("cv.zip", "application/zip", startingWith("PK\u0003\u0004", 100)),
                 ApplicantProfileService.RESUME_WRONG_TYPE);
     }
 
@@ -265,7 +264,7 @@ class ApplicantProfileServiceTest {
 
     @Test
     void refusesAnEmptyFile() {
-        assertResumeRefused(new MockMultipartFile("file", "cv.pdf", PDF, new byte[0]),
+        assertResumeRefused(new Upload("cv.pdf", PDF, new byte[0]),
                 ApplicantProfileService.RESUME_EMPTY);
     }
 
@@ -285,11 +284,11 @@ class ApplicantProfileServiceTest {
     @Test
     void anAccountThatNoLongerExistsCannotUpload() {
         assertThrows(AccountGoneException.class,
-                () -> applicantProfileService.uploadResume("gone@example.com", pdf("cv.pdf", 100)));
+                () -> upload("gone@example.com", pdf("cv.pdf", 100)));
     }
 
-    private static MockMultipartFile pdf(String fileName, int size) {
-        return new MockMultipartFile("file", fileName, PDF, startingWith("%PDF-1.4", size));
+    private static Upload pdf(String fileName, int size) {
+        return new Upload(fileName, PDF, startingWith("%PDF-1.4", size));
     }
 
     private static byte[] startingWith(String signature, int size) {
@@ -300,13 +299,20 @@ class ApplicantProfileServiceTest {
         return content;
     }
 
+    private record Upload(String fileName, String contentType, byte[] content) {
+    }
+
+    private Resume upload(String email, Upload file) {
+        return applicantProfileService.uploadResume(email, file.fileName(), file.contentType(), file.content());
+    }
+
     // Extension 6a: the resume on file stays as it was
-    private void assertResumeRefused(MockMultipartFile file, String reason) {
-        Resume current = applicantProfileService.uploadResume(JORDAN, pdf("current.pdf", 100));
+    private void assertResumeRefused(Upload file, String reason) {
+        Resume current = upload(JORDAN, pdf("current.pdf", 100));
         entityManager.flush();
 
         ResumeRefusedException refused = assertThrows(ResumeRefusedException.class,
-                () -> applicantProfileService.uploadResume(JORDAN, file));
+                () -> upload(JORDAN, file));
 
         assertEquals(reason, refused.getMessage());
         entityManager.flush();

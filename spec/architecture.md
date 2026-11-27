@@ -17,7 +17,8 @@ JSON. The backend lists the frontend addresses that may call it (CORS).
 
 ### Backend layers
 
-A layer calls only the layer below it.
+A layer calls only the layer below it, and only a controller knows about HTTP. The test
+`LayersTest` (`app/backend/src/test`) checks both on every pull request.
 
 | Layer | Package | Responsibility |
 | --- | --- | --- |
@@ -33,10 +34,12 @@ there is the shape of one request or one response:
   itself (an id, a status, a date, the owner). `CreateJobPostingRequest` is the first one: a new
   posting gets its status and its date from the service, never from the client.
 - **Response record:** when a screen shows data from several classes, or the actor must not see
-  every attribute of the entity (for example another user's contact details).
+  every attribute of the entity (for example another user's contact details). Postings always go
+  out as one: `PublicPosting` on the public board, `PostingResponse` to the recruiter and the
+  administrator, so a field added to `JobPosting` stays inside until a record names it.
 - **No record:** when an operation takes only an id, a token, a keyword or one value, the
   controller reads it from the path or the query; when an entity has nothing to hide, the
-  controller returns it as it is, as `/api/postings` does with `JobPosting`.
+  controller returns it as it is.
 
 ### Data
 

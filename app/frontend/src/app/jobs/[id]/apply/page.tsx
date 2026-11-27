@@ -67,6 +67,7 @@ export default async function ApplyPage({ params }: { params: Promise<{ id: stri
         appliedPostingIds: applications.appliedPostingIds,
         resume: start.resume,
         refusal: start.refusal?.reason ?? null,
+        applicationLimit: start.applicationLimit,
       }}
     />
   );

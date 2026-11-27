@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { ApplicationRefused, formatDate, SessionEnded, submitApplication, type JobPosting } from "@/lib/api";
 import { checkApplication, type Desk } from "@/lib/apply";
-import { APPLICATION_LIMIT } from "@/lib/sampleDesk";
 import { withNext, type Session } from "@/lib/session";
 import { useEndSession } from "@/lib/useEndSession";
 import PageTitle from "./PageTitle";
@@ -20,7 +19,7 @@ export default function ApplyForm({ posting, session, desk }: { posting: JobPost
   const [activeCount, setActiveCount] = useState<number | null>(null); // set once submitted
 
   if (activeCount !== null) {
-    return <Submitted posting={posting} activeCount={activeCount} />;
+    return <Submitted posting={posting} activeCount={activeCount} limit={desk.applicationLimit} />;
   }
 
   const check = checkApplication(posting, desk);
@@ -135,7 +134,7 @@ export default function ApplyForm({ posting, session, desk }: { posting: JobPost
           </p>
         </ResumeOnFile>
 
-        <SlotMeter used={desk.applications.length} total={APPLICATION_LIMIT} />
+        <SlotMeter used={desk.applications.length} total={desk.applicationLimit} />
       </aside>
     </form>
   );
@@ -195,7 +194,7 @@ function Blocked({
       return (
         <div role="status" className="alert alert-warning flex-col items-start">
           <p>
-            You have {APPLICATION_LIMIT} active applications, the most allowed at once. A slot
+            You have {check.limit} active applications, the most allowed at once. A slot
             frees up when you withdraw one or it reaches Hired, Rejected or Offer Declined.
           </p>
           <ul className="list-inside list-disc">
@@ -214,7 +213,7 @@ function Blocked({
   }
 }
 
-function Submitted({ posting, activeCount }: { posting: JobPosting; activeCount: number }) {
+function Submitted({ posting, activeCount, limit }: { posting: JobPosting; activeCount: number; limit: number }) {
   return (
     <article className="card border border-base-300 bg-base-100">
       <div className="card-body gap-5">
@@ -233,7 +232,7 @@ function Submitted({ posting, activeCount }: { posting: JobPosting; activeCount:
           </svg>
         </div>
         <PageTitle
-          subtitle={`${posting.title} at ${posting.organization.name}. You now have ${activeCount} of ${APPLICATION_LIMIT} active applications.`}
+          subtitle={`${posting.title} at ${posting.organization.name}. You now have ${activeCount} of ${limit} active applications.`}
         >
           Application submitted
         </PageTitle>

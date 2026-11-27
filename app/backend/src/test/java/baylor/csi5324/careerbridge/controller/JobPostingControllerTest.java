@@ -40,7 +40,8 @@ class JobPostingControllerTest {
 
     private final JobPostingService jobPostingService = mock(JobPostingService.class);
     private final MockMvc mockMvc =
-            MockMvcBuilders.standaloneSetup(new JobPostingController(jobPostingService)).build();
+            MockMvcBuilders.standaloneSetup(new JobPostingController(jobPostingService))
+                    .setControllerAdvice(new ServiceExceptionHandlers()).build();
 
     @Test
     void searchPassesEveryQueryCriterionToTheService() throws Exception {
@@ -180,6 +181,23 @@ class JobPostingControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.recruiter").doesNotExist())
                 .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("secret-hash"))));
+    }
+
+    // The recruiter's answers are a PostingResponse: the comment they act on, not who approved it (SCRUM-262)
+    @Test
+    void theRecruitersAnswersLeaveOutWhoApprovedItAndTheOrganizationsStatus() throws Exception {
+        when(jobPostingService.createPosting(any(), any())).thenReturn(approvedPosting());
+        when(jobPostingService.updatePosting(eq(7L), any(), eq("owner@example.com"))).thenReturn(approvedPosting());
+
+        for (var request : List.of(aPosting(), put("/api/postings/7").principal(() -> "owner@example.com")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"title\": \"Backend Developer\", \"numberOfOpenings\": 2}"))) {
+            mockMvc.perform(request)
+                    .andExpect(jsonPath("$.reviewComment").value("Looks good"))
+                    .andExpect(jsonPath("$.organization.name").value("Brazos Analytics"))
+                    .andExpect(jsonPath("$.approvedBy").doesNotExist())
+                    .andExpect(jsonPath("$.approvedAt").doesNotExist())
+                    .andExpect(jsonPath("$.organization.organizationStatus").doesNotExist());
+        }
     }
 
     @Test
