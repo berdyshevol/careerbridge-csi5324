@@ -3,8 +3,7 @@
 // come from startApplication; the closed and already-applied ones are worked out
 // here because it does not flag them.
 
-import { isOpen, type JobPosting, type Resume, type StartRefusalReason } from "./api";
-import { type DeskApplication } from "./sampleDesk";
+import { isOpen, type DeskApplication, type JobPosting, type Resume, type StartRefusalReason } from "./api";
 
 export type Desk = {
   applications: DeskApplication[]; // the active applications

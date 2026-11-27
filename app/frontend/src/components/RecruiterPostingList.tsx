@@ -9,7 +9,7 @@ import {
   type RecruiterPostingRow,
   type RecruiterPostings,
 } from "@/lib/api";
-import { STAGES } from "@/lib/sampleDesk";
+import { STAGES } from "@/lib/stages";
 import AccessNotice from "./AccessNotice";
 import EmptyState from "./EmptyState";
 import Loading from "./Loading";

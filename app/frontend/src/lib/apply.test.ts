@@ -1,6 +1,6 @@
 import type { JobPosting } from "./api";
 import { checkApplication, type Desk } from "./apply";
-import type { DeskApplication } from "./sampleDesk";
+import type { DeskApplication } from "./api";
 
 function posting(overrides: Partial<JobPosting> = {}): JobPosting {
   return {

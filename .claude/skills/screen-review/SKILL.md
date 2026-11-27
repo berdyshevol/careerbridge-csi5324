@@ -31,7 +31,7 @@ do not edit unless asked.
    | Names from the specification | Fields and operations named as in `spec/domain-model.md` and `spec/ssd-and-contracts.md`. |
    | Copy | Plain sentences; a message says what went wrong and the way out; no "TBD". |
    | Tests | A Vitest file for the component and a Playwright test for the main flow (`app/frontend/e2e/`). |
-   | Sample data marked | Anything not from the backend comes from `src/lib/sampleDesk.ts` or a file marked `STAND-IN`, and the screen says so. |
+   | Sample data marked | Anything not from the backend is marked `STAND-IN`, and the screen says so. `src/lib/sampleDesk.ts` only fills `/styleguide` (lint refuses it elsewhere). |
 
 4. **Look at it.** Run your own copies on free ports, so another app on 3000 or 8080 is never
    what you photograph (the backend allows the port through `FRONTEND_ORIGINS`):

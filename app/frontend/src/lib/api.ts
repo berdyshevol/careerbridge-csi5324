@@ -1,4 +1,4 @@
-import { STAGES, type ApplicationStage, type DeskApplication, type Stage } from "./sampleDesk";
+import { STAGES, type ApplicationStage, type Stage } from "./stages";
 import type { Role, Session } from "./session";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -344,6 +344,19 @@ export type ApplicationSummary = {
   active: boolean;
   dateApplied: string;
   lastStageChangeDate: string;
+};
+
+// An active application, as the applicant desk lists it
+export type DeskApplication = {
+  applicationId: number;
+  postingId: number; // jobPostId of the posting applied to
+  title: string;
+  organizationName: string;
+  location: string;
+  employmentType: string;
+  applicationStatus: Stage;
+  dateApplied?: string;
+  lastStageChangeDate?: string;
 };
 
 // CO-05.1. Active applications come first from the backend along with the active count;
