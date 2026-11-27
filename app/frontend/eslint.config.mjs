@@ -2,6 +2,30 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
+const ONE_UI_LIBRARY = {
+  group: [
+    "@mui/*",
+    "antd",
+    "antd/*",
+    "@chakra-ui/*",
+    "react-bootstrap",
+    "bootstrap",
+    "@radix-ui/*",
+    "@headlessui/*",
+    "flowbite*",
+    "@mantine/*",
+    "styled-components",
+    "@emotion/*",
+  ],
+  message: "One component library: daisyUI through Tailwind classes, and the components in src/components/ (ADR-0004).",
+};
+
+// A screen that imports sample data shows made-up numbers as if they were real (ADR-0004)
+const SAMPLE_DATA = {
+  group: ["@/lib/sampleDesk", "**/sampleDesk"],
+  message: "Sample data only fills /styleguide. Take the data from the backend through src/lib/api.ts.",
+};
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -52,32 +76,13 @@ const eslintConfig = defineConfig([
             "Do not swallow an error: show the user what went wrong, or let it fail. A hidden backend refusal is how a screen says 'saved' when nothing was.",
         },
       ],
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            {
-              group: [
-                "@mui/*",
-                "antd",
-                "antd/*",
-                "@chakra-ui/*",
-                "react-bootstrap",
-                "bootstrap",
-                "@radix-ui/*",
-                "@headlessui/*",
-                "flowbite*",
-                "@mantine/*",
-                "styled-components",
-                "@emotion/*",
-              ],
-              message:
-                "One component library: daisyUI through Tailwind classes, and the components in src/components/ (ADR-0004).",
-            },
-          ],
-        },
-      ],
+      "no-restricted-imports": ["error", { patterns: [ONE_UI_LIBRARY, SAMPLE_DATA] }],
     },
+  },
+  // The catalogue of blocks is the one place that shows sample data
+  {
+    files: ["src/app/styleguide/**"],
+    rules: { "no-restricted-imports": ["error", { patterns: [ONE_UI_LIBRARY] }] },
   },
   // A step definition takes every value its Gherkin step passes, even one it does not use
   {

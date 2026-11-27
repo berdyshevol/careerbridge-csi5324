@@ -23,7 +23,8 @@ import { StageBadge, StageProgress } from "@/components/StageBadge";
 import StageTimeline from "@/components/StageTimeline";
 import UserList from "@/components/UserList";
 import { formatDate, type JobPosting } from "@/lib/api";
-import { ALL_STAGES, APPLICATION_LIMIT, STAGES, applications, offer } from "@/lib/sampleDesk";
+import { APPLICATION_LIMIT, applications, offer } from "@/lib/sampleDesk";
+import { ALL_STAGES, STAGES } from "@/lib/stages";
 import { ROLE_THEMES, type SessionUser } from "@/lib/session";
 
 // Every block here is the real component, so this page cannot drift from the
@@ -213,7 +214,7 @@ export default function StyleguidePage() {
             <MembershipBadge status="INFORMATION_REQUESTED" label="Information requested" />
           </div>
         </Block>
-        <Block title="Stage badge" use="<StageBadge stage={…} onWarning? /> — stages come from ALL_STAGES in src/lib/sampleDesk.ts">
+        <Block title="Stage badge" use="<StageBadge stage={…} onWarning? /> — stages come from ALL_STAGES in src/lib/stages.ts">
           <div className="flex flex-wrap gap-3">
             {ALL_STAGES.map((stage) => (
               <StageBadge key={stage} stage={stage} />

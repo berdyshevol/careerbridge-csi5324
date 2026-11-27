@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { formatDate, type ApplicationSummary } from "@/lib/api";
-import type { ApplicationStage } from "@/lib/sampleDesk";
+import type { ApplicationStage } from "@/lib/stages";
 import { StageBadge } from "./StageBadge";
 
 export type ApplicationRowItem = Pick<

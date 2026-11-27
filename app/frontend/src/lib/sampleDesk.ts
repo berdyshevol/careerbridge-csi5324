@@ -1,27 +1,9 @@
-// SAMPLE DATA for the applicant desk. The backend cannot answer the offer yet: it comes
-// with UC-07; replace it with an API call in src/lib/api.ts then. The screens read the
-// applications from viewApplications; `applications` below only fills /styleguide.
+// SAMPLE DATA that only fills /styleguide; eslint keeps it out of every other file. The
+// screens read applications, offers and the application limit from the backend (src/lib/api.ts).
 
-export const STAGES = ["Applied", "Screening", "Interview", "Offer"] as const;
-export type Stage = (typeof STAGES)[number];
-
-const CLOSED_STAGES = ["Hired", "Rejected", "Withdrawn", "Offer Declined"] as const;
-export const ALL_STAGES = [...STAGES, ...CLOSED_STAGES] as const;
-export type ApplicationStage = (typeof ALL_STAGES)[number];
+import type { DeskApplication } from "./api";
 
 export const APPLICATION_LIMIT = 5;
-
-export type DeskApplication = {
-  applicationId: number;
-  postingId: number; // jobPostId of the posting applied to
-  title: string;
-  organizationName: string;
-  location: string;
-  employmentType: string;
-  applicationStatus: Stage;
-  dateApplied?: string;
-  lastStageChangeDate?: string;
-};
 
 export const applications: DeskApplication[] = [
   {

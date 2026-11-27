@@ -1,4 +1,4 @@
-import { STAGES, type ApplicationStage, type Stage } from "@/lib/sampleDesk";
+import { STAGES, type ApplicationStage, type Stage } from "@/lib/stages";
 import { TONES } from "./statusTones";
 
 const chipStyle: Record<ApplicationStage, string> = {

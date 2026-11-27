@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { ALL_STAGES, STAGES } from "@/lib/sampleDesk";
+import { ALL_STAGES, STAGES } from "@/lib/stages";
 import { StageBadge, StageProgress } from "./StageBadge";
 
 describe("StageBadge", () => {
