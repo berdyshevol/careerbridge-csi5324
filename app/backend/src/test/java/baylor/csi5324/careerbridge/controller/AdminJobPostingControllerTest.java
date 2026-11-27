@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -67,7 +68,13 @@ class AdminJobPostingControllerTest {
                         .with(asAdministrator()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.postStatus").value("PUBLISHED"))
-                .andExpect(jsonPath("$.approvedBy").value("root@careerbridge.example"));
+                // Who approved it is recorded, not sent: the answer is a PostingResponse (SCRUM-262)
+                .andExpect(jsonPath("$.approvedBy").doesNotExist())
+                .andExpect(jsonPath("$.organization.organizationStatus").doesNotExist())
+                .andExpect(jsonPath("$.organization.name").exists());
+
+        assertThat(jobPostingRepository.findById(pending.getJobPostId()).orElseThrow().getApprovedBy())
+                .isEqualTo("root@careerbridge.example");
     }
 
     @Test
