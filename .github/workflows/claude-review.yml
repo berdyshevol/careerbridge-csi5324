@@ -47,8 +47,10 @@ jobs:
       - name: Note the start
         run: echo "SINCE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
 
-      # Pinned to a commit: this action receives the subscription token
+      # Pinned to a commit: this action receives the subscription token. A failed run goes on to the
+      # retry; the verdict step turns the check red if neither posted
       - uses: anthropics/claude-code-action@a26b07d8c778b0c43f64618e5fd29fd0f8af72e8 # v1.0.250
+        continue-on-error: true
         with: &review
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
