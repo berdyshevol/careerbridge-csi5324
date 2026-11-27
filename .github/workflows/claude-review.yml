@@ -1,12 +1,12 @@
 name: Claude review
 
-# One review comment per pull request. The check turns red when the review lists a must-fix item,
-# so nobody misses it, but it is not a required check: a model can be wrong and must not block the
-# team. Runs on open, not on every push, to spare the subscription; re-run it from the Actions tab
-# after a fix or larger changes.
+# One review comment per run. The check turns red when the review lists a must-fix item, so nobody
+# misses it, but it is not a required check: a model can be wrong and must not block the team.
+# Runs on open and when the base branch changes (a stacked pull request retargeted to main is a new
+# diff), not on every push, to spare the subscription; re-run it from the Actions tab after a fix.
 on:
   pull_request:
-    types: [opened, reopened, ready_for_review]
+    types: [opened, reopened, ready_for_review, edited]
 
 permissions:
   contents: read
@@ -15,7 +15,10 @@ permissions:
 jobs:
   review:
     name: Review the pull request
-    if: github.event.pull_request.draft == false
+    # "edited" also fires for a new title or description; only a new base is a new diff
+    if: >-
+      github.event.pull_request.draft == false &&
+      (github.event.action != 'edited' || github.event.changes.base != null)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -40,9 +43,15 @@ jobs:
             echo '{}' > "$RUNNER_TEMP/ticket.json"
           fi
 
-      # Pinned to a commit: this action receives the subscription token
+      # Only a comment of this run is its verdict, not one left for an earlier diff
+      - name: Note the start
+        run: echo "SINCE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      # Pinned to a commit: this action receives the subscription token. A failed run goes on to the
+      # retry; the verdict step turns the check red if neither posted
       - uses: anthropics/claude-code-action@a26b07d8c778b0c43f64618e5fd29fd0f8af72e8 # v1.0.250
-        with:
+        continue-on-error: true
+        with: &review
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_args: >-
@@ -91,14 +100,28 @@ jobs:
             comment is `<!-- must-fix: N -->`, where N is the number of items under "Must fix" (0 when
             there are none).
 
-      - name: Turn red on a must-fix item
-        env:
+      # The model sometimes ends without posting (PR #166); one more try before the check turns red
+      - name: Look for the comment
+        id: posted
+        env: &verdict-env
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
         run: |
           # Only the bot's own comments count: anyone could post a "## Claude review" with a 0
           body=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json comments \
-            --jq '[.comments[] | select(.author.login == "github-actions" and (.body | startswith("## Claude review")))] | last | .body // ""')
+            --jq '[.comments[] | select(.author.login == "github-actions" and .createdAt >= "'"$SINCE"'" and (.body | startswith("## Claude review")))] | last | .body // ""')
+          grep -qE '<!-- must-fix: [0-9]+ -->' <<<"$body" && echo "found=true" >> "$GITHUB_OUTPUT" || true
+
+      - name: Review again
+        if: steps.posted.outputs.found != 'true'
+        uses: anthropics/claude-code-action@a26b07d8c778b0c43f64618e5fd29fd0f8af72e8 # v1.0.250
+        with: *review
+
+      - name: Turn red on a must-fix item
+        env: *verdict-env
+        run: |
+          body=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json comments \
+            --jq '[.comments[] | select(.author.login == "github-actions" and .createdAt >= "'"$SINCE"'" and (.body | startswith("## Claude review")))] | last | .body // ""')
           count=$(grep -oE '<!-- must-fix: [0-9]+ -->' <<<"$body" | grep -oE '[0-9]+' | tail -n 1 || true)
           if [[ -z "$count" ]]; then
             echo "::error::The review left no verdict. Read the pull request yourself or re-run the review."
