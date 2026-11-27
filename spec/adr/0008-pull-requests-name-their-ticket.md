@@ -43,4 +43,6 @@ rules.
   stay in environments that only `main` can use.
 - Status changes appear in Jira under the account of `JIRA_EMAIL`, not the pull request's author.
 - The review runs on Oleg's Claude subscription and counts toward its limits, so it runs when a
-  pull request opens, not on every push.
+  pull request opens or its base branch changes, not on every push. Only a comment of the same run
+  is its verdict, and a run that posts none tries once more before its check turns red (amended
+  2026-11-26, SCRUM-255).
