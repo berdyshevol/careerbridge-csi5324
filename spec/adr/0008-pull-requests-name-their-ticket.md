@@ -28,9 +28,12 @@ rules.
 - **Claude reviews every pull request:** one comment on bugs, the ticket, the specification and
   ADRs, and the screen rules, read from the code. A clear contradiction of an accepted ADR is a
   must-fix item unless the same pull request adds the ADR that replaces it; a doubtful one is left
-  to a person (amended 2026-11-26, SCRUM-252). Its check turns red when the comment lists a
-  must-fix item, so nobody misses it (amended 2026-10-28), but it is not a required check and never
-  blocks a merge, because a model can be wrong. It does not replace the `screen-review` skill,
+  to a person (amended 2026-11-26, SCRUM-252). A breach of the backend layers
+  ([architecture.md](../architecture.md), [design.md](../design.md)), a new page outside the screen
+  catalog, and a screen change without a `## Screens` section are must-fix items too (amended
+  2026-11-26, SCRUM-258). Its check turns red when the comment lists a must-fix item, so nobody
+  misses it (amended 2026-10-28), but it is not a required check and never blocks a merge, because
+  a model can be wrong. It does not replace the `screen-review` skill,
   which runs the screen and takes the screenshots.
 
 ## Consequences

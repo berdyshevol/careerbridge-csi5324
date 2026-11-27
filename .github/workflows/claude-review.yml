@@ -67,7 +67,7 @@ jobs:
             Read the change with `gh pr view` and `gh pr diff`. The Jira ticket named in the title
             is in ${{ runner.temp }}/ticket.json (`{}` when there is none).
 
-            Check four things, and report only real problems with file and line:
+            Check these things, and report only real problems with file and line:
             1. Code: correctness bugs in the changed lines — wrong logic, unhandled failures,
                broken tests, security holes. Not style.
             2. Ticket: does the change do what the ticket asks? Does it do more? If the ticket has
@@ -86,17 +86,27 @@ jobs:
                entity in app/backend/src/main/java/**/model/ that changes the schema (a field, a
                column, an enum value) without a new migration in
                app/backend/src/main/resources/db/migration/ contradicts ADR-0014.
-            4. Screens: only if files under app/frontend/src/app/ or app/frontend/src/components/
+            4. Layers: only if files under app/backend/src/main/ changed — check them against
+               "Backend layers" in spec/architecture.md and the refusal rule in spec/design.md
+               (section 6). A layer calls only the layer below it; a service, repository or entity
+               knows nothing of HTTP (no @ResponseStatus, ResponseEntity, HttpStatus, MultipartFile
+               or servlet types); a refusal is an exception the controller turns into a status; a
+               collection a response needs is fetched by the repository, not forced loaded in a
+               service or controller (a `.size()` or getter called only for its side effect). A
+               clear breach is "Must fix", with the line of spec/architecture.md or spec/design.md
+               it breaks.
+            5. Screens: only if files under app/frontend/src/app/ or app/frontend/src/components/
                changed — apply the rule table of .claude/skills/screen-review/SKILL.md (ADR-0004) to
                the changed pages by reading the code. You cannot run lint, tests or take
-               screenshots here; skip those rows and say so in one line under "Fine".
+               screenshots here; skip those rows and say so in one line under "Fine". Two cases
+               are always "Must fix" (CLAUDE.md, ADR-0011): a new page.tsx whose address is not in
+               "Screens by role" of spec/screens/README.md, and a pull request description without
+               a `## Screens` section.
 
             Post exactly one comment with `gh pr comment`, in plain English:
             "## Claude review", then sections "Must fix", "Should fix" and "Fine" (one line each
             for what passed), each finding as `file:line — what is wrong — the fix`. End with one
-            line: ready to merge, or not and why. For a pull request that changes a screen, say "ready
-            to merge once screen-review screenshots are attached" unless the description has a
-            `## Screens` section. If nothing is wrong, say so in one line. The very last line of the
+            line: ready to merge, or not and why. If nothing is wrong, say so in one line. The very last line of the
             comment is `<!-- must-fix: N -->`, where N is the number of items under "Must fix" (0 when
             there are none).
 
