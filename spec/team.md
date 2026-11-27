@@ -20,3 +20,4 @@ specification.
 - Repository: [github.com/berdyshevol/careerbridge-csi5324](https://github.com/berdyshevol/careerbridge-csi5324)
 - Scrum board (Jira): [careerbridge-csi5324.atlassian.net/jira/software/projects/SCRUM/boards/1](https://careerbridge-csi5324.atlassian.net/jira/software/projects/SCRUM/boards/1)
 - Application: [careerbridge-csi5324.vercel.app](https://careerbridge-csi5324.vercel.app)
+- Team website: [reaganbaylor.github.io/careerbridge-csi5324-hub](https://reaganbaylor.github.io/careerbridge-csi5324-hub/)

@@ -41,7 +41,7 @@ minutes lock the account for 15 minutes.
 
 Each role sees only its own pages. If you open another role's page, you see a notice such as
 **Administrators only** instead. The job board is open to everyone. The **About CareerBridge**
-link at the foot of every page lists the team and the project links.
+link at the foot of every page says what the application is and links the team website.
 
 ### 12.2 Visitor
 
