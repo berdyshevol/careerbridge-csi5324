@@ -14,8 +14,8 @@ rules.
 ## Decision
 
 - **Every pull request names its ticket.** Its title starts with `SCRUM-NN`; the branch is
-  `<name>/SCRUM-NN-<slug>`. The required **Ticket** check fails a title without a key. No ticket,
-  no pull request.
+  `<name>/SCRUM-NN-<slug>`. The required **Ticket** check fails a title or a branch without a key
+  (the branch since 2026-11-26, SCRUM-260). No ticket, no pull request.
 - **Jira follows the pull request.** The **Jira** workflow moves the ticket to In Review when the
   pull request opens (or its title is fixed) and to Done when it merges. Nobody moves statuses by
   hand. A workflow does it rather than a Jira automation rule, whose runs the free plan limits.
