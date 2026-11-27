@@ -217,8 +217,9 @@ session token (ADR-0010). Only the Applicant role reaches `/api/postings/{postin
 a visitor who is not logged in is answered 401 and a Recruiter or Administrator 403 (extensions 1a,
 1b). A posting that does not exist is 404.
 
-startApplication only reads. A missing resume (extension 2a) or 5 active applications (2b) comes
-back as a refusal inside the answer, not as an error, so the screen shows it beside the summary.
+startApplication only reads. It makes the checks of submitApplication below, in the same order,
+and returns the first that fails as a refusal inside the answer, not as an error, so the screen shows
+it beside the summary and never decides one itself.
 
 submitApplication checks, in this order: the posting is Published and its deadline day is not over
 in the organization's time zone (4a, BR-10); a resume is on file (2a, BR-6); the applicant has never
@@ -250,7 +251,9 @@ sequenceDiagram
     UR-->>AS: Applicant, with its Resume if any
     AS->>AR: findByApplicantAndApplicationStatusIn(applicant, ACTIVE)
     AR-->>AS: active Applications
-    AS->>AS: refusal = NO_RESUME if no resume (ext. 2a),<br/>LIMIT_REACHED if 5 active (ext. 2b), else none
+    AS->>AR: existsByApplicantAndJobPosting(applicant, posting)
+    AR-->>AS: applied before or not
+    AS->>AS: refusal = POSTING_CLOSED if not open (ext. 1c),<br/>NO_RESUME if no resume (ext. 2a),<br/>ALREADY_APPLIED if applied before (ext. 4c),<br/>LIMIT_REACHED if 5 active (ext. 2b), else none
     AS-->>AC: ApplicationStart
     AC-->>AP: 200 ApplicationStartResponse {posting, applicant,<br/>resume, activeApplications, activeApplicationCount,<br/>applicationLimit, refusal}
 
@@ -258,13 +261,16 @@ sequenceDiagram
     AC->>AS: submitApplication(postingId, email)
     AS->>JR: findById(postingId)
     JR-->>AS: JobPosting
+    AS->>UR: findByEmailIgnoreCase(email)
+    UR-->>AS: Applicant, with its Resume if any
+    AS->>AR: countActiveByApplicant(applicant)
+    AR-->>AS: active
+    Note over AS: refusal(...): the same checks as startApplication, in this order
     AS->>AS: posting.isOpen(now): Published, before 23:59<br/>of the deadline in the organization's zone
     break posting closed (ext. 4a)
         AS-->>AC: ApplicationRefusedException(POSTING_CLOSED)
         AC-->>AP: 409 {reason, message}, nothing saved
     end
-    AS->>UR: findByEmailIgnoreCase(email)
-    UR-->>AS: Applicant, with its Resume if any
     break no resume on file (ext. 2a)
         AS-->>AC: ApplicationRefusedException(NO_RESUME)
         AC-->>AP: 409 {reason, message}, nothing saved
@@ -275,8 +281,6 @@ sequenceDiagram
         AS-->>AC: ApplicationRefusedException(ALREADY_APPLIED)
         AC-->>AP: 409 {reason, message}, nothing saved
     end
-    AS->>AR: countActiveByApplicant(applicant)
-    AR-->>AS: active
     break 5 active applications (ext. 4b, BR-4)
         AS-->>AC: ApplicationRefusedException(LIMIT_REACHED)
         AC-->>AP: 409 {reason, message}, nothing saved

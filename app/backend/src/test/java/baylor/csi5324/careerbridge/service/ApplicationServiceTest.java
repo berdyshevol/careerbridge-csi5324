@@ -200,6 +200,34 @@ class ApplicationServiceTest {
         assertEquals(ApplicationService.APPLICATION_LIMIT - 1, start.activeApplicationCount());
     }
 
+    // SCRUM-266: the screen shows these up front instead of working them out in the browser
+    @Test
+    void startsOnAClosedPostingWithThatRefusalFirst() {
+        JobPosting closed = save("Software Engineer", PostStatus.CLOSED, today.plusDays(14));
+        JobPosting pastDeadline = save("Data Analyst", PostStatus.PUBLISHED, today.minusDays(1));
+
+        assertEquals(ApplicationRefusal.POSTING_CLOSED,
+                applicationService.startApplication(closed.getJobPostId(), JORDAN).refusal());
+        assertEquals(ApplicationRefusal.POSTING_CLOSED,
+                applicationService.startApplication(pastDeadline.getJobPostId(), JORDAN).refusal());
+        // In submitApplication's order: a closed posting is named before the missing resume
+        assertEquals(ApplicationRefusal.POSTING_CLOSED,
+                applicationService.startApplication(closed.getJobPostId(), SAM).refusal());
+    }
+
+    @Test
+    void startsOnAPostingAppliedToBeforeWithThatRefusal() {
+        JobPosting posting = save("Software Engineer", PostStatus.PUBLISHED, today.plusDays(14));
+        applicationService.submitApplication(posting.getJobPostId(), JORDAN);
+        // Ended applications count too: a posting is applied to once (A5)
+        applicationRepository.findAll().get(0).setApplicationStatus(ApplicationStatus.WITHDRAWN);
+
+        ApplicationStart start = applicationService.startApplication(posting.getJobPostId(), JORDAN);
+
+        assertEquals(ApplicationRefusal.ALREADY_APPLIED, start.refusal());
+        assertEquals(0, start.activeApplicationCount());
+    }
+
     @Test
     void startingOnAPostingThatDoesNotExistFails() {
         assertThrows(PostingNotFoundException.class,
