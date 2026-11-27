@@ -43,7 +43,8 @@ class ApplicantApplicationsControllerTest {
     private static final Instant NOW = Instant.parse("2026-10-30T15:00:00Z");
     private final ApplicationService applicationService = mock(ApplicationService.class);
     private final MockMvc mockMvc = MockMvcBuilders.standaloneSetup(
-            new ApplicantApplicationsController(applicationService, Clock.fixed(NOW, ZoneOffset.UTC))).build();
+            new ApplicantApplicationsController(applicationService, Clock.fixed(NOW, ZoneOffset.UTC)))
+            .setControllerAdvice(new ServiceExceptionHandlers()).build();
 
     @Test
     void returnsApplicationsWithDatesAndActiveApplicationCount() throws Exception {

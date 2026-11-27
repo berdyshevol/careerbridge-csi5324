@@ -20,7 +20,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
@@ -103,8 +102,8 @@ class JobPostingApprovalTest {
     void closingKeepsTheApplicationsAndRefusesNewOnes() {
         JobPosting published = createPosting(PostStatus.PUBLISHED, LocalDate.now().plusDays(10));
         String jordan = SampleDataLoader.SAMPLE_APPLICANT_EMAIL;
-        applicantProfileService.uploadResume(jordan, new MockMultipartFile(
-                "file", "cv.pdf", "application/pdf", "%PDF-1.4 cv".getBytes(StandardCharsets.ISO_8859_1)));
+        applicantProfileService.uploadResume(jordan, "cv.pdf", "application/pdf",
+                "%PDF-1.4 cv".getBytes(StandardCharsets.ISO_8859_1));
         Long applicationId = applicationService.submitApplication(published.getJobPostId(), jordan)
                 .application().getApplicationId();
 

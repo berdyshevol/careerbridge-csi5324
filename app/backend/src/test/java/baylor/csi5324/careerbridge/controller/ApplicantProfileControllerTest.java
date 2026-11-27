@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -109,8 +108,8 @@ class ApplicantProfileControllerTest {
     void storesTheUploadedFileAsTheResume() throws Exception {
         Resume resume = new Resume("Jordan_Lee_CV.pdf", "application/pdf", 8L, "%PDF-1.4".getBytes(),
                 LocalDateTime.of(2026, 10, 27, 14, 5));
-        when(applicantProfileService.uploadResume(eq("jordan.lee@example.com"),
-                argThat(file -> "Jordan_Lee_CV.pdf".equals(file.getOriginalFilename())))).thenReturn(resume);
+        when(applicantProfileService.uploadResume(eq("jordan.lee@example.com"), eq("Jordan_Lee_CV.pdf"),
+                eq("application/pdf"), any())).thenReturn(resume);
 
         mockMvc.perform(multipart("/api/applicant/resume")
                         .file(new MockMultipartFile("file", "Jordan_Lee_CV.pdf", "application/pdf", "%PDF-1.4".getBytes()))
@@ -123,7 +122,7 @@ class ApplicantProfileControllerTest {
 
     @Test
     void answersARefusedFileWithTheReasonInPlainText() throws Exception {
-        when(applicantProfileService.uploadResume(any(), any()))
+        when(applicantProfileService.uploadResume(any(), any(), any(), any()))
                 .thenThrow(new ResumeRefusedException("The file is not a PDF or DOCX. Choose a PDF or DOCX file of at most 5 MB."));
 
         mockMvc.perform(multipart("/api/applicant/resume")

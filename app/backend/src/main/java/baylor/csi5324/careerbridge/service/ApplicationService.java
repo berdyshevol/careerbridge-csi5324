@@ -115,9 +115,7 @@ public class ApplicationService {
     // CO-05.2: ownership check reveals nothing and logs the attempt when another applicant asks (BR-15, ext *a)
     @Transactional(readOnly = true)
     public Application viewApplication(Long applicationId, String applicantEmail) {
-        Application application = ownedApplication(applicationId, applicant(applicantEmail));
-        application.getInterviews().size();
-        return application;
+        return applicationRepository.withInterviews(ownedApplication(applicationId, applicant(applicantEmail)));
     }
 
     // CO-06.1: query-only preview of withdrawal warning before any state changes (FR-UC06.1, FR-UC06.2)
@@ -143,7 +141,7 @@ public class ApplicationService {
         application.getStatusHistory().add(new StatusHistoryEntry(
                 ApplicationStatus.WITHDRAWN, withdrawnDate, normalizedReason));
         applicationRepository.saveAndFlush(application);
-        application.getInterviews().size();
+        applicationRepository.withInterviews(application);
 
         int activeCount = (int) applicationRepository.countActiveByApplicant(applicant);
         return new WithdrawnApplication(application, activeCount);
@@ -192,7 +190,7 @@ public class ApplicationService {
             closeFilledPosting(posting, responseDate, now);
         }
 
-        application.getInterviews().size();
+        applicationRepository.withInterviews(application);
         int activeCount = (int) applicationRepository.countActiveByApplicant(applicant);
         return new OfferResponseResult(application, activeCount, now);
     }
@@ -237,7 +235,7 @@ public class ApplicationService {
         offer.setStatus(OfferStatus.DECLINED);
         offer.setResponseDate(responseDate);
         applicationRepository.saveAndFlush(application);
-        application.getInterviews().size();
+        applicationRepository.withInterviews(application);
 
         int activeCount = (int) applicationRepository.countActiveByApplicant(applicant);
         return new OfferResponseResult(application, activeCount, now);

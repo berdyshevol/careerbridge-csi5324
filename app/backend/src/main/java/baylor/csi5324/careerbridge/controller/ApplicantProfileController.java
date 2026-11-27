@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.Map;
 
@@ -44,8 +45,10 @@ public class ApplicantProfileController {
 
     @PostMapping("/resume")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResumeResponse uploadResume(Principal applicant, @RequestParam("file") MultipartFile file) {
-        return ResumeResponse.from(applicantProfileService.uploadResume(applicant.getName(), file));
+    public ResumeResponse uploadResume(Principal applicant, @RequestParam("file") MultipartFile file)
+            throws IOException {
+        return ResumeResponse.from(applicantProfileService.uploadResume(
+                applicant.getName(), file.getOriginalFilename(), file.getContentType(), file.getBytes()));
     }
 
     // Field by field, so the form can put each reason next to its field (UC-03 extension 4a)

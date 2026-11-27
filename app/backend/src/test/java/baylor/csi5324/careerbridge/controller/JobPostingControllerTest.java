@@ -40,7 +40,8 @@ class JobPostingControllerTest {
 
     private final JobPostingService jobPostingService = mock(JobPostingService.class);
     private final MockMvc mockMvc =
-            MockMvcBuilders.standaloneSetup(new JobPostingController(jobPostingService)).build();
+            MockMvcBuilders.standaloneSetup(new JobPostingController(jobPostingService))
+                    .setControllerAdvice(new ServiceExceptionHandlers()).build();
 
     @Test
     void searchPassesEveryQueryCriterionToTheService() throws Exception {

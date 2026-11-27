@@ -6,10 +6,7 @@ import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ResumeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -132,26 +129,20 @@ public class ApplicantProfileService {
     }
 
     // CO-03.3: the accepted file replaces the resume on file (BR-6); a refused one changes nothing (6a)
-    public Resume uploadResume(String email, MultipartFile file) {
-        if (file.isEmpty()) {
+    public Resume uploadResume(String email, String originalFileName, String contentType, byte[] content) {
+        if (content.length == 0) {
             throw new ResumeRefusedException(RESUME_EMPTY);
         }
-        if (file.getSize() > Resume.MAX_FILE_SIZE) {
+        if (content.length > Resume.MAX_FILE_SIZE) {
             throw new ResumeRefusedException(RESUME_TOO_LARGE);
         }
         // Some browsers send the whole path; only the name is the applicant's
-        String fileName = stripped(file.getOriginalFilename()).replaceAll(".*[/\\\\]", "");
+        String fileName = stripped(originalFileName).replaceAll(".*[/\\\\]", "");
         if (fileName.length() > MAX_LINE_LENGTH) {
             throw new ResumeRefusedException(RESUME_NAME_TOO_LONG);
         }
-        byte[] content;
-        try {
-            content = file.getBytes();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
         ResumeFormat format = Arrays.stream(ResumeFormat.values())
-                .filter(candidate -> candidate.matches(fileName, file.getContentType(), content))
+                .filter(candidate -> candidate.matches(fileName, contentType, content))
                 .findFirst()
                 .orElseThrow(() -> new ResumeRefusedException(RESUME_WRONG_TYPE));
 
