@@ -1,9 +1,9 @@
 package baylor.csi5324.careerbridge.controller;
 
+import baylor.csi5324.careerbridge.dto.PostingResponse;
 import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
 import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.dto.PublicPosting;
-import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.service.InvalidPostingException;
 import baylor.csi5324.careerbridge.service.JobPostingService;
 import baylor.csi5324.careerbridge.service.PostingNotAllowedException;
@@ -37,30 +37,30 @@ public class JobPostingController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public JobPosting createPosting(
+    public PostingResponse createPosting(
             @RequestBody CreateJobPostingRequest request, Principal recruiter) {
-        return jobPostingService.createPosting(request, recruiter.getName());
+        return PostingResponse.of(jobPostingService.createPosting(request, recruiter.getName()));
     }
 
     @PostMapping("/{postingId}/submit")
-    public JobPosting submitJobPosting(@PathVariable Long postingId, Principal recruiter) {
-        return jobPostingService.submitJobPosting(postingId, recruiter.getName());
+    public PostingResponse submitJobPosting(@PathVariable Long postingId, Principal recruiter) {
+        return PostingResponse.of(jobPostingService.submitJobPosting(postingId, recruiter.getName()));
     }
 
     @GetMapping("/{postingId}/edit")
-    public JobPosting openPostingForEdit(@PathVariable Long postingId, Principal recruiter) {
-        return jobPostingService.openPostingForEdit(postingId, recruiter.getName());
+    public PostingResponse openPostingForEdit(@PathVariable Long postingId, Principal recruiter) {
+        return PostingResponse.of(jobPostingService.openPostingForEdit(postingId, recruiter.getName()));
     }
 
     @PutMapping("/{postingId}")
-    public JobPosting updatePosting(
+    public PostingResponse updatePosting(
             @PathVariable Long postingId, @RequestBody CreateJobPostingRequest request, Principal recruiter) {
-        return jobPostingService.updatePosting(postingId, request, recruiter.getName());
+        return PostingResponse.of(jobPostingService.updatePosting(postingId, request, recruiter.getName()));
     }
 
     @PostMapping("/{postingId}/close")
-    public JobPosting closePosting(@PathVariable Long postingId, Principal recruiter) {
-        return jobPostingService.closePosting(postingId, recruiter.getName());
+    public PostingResponse closePosting(@PathVariable Long postingId, Principal recruiter) {
+        return PostingResponse.of(jobPostingService.closePosting(postingId, recruiter.getName()));
     }
 
     // Only these three exceptions: any other failure is the server's, not the recruiter's

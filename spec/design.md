@@ -547,7 +547,7 @@ sequenceDiagram
             JS->>JR: save(posting)
             JR-->>JS: JobPosting (Draft)
             JS-->>JC: JobPosting
-            JC-->>R: 201 Created, JobPosting
+            JC-->>R: 201 Created, PostingResponse
         end
     end
 ```
@@ -595,7 +595,7 @@ sequenceDiagram
         JS->>JR: save(posting)
         JR-->>JS: JobPosting (Pending Approval)
         JS-->>JC: JobPosting
-        JC-->>R: 200, JobPosting in the approval queue (UC-12)
+        JC-->>R: 200, PostingResponse in the approval queue (UC-12)
     end
 ```
 
@@ -630,7 +630,7 @@ sequenceDiagram
         JC-->>R: 409 and the status
     else the recruiter's own Draft or Returned posting
         JS-->>JC: JobPosting
-        JC-->>R: 200, JobPosting with its reviewComment
+        JC-->>R: 200, PostingResponse with its reviewComment
     end
 
     R->>JC: PUT /api/postings/{postingId} (CreateJobPostingRequest)
@@ -674,7 +674,7 @@ sequenceDiagram
     JS->>JR: findByPostStatusOrderByDatePostedAscJobPostIdAsc(PENDING_APPROVAL)
     JR-->>JS: List<JobPosting>, oldest first
     JS-->>AC: List<JobPosting>
-    AC-->>A: 200 List<JobPosting> (empty: ext. 2a)
+    AC-->>A: 200 List<PostingResponse> (empty: ext. 2a)
 ```
 
 **Figure 34: SD-6 Open the posting approval queue (UC-12)**
@@ -723,7 +723,7 @@ sequenceDiagram
     JS->>JR: save(posting)
     JR-->>JS: JobPosting
     JS-->>AC: JobPosting
-    AC-->>A: 200, JobPosting with its new status
+    AC-->>A: 200, PostingResponse with its new status
 ```
 
 **Figure 35: SD-7 Approve, return or reject a posting (UC-12)**
@@ -821,7 +821,7 @@ sequenceDiagram
         JS->>JR: save(posting)
         JR-->>JS: JobPosting (Closed)
         JS-->>JC: JobPosting
-        JC-->>R: 200, JobPosting Closed, out of public listings
+        JC-->>R: 200, PostingResponse Closed, out of public listings
     end
 ```
 
