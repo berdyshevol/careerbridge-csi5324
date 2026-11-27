@@ -1,7 +1,9 @@
 # Architecture decision records
 
-One file per decision that shapes the code. A record is not edited after it is accepted; a changed
-decision gets a new record that names the one it replaces.
+One file per decision that shapes the code. An accepted record keeps its decision. A rule that only
+narrows, widens or adds a check to it is written into the record itself, with
+"(amended YYYY-MM-DD, SCRUM-NN)" after the changed text. A decision that is reversed or replaced
+gets a new record that names the one it replaces, and the old one becomes "Superseded".
 
 | ADR | Decision | Status |
 | --- | --- | --- |
