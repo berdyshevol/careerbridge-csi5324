@@ -889,7 +889,7 @@ export type PostingApplicants = { postingId: number; title: string; applicants: 
 
 export async function viewPostingApplicants(token: string, postingId: number): Promise<PostingApplicants> {
   const response = await backendFetch(`/api/recruiter/postings/${postingId}`, { headers: bearer(token) });
-  return recruiterRead(response);
+  return recruiterRead(response, (answer) => answer.json());
 }
 
 export type ApplicationReview = {
@@ -909,7 +909,7 @@ export async function reviewApplication(token: string, applicationId: number): P
   const response = await backendFetch(`/api/recruiter/applications/${applicationId}`, { headers: bearer(token) });
   const raw = await recruiterRead<
     Omit<ApplicationReview, "stage" | "history"> & { stage: string; history: { stage: string; date: string }[] }
-  >(response);
+  >(response, (answer) => answer.json());
   return {
     ...raw,
     stage: stageLabel(raw.stage),
@@ -922,17 +922,10 @@ export async function downloadApplicationResume(token: string, applicationId: nu
   const response = await backendFetch(`/api/recruiter/applications/${applicationId}/resume`, {
     headers: bearer(token),
   });
-  endedSession(response);
-  if (response.status === 404) {
-    throw new RecruiterNotFound();
-  }
-  if (!response.ok) {
-    throw new Error(`Backend answered ${response.status}`);
-  }
-  return response.blob();
+  return recruiterRead(response, (answer) => answer.blob());
 }
 
-async function recruiterRead<T>(response: Response): Promise<T> {
+async function recruiterRead<T>(response: Response, body: (answer: Response) => Promise<T>): Promise<T> {
   endedSession(response);
   if (response.status === 404) {
     throw new RecruiterNotFound();
@@ -940,7 +933,7 @@ async function recruiterRead<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new Error(`Backend answered ${response.status}`);
   }
-  return response.json();
+  return body(response);
 }
 
 export type ReviewAction = "approve" | "return" | "reject";

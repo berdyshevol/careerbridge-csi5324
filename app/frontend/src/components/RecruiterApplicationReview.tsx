@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   RecruiterNotFound,
@@ -10,6 +9,7 @@ import {
   type ApplicationReview,
 } from "@/lib/api";
 import AccessNotice from "./AccessNotice";
+import BackLink from "./BackLink";
 import EmptyState from "./EmptyState";
 import Loading from "./Loading";
 import PageTitle from "./PageTitle";
@@ -80,9 +80,7 @@ export default function RecruiterApplicationReview({ token, applicationId }: { t
   if (missing) {
     return (
       <div className="flex flex-col gap-6">
-        <Link href="/recruiter/postings" className="link link-primary self-start text-sm font-semibold no-underline hover:underline">
-          <span aria-hidden="true">← </span>Postings
-        </Link>
+        <BackLink href="/recruiter/postings">Postings</BackLink>
         <EmptyState card>There is no application at this address.</EmptyState>
       </div>
     );
@@ -106,13 +104,9 @@ export default function RecruiterApplicationReview({ token, applicationId }: { t
   ];
   return (
     <div className="flex flex-col gap-6">
-      <Link
-        href={`/recruiter/postings/${review.postingId}`}
-        className="link link-primary self-start text-sm font-semibold no-underline hover:underline"
-      >
-        <span aria-hidden="true">← </span>
+      <BackLink href={`/recruiter/postings/${review.postingId}`}>
         {review.postingTitle} · {review.stage} stage
-      </Link>
+      </BackLink>
       <div className="flex flex-wrap items-center gap-3">
         <PageTitle>{review.applicantName}</PageTitle>
         <StageBadge stage={review.stage} />

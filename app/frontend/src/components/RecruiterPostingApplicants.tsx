@@ -6,10 +6,12 @@ import {
   RecruiterNotFound,
   SessionEnded,
   viewPostingApplicants,
+  type PostingApplicant,
   type PostingApplicants,
 } from "@/lib/api";
 import { STAGES, type Stage } from "@/lib/stages";
 import AccessNotice from "./AccessNotice";
+import BackLink from "./BackLink";
 import EmptyState from "./EmptyState";
 import Loading from "./Loading";
 import PageTitle from "./PageTitle";
@@ -52,11 +54,7 @@ export default function RecruiterPostingApplicants({ token, postingId }: { token
     );
   }
 
-  const backToPostings = (
-    <Link href="/recruiter/postings" className="link link-primary self-start text-sm font-semibold no-underline hover:underline">
-      <span aria-hidden="true">← </span>Postings
-    </Link>
-  );
+  const backToPostings = <BackLink href="/recruiter/postings">Postings</BackLink>;
 
   if (missing) {
     return (
@@ -67,10 +65,10 @@ export default function RecruiterPostingApplicants({ token, postingId }: { token
     );
   }
 
-  const counts = Object.fromEntries(
-    STAGES.map((name) => [name, posting?.applicants.filter((applicant) => applicant.stage === name.toUpperCase()).length ?? 0]),
-  ) as Record<Stage, number>;
-  const listed = posting?.applicants.filter((applicant) => applicant.stage === stage.toUpperCase()) ?? [];
+  const byStage = Object.fromEntries(
+    STAGES.map((name) => [name, posting?.applicants.filter((applicant) => applicant.stage === name.toUpperCase()) ?? []]),
+  ) as Record<Stage, PostingApplicant[]>;
+  const counts = Object.fromEntries(STAGES.map((name) => [name, byStage[name].length])) as Record<Stage, number>;
 
   return (
     <div className="flex flex-col gap-6">
@@ -92,7 +90,7 @@ export default function RecruiterPostingApplicants({ token, postingId }: { token
               <h2 className="font-display text-xl font-semibold">Applicants</h2>
               <StageBar counts={counts} selected={stage} onSelect={setStage} />
               <ul className="flex flex-col gap-2">
-                {listed.map((applicant) => (
+                {byStage[stage].map((applicant) => (
                   <li
                     key={applicant.applicationId}
                     className="flex items-center gap-4 rounded-xl border border-base-300 bg-base-100 px-4 py-3 shadow-lift"
