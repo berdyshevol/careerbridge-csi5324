@@ -174,6 +174,14 @@ export async function applyByApi(request: APIRequestContext, cast: Cast, applica
   expect(applied.ok(), await applied.text()).toBeTruthy();
 }
 
+// An applicant who already applied somewhere applies again; the account and resume exist
+export async function applyAgainByApi(request: APIRequestContext, cast: Cast, applicant: Person, posting: Posting) {
+  const applied = await request.post(`${API}/api/postings/${posting.id}/application`, {
+    headers: await cast.token(request, applicant),
+  });
+  expect(applied.ok(), await applied.text()).toBeTruthy();
+}
+
 export async function isWaitingForApproval(request: APIRequestContext, cast: Cast, posting: Posting) {
   const pending: { jobPostId: number }[] = await (
     await request.get(`${API}/api/admin/postings/pending`, { headers: await cast.token(request, ACCOUNTS.administrator) })
@@ -613,4 +621,64 @@ const POSTING_STATUS_LABELS = { "waiting for approval": "Pending approval" };
 export async function expectPostingStatus(page: Page, posting: Posting, status: keyof typeof POSTING_STATUS_LABELS) {
   const row = page.getByRole("listitem").filter({ hasText: posting.title });
   await expect(row.getByText(POSTING_STATUS_LABELS[status], { exact: true })).toBeVisible();
+}
+
+export async function openApplicantsOf(page: Page, posting: Posting) {
+  await openRecruiterPostings(page);
+  await page.getByRole("link", { name: `Applicants of ${posting.title}` }).click();
+  await expect(page.getByRole("heading", { level: 1, name: posting.title })).toBeVisible();
+}
+
+export async function openApplicationOf(page: Page, applicant: Person, posting: Posting) {
+  await openApplicantsOf(page, posting);
+  await page.getByRole("link", { name: `Open ${applicant.fullName}` }).click();
+  await expect(page.getByRole("heading", { level: 1, name: applicant.fullName })).toBeVisible();
+}
+
+export async function expectResumeCopy(page: Page) {
+  await expect(page.getByRole("heading", { name: "Resume sent with this application" })).toBeVisible();
+  await expect(page.getByText(RESUME_NAME).first()).toBeVisible();
+}
+
+export async function expectProfileDetails(page: Page, applicant: Person) {
+  const profile = page.getByRole("heading", { name: "Profile" }).locator("xpath=ancestor::section[1]");
+  await expect(profile.getByText(applicant.email)).toBeVisible();
+}
+
+export async function expectApplicationAt(page: Page, stage: string) {
+  const history = page.getByRole("heading", { name: "Stage history" }).locator("xpath=ancestor::section[1]");
+  await expect(history.getByRole("listitem").last()).toContainText(stage);
+}
+
+// The other application is of the same applicant to a posting of another organization (BR-15)
+export async function expectNothingAboutPosting(page: Page, posting: Posting) {
+  await expect(page.getByRole("main").getByText(posting.title)).toHaveCount(0);
+}
+
+export async function expectNoApplications(page: Page) {
+  await expect(page.getByText("No applications.")).toBeVisible();
+}
+
+// Another organization's application is not listed anywhere the recruiter can reach, so it is asked for by its address
+export async function openApplicationByAddress(
+  page: Page,
+  request: APIRequestContext,
+  cast: Cast,
+  applicant: Person,
+  posting: Posting,
+) {
+  const answer = await request.get(`${API}/api/applicant/applications`, { headers: await cast.token(request, applicant) });
+  const { applications }: { applications: { applicationId: number; postingId: number }[] } = await answer.json();
+  const application = applications.find((candidate) => candidate.postingId === posting.id);
+  expect(application, `${applicant.fullName} has no application to ${posting.title}`).toBeDefined();
+  await page.goto(`/recruiter/applications/${application!.applicationId}`);
+}
+
+export async function expectApplicationNotFound(page: Page) {
+  await expect(page.getByText("There is no application at this address.")).toBeVisible();
+}
+
+export async function expectNothingAboutPerson(page: Page, person: Person) {
+  await expect(page.getByText(person.fullName)).toHaveCount(0);
+  await expect(page.getByText(person.email)).toHaveCount(0);
 }

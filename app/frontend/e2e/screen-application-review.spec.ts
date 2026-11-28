@@ -64,10 +64,10 @@ test("another organization's application is reported as not found, like one that
   const theirs = cast.posting("Night Nurse");
   const applicant = cast.person("Pat");
   await applyByApi(request, cast, applicant, theirs);
-  const applications = await (
+  const { applications } = await (
     await request.get(`${API}/api/applicant/applications`, { headers: await cast.token(request, applicant) })
   ).json();
-  const applicationId = (Array.isArray(applications) ? applications : applications.applications)[0].applicationId;
+  const applicationId = applications[0].applicationId;
 
   await logIn(page, ACCOUNTS.recruiter, `/recruiter/applications/${applicationId}`);
   await expect(page.getByText("There is no application at this address.")).toBeVisible();
