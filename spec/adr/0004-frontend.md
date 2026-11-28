@@ -3,7 +3,8 @@
 - **Status:** Accepted
 - **Date:** 2026-10-07
 - **Extends:** [ADR-0001](0001-spring-boot-and-nextjs.md) (Next.js as the frontend)
-- **Amended by:** [ADR-0012](0012-role-colors.md) (each role has its own primary colors)
+- **Amended by:** [ADR-0012](0012-role-colors.md) (each role has its own primary colors),
+  [ADR-0015](0015-inter-font.md) (one typeface, Inter)
 
 ## Context
 
@@ -32,7 +33,7 @@ Tailwind with daisyUI.
    no component code to copy into the repository and maintain, and a member who knows HTML can use
    it.
 4. **Two typefaces** loaded through `next/font`: Figtree for text, Bricolage Grotesque for
-   headings (`font-display`).
+   headings (`font-display`). Replaced by Inter for both ([ADR-0015](0015-inter-font.md)).
 5. **Thin frontend.** Pages are Next.js server components that read from the backend in
    `src/lib/api.ts` and render; interaction that needs state (forms) is a client component. Business
    rules live in the backend. Where a rule must run before the backend exists, it is written as a

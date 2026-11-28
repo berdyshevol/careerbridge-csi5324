@@ -115,7 +115,7 @@ export default function StyleguidePage() {
             ))}
           </ul>
         </Block>
-        <Block title="Type" use="font-display for titles (Bricolage Grotesque); the default face for everything else (Figtree); text-muted for secondary text">
+        <Block title="Type" use="Inter for everything (ADR-0015); font-display on titles, which stand out by size and weight; text-muted for secondary text">
           <p className="font-display text-3xl font-semibold">A title in the display face</p>
           <p>Body text in the default face, for everything that is read.</p>
           <p className="text-muted">Secondary text, in text-muted.</p>
