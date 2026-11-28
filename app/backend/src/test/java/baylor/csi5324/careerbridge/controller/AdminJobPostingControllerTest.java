@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -95,7 +96,7 @@ class AdminJobPostingControllerTest {
     @Test
     void aPostingAlreadyDecidedIsAConflictThatNamesItsStatus() throws Exception {
         JobPosting pending = savePending();
-        pending.setPostStatus(PostStatus.PUBLISHED);
+        pending.approve("Another Administrator", null, Instant.now());
         jobPostingRepository.save(pending);
 
         mockMvc.perform(post("/api/admin/postings/{id}/approve", pending.getJobPostId())
@@ -127,7 +128,7 @@ class AdminJobPostingControllerTest {
         posting.setNumberOfOpenings(1);
         posting.setDatePosted(LocalDate.now());
         posting.setApplicationDeadline(LocalDate.now().plusDays(10));
-        posting.setPostStatus(PostStatus.PENDING_APPROVAL);
+        posting.submit();
         posting.setOrganization(organization);
         return jobPostingRepository.save(posting);
     }

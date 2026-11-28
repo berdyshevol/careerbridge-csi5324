@@ -1,7 +1,7 @@
 package baylor.csi5324.careerbridge.controller.dto;
 
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
-import baylor.csi5324.careerbridge.service.ApplicationActionRefusedException;
+import baylor.csi5324.careerbridge.model.ApplicationActionRefusedException;
 
 public record ActionRefusalResponse(ApplicationStatus currentStage, String message) {
 

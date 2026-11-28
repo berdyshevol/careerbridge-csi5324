@@ -17,15 +17,16 @@ JSON. The backend lists the frontend addresses that may call it (CORS).
 
 ### Backend layers
 
-A layer calls only the layer below it, and only a controller knows about HTTP. The test
-`LayersTest` (`app/backend/src/test`) checks both on every pull request.
+A layer calls only the layer below it, only a controller knows about HTTP, and only a service (or
+the sample data in `config`) changes a status. The test `LayersTest` (`app/backend/src/test`)
+checks all three on every pull request.
 
 | Layer | Package | Responsibility |
 | --- | --- | --- |
 | Controller | `controller` | Maps a URL under `/api` to one service call and returns JSON |
-| Service | `service` | Business rules; one method per system operation of the operation contracts |
+| Service | `service` | One method per system operation of the operation contracts: checks what needs a query, loads and locks, calls the entity's operation, saves |
 | Repository | `repository` | Spring Data JPA interfaces |
-| Model | `model` | Entities, named as in the [domain model](domain-model.md) |
+| Model | `model` | Entities, named as in the [domain model](domain-model.md), with their lifecycles: the arrows on the status enum, one operation per move ([ADR-0015](adr/0015-entities-own-their-lifecycles.md)) |
 
 Controllers and services also use the records in the `dto` package, which is not a layer. A record
 there is the shape of one request or one response:
@@ -56,7 +57,8 @@ backend loads sample job postings and applications from CSV files
 | --- | --- |
 | Conceptual class and its attributes ([domain model](domain-model.md)) | Entity in `model`, same names |
 | System operation ([operation contract](ssd-and-contracts.md)) | Method of a service, same name |
-| Posting lifecycle state ([use-cases.md](use-cases.md), Figure 4) | Value of the `PostStatus` enum |
+| Application pipeline ([use-cases.md](use-cases.md), Figure 3, BR-8) | `ApplicationStatus.allowedMoves()`; the moves are operations of `Application` |
+| Posting lifecycle ([use-cases.md](use-cases.md), Figure 4) | `PostStatus.allowedMoves()`; the moves are operations of `JobPosting` |
 | Use case | A controller, a service, a page under `app/frontend/src/app/` |
 
 UC-04 Apply for Job is implemented end to end: `ApplyForm` → `lib/api.ts` → `ApplicationController`

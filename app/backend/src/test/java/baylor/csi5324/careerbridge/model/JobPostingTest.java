@@ -17,9 +17,8 @@ class JobPostingTest {
         organization.setTimeZone(timeZone);
         JobPosting posting = new JobPosting();
         posting.setOrganization(organization);
-        posting.setPostStatus(PostStatus.PUBLISHED);
         posting.setApplicationDeadline(deadline);
-        return posting;
+        return Lifecycles.inStatus(posting, PostStatus.PUBLISHED);
     }
 
     @Test
@@ -40,7 +39,7 @@ class JobPostingTest {
     @Test
     void isNotOpenUnlessPublished() {
         JobPosting posting = published(LocalDate.of(2026, 10, 17), "UTC");
-        posting.setPostStatus(PostStatus.CLOSED);
+        posting.closeByRecruiter(Instant.parse("2026-10-01T00:00:00Z"));
 
         assertFalse(posting.isOpen(Instant.parse("2026-10-01T00:00:00Z")));
     }

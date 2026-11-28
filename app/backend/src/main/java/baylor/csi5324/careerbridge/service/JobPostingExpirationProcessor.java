@@ -18,28 +18,18 @@ public class JobPostingExpirationProcessor {
         this.jobPostingRepository = jobPostingRepository;
     }
 
-    // One transaction per posting, so a failure leaves the rest of the run untouched (UC-13 extension 3a)
+    // One transaction per posting, so a failure leaves the rest of the run untouched (UC-13 extension 3a).
+    // The row lock makes an offer acceptance that fills the posting finish first, so Expired never
+    // overwrites Filled. Answers whether a published posting was closed
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean expirePosting(Long postingId, Instant now) {
-        JobPosting posting = jobPostingRepository.findById(postingId).orElse(null);
+        JobPosting posting = jobPostingRepository.findByIdForUpdate(postingId).orElse(null);
 
-        if (posting == null || !posting.isPastDeadline(now)) {
+        if (posting == null || !posting.isDueToExpire(now)) {
             return false;
         }
-
-        return switch (posting.getPostStatus()) {
-            case PUBLISHED -> {
-                posting.close("Expired", now);
-                jobPostingRepository.saveAndFlush(posting);
-                yield true;
-            }
-            // UC-13 extension 2b: never published, so it is marked Expired rather than Closed
-            case PENDING_APPROVAL, RETURNED -> {
-                posting.setPostStatus(PostStatus.EXPIRED);
-                jobPostingRepository.saveAndFlush(posting);
-                yield false;
-            }
-            default -> false;
-        };
+        PostStatus result = posting.expire(now);
+        jobPostingRepository.saveAndFlush(posting);
+        return result == PostStatus.CLOSED;
     }
 }

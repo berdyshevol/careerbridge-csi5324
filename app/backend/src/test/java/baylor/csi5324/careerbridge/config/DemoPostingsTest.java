@@ -4,6 +4,7 @@ import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.Lifecycles;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.Recruiter;
@@ -103,7 +104,8 @@ class DemoPostingsTest {
     void leavesAPostingTheOrganizationAlreadyHas() throws Exception {
         JobPosting existing = new JobPosting();
         existing.setTitle("Data Platform Engineer");
-        existing.setPostStatus(PostStatus.CLOSED);
+        existing.setOrganization(brazos);
+        Lifecycles.inStatus(existing, PostStatus.CLOSED);
         when(jobPostingRepository.findFirstByOrganizationAndTitleIgnoreCase(brazos, "Data Platform Engineer"))
                 .thenReturn(Optional.of(existing));
 

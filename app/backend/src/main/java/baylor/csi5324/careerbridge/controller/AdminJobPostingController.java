@@ -3,7 +3,7 @@ package baylor.csi5324.careerbridge.controller;
 import baylor.csi5324.careerbridge.dto.PostingResponse;
 import baylor.csi5324.careerbridge.service.InvalidPostingException;
 import baylor.csi5324.careerbridge.service.JobPostingService;
-import baylor.csi5324.careerbridge.service.PostingStateConflictException;
+import baylor.csi5324.careerbridge.model.PostingStateConflictException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.ExceptionHandler;

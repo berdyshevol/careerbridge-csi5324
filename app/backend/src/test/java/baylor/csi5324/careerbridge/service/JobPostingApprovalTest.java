@@ -5,8 +5,10 @@ import baylor.csi5324.careerbridge.config.SampleDataLoader;
 import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
 import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.model.AccountStatus;
+import baylor.csi5324.careerbridge.model.PostingStateConflictException;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.Lifecycles;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.OrganizationStatus;
 import baylor.csi5324.careerbridge.model.PostStatus;
@@ -23,6 +25,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -341,10 +344,9 @@ class JobPostingApprovalTest {
     @Test
     void resubmittingClearsPreviousReviewInformation() {
         JobPosting returned = createPosting(
-                PostStatus.RETURNED, LocalDate.now().plusDays(10));
-
-        returned.setApprovedBy("Previous Administrator");
-        returned.setReviewComment("Needs corrections");
+                PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
+        returned.returnToRecruiter("Previous Administrator", "Needs corrections", Instant.now());
+        jobPostingRepository.save(returned);
 
         JobPosting result =
                 jobPostingService.submitJobPosting(returned.getJobPostId(), OWNER);
@@ -373,8 +375,8 @@ class JobPostingApprovalTest {
 
     @Test
     void aReturnedPostingKeepsItsCommentUntilItIsSubmittedAgain() {
-        JobPosting returned = createPosting(PostStatus.RETURNED, LocalDate.now().plusDays(10));
-        returned.setReviewComment("Add the salary range");
+        JobPosting returned = createPosting(PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
+        returned.returnToRecruiter("Test Administrator", "Add the salary range", Instant.now());
         jobPostingRepository.save(returned);
 
         assertEquals("Add the salary range",
@@ -489,11 +491,10 @@ class JobPostingApprovalTest {
         posting.setNumberOfOpenings(1);
         posting.setDatePosted(LocalDate.now());
         posting.setApplicationDeadline(deadline);
-        posting.setPostStatus(status);
         posting.setOrganization(organization);
         posting.setRecruiter(owner);
 
-        return jobPostingRepository.save(posting);
+        return jobPostingRepository.save(Lifecycles.inStatus(posting, status));
     }
 
 }

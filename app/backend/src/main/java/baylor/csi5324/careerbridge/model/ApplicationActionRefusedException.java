@@ -1,8 +1,6 @@
-package baylor.csi5324.careerbridge.service;
+package baylor.csi5324.careerbridge.model;
 
-import baylor.csi5324.careerbridge.model.ApplicationStatus;
-
-// Raised when an applicant action (withdraw, offer response) is no longer allowed for the current stage
+// The application refused a move; the message is shown to the user as is, so it says what to do instead
 public class ApplicationActionRefusedException extends RuntimeException {
 
     private final ApplicationStatus currentStage;
