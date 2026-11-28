@@ -41,15 +41,27 @@ describe("RecruiterPostingList", () => {
     vi.unstubAllGlobals();
   });
 
-  it("links a posting that took applications to its applicants, and no other", async () => {
-    fetchMock.mockResolvedValueOnce(reply(200, answer));
+  it("links a published posting to its applicants, and a closed one only while it has active applications", async () => {
+    const closedWithApplications = {
+      ...answer.postings[4],
+      postingId: 8,
+      title: "Pharmacy Technician",
+      applicationsByStage: stages(0, 2, 1, 0),
+    };
+    fetchMock.mockResolvedValueOnce(reply(200, { ...answer, postings: [...answer.postings, closedWithApplications] }));
 
     render(<RecruiterPostingList token="t" />);
 
     const link = await screen.findByRole("link", { name: "Applicants of Data Analyst" });
     expect(link).toHaveAttribute("href", "/recruiter/postings/1");
-    // Published and Closed postings only: a draft or a posting waiting for approval has no applications
+    expect(screen.getByRole("link", { name: "Applicants of Pharmacy Technician" })).toHaveAttribute(
+      "href",
+      "/recruiter/postings/8",
+    );
+    // The three Published rows and the Closed one with applications; not a draft, a posting waiting for
+    // approval or a Closed one with none
     expect(screen.getAllByRole("link", { name: /^Applicants of/ })).toHaveLength(4);
+    expect(screen.queryByRole("link", { name: "Applicants of Front Desk Coordinator" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Applicants of Clinical Data Engineer" })).not.toBeInTheDocument();
   });
 

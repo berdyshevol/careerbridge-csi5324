@@ -145,8 +145,8 @@ history, withdraw an application, accept or decline an offer.
 ### 12.4 Recruiter
 
 **Key features:** create a job posting, save it as a draft, submit it for approval, revise a
-returned posting, close a published posting, see the postings of the organization, join another
-organization.
+returned posting, close a published posting, see the postings of the organization, see a posting's
+applicants by stage and review one application, join another organization.
 
 **Navigation:** **Postings**, **Organizations**. After logging in, a recruiter lands on
 **Create job posting**.
@@ -176,7 +176,20 @@ use the one you asked to join first. A recruiter with no approved organization c
    draft** to finish later. A rejected posting cannot be sent again.
 3. A published posting leaves the job board by itself when its application deadline passes.
 
-Only the recruiter who created a posting sees **Revise**, **Continue** and **Close** on it.
+Only the recruiter who created a posting sees **Revise**, **Continue** and **Close** on it. Every
+recruiter of the organization sees **Applicants** on a published posting, and on a closed one that still
+has applications in progress.
+
+**Workflow: review an application.**
+
+1. On **Postings**, select **Applicants** next to a posting. The page names the posting and shows
+   how many applications are at **Applied**, **Screening**, **Interview** and **Offer**. Select a
+   stage to list the applicants at it. A posting with no applications says **No applications.**
+2. Select **Open** next to an applicant. The page shows the resume sent with that application, with
+   a link to download it, the applicant's email, phone, location and headline, and this application's
+   stage history. It shows nothing about the applicant's other applications.
+3. Select the link above the name to go back to the posting.
+4. An application that is not of your organization, or does not exist, is reported as not found.
 
 **Workflow: close a posting.**
 
@@ -196,8 +209,8 @@ Only the recruiter who created a posting sees **Revise**, **Continue** and **Clo
 
 After you log in, the start page shows three cards for the organization you act for, **Published**,
 **Pending approval** and **Returned**, each opening **Postings**, and below them the postings open
-now. Not yet available: a recruiter home page of its own, a posting detail page, reviewing applications and
-moving them through the stages (UC-14), extending offers (UC-15), and switching the
+now. Not yet available: a recruiter home page of its own, moving applications through the stages,
+rejecting them and recording interviews (UC-14), extending offers (UC-15), and switching the
 organization you act for.
 
 ### 12.5 Administrator
