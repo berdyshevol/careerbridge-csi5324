@@ -1,5 +1,7 @@
 package baylor.csi5324.careerbridge.service;
 
+import baylor.csi5324.careerbridge.lifecycle.ApplicationLifecycle;
+import baylor.csi5324.careerbridge.lifecycle.JobPostingLifecycle;
 import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
@@ -10,7 +12,6 @@ import baylor.csi5324.careerbridge.model.OfferStatus;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
-import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
@@ -62,7 +63,7 @@ class OfferAcceptanceConcurrencyTest {
         posting.setNumberOfOpenings(1);
         posting.setDatePosted(LocalDate.now());
         posting.setApplicationDeadline(LocalDate.now().plusDays(14));
-        posting.setPostStatus(PostStatus.PUBLISHED);
+        JobPostingLifecycle.restore(posting, PostStatus.PUBLISHED);
         posting = jobPostingRepository.save(posting);
 
         Applicant first = saveApplicant("first-" + suffix + "@example.com");
@@ -145,8 +146,7 @@ class OfferAcceptanceConcurrencyTest {
                 posting,
                 new ResumeSnapshot("cv.pdf", "application/pdf", 512L),
                 today);
-        application.setApplicationStatus(ApplicationStatus.OFFER);
-        application.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.OFFER, today));
+        ApplicationLifecycle.restore(application, ApplicationStatus.OFFER, today);
         application.setOffer(new Offer(
                 application,
                 today,

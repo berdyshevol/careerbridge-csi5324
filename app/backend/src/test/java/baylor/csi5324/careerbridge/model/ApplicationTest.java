@@ -1,5 +1,6 @@
 package baylor.csi5324.careerbridge.model;
 
+import baylor.csi5324.careerbridge.lifecycle.ApplicationLifecycle;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
@@ -58,7 +59,7 @@ class ApplicationTest {
     private Application apply(JobPosting posting, ApplicationStatus status) {
         Application application = new Application(applicant, posting,
                 new ResumeSnapshot("cv.pdf", "PDF", 1024), TODAY);
-        application.setApplicationStatus(status);
+        ApplicationLifecycle.restore(application, status);
         return applicationRepository.saveAndFlush(application);
     }
 

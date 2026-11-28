@@ -23,6 +23,7 @@ import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 // One application per applicant and posting, withdrawn ones included (A5)
@@ -102,15 +103,17 @@ public class Application {
         return applicationStatus;
     }
 
-    public void setApplicationStatus(ApplicationStatus applicationStatus) {
-        this.applicationStatus = applicationStatus;
+    // Written only by the lifecycle package (LayersTest): the stage and its history entry change together
+    public void enterStage(ApplicationStatus stage, LocalDate date, String note) {
+        this.applicationStatus = stage;
+        statusHistory.add(new StatusHistoryEntry(stage, date, note));
     }
 
     public String getRejectionReason() {
         return rejectionReason;
     }
 
-    public void setRejectionReason(String rejectionReason) {
+    public void recordRejection(String rejectionReason) {
         this.rejectionReason = rejectionReason;
     }
 
@@ -145,37 +148,11 @@ public class Application {
         this.offer = offer;
     }
 
-    public boolean isWithdrawable() {
-        return applicationStatus == ApplicationStatus.APPLIED
-                || applicationStatus == ApplicationStatus.SCREENING
-                || applicationStatus == ApplicationStatus.INTERVIEW;
-    }
-
-    public List<String> availableActions() {
-        return availableActions(Instant.now());
-    }
-
-    public List<String> availableActions(Instant now) {
-        return switch (applicationStatus) {
-            case APPLIED, SCREENING, INTERVIEW -> List.of("WITHDRAW");
-            case OFFER -> {
-                if (jobPosting != null && jobPosting.getPostStatus() == PostStatus.CLOSED) {
-                    yield List.of();
-                }
-                if (offer != null && !offer.canRespond(now, jobPosting.getOrganization().getZoneId())) {
-                    yield List.of();
-                }
-                yield List.of("ACCEPT_OFFER", "DECLINE_OFFER");
-            }
-            case HIRED, REJECTED, WITHDRAWN, OFFER_DECLINED -> List.of();
-        };
-    }
-
     public Instant getWithdrawnAt() {
         return withdrawnAt;
     }
 
-    public void setWithdrawnAt(Instant withdrawnAt) {
+    public void recordWithdrawal(Instant withdrawnAt) {
         this.withdrawnAt = withdrawnAt;
     }
 
@@ -183,8 +160,9 @@ public class Application {
         return resumeSnapshot;
     }
 
+    // Read-only: an entry is added only together with a stage, by enterStage
     public List<StatusHistoryEntry> getStatusHistory() {
-        return statusHistory;
+        return Collections.unmodifiableList(statusHistory);
     }
 
     public boolean isActive() {

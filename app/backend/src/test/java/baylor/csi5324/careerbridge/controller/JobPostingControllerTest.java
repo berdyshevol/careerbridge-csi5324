@@ -1,10 +1,12 @@
 package baylor.csi5324.careerbridge.controller;
 
+import java.time.Instant;
+import baylor.csi5324.careerbridge.lifecycle.LifecycleFixtures;
+import baylor.csi5324.careerbridge.lifecycle.JobPostingLifecycle;
 import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.OrganizationStatus;
-import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.service.InvalidPostingException;
 import baylor.csi5324.careerbridge.service.PostingNotFoundException;
@@ -14,7 +16,6 @@ import baylor.csi5324.careerbridge.service.PostingNotAllowedException;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -120,9 +121,8 @@ class JobPostingControllerTest {
 
     @Test
     void reopeningAPostingSendsTheAdministratorsComment() throws Exception {
-        JobPosting returned = approvedPosting();
-        returned.setPostStatus(PostStatus.RETURNED);
-        returned.setReviewComment("Add the salary range");
+        JobPosting returned = LifecycleFixtures.decided(postingDetails(), JobPostingLifecycle.Event.RETURN_JOB_POSTING,
+                "Test Administrator", "Add the salary range", Instant.parse("2026-10-10T14:00:00Z"));
         when(jobPostingService.openPostingForEdit(7L, "owner@example.com")).thenReturn(returned);
 
         mockMvc.perform(get("/api/postings/7/edit").principal(() -> "owner@example.com"))
@@ -147,9 +147,8 @@ class JobPostingControllerTest {
 
     @Test
     void closingPassesTheLoggedInRecruiterAndAnswersWithThePosting() throws Exception {
-        JobPosting closed = approvedPosting();
-        closed.setPostStatus(PostStatus.CLOSED);
-        closed.setClosingReason("Closed by recruiter");
+        JobPosting closed = LifecycleFixtures.closed(postingDetails(), JobPostingLifecycle.Event.CLOSE_POSTING,
+                Instant.parse("2026-10-20T14:00:00Z"));
         when(jobPostingService.closePosting(7L, "owner@example.com")).thenReturn(closed);
 
         mockMvc.perform(post("/api/postings/7/close").principal(() -> "owner@example.com"))
@@ -216,6 +215,11 @@ class JobPostingControllerTest {
     }
 
     private static JobPosting approvedPosting() {
+        return LifecycleFixtures.decided(postingDetails(), JobPostingLifecycle.Event.APPROVE_JOB_POSTING,
+                "Test Administrator", "Looks good", Instant.parse("2026-10-10T14:00:00Z"));
+    }
+
+    private static JobPosting postingDetails() {
         Organization organization = new Organization("Brazos Analytics");
         organization.setOrganizationStatus(OrganizationStatus.ACTIVE);
         JobPosting posting = new JobPosting();
@@ -223,10 +227,6 @@ class JobPostingControllerTest {
         posting.setTitle("Backend Developer");
         posting.setNumberOfOpenings(2);
         posting.setApplicationDeadline(LocalDate.of(2026, 12, 31));
-        posting.setPostStatus(PostStatus.PUBLISHED);
-        posting.setApprovedBy("Test Administrator");
-        posting.setApprovedAt(LocalDateTime.of(2026, 10, 10, 9, 0));
-        posting.setReviewComment("Looks good");
         return posting;
     }
 }

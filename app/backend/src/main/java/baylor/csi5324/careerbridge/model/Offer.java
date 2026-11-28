@@ -95,64 +95,52 @@ public class Offer {
         return startDate;
     }
 
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
-    }
-
     public String getSalary() {
         return salary;
-    }
-
-    public void setSalary(String salary) {
-        this.salary = salary;
     }
 
     public String getTerms() {
         return terms;
     }
 
-    public void setTerms(String terms) {
-        this.terms = terms;
-    }
-
     public LocalDate getExpirationDate() {
         return expirationDate;
-    }
-
-    public void setExpirationDate(LocalDate expirationDate) {
-        this.expirationDate = expirationDate;
     }
 
     public String getOfferLetterFileName() {
         return offerLetterFileName;
     }
 
-    public void setOfferLetterFileName(String offerLetterFileName) {
-        this.offerLetterFileName = offerLetterFileName;
-    }
-
     public OfferStatus getStatus() {
         return status;
     }
 
-    public void setStatus(OfferStatus status) {
+    // Written only by the lifecycle package (LayersTest)
+    public void enterStatus(OfferStatus status) {
         this.status = status;
+    }
+
+    public void recordResponse(LocalDate responseDate) {
+        this.responseDate = responseDate;
+    }
+
+    // New terms always bump the revision, so an applicant answering the old terms is caught (ext 6b)
+    public void revise(LocalDate startDate, String salary, String terms, LocalDate expirationDate,
+                       String offerLetterFileName) {
+        this.startDate = startDate;
+        this.salary = salary;
+        this.terms = terms;
+        this.expirationDate = expirationDate;
+        this.offerLetterFileName = offerLetterFileName;
+        revision++;
     }
 
     public LocalDate getResponseDate() {
         return responseDate;
     }
 
-    public void setResponseDate(LocalDate responseDate) {
-        this.responseDate = responseDate;
-    }
-
     public int getRevision() {
         return revision;
-    }
-
-    public void setRevision(int revision) {
-        this.revision = revision;
     }
 }
 

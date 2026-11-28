@@ -92,11 +92,21 @@ public class JobPosting {
                 && now.isBefore(closesAt());
     }
 
-    // Close Job Posting: the three fields change together; each caller checks its own precondition
-    public void close(String reason, Instant now) {
-        postStatus = PostStatus.CLOSED;
-        closingReason = reason;
-        closedAt = now;
+    // Written only by the lifecycle package (LayersTest), which checks fig-04 first
+    public void enterStatus(PostStatus postStatus) {
+        this.postStatus = postStatus;
+    }
+
+    // Who decided, also for a return or a rejection; all null again once resubmitted
+    public void recordDecision(String decidedBy, LocalDateTime decidedAt, String comment) {
+        this.approvedBy = decidedBy;
+        this.approvedAt = decidedAt;
+        this.reviewComment = comment;
+    }
+
+    public void recordClosing(String reason, Instant at) {
+        this.closingReason = reason;
+        this.closedAt = at;
     }
 
     public boolean wasPublished() {
@@ -187,10 +197,6 @@ public class JobPosting {
         return postStatus;
     }
 
-    public void setPostStatus(PostStatus postStatus) {
-        this.postStatus = postStatus;
-    }
-
     public Organization getOrganization() {
         return organization;
     }
@@ -215,39 +221,19 @@ public class JobPosting {
         return approvedBy;
     }
 
-    public void setApprovedBy(String approvedBy) {
-        this.approvedBy = approvedBy;
-    }
-
     public LocalDateTime getApprovedAt() {
         return approvedAt;
-    }
-
-    public void setApprovedAt(LocalDateTime approvedAt) {
-        this.approvedAt = approvedAt;
     }
 
     public String getReviewComment() {
         return reviewComment;
     }
 
-    public void setReviewComment(String reviewComment) {
-        this.reviewComment = reviewComment;
-    }
-
     public String getClosingReason() {
         return closingReason;
     }
 
-    public void setClosingReason(String closingReason) {
-        this.closingReason = closingReason;
-    }
-
     public Instant getClosedAt() {
         return closedAt;
-    }
-
-    public void setClosedAt(Instant closedAt) {
-        this.closedAt = closedAt;
     }
 }

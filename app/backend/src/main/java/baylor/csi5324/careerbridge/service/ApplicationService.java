@@ -1,15 +1,15 @@
 package baylor.csi5324.careerbridge.service;
 
+import baylor.csi5324.careerbridge.lifecycle.ApplicationLifecycle;
+import baylor.csi5324.careerbridge.lifecycle.ApplicationLifecycle.Event;
+import baylor.csi5324.careerbridge.lifecycle.ApplicationLifecycle.Move;
+import baylor.csi5324.careerbridge.lifecycle.PostingFilled;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
-import baylor.csi5324.careerbridge.model.Offer;
-import baylor.csi5324.careerbridge.model.OfferStatus;
-import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.Resume;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
-import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
@@ -126,7 +126,7 @@ public class ApplicationService {
     @Transactional(readOnly = true)
     public WithdrawalPrompt requestWithdrawal(Long applicationId, String applicantEmail) {
         Application application = ownedApplication(applicationId, applicant(applicantEmail));
-        requireWithdrawable(application);
+        check(Move.of(application, clock.instant()), Event.WITHDRAW_APPLICATION);
         return new WithdrawalPrompt(application, WithdrawalPrompt.WARNING, WithdrawalPrompt.REASONS);
     }
 
@@ -134,16 +134,7 @@ public class ApplicationService {
     public WithdrawnApplication withdrawApplication(Long applicationId, String applicantEmail, String reason) {
         Applicant applicant = applicant(applicantEmail);
         Application application = ownedApplicationForUpdate(applicationId, applicant);
-        requireWithdrawable(application);
-
-        Instant now = clock.instant();
-        LocalDate withdrawnDate = LocalDate.ofInstant(now, application.getJobPosting().getOrganization().getZoneId());
-        String normalizedReason = normalizeReason(reason);
-
-        application.setApplicationStatus(ApplicationStatus.WITHDRAWN);
-        application.setWithdrawnAt(now);
-        application.getStatusHistory().add(new StatusHistoryEntry(
-                ApplicationStatus.WITHDRAWN, withdrawnDate, normalizedReason));
+        fire(Move.of(application, clock.instant()).withNote(normalizeReason(reason)), Event.WITHDRAW_APPLICATION);
         applicationRepository.saveAndFlush(application);
         applicationRepository.withInterviews(application);
 
@@ -174,53 +165,24 @@ public class ApplicationService {
                 .orElseThrow(() -> new ApplicationNotFoundException(applicationId));
         Application application = ownedApplicationForUpdate(applicationId, applicant);
         Instant now = clock.instant();
-        Offer offer = requireRespondableOffer(application, now, expectedRevision);
+        requireRevision(expectedRevision);
 
         long alreadyHired = applicationRepository.countByJobPostingAndApplicationStatus(posting, ApplicationStatus.HIRED);
-        if (alreadyHired >= posting.getNumberOfOpenings()) {
-            throw new ApplicationActionRefusedException(
-                    application.getApplicationStatus(),
-                    "All openings for this posting have already been filled.");
-        }
-
-        LocalDate responseDate = LocalDate.ofInstant(now, posting.getOrganization().getZoneId());
-        application.setApplicationStatus(ApplicationStatus.HIRED);
-        application.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.HIRED, responseDate));
-        offer.setStatus(OfferStatus.ACCEPTED);
-        offer.setResponseDate(responseDate);
+        fire(Move.of(application, now).answering(expectedRevision, alreadyHired), Event.ACCEPT_OFFER);
         applicationRepository.saveAndFlush(application);
 
-        if (alreadyHired + 1 >= posting.getNumberOfOpenings()) {
-            closeFilledPosting(posting, responseDate, now);
+        if (PostingFilled.fillsLastOpening(posting, alreadyHired)) {
+            List<Application> remainingActive = applicationRepository
+                    .findByJobPostingAndApplicationStatusIn(posting, ApplicationStatus.ACTIVE);
+            // A Notification to each rejected applicant would be sent here, from the list returned
+            applicationRepository.saveAll(PostingFilled.closeFilledPosting(posting, remainingActive, now));
+            jobPostingRepository.save(posting);
+            applicationRepository.flush();
         }
 
         applicationRepository.withInterviews(application);
         int activeCount = (int) applicationRepository.countActiveByApplicant(applicant);
         return new OfferResponseResult(application, activeCount, now);
-    }
-
-    // Close Job Posting subfunction for UC-07 extension 6c (FR-UC07.7, A2, A3, BR-10, BR-11)
-    private void closeFilledPosting(JobPosting posting, LocalDate closedDate, Instant now) {
-        if (posting.getPostStatus() == PostStatus.CLOSED) {
-            return;
-        }
-        posting.setPostStatus(PostStatus.CLOSED);
-        posting.setClosingReason("Filled");
-        posting.setClosedAt(now);
-        jobPostingRepository.save(posting);
-
-        List<Application> remainingActive = applicationRepository
-                .findByJobPostingAndApplicationStatusIn(posting, ApplicationStatus.ACTIVE);
-        for (Application other : remainingActive) {
-            other.setApplicationStatus(ApplicationStatus.REJECTED);
-            other.setRejectionReason("Posting closed");
-            other.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.REJECTED, closedDate));
-            if (other.getOffer() != null && other.getOffer().getStatus() == OfferStatus.PENDING) {
-                other.getOffer().setStatus(OfferStatus.RESCINDED);
-            }
-            applicationRepository.save(other);
-        }
-        applicationRepository.flush();
     }
 
     // CO-07.3: declines an active offer with an optional reason and frees the active slot (FR-UC07.2-7.3, 7.5-7.6, 7.11)
@@ -229,15 +191,9 @@ public class ApplicationService {
         Applicant applicant = applicant(applicantEmail);
         Application application = ownedApplicationForUpdate(applicationId, applicant);
         Instant now = clock.instant();
-        Offer offer = requireRespondableOffer(application, now, expectedRevision);
-        LocalDate responseDate = LocalDate.ofInstant(now, application.getJobPosting().getOrganization().getZoneId());
-        String normalizedReason = normalizeReason(reason);
-
-        application.setApplicationStatus(ApplicationStatus.OFFER_DECLINED);
-        application.getStatusHistory().add(new StatusHistoryEntry(
-                ApplicationStatus.OFFER_DECLINED, responseDate, normalizedReason));
-        offer.setStatus(OfferStatus.DECLINED);
-        offer.setResponseDate(responseDate);
+        requireRevision(expectedRevision);
+        fire(Move.of(application, now).answering(expectedRevision, 0).withNote(normalizeReason(reason)),
+                Event.DECLINE_OFFER);
         applicationRepository.saveAndFlush(application);
         applicationRepository.withInterviews(application);
 
@@ -245,30 +201,27 @@ public class ApplicationService {
         return new OfferResponseResult(application, activeCount, now);
     }
 
-    private Offer requireRespondableOffer(Application application, Instant now, Integer expectedRevision) {
+    private static void requireRevision(Integer expectedRevision) {
         if (expectedRevision == null) {
             throw new IllegalArgumentException("Offer revision is required.");
         }
-        ApplicationStatus stage = application.getApplicationStatus();
-        Offer offer = application.getOffer();
-        if (stage != ApplicationStatus.OFFER || offer == null || offer.getStatus() != OfferStatus.PENDING) {
-            throw new ApplicationActionRefusedException(
-                    stage, "This offer is no longer open. Current stage: " + stage.getLabel() + ".");
-        }
-        JobPosting posting = application.getJobPosting();
-        if (posting.getPostStatus() == PostStatus.CLOSED) {
-            throw new ApplicationActionRefusedException(
-                    stage, "This posting is closed and the offer can no longer be answered.");
-        }
-        var zoneId = posting.getOrganization().getZoneId();
-        if (offer.isExpired(now, zoneId)) {
-            throw new ApplicationActionRefusedException(
-                    stage, "The response deadline has passed. This offer can no longer be accepted.");
-        }
-        if (!expectedRevision.equals(offer.getRevision())) {
-            throw new OfferRevisedException(offer, now, zoneId);
-        }
-        return offer;
+    }
+
+    private static void fire(Move move, Event event) {
+        check(move, event);
+        ApplicationLifecycle.TABLE.fire(move, event);
+    }
+
+    // The lifecycle decides; this only picks the exception the controller turns into a response
+    private static void check(Move move, Event event) {
+        Application application = move.application();
+        ApplicationLifecycle.TABLE.refusal(move, event).ifPresent(refusal -> {
+            if (ApplicationLifecycle.OFFER_REVISED.equals(refusal.rule())) {
+                throw new OfferRevisedException(application.getOffer(), move.now(),
+                        application.getJobPosting().getOrganization().getZoneId());
+            }
+            throw new ApplicationActionRefusedException(application.getApplicationStatus(), refusal.message());
+        });
     }
 
     private Application ownedApplication(Long applicationId, Applicant applicant) {
@@ -289,19 +242,6 @@ public class ApplicationService {
             throw new ApplicationNotFoundException(applicationId);
         }
         return application;
-    }
-
-    private static void requireWithdrawable(Application application) {
-        if (application.isWithdrawable()) {
-            return;
-        }
-        ApplicationStatus stage = application.getApplicationStatus();
-        if (stage == ApplicationStatus.OFFER) {
-            throw new ApplicationActionRefusedException(
-                    stage, "This application is at the Offer stage. Use Decline on the offer instead.");
-        }
-        throw new ApplicationActionRefusedException(
-                stage, "This application is already " + stage.getLabel() + " and can no longer be withdrawn.");
     }
 
     private static String normalizeReason(String reason) {

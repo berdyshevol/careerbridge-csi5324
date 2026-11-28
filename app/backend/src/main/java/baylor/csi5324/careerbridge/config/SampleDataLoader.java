@@ -1,5 +1,7 @@
 package baylor.csi5324.careerbridge.config;
 
+import baylor.csi5324.careerbridge.lifecycle.ApplicationLifecycle;
+import baylor.csi5324.careerbridge.lifecycle.JobPostingLifecycle;
 import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
@@ -13,7 +15,6 @@ import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.model.Resume;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
-import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
@@ -131,7 +132,6 @@ public class SampleDataLoader implements CommandLineRunner {
             LocalDate appliedDate = LocalDate.parse(record.get("dateApplied"));
             ApplicationStatus status = ApplicationStatus.valueOf(record.get("applicationStatus"));
             Application application = new Application(applicant, posting, SAMPLE_RESUME, appliedDate);
-            application.setApplicationStatus(status);
             seedStageHistoryAndInterviews(application, appliedDate, status);
             applicationRepository.save(application);
         }
@@ -139,14 +139,9 @@ public class SampleDataLoader implements CommandLineRunner {
 
     private static void seedStageHistoryAndInterviews(Application application, LocalDate appliedDate,
                                                       ApplicationStatus status) {
-        if (status == ApplicationStatus.SCREENING || status == ApplicationStatus.INTERVIEW
-                || status == ApplicationStatus.OFFER) {
-            application.getStatusHistory().add(new StatusHistoryEntry(
-                    ApplicationStatus.SCREENING, appliedDate.plusDays(4)));
-        }
+        ApplicationLifecycle.restore(application, status,
+                appliedDate.plusDays(4), appliedDate.plusDays(9), appliedDate.plusDays(16));
         if (status == ApplicationStatus.INTERVIEW || status == ApplicationStatus.OFFER) {
-            application.getStatusHistory().add(new StatusHistoryEntry(
-                    ApplicationStatus.INTERVIEW, appliedDate.plusDays(9)));
             Interview interview = new Interview(
                     application,
                     1,
@@ -159,8 +154,6 @@ public class SampleDataLoader implements CommandLineRunner {
             application.getInterviews().add(interview);
         }
         if (status == ApplicationStatus.OFFER) {
-            application.getStatusHistory().add(new StatusHistoryEntry(
-                    ApplicationStatus.OFFER, appliedDate.plusDays(16)));
             if (application.getOffer() == null) {
                 application.setOffer(sampleOffer(application, appliedDate));
             }
@@ -223,7 +216,7 @@ public class SampleDataLoader implements CommandLineRunner {
         posting.setNumberOfOpenings(Integer.parseInt(record.get("numberOfOpenings")));
         posting.setDatePosted(LocalDate.parse(record.get("datePosted")));
         posting.setApplicationDeadline(LocalDate.parse(record.get("applicationDeadline")));
-        posting.setPostStatus(PostStatus.fromLabel(record.get("postStatus")));
+        JobPostingLifecycle.restore(posting, PostStatus.fromLabel(record.get("postStatus")));
         String recruiterEmail = record.get("recruiterEmail");
         if (!recruiterEmail.isBlank()) {
             posting.setRecruiter(recruiterRepository.findByEmailIgnoreCase(recruiterEmail)

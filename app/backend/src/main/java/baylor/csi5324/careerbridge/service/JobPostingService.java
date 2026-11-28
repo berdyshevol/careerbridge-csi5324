@@ -3,6 +3,8 @@ package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
 import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
+import baylor.csi5324.careerbridge.lifecycle.JobPostingLifecycle;
+import baylor.csi5324.careerbridge.lifecycle.JobPostingLifecycle.Event;
 import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
@@ -17,26 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Locale;
 
 @Service
 public class JobPostingService {
-
-    // UC-11, extension 5b
-    private static final int MIN_DAYS_TO_DEADLINE = 1;
-    private static final int MAX_DAYS_TO_DEADLINE = 90;
-
-    // UC-12, extension 6a
-    static final String DEADLINE_PASSED =
-            "The application deadline passed while the posting was waiting. Set a new deadline and submit it again.";
-
-    private static final int MAX_COMMENT_LENGTH = 2000;
-
-    // UC-13 extension *a, the reason Close Job Posting records
-    public static final String CLOSED_BY_RECRUITER = "Closed by recruiter";
 
     private static final ZoneOffset LATEST_ZONE = ZoneOffset.ofHours(-12);
 
@@ -117,7 +105,6 @@ public class JobPostingService {
         posting.setOrganization(organization);
         posting.setRecruiter(recruiter);
         applyDetails(posting, request);
-        posting.setPostStatus(PostStatus.DRAFT);
         posting.setDatePosted(LocalDate.now());
 
         return jobPostingRepository.save(posting);
@@ -126,34 +113,24 @@ public class JobPostingService {
     // One transaction, so the lazily loaded recruiter can be read
     @Transactional
     public JobPosting submitJobPosting(Long postingId, String recruiterEmail) {
-        JobPosting posting = findOwnDraftOrReturned(postingId, recruiterEmail, "submit", "submitted");
-
-        LocalDate deadline = posting.getApplicationDeadline();
-        LocalDate today = LocalDate.now();
-        if (deadline == null
-                || deadline.isBefore(today.plusDays(MIN_DAYS_TO_DEADLINE))
-                || deadline.isAfter(today.plusDays(MAX_DAYS_TO_DEADLINE))) {
-            throw new InvalidPostingException("The application deadline must be between "
-                    + MIN_DAYS_TO_DEADLINE + " and " + MAX_DAYS_TO_DEADLINE + " days away");
-        }
-
-        posting.setPostStatus(PostStatus.PENDING_APPROVAL);
-        posting.setApprovedBy(null);
-        posting.setApprovedAt(null);
-        posting.setReviewComment(null);
+        JobPosting posting = findOwnPosting(postingId, recruiterEmail, "submit");
+        fire(JobPostingLifecycle.Move.of(posting, clock.instant()), Event.SUBMIT_JOB_POSTING);
         return jobPostingRepository.save(posting);
     }
 
     // UC-11 extensions 3b and 6a: a query, so it has no contract
     @Transactional(readOnly = true)
     public JobPosting openPostingForEdit(Long postingId, String recruiterEmail) {
-        return findOwnDraftOrReturned(postingId, recruiterEmail, "change", "changed");
+        JobPosting posting = findOwnPosting(postingId, recruiterEmail, "change");
+        check(JobPostingLifecycle.Move.of(posting, clock.instant()), Event.UPDATE_POSTING);
+        return posting;
     }
 
     // CO-11.2: the organization stays, and a Returned posting keeps its comment until it is submitted again
     @Transactional
     public JobPosting updatePosting(Long postingId, CreateJobPostingRequest request, String recruiterEmail) {
-        JobPosting posting = findOwnDraftOrReturned(postingId, recruiterEmail, "change", "changed");
+        JobPosting posting = findOwnPosting(postingId, recruiterEmail, "change");
+        check(JobPostingLifecycle.Move.of(posting, clock.instant()), Event.UPDATE_POSTING);
         if (request == null) {
             throw new InvalidPostingException("Posting details are required");
         }
@@ -165,25 +142,14 @@ public class JobPostingService {
     // UC-13 extension *a, CO-13.2: the Recruiter who created a Published posting closes it early
     @Transactional
     public JobPosting closePosting(Long postingId, String recruiterEmail) {
-        JobPosting posting = findPosting(postingId);
+        JobPosting posting = findPostingForUpdate(postingId);
 
         if (!posting.wasCreatedBy(recruiterEmail)) {
             throw new PostingNotAllowedException("Only the recruiter who created this posting can close it");
         }
         requireActiveMember(recruiterEmail, posting.getOrganization());
-        if (posting.getPostStatus() != PostStatus.PUBLISHED) {
-            throw new PostingStateConflictException(
-                    "Only a published posting can be closed; this one is " + posting.getPostStatus().getLabel());
-        }
-        Instant now = clock.instant();
-        // Past its deadline the posting is UC-13's to close as Expired, at the next run
-        if (posting.isPastDeadline(now)) {
-            throw new PostingStateConflictException(
-                    "The application deadline has passed, so this posting is closing as Expired");
-        }
-
         // Applications keep their stages (A3): only the posting changes
-        posting.close(CLOSED_BY_RECRUITER, now);
+        fire(JobPostingLifecycle.Move.of(posting, clock.instant()), Event.CLOSE_POSTING);
         return jobPostingRepository.save(posting);
     }
 
@@ -194,29 +160,22 @@ public class JobPostingService {
 
     @Transactional
     public JobPosting approveJobPosting(Long postingId, String administrator, String comment) {
-        JobPosting posting = findPendingPosting(postingId);
-
-        if (posting.getApplicationDeadline() == null || posting.isPastDeadline(clock.instant())) {
-            recordDecision(posting, PostStatus.RETURNED, administrator, DEADLINE_PASSED);
-        } else {
-            requireStillActive(posting);
-            recordDecision(posting, PostStatus.PUBLISHED, administrator, comment);
-            posting.setDatePosted(LocalDate.now());
-        }
+        JobPosting posting = findPostingForUpdate(postingId);
+        decide(posting, Event.APPROVE_JOB_POSTING, administrator, comment);
         return jobPostingRepository.save(posting);
     }
 
     @Transactional
     public JobPosting returnJobPosting(Long postingId, String administrator, String comment) {
-        JobPosting posting = findPendingPosting(postingId);
-        recordDecision(posting, PostStatus.RETURNED, administrator, requireComment(comment));
+        JobPosting posting = findPostingForUpdate(postingId);
+        decide(posting, Event.RETURN_JOB_POSTING, administrator, comment);
         return jobPostingRepository.save(posting);
     }
 
     @Transactional
     public JobPosting rejectJobPosting(Long postingId, String administrator, String comment) {
-        JobPosting posting = findPendingPosting(postingId);
-        recordDecision(posting, PostStatus.REJECTED, administrator, requireComment(comment));
+        JobPosting posting = findPostingForUpdate(postingId);
+        decide(posting, Event.REJECT_JOB_POSTING, administrator, comment);
         return jobPostingRepository.save(posting);
     }
 
@@ -232,36 +191,21 @@ public class JobPostingService {
         }
     }
 
-    // UC-12 extension 6b, CO-12.1: nothing is published for an organization or a recruiter that is no
-    // longer active; the posting stays pending
-    private void requireStillActive(JobPosting posting) {
-        Organization organization = posting.getOrganization();
-        if (!organization.isRegistered()) {
-            throw new PostingStateConflictException(
-                    organization.getName() + " is no longer active, so the posting stays pending");
-        }
+    // UC-12 extension 6b, CO-12.1: a fact the approval rule needs but only a query can tell
+    private boolean submitterStillActive(JobPosting posting) {
         Recruiter recruiter = posting.getRecruiter();
-        if (recruiter == null) {
-            return;
-        }
-        if (recruiter.getAccountStatus() != AccountStatus.ACTIVE
-                || !recruiterOrganization.isActiveMember(recruiter.getEmail(), organization)) {
-            throw new PostingStateConflictException("The recruiter who submitted it is no longer an active member of "
-                    + organization.getName() + ", so the posting stays pending");
-        }
+        return recruiter == null
+                || recruiter.getAccountStatus() == AccountStatus.ACTIVE
+                && recruiterOrganization.isActiveMember(recruiter.getEmail(), posting.getOrganization());
     }
 
-    // Only the recruiter who created a posting changes or submits it, and only before the Administrator has it
-    private JobPosting findOwnDraftOrReturned(Long postingId, String recruiterEmail, String verb, String done) {
+    // Only the recruiter who created a posting changes, submits or closes it
+    private JobPosting findOwnPosting(Long postingId, String recruiterEmail, String verb) {
         JobPosting posting = findPosting(postingId);
         if (!posting.wasCreatedBy(recruiterEmail)) {
             throw new PostingNotAllowedException("Only the recruiter who created this posting can " + verb + " it");
         }
         requireActiveMember(recruiterEmail, posting.getOrganization());
-        if (posting.getPostStatus() != PostStatus.DRAFT && posting.getPostStatus() != PostStatus.RETURNED) {
-            throw new PostingStateConflictException("Only a draft or a returned posting can be " + done
-                    + "; this one is " + posting.getPostStatus().getLabel());
-        }
         return posting;
     }
 
@@ -270,32 +214,32 @@ public class JobPostingService {
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
     }
 
-    private JobPosting findPendingPosting(Long postingId) {
-        JobPosting posting = findPosting(postingId);
-        if (posting.getPostStatus() != PostStatus.PENDING_APPROVAL) {
-            throw new PostingStateConflictException(
-                    "This posting was already decided: it is " + posting.getPostStatus().getLabel());
-        }
-        return posting;
+    // A decision and a close lock the row, so an expiry run or a second Administrator waits instead of
+    // overwriting the status this one sets
+    private JobPosting findPostingForUpdate(Long postingId) {
+        return jobPostingRepository.findByIdForUpdate(postingId)
+                .orElseThrow(() -> new PostingNotFoundException(postingId));
     }
 
-    private static void recordDecision(
-            JobPosting posting, PostStatus decision, String administrator, String comment) {
-        if (comment != null && comment.length() > MAX_COMMENT_LENGTH) {
-            throw new InvalidPostingException("The comment is too long");
-        }
-        posting.setPostStatus(decision);
-        posting.setApprovedBy(administrator);
-        posting.setApprovedAt(LocalDateTime.now());
-        posting.setReviewComment(comment == null || comment.isBlank() ? null : comment.trim());
+    private void decide(JobPosting posting, Event decision, String administrator, String comment) {
+        fire(JobPostingLifecycle.Move.of(posting, clock.instant())
+                .decidedBy(administrator, comment, submitterStillActive(posting)), decision);
     }
 
-    private static String requireComment(String comment) {
-        if (comment == null || comment.isBlank()) {
-            throw new InvalidPostingException(
-                    "A reason is required to return or reject a posting");
-        }
-        return comment;
+    private static void fire(JobPostingLifecycle.Move move, Event event) {
+        check(move, event);
+        JobPostingLifecycle.TABLE.fire(move, event);
+    }
+
+    // The lifecycle decides; this only picks the exception the controller turns into a response
+    private static void check(JobPostingLifecycle.Move move, Event event) {
+        JobPostingLifecycle.TABLE.refusal(move, event).ifPresent(refusal -> {
+            if (JobPostingLifecycle.DEADLINE_WINDOW.equals(refusal.rule())
+                    || JobPostingLifecycle.INVALID_COMMENT.equals(refusal.rule())) {
+                throw new InvalidPostingException(refusal.message());
+            }
+            throw new PostingStateConflictException(refusal.message());
+        });
     }
 
     // UC-11 extensions 5a and 5b, the same for a new posting and a changed one

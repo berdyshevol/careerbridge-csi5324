@@ -1,5 +1,6 @@
 package baylor.csi5324.careerbridge.service;
 
+import baylor.csi5324.careerbridge.lifecycle.JobPostingLifecycle;
 import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
@@ -37,7 +38,7 @@ class JobPostingSearchDeadlineTest {
         JobPosting posting = new JobPosting();
         posting.setTitle(title);
         posting.setOrganization(organization);
-        posting.setPostStatus(PostStatus.PUBLISHED);
+        JobPostingLifecycle.restore(posting, PostStatus.PUBLISHED);
         posting.setApplicationDeadline(LocalDate.of(2026, 10, 17));
         return posting;
     }

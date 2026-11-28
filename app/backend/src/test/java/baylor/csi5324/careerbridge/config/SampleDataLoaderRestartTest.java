@@ -1,5 +1,6 @@
 package baylor.csi5324.careerbridge.config;
 
+import org.springframework.jdbc.core.JdbcTemplate;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
@@ -29,12 +30,17 @@ class SampleDataLoaderRestartTest {
     @Autowired
     private TransactionTemplate transactionTemplate;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @Test
     void aRestartOnADatabaseLoadedBeforeInterviewsExistedBackFillsThem() {
         Long applicationId = transactionTemplate.execute(status -> {
             Application interviewed = jordansApplicationAt(ApplicationStatus.INTERVIEW);
             interviewed.getInterviews().clear();
-            interviewed.getStatusHistory().subList(1, interviewed.getStatusHistory().size()).clear();
+            // The model no longer lets history lose entries, so the old database is recreated in SQL
+            jdbcTemplate.update("delete from application_status_history where application_id = ? "
+                    + "and status_history_order > 0", interviewed.getApplicationId());
             return interviewed.getApplicationId();
         });
 
