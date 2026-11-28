@@ -72,6 +72,8 @@ The requirements below come from the use cases in section 4.2. Each functional r
 
 - **FR-UC14.9:** When a Recruiter asks for a posting or application of an organization they are not an Active member of, the system shall reveal nothing, report that it was not found and record the attempt. (BR-15; UC-14 extension *a)
 
+  *Until the audit log of refused attempts exists (SCRUM-201):* the system reports that the posting or application was not found, the same words as for one that does not exist, but does not yet record the attempt.
+
 - **FR-UC14.10:** If the application was withdrawn, rejected or moved by another recruiter since the Recruiter took it up, the system shall report the current stage and change nothing. (UC-14 extension 6a)
 
 - **FR-UC14.11:** The system shall let a Recruiter who belongs to several organizations switch the organization they act for, and then present only that organization's postings. (BR-2, A16; UC-14 extension 2a)

@@ -46,6 +46,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     long countByJobPostingAndApplicationStatus(JobPosting jobPosting, ApplicationStatus status);
 
+    // The applicant comes with each row: the recruiter's list of a posting shows their names
+    @EntityGraph(attributePaths = "applicant")
     List<Application> findByJobPostingAndApplicationStatusIn(JobPosting jobPosting,
                                                              Collection<ApplicationStatus> statuses);
 

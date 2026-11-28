@@ -2,7 +2,7 @@
 
 Acceptance scenarios for UC-01 Search Job Postings, UC-02 Register as Applicant, UC-03 Update
 Applicant Profile, UC-11 Create Job Posting, UC-12 Approve Job Posting, UC-14 Screen Applications (steps
-1-2 so far) and Log In, written in Gherkin (`.feature` files) and run as end-to-end tests with
+1-4 and extensions 3a and \*a so far) and Log In, written in Gherkin (`.feature` files) and run as end-to-end tests with
 [playwright-bdd](https://github.com/vitalets/playwright-bdd). Every scenario comes from a use case in
 [use-cases.md](../use-cases.md), its main success scenario or one of its extensions, and names the item
 of the course's minimum scope for the final iteration that it shows, where it has one. The owner of another use case adds
@@ -106,6 +106,9 @@ Feature: UC-02 Register as Applicant
 | [A resume that is not a PDF or DOCX is refused and the current resume is kept](applicant-7-upload-resume-wrong-file.feature) | UC-03 extension 6a; minimum scope Applicant 7, input validation |
 | [A recruiter logs in and reaches only the recruiter's work](recruiter-1-log-in.feature) | Log In; minimum scope Recruiter 1 |
 | [A recruiter sees every posting of the organization, whatever its status, with its applications at each stage](recruiter-3-view-postings.feature) | UC-14 main success scenario, steps 1-2; minimum scope Recruiter 3 (view own postings), permissions by role |
+| [A recruiter reviews one application and sees its resume copy, the applicant's details and its history, and nothing of the applicant's other applications](recruiter-review-application.feature) | UC-14 main success scenario, steps 3-4; minimum-scope item to confirm with Oleg, permissions by role |
+| [A posting that took no applications says so](recruiter-review-application-no-applications.feature) | UC-14 extension 3a; minimum-scope item to confirm with Oleg |
+| [An application of another organization is reported as not found and nothing of it is shown](recruiter-review-application-not-found.feature) | UC-14 extension \*a, the answer "not found"; minimum-scope item to confirm with Oleg, permissions by role |
 | [The administrator logs in and reaches the posting approval queue](administrator-1-log-in.feature) | Log In: a session with the Administrator role, which UC-12 requires (FR-UC12.1); minimum scope Administrator 1 |
 | [A recruiter creates a posting and sends it for approval](recruiter-2-create-posting.feature) | UC-11 main success scenario, steps 1-7; minimum scope Recruiter 2 |
 | [A posting saved as a draft is not sent for approval or shown to the public](recruiter-2-create-posting-draft.feature) | UC-11 extension 3b; minimum scope Recruiter 2 |
@@ -151,8 +154,8 @@ up on its own, except:
 | UC-12 | 6b: the organization or recruiter is no longer active | Needs Organization Membership, not on main yet. |
 | UC-12 | 6c: another administrator decided first | There is only one administrator account. |
 | UC-13 | Expire Job Posting | A scenario cannot move a deadline into the past; `e2e/expire-job-posting.spec.ts` checks expiry against the sample data. |
-| UC-14 | Steps 3-7 and extensions 2a, 3a, 5a-5d, 6a | Not built yet: only steps 1-2 are (SCRUM-195). |
-| UC-14 | \*a: a posting of an organization the recruiter is not a member of | Every recruiter acts for one stand-in organization until memberships exist (SCRUM-198). Step 2 already checks that another organization's posting is not listed. |
+| UC-14 | Steps 5-7 and extensions 2a, 5a-5d, 6a | Not built yet: steps 1-4 are (SCRUM-195, SCRUM-196). |
+| UC-14 | \*a: that the attempt is recorded | The audit log is not built yet (SCRUM-201). The scenario checks the answer "not found" only. The other organization is not one the recruiter belongs to by the stand-in of SCRUM-198; a recruiter with several memberships is UC-09. |
 | UC-14 | 7a: the Notification Service is unavailable | Needs the backend to fail in the middle of a request. |
 
 The UC-02 extension 1a scenario checks that the visitor is handed to recruiter registration; that page

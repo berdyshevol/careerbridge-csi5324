@@ -510,3 +510,65 @@ Then(
 Then("{string} is shown as waiting for approval", async ({ page, cast }, posting: string) => {
   await system.expectPostingStatus(page, cast.posting(posting), "waiting for approval");
 });
+
+// UC-14 steps 3-4: reviewing one application
+
+Given("{string} has also applied to {string}", async ({ request, cast }, alias: string, posting: string) => {
+  await system.applyAgainByApi(request, cast, cast.person(alias), cast.posting(posting));
+});
+
+When(
+  "{string} takes up the application of {string} to {string}",
+  async ({ page, cast }, _recruiter: string, applicant: string, posting: string) => {
+    await system.openApplicationOf(page, cast.person(applicant), cast.posting(posting));
+  },
+);
+
+Then("{string} is shown the resume copy that {string} sent with the application", async ({ page }, _recruiter: string, _applicant: string) => {
+  await system.expectResumeCopy(page);
+});
+
+Then("{string} is shown the profile details of {string}", async ({ page, cast }, _recruiter: string, applicant: string) => {
+  await system.expectProfileDetails(page, cast.person(applicant));
+});
+
+Then(
+  /^"(.*)" is shown that the application is at (Applied|Screening|Interview|Offer)$/,
+  async ({ page }, _recruiter: string, stage: string) => {
+    await system.expectApplicationAt(page, stage);
+  },
+);
+
+Then(
+  "{string} is shown nothing about the application of {string} to {string}",
+  async ({ page, cast }, _recruiter: string, _applicant: string, posting: string) => {
+    await system.expectNothingAboutPosting(page, cast.posting(posting));
+  },
+);
+
+// UC-14 extension 3a
+
+When("{string} asks to review the applications to {string}", async ({ page, cast }, _recruiter: string, posting: string) => {
+  await system.openApplicantsOf(page, cast.posting(posting));
+});
+
+Then("{string} is told that {string} has no applications", async ({ page }, _recruiter: string, _posting: string) => {
+  await system.expectNoApplications(page);
+});
+
+// UC-14 extension *a: an application of another organization
+
+When(
+  "{string} asks for the application of {string} to {string}",
+  async ({ page, request, cast }, _recruiter: string, applicant: string, posting: string) => {
+    await system.openApplicationByAddress(page, request, cast, cast.person(applicant), cast.posting(posting));
+  },
+);
+
+Then("{string} is told that the application was not found", async ({ page }, _recruiter: string) => {
+  await system.expectApplicationNotFound(page);
+});
+
+Then("{string} is shown nothing about {string}", async ({ page, cast }, _recruiter: string, applicant: string) => {
+  await system.expectNothingAboutPerson(page, cast.person(applicant));
+});

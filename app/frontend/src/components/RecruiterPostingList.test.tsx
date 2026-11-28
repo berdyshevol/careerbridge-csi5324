@@ -41,6 +41,30 @@ describe("RecruiterPostingList", () => {
     vi.unstubAllGlobals();
   });
 
+  it("links a published posting to its applicants, and a closed one only while it has active applications", async () => {
+    const closedWithApplications = {
+      ...answer.postings[4],
+      postingId: 8,
+      title: "Pharmacy Technician",
+      applicationsByStage: stages(0, 2, 1, 0),
+    };
+    fetchMock.mockResolvedValueOnce(reply(200, { ...answer, postings: [...answer.postings, closedWithApplications] }));
+
+    render(<RecruiterPostingList token="t" />);
+
+    const link = await screen.findByRole("link", { name: "Applicants of Data Analyst" });
+    expect(link).toHaveAttribute("href", "/recruiter/postings/1");
+    expect(screen.getByRole("link", { name: "Applicants of Pharmacy Technician" })).toHaveAttribute(
+      "href",
+      "/recruiter/postings/8",
+    );
+    // The three Published rows and the Closed one with applications; not a draft, a posting waiting for
+    // approval or a Closed one with none
+    expect(screen.getAllByRole("link", { name: /^Applicants of/ })).toHaveLength(4);
+    expect(screen.queryByRole("link", { name: "Applicants of Front Desk Coordinator" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Applicants of Clinical Data Engineer" })).not.toBeInTheDocument();
+  });
+
   it("lists each posting with its status and the applications at each stage", async () => {
     fetchMock.mockResolvedValueOnce(reply(200, answer));
 
@@ -208,7 +232,8 @@ describe("RecruiterPostingList", () => {
 
     const teammates = await findRow("Lab Courier");
     expect(within(teammates).queryByRole("button")).toBeNull();
-    expect(within(teammates).queryByRole("link")).toBeNull();
+    // Only the creator changes or closes a posting; every recruiter of the organization reads its applicants
+    expect(within(teammates).getAllByRole("link").map((link) => link.textContent)).toEqual(["Applicants"]);
   });
 
   it("puts focus in the confirmation, and back on Close after Escape", async () => {
