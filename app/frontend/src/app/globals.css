@@ -120,8 +120,9 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-figtree), system-ui, sans-serif;
-  --font-display: var(--font-bricolage), system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  /* The same face as the text (ADR-0015); titles stand out by size and weight */
+  --font-display: var(--font-inter), system-ui, sans-serif;
   --color-muted: #55615c;
 }
 

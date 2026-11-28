@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Figtree } from "next/font/google";
+import { Inter } from "next/font/google";
 import Link from "next/link";
 import AccountMenu from "@/components/AccountMenu";
 import DeskNav from "@/components/DeskNav";
@@ -8,8 +8,8 @@ import { serverSession } from "@/lib/serverSession";
 import { themeOf } from "@/lib/session";
 import "./globals.css";
 
-const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"] });
-const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"] });
+// ADR-0015: one face for titles and text
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "CareerBridge",
@@ -23,7 +23,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const hasDesk = Boolean(session);
 
   return (
-    <html lang="en" data-theme={themeOf(session?.user.role)} className={`${figtree.variable} ${bricolage.variable}`}>
+    <html lang="en" data-theme={themeOf(session?.user.role)} className={inter.variable}>
       <body className="min-h-screen bg-base-200 font-sans text-base-content">
         {/* ADR-0012: the header carries the role's color, so the role shows from any part of the screen */}
         {/* Sticky, so the role's color and the account menu stay in view on a long list */}

@@ -21,3 +21,4 @@ gets a new record that names the one it replaces, and the old one becomes "Super
 | [0012](0012-role-colors.md) | Each role has its own primary colors | Accepted |
 | [0013](0013-home-summary-cards.md) | A role's home shows a few counts it already has | Accepted |
 | [0014](0014-schema-from-flyway-migrations.md) | The database schema comes from Flyway migrations; Hibernate only checks it | Accepted |
+| [0015](0015-inter-font.md) | One typeface, Inter, for titles and text | Accepted |
