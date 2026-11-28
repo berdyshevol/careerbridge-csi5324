@@ -11,7 +11,10 @@ operation contract of [ssd-and-contracts.md](ssd-and-contracts.md):
 - a diagram starts at the HTTP request the actor sends to a controller and ends at its response;
   pages and other user-interface steps are left out (Deliverable 3 feedback);
 - the controller hands the request to the service method named after the system operation;
-- the service applies the business rules, creates and changes entities and calls repositories;
+- the service checks what needs a query (who the actor is, what they may do), loads and locks the
+  entities, fires the system operation on the lifecycle table of the entity (`ApplicationLifecycle`,
+  `JobPostingLifecycle`, `OfferLifecycle`) and saves; a status changes only through those tables,
+  whose rows are the arrows of the lifecycle figures ([ADR-0015](adr/0015-lifecycles-are-transition-tables.md));
 - a refusal is an exception that the controller turns into an HTTP status with a reason in plain
   text or, for refused fields, a field-to-reason map;
 - names are the class and method names in the code on `main`; a step that is designed but not
@@ -547,7 +550,7 @@ sequenceDiagram
         else valid
             create participant P as :JobPosting
             JS->>P: new JobPosting(), setOrganization(organization),<br/>setRecruiter(recruiter), setTitle(...), ...
-            JS->>P: setPostStatus(DRAFT), setDatePosted(today)
+            JS->>P: setDatePosted(today)<br/>(a new JobPosting starts as DRAFT)
             JS->>JR: save(posting)
             JR-->>JS: JobPosting (Draft)
             JS-->>JC: JobPosting
@@ -566,6 +569,7 @@ sequenceDiagram
     participant JR as JobPosting<br/>Repository
     participant RR as Recruiter<br/>Repository
     participant MR as OrganizationMembership<br/>Repository
+    participant L as JobPosting<br/>Lifecycle
     participant P as :JobPosting
 
     R->>JC: POST /api/postings/{postingId}/submit<br/>with the session token
@@ -588,14 +592,18 @@ sequenceDiagram
     else posting's organization not among the Active memberships (ext. *a, BR-14)
         JS-->>JC: throw PostingNotAllowedException(reason)
         JC-->>R: 403 and the reason, nothing changed
-    else postStatus is not DRAFT or RETURNED
+    end
+    JS->>L: refusal(Move.of(posting, now), SUBMIT_JOB_POSTING)
+    L-->>JS: Optional<Refusal>
+    alt postStatus is not DRAFT or RETURNED
         JS-->>JC: throw PostingStateConflictException(current status)
         JC-->>R: handleStatusConflict(): 409 and the status
     else deadline not 1 to 90 days away (ext. 5b)
         JS-->>JC: throw InvalidPostingException(reason)
         JC-->>R: 400 and the allowed range
     else ready to submit
-        JS->>P: setPostStatus(PENDING_APPROVAL), setApprovedBy(null),<br/>setApprovedAt(null), setReviewComment(null)
+        JS->>L: fire(move, SUBMIT_JOB_POSTING)
+        L->>P: enterStatus(PENDING_APPROVAL),<br/>recordDecision(null, null, null)
         JS->>JR: save(posting)
         JR-->>JS: JobPosting (Pending Approval)
         JS-->>JC: JobPosting
@@ -690,39 +698,38 @@ sequenceDiagram
     participant JS as JobPosting<br/>Service
     participant JR as JobPosting<br/>Repository
     participant MR as OrganizationMembership<br/>Repository
+    participant L as JobPosting<br/>Lifecycle
     participant P as :JobPosting
 
     A->>AC: POST /api/admin/postings/{postingId}/approve | return | reject<br/>(DecisionRequest {comment})
     AC->>JS: approveJobPosting | returnJobPosting | rejectJobPosting<br/>(postingId, administrator, comment)
-    JS->>JR: findById(postingId)
+    JS->>JR: findByIdForUpdate(postingId)
     JR-->>JS: Optional<JobPosting>
     alt no such posting
         JS-->>AC: throw PostingNotFoundException
         AC-->>A: 404
-    else postStatus is not PENDING_APPROVAL (ext. 6c)
+    end
+    JS->>MR: findByRecruiterAndStatus(posting.recruiter, ACTIVE)
+    MR-->>JS: List<OrganizationMembership>
+    JS->>L: refusal(Move.of(posting, now).decidedBy(administrator,<br/>comment, submitterStillActive), APPROVE | RETURN | REJECT)
+    L-->>JS: Optional<Refusal>, the first in table order
+    alt postStatus is not PENDING_APPROVAL (ext. 6c)
         JS-->>AC: throw PostingStateConflictException(current status)
         AC-->>A: handleAlreadyDecided(): 409 and the status
+    else approve before the deadline: organization inactive, or<br/>submitting Recruiter has no Active membership in it (ext. 6b)
+        JS-->>AC: throw PostingStateConflictException(reason)
+        AC-->>A: 409 and the reason, the posting stays pending
+    else return or reject with no comment (ext. 5a, 5b),<br/>or a comment that is kept but too long
+        JS-->>AC: throw InvalidPostingException(reason)
+        AC-->>A: handleInvalidDecision(): 400 and the reason
     end
-    alt approve
-        JS->>P: isPastDeadline(now)
-        P-->>JS: boolean
-        alt deadline passed (ext. 6a)
-            JS->>P: recordDecision(RETURNED, administrator,<br/>"a new deadline is needed")
-        else organization inactive, or submitting Recruiter<br/>has no Active membership in it (ext. 6b)
-            JS->>MR: findByRecruiterAndStatus(posting.recruiter, ACTIVE)
-            MR-->>JS: List<OrganizationMembership>
-            JS-->>AC: throw PostingStateConflictException(reason)
-            AC-->>A: 409 and the reason, the posting stays pending
-        else publish
-            JS->>P: recordDecision(PUBLISHED, administrator, comment),<br/>setDatePosted(today)
-        end
-    else return (ext. 5a) or reject (ext. 5b)
-        alt no comment, or comment too long
-            JS-->>AC: throw InvalidPostingException(reason)
-            AC-->>A: handleInvalidDecision(): 400 and the reason
-        else comment given
-            JS->>P: recordDecision(RETURNED | REJECTED, administrator, comment)
-        end
+    JS->>L: fire(move, APPROVE | RETURN | REJECT)
+    alt approve, deadline passed (ext. 6a)
+        L->>P: enterStatus(RETURNED), recordDecision(administrator,<br/>now, "a new deadline is needed")
+    else approve
+        L->>P: enterStatus(PUBLISHED), recordDecision(administrator,<br/>now, comment), setDatePosted(today)
+    else return or reject
+        L->>P: enterStatus(RETURNED | REJECTED),<br/>recordDecision(administrator, now, comment)
     end
     JS->>JR: save(posting)
     JR-->>JS: JobPosting
@@ -748,6 +755,7 @@ sequenceDiagram
     participant ES as JobPostingExpiration<br/>Service
     participant PR as JobPostingExpiration<br/>Processor
     participant JR as JobPosting<br/>Repository
+    participant L as JobPosting<br/>Lifecycle
     participant P as :JobPosting
 
     S->>SC: runScheduledExpiration()<br/>(at start, then every 15 minutes)
@@ -760,17 +768,20 @@ sequenceDiagram
         P-->>ES: boolean
         opt past 23:59 of its deadline in the organization's time zone
             ES->>PR: expirePosting(postingId, now)<br/>(new transaction)
-            PR->>JR: findById(postingId)
+            PR->>JR: findByIdForUpdate(postingId)
             JR-->>PR: Optional<JobPosting>
-            alt PUBLISHED
-                PR->>P: close("Expired", now)
+            PR->>L: refusal(Move.of(posting, now), EXPIRE_POSTING)
+            L-->>PR: Optional<Refusal>
+            alt no refusal
+                PR->>L: fire(move, EXPIRE_POSTING)
+                alt PUBLISHED
+                    L->>P: enterStatus(CLOSED), recordClosing("Expired", now)
+                else PENDING_APPROVAL or RETURNED (ext. 2b)
+                    L->>P: enterStatus(EXPIRED)
+                end
                 PR->>JR: saveAndFlush(posting)
-                PR-->>ES: true (closed)
-            else PENDING_APPROVAL or RETURNED (ext. 2b)
-                PR->>P: setPostStatus(EXPIRED)
-                PR->>JR: saveAndFlush(posting)
-                PR-->>ES: false
-            else already closed, or gone (ext. 3a)
+                PR-->>ES: true if it closed
+            else already closed meanwhile, or gone (ext. 3a)
                 PR-->>ES: false, nothing changed
             end
             break the posting fails (ext. 3b)
@@ -797,11 +808,12 @@ sequenceDiagram
     participant JC as JobPosting<br/>Controller
     participant JS as JobPosting<br/>Service
     participant JR as JobPosting<br/>Repository
+    participant L as JobPosting<br/>Lifecycle
     participant P as :JobPosting
 
     R->>JC: POST /api/postings/{postingId}/close<br/>with the session token
     JC->>JS: closePosting(postingId, recruiterEmail)
-    JS->>JR: findById(postingId)
+    JS->>JR: findByIdForUpdate(postingId)
     JR-->>JS: Optional<JobPosting>
     alt no such posting
         JS-->>JC: throw PostingNotFoundException
@@ -812,16 +824,18 @@ sequenceDiagram
     alt created by another recruiter, or by none
         JS-->>JC: throw PostingNotAllowedException(reason)
         JC-->>R: handleNotAllowed(): 403 and the reason, nothing changed
-    else postStatus is not PUBLISHED
+    end
+    JS->>L: refusal(Move.of(posting, now), CLOSE_POSTING)
+    L-->>JS: Optional<Refusal>
+    alt postStatus is not PUBLISHED
         JS-->>JC: throw PostingStateConflictException(current status)
         JC-->>R: handleStatusConflict(): 409 and the status
     else past its deadline (left to the expiration job)
-        JS->>P: isPastDeadline(now)
-        P-->>JS: true
         JS-->>JC: throw PostingStateConflictException(reason)
         JC-->>R: 409 and the reason, nothing changed
     else Published and open
-        JS->>P: close("Closed by recruiter", now)
+        JS->>L: fire(move, CLOSE_POSTING)
+        L->>P: enterStatus(CLOSED), recordClosing("Closed by recruiter", now)
         JS->>JR: save(posting)
         JR-->>JS: JobPosting (Closed)
         JS-->>JC: JobPosting
@@ -850,12 +864,12 @@ the DCD must contain each of them.
 | SD-9 | `ApplicantProfileController.viewProfile`, `updateProfile` | `ApplicantProfileService.viewProfile`, `updateProfile` | `ApplicantRepository.findByEmailIgnoreCase`, `save` |
 | SD-10 | `ApplicantProfileController.uploadResume` | `ApplicantProfileService.uploadResume` | `ApplicantRepository.findByEmailIgnoreCase`, `save`; `ResumeRepository.save`, `delete` |
 | SD-4 | `JobPostingController.createPosting` | `JobPostingService.createPosting` | `OrganizationRepository.findById`; `RecruiterRepository.findByEmailIgnoreCase`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\*; `JobPostingRepository.save` |
-| SD-5 | `JobPostingController.submitJobPosting` | `JobPostingService.submitJobPosting`; `JobPosting.wasCreatedBy` | `JobPostingRepository.findById`, `save`; `RecruiterRepository.findByEmailIgnoreCase`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\* |
+| SD-5 | `JobPostingController.submitJobPosting` | `JobPostingService.submitJobPosting`; `JobPosting.wasCreatedBy`; `JobPostingLifecycle.TABLE.refusal`, `fire` | `JobPostingRepository.findById`, `save`; `RecruiterRepository.findByEmailIgnoreCase`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\* |
 | SD-5b | `JobPostingController.openPostingForEdit`, `updatePosting` | `JobPostingService.openPostingForEdit`, `updatePosting`; `JobPosting.wasCreatedBy` | `JobPostingRepository.findById`, `save` |
 | SD-6 | `AdminJobPostingController.openPostingApprovalQueue` | `JobPostingService.openPostingApprovalQueue` | `JobPostingRepository.findByPostStatusOrderByDatePostedAscJobPostIdAsc` |
-| SD-7 | `AdminJobPostingController.approveJobPosting`, `returnJobPosting`, `rejectJobPosting` | `JobPostingService.approveJobPosting`, `returnJobPosting`, `rejectJobPosting`; `JobPosting.isPastDeadline` | `JobPostingRepository.findById`, `save`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\* |
-| SD-11 | none: `JobPostingExpirationScheduler.runScheduledExpiration` | `JobPostingExpirationService.runExpirationJob`; `JobPostingExpirationProcessor.expirePosting`; `JobPosting.isPastDeadline`, `close` | `JobPostingRepository.findByPostStatusInAndApplicationDeadlineLessThanEqual`, `findById`, `saveAndFlush` |
-| SD-11b | `JobPostingController.closePosting` | `JobPostingService.closePosting`; `JobPosting.wasCreatedBy`, `isPastDeadline`, `close` | `JobPostingRepository.findById`, `save` |
+| SD-7 | `AdminJobPostingController.approveJobPosting`, `returnJobPosting`, `rejectJobPosting` | `JobPostingService.approveJobPosting`, `returnJobPosting`, `rejectJobPosting`; `JobPostingLifecycle.TABLE.refusal`, `fire` | `JobPostingRepository.findByIdForUpdate`, `save`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\* |
+| SD-11 | none: `JobPostingExpirationScheduler.runScheduledExpiration` | `JobPostingExpirationService.runExpirationJob`; `JobPostingExpirationProcessor.expirePosting`; `JobPosting.isPastDeadline`; `JobPostingLifecycle.TABLE.refusal`, `fire` | `JobPostingRepository.findByPostStatusInAndApplicationDeadlineLessThanEqual`, `findByIdForUpdate`, `saveAndFlush` |
+| SD-11b | `JobPostingController.closePosting` | `JobPostingService.closePosting`; `JobPosting.wasCreatedBy`; `JobPostingLifecycle.TABLE.refusal`, `fire` | `JobPostingRepository.findByIdForUpdate`, `save` |
 | SD-12 | `RecruiterRegistrationController.submitRecruiterRegistration` | `RecruiterRegistrationService.submitRecruiterRegistration`; `OrganizationRules.rejectDuplicate`; `NotificationService.notify` | `UserRepository.findByEmailIgnoreCase`; `RecruiterRepository.saveAndFlush`; `OrganizationRepository.findAll`, `findByName`, `save`; `OrganizationMembershipRepository.save` |
 | SD-13 | `RecruiterRegistrationController.verifyRecruiterEmail` | `RecruiterRegistrationService.verifyRecruiterEmail`; `NotificationService.notifyAdministrators` | `RecruiterRepository.findByVerificationTokenHash`; `OrganizationMembershipRepository.findByRecruiterAndStatus` |
 | SD-14 | `RecruiterMembershipController.submitMembershipRequest` | `MembershipService.submitMembershipRequest`; `NotificationService.notify`, `notifyAdministrators` | `RecruiterRepository.lockByEmail`; `OrganizationRepository.findById`; `OrganizationMembershipRepository.findByRecruiterAndStatus`, `findByRecruiterOrderByRequestedAtAscMembershipIdAsc`, `save` |
@@ -872,7 +886,9 @@ so one failing posting does not undo the others.
 
 Associations between entities use the multiplicities of the [domain model](domain-model.md)
 (section 5.3), written as `1` and `*` in every view. Dashed arrows are dependencies and have no
-multiplicity. Items marked «designed» are not in the code yet. Getters and setters are left out.
+multiplicity. Items marked «designed» are not in the code yet. Getters and setters are left out;
+JobPosting has no setter for its status: only the rows of `JobPostingLifecycle` (Figure 4) call
+its writers.
 
 ```mermaid
 classDiagram
@@ -914,6 +930,7 @@ classDiagram
     class JobPostingRepository {
         <<interface>>
         +findById(Long) Optional~JobPosting~
+        +findByIdForUpdate(Long) Optional~JobPosting~
         +save(JobPosting) JobPosting
         +findByPostStatusOrderByDatePostedAscJobPostIdAsc(PostStatus) List~JobPosting~
         +findByPostStatusInAndApplicationDeadlineLessThanEqual(List~PostStatus~, LocalDate) List~JobPosting~
@@ -952,7 +969,19 @@ classDiagram
         +isOpen(Instant now) boolean
         +wasPublished() boolean
         +wasCreatedBy(String recruiterEmail) boolean
-        +close(String reason, Instant now) void
+        +enterStatus(PostStatus) void
+        +recordDecision(String decidedBy, LocalDateTime decidedAt, String comment) void
+        +recordClosing(String reason, Instant at) void
+    }
+    class JobPostingLifecycle {
+        +TABLE StateMachine
+        +restore(JobPosting, PostStatus) JobPosting
+    }
+    class StateMachine {
+        +refusal(context, event) Optional~Refusal~
+        +fire(context, event) state
+        +allowedEvents(context) List
+        +toMermaid() String
     }
     class Organization {
         -Long organizationId
@@ -990,6 +1019,10 @@ classDiagram
     JobPostingService ..> OrganizationRepository
     JobPostingService ..> RecruiterRepository
     JobPostingService ..> OrganizationMembershipRepository
+    JobPostingService ..> JobPostingLifecycle
+    JobPostingExpirationProcessor ..> JobPostingLifecycle
+    JobPostingLifecycle ..> StateMachine
+    JobPostingLifecycle ..> JobPosting
 
     Organization "1" -- "*" JobPosting : organization
     Recruiter "1" -- "*" JobPosting : recruiter

@@ -17,15 +17,17 @@ JSON. The backend lists the frontend addresses that may call it (CORS).
 
 ### Backend layers
 
-A layer calls only the layer below it, and only a controller knows about HTTP. The test
-`LayersTest` (`app/backend/src/test`) checks both on every pull request.
+A layer calls only the layer below it, only a controller knows about HTTP, and only a lifecycle
+table changes a status, fired by a service (or by the sample data in `config`). The test
+`LayersTest` (`app/backend/src/test`) checks all three on every pull request.
 
 | Layer | Package | Responsibility |
 | --- | --- | --- |
 | Controller | `controller` | Maps a URL under `/api` to one service call and returns JSON |
-| Service | `service` | Business rules; one method per system operation of the operation contracts |
+| Service | `service` | One method per system operation of the operation contracts: checks what needs a query, loads and locks, fires the operation on the lifecycle table, saves |
 | Repository | `repository` | Spring Data JPA interfaces |
-| Model | `model` | Entities, named as in the [domain model](domain-model.md) |
+| Lifecycle | `lifecycle` | One transition table per lifecycle, run by `StateMachine`: each row is an arrow of the figure with its refusals and its effect ([ADR-0015](adr/0015-lifecycles-are-transition-tables.md)); plain Java, no Spring |
+| Model | `model` | Entities, named as in the [domain model](domain-model.md); their status is written only by a lifecycle table |
 
 Controllers and services also use the records in the `dto` package, which is not a layer. A record
 there is the shape of one request or one response:
@@ -56,7 +58,8 @@ backend loads sample job postings and applications from CSV files
 | --- | --- |
 | Conceptual class and its attributes ([domain model](domain-model.md)) | Entity in `model`, same names |
 | System operation ([operation contract](ssd-and-contracts.md)) | Method of a service, same name |
-| Posting lifecycle state ([use-cases.md](use-cases.md), Figure 4) | Value of the `PostStatus` enum |
+| Application pipeline ([use-cases.md](use-cases.md), Figure 3, BR-8) | `ApplicationLifecycle.TABLE`; the stages are values of `ApplicationStatus` |
+| Posting lifecycle ([use-cases.md](use-cases.md), Figure 4) | `JobPostingLifecycle.TABLE`; the states are values of `PostStatus` |
 | Use case | A controller, a service, a page under `app/frontend/src/app/` |
 
 UC-04 Apply for Job is implemented end to end: `ApplyForm` → `lib/api.ts` → `ApplicationController`

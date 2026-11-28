@@ -22,7 +22,7 @@ public class JobPostingExpirationProcessor {
     // One transaction per posting, so a failure leaves the rest of the run untouched (UC-13 extension 3a)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean expirePosting(Long postingId, Instant now) {
-        JobPosting posting = jobPostingRepository.findById(postingId).orElse(null);
+        JobPosting posting = jobPostingRepository.findByIdForUpdate(postingId).orElse(null);
 
         if (posting == null || !posting.isPastDeadline(now)) {
             return false;

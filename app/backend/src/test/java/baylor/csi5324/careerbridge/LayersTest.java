@@ -53,6 +53,14 @@ class LayersTest {
                     (JavaMethodCall call) -> LIFECYCLE_ENTITIES.contains(call.getTargetOwner().getSimpleName())
                             && STATE_WRITERS.contains(call.getName())));
 
+    // A table fired outside a service runs unlocked, outside its transaction, and is never saved
+    @ArchTest
+    static final ArchRule onlyServicesFireALifecycle = noClasses()
+            .that().resideOutsideOfPackages("..service..", "..config..", "..lifecycle..")
+            .should().callMethodWhere(DescribedPredicate.describe("a move on a lifecycle table",
+                    (JavaMethodCall call) -> Set.of("fire", "restore").contains(call.getName())
+                            && call.getTargetOwner().getPackageName().endsWith(".lifecycle")));
+
     // Also catches @ResponseStatus on a service exception: the controller decides the status (design.md)
     @ArchTest
     static final ArchRule servicesKnowNothingOfHttp = noClasses()

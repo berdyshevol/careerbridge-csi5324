@@ -83,7 +83,7 @@ class JobPostingExpirationServiceTest {
                 });
 
         for (JobPosting posting : postings) {
-            when(repository.findById(posting.getJobPostId()))
+            when(repository.findByIdForUpdate(posting.getJobPostId()))
                     .thenReturn(Optional.of(posting));
         }
     }

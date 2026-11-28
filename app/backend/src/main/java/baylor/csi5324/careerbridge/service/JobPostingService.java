@@ -145,7 +145,7 @@ public class JobPostingService {
     // UC-13 extension *a, CO-13.2: the Recruiter who created a Published posting closes it early
     @Transactional
     public JobPosting closePosting(Long postingId, String recruiterEmail) {
-        JobPosting posting = findPosting(postingId);
+        JobPosting posting = findPostingForUpdate(postingId);
 
         if (!posting.wasCreatedBy(recruiterEmail)) {
             throw new PostingNotAllowedException("Only the recruiter who created this posting can close it");
@@ -163,21 +163,21 @@ public class JobPostingService {
 
     @Transactional
     public JobPosting approveJobPosting(Long postingId, String administrator, String comment) {
-        JobPosting posting = findPosting(postingId);
+        JobPosting posting = findPostingForUpdate(postingId);
         decide(posting, Event.APPROVE_JOB_POSTING, administrator, comment);
         return jobPostingRepository.save(posting);
     }
 
     @Transactional
     public JobPosting returnJobPosting(Long postingId, String administrator, String comment) {
-        JobPosting posting = findPosting(postingId);
+        JobPosting posting = findPostingForUpdate(postingId);
         decide(posting, Event.RETURN_JOB_POSTING, administrator, comment);
         return jobPostingRepository.save(posting);
     }
 
     @Transactional
     public JobPosting rejectJobPosting(Long postingId, String administrator, String comment) {
-        JobPosting posting = findPosting(postingId);
+        JobPosting posting = findPostingForUpdate(postingId);
         decide(posting, Event.REJECT_JOB_POSTING, administrator, comment);
         return jobPostingRepository.save(posting);
     }
@@ -214,6 +214,13 @@ public class JobPostingService {
 
     private JobPosting findPosting(Long postingId) {
         return jobPostingRepository.findById(postingId)
+                .orElseThrow(() -> new PostingNotFoundException(postingId));
+    }
+
+    // A decision and a close lock the row, so an expiry run or a second Administrator waits instead of
+    // overwriting the status this one sets
+    private JobPosting findPostingForUpdate(Long postingId) {
+        return jobPostingRepository.findByIdForUpdate(postingId)
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
     }
 
