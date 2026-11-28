@@ -277,6 +277,32 @@ class JobPostingApprovalTest {
     }
 
     @Test
+    void pastDeadlineReturnsThePostingWhateverTheComment() {
+        JobPosting pending = createPosting(
+                PostStatus.PENDING_APPROVAL, LocalDate.now().minusDays(1));
+
+        JobPosting result = jobPostingService.approveJobPosting(
+                pending.getJobPostId(), "Admin", "x".repeat(2001));
+
+        assertEquals(PostStatus.RETURNED, result.getPostStatus());
+        assertEquals(JobPosting.DEADLINE_PASSED, result.getReviewComment());
+    }
+
+    @Test
+    void aDecidedPostingIsReportedBeforeTheComment() {
+        JobPosting published = createPosting(
+                PostStatus.PUBLISHED, LocalDate.now().plusDays(10));
+        Long id = published.getJobPostId();
+
+        assertThrows(PostingStateConflictException.class,
+                () -> jobPostingService.approveJobPosting(id, "Admin", "x".repeat(2001)));
+        assertThrows(PostingStateConflictException.class,
+                () -> jobPostingService.returnJobPosting(id, "Admin", " "));
+        assertThrows(PostingStateConflictException.class,
+                () -> jobPostingService.rejectJobPosting(id, "Admin", null));
+    }
+
+    @Test
     void approvalRecordsThePublicationDate() {
         JobPosting pending = createPosting(
                 PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));

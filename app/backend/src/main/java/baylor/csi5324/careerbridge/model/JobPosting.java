@@ -194,7 +194,9 @@ public class JobPosting {
         return postStatus;
     }
 
-    private void requirePendingApproval() {
+    // UC-12 ext 6c comes first: an Administrator who lost the race learns that, not what was wrong
+    // with their comment
+    public void requirePendingApproval() {
         if (postStatus != PostStatus.PENDING_APPROVAL) {
             throw new PostingStateConflictException(
                     "This posting was already decided: it is " + postStatus.getLabel());

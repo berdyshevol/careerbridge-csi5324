@@ -172,10 +172,12 @@ public class JobPostingService {
     @Transactional
     public JobPosting approveJobPosting(Long postingId, String administrator, String comment) {
         JobPosting posting = findPostingForUpdate(postingId);
-        requireShortComment(comment);
+        posting.requirePendingApproval();
         Instant now = clock.instant();
+        // Past the deadline the posting goes back with its own comment, so the Administrator's is not checked
         if (posting.canBePublished(now)) {
             requireStillActive(posting);
+            requireShortComment(comment);
         }
         posting.approve(administrator, comment, now);
         return jobPostingRepository.save(posting);
@@ -184,6 +186,7 @@ public class JobPostingService {
     @Transactional
     public JobPosting returnJobPosting(Long postingId, String administrator, String comment) {
         JobPosting posting = findPostingForUpdate(postingId);
+        posting.requirePendingApproval();
         posting.returnToRecruiter(administrator, requireComment(comment), clock.instant());
         return jobPostingRepository.save(posting);
     }
@@ -191,6 +194,7 @@ public class JobPostingService {
     @Transactional
     public JobPosting rejectJobPosting(Long postingId, String administrator, String comment) {
         JobPosting posting = findPostingForUpdate(postingId);
+        posting.requirePendingApproval();
         posting.reject(administrator, requireComment(comment), clock.instant());
         return jobPostingRepository.save(posting);
     }

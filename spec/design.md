@@ -703,14 +703,25 @@ sequenceDiagram
         JS-->>AC: throw PostingNotFoundException
         AC-->>A: 404
     end
+    JS->>P: requirePendingApproval()
+    alt postStatus is not PENDING_APPROVAL (ext. 6c)
+        P-->>JS: throw PostingStateConflictException(current status)
+        JS-->>AC: PostingStateConflictException
+        AC-->>A: handleAlreadyDecided(): 409 and the status
+    end
     alt approve
         JS->>P: canBePublished(now)
         P-->>JS: boolean
-        opt still pending and before its deadline: organization inactive, or submitting<br/>Recruiter has no Active membership in it (ext. 6b)
-            JS->>MR: findByRecruiterAndStatus(posting.recruiter, ACTIVE)
-            MR-->>JS: List<OrganizationMembership>
-            JS-->>AC: throw PostingStateConflictException(reason)
-            AC-->>A: 409 and the reason, the posting stays pending
+        opt before its deadline
+            alt organization inactive, or submitting Recruiter<br/>has no Active membership in it (ext. 6b)
+                JS->>MR: findByRecruiterAndStatus(posting.recruiter, ACTIVE)
+                MR-->>JS: List<OrganizationMembership>
+                JS-->>AC: throw PostingStateConflictException(reason)
+                AC-->>A: 409 and the reason, the posting stays pending
+            else comment too long
+                JS-->>AC: throw InvalidPostingException(reason)
+                AC-->>A: handleInvalidDecision(): 400 and the reason
+            end
         end
         JS->>P: approve(administrator, comment, now)
         Note right of P: PUBLISHED, datePosted today; past the<br/>deadline RETURNED, "a new deadline<br/>is needed" (ext. 6a)
@@ -722,16 +733,10 @@ sequenceDiagram
             JS->>P: returnToRecruiter | reject(administrator, comment, now)
         end
     end
-    alt postStatus is not PENDING_APPROVAL (ext. 6c)
-        P-->>JS: throw PostingStateConflictException(current status)
-        JS-->>AC: PostingStateConflictException
-        AC-->>A: handleAlreadyDecided(): 409 and the status
-    else decided
-        JS->>JR: save(posting)
-        JR-->>JS: JobPosting
-        JS-->>AC: JobPosting
-        AC-->>A: 200, PostingResponse with its new status
-    end
+    JS->>JR: save(posting)
+    JR-->>JS: JobPosting
+    JS-->>AC: JobPosting
+    AC-->>A: 200, PostingResponse with its new status
 ```
 
 **Figure 35: SD-7 Approve, return or reject a posting (UC-12)**
@@ -858,7 +863,7 @@ the DCD must contain each of them.
 | SD-5 | `JobPostingController.submitJobPosting` | `JobPostingService.submitJobPosting`; `JobPosting.wasCreatedBy`, `submit` | `JobPostingRepository.findById`, `save`; `RecruiterRepository.findByEmailIgnoreCase`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\* |
 | SD-5b | `JobPostingController.openPostingForEdit`, `updatePosting` | `JobPostingService.openPostingForEdit`, `updatePosting`; `JobPosting.wasCreatedBy` | `JobPostingRepository.findById`, `save` |
 | SD-6 | `AdminJobPostingController.openPostingApprovalQueue` | `JobPostingService.openPostingApprovalQueue` | `JobPostingRepository.findByPostStatusOrderByDatePostedAscJobPostIdAsc` |
-| SD-7 | `AdminJobPostingController.approveJobPosting`, `returnJobPosting`, `rejectJobPosting` | `JobPostingService.approveJobPosting`, `returnJobPosting`, `rejectJobPosting`; `JobPosting.canBePublished`, `approve`, `returnToRecruiter`, `reject` | `JobPostingRepository.findByIdForUpdate`, `save`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\* |
+| SD-7 | `AdminJobPostingController.approveJobPosting`, `returnJobPosting`, `rejectJobPosting` | `JobPostingService.approveJobPosting`, `returnJobPosting`, `rejectJobPosting`; `JobPosting.requirePendingApproval`, `canBePublished`, `approve`, `returnToRecruiter`, `reject` | `JobPostingRepository.findByIdForUpdate`, `save`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\* |
 | SD-11 | none: `JobPostingExpirationScheduler.runScheduledExpiration` | `JobPostingExpirationService.runExpirationJob`; `JobPostingExpirationProcessor.expirePosting`; `JobPosting.isPastDeadline`, `isDueToExpire`, `expire` | `JobPostingRepository.findByPostStatusInAndApplicationDeadlineLessThanEqual`, `findByIdForUpdate`, `saveAndFlush` |
 | SD-11b | `JobPostingController.closePosting` | `JobPostingService.closePosting`; `JobPosting.wasCreatedBy`, `closeByRecruiter` | `JobPostingRepository.findByIdForUpdate`, `save` |
 | SD-12 | `RecruiterRegistrationController.submitRecruiterRegistration` | `RecruiterRegistrationService.submitRecruiterRegistration`; `OrganizationRules.rejectDuplicate`; `NotificationService.notify` | `UserRepository.findByEmailIgnoreCase`; `RecruiterRepository.saveAndFlush`; `OrganizationRepository.findAll`, `findByName`, `save`; `OrganizationMembershipRepository.save` |
@@ -961,6 +966,7 @@ classDiagram
         +wasPublished() boolean
         +wasCreatedBy(String recruiterEmail) boolean
         +submit() void
+        +requirePendingApproval() void
         +canBePublished(Instant now) boolean
         +approve(String administrator, String comment, Instant now) PostStatus
         +returnToRecruiter(String administrator, String comment, Instant now) void
