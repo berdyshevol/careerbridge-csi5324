@@ -4,17 +4,16 @@ import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.OrganizationStatus;
-import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.service.InvalidPostingException;
 import baylor.csi5324.careerbridge.service.PostingNotFoundException;
-import baylor.csi5324.careerbridge.service.PostingStateConflictException;
+import baylor.csi5324.careerbridge.model.PostingStateConflictException;
 import baylor.csi5324.careerbridge.service.JobPostingService;
 import baylor.csi5324.careerbridge.service.PostingNotAllowedException;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.Test;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -120,9 +119,9 @@ class JobPostingControllerTest {
 
     @Test
     void reopeningAPostingSendsTheAdministratorsComment() throws Exception {
-        JobPosting returned = approvedPosting();
-        returned.setPostStatus(PostStatus.RETURNED);
-        returned.setReviewComment("Add the salary range");
+        JobPosting returned = draftPosting();
+        returned.submit();
+        returned.returnToRecruiter("Test Administrator", "Add the salary range", DECIDED_AT);
         when(jobPostingService.openPostingForEdit(7L, "owner@example.com")).thenReturn(returned);
 
         mockMvc.perform(get("/api/postings/7/edit").principal(() -> "owner@example.com"))
@@ -148,8 +147,7 @@ class JobPostingControllerTest {
     @Test
     void closingPassesTheLoggedInRecruiterAndAnswersWithThePosting() throws Exception {
         JobPosting closed = approvedPosting();
-        closed.setPostStatus(PostStatus.CLOSED);
-        closed.setClosingReason("Closed by recruiter");
+        closed.closeByRecruiter(DECIDED_AT);
         when(jobPostingService.closePosting(7L, "owner@example.com")).thenReturn(closed);
 
         mockMvc.perform(post("/api/postings/7/close").principal(() -> "owner@example.com"))
@@ -215,7 +213,16 @@ class JobPostingControllerTest {
                 .principal(() -> "owner@example.com");
     }
 
+    private static final Instant DECIDED_AT = Instant.parse("2026-10-10T09:00:00Z");
+
     private static JobPosting approvedPosting() {
+        JobPosting posting = draftPosting();
+        posting.submit();
+        posting.approve("Test Administrator", "Looks good", DECIDED_AT);
+        return posting;
+    }
+
+    private static JobPosting draftPosting() {
         Organization organization = new Organization("Brazos Analytics");
         organization.setOrganizationStatus(OrganizationStatus.ACTIVE);
         JobPosting posting = new JobPosting();
@@ -223,10 +230,6 @@ class JobPostingControllerTest {
         posting.setTitle("Backend Developer");
         posting.setNumberOfOpenings(2);
         posting.setApplicationDeadline(LocalDate.of(2026, 12, 31));
-        posting.setPostStatus(PostStatus.PUBLISHED);
-        posting.setApprovedBy("Test Administrator");
-        posting.setApprovedAt(LocalDateTime.of(2026, 10, 10, 9, 0));
-        posting.setReviewComment("Looks good");
         return posting;
     }
 }

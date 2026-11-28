@@ -9,13 +9,11 @@ import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
-import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.RecruiterRepository;
 import baylor.csi5324.careerbridge.service.ApplicationService;
-import baylor.csi5324.careerbridge.service.JobPostingService;
 import baylor.csi5324.careerbridge.service.RecruiterOrganization;
 import baylor.csi5324.careerbridge.util.CsvReader;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -128,8 +125,7 @@ public class DemoPostings implements CommandLineRunner {
         LocalDate today = LocalDate.now(clock);
         Application application = new Application(applicant, posting, DEMO_RESUME, today);
         if (stage == ApplicationStatus.SCREENING) {
-            application.setApplicationStatus(stage);
-            application.getStatusHistory().add(new StatusHistoryEntry(stage, today));
+            application.advance(ApplicationStatus.APPLIED, clock.instant());
         }
         applicationRepository.save(application);
     }
@@ -149,17 +145,8 @@ public class DemoPostings implements CommandLineRunner {
         posting.setDatePosted(today);
         posting.setApplicationDeadline(today.plusDays(DAYS_OPEN));
         PostStatus status = PostStatus.fromLabel(record.get("postStatus"));
-        posting.setPostStatus(status);
-        if (status == PostStatus.RETURNED) {
-            posting.setReviewComment(record.get("reviewComment"));
-        }
-        if (status == PostStatus.PUBLISHED || status == PostStatus.CLOSED) {
-            posting.setApprovedBy(APPROVED_BY);
-            posting.setApprovedAt(LocalDateTime.now(clock));
-        }
-        if (status == PostStatus.CLOSED) {
-            posting.close(JobPostingService.CLOSED_BY_RECRUITER, clock.instant());
-        }
+        String comment = status == PostStatus.RETURNED ? record.get("reviewComment") : null;
+        SeedLifecycle.walkPostingTo(posting, status, APPROVED_BY, comment, clock.instant());
         return posting;
     }
 }

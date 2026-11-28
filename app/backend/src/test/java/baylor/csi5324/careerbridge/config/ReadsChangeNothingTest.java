@@ -7,7 +7,8 @@ import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.MembershipRequestType;
 import baylor.csi5324.careerbridge.model.MembershipStatus;
-import baylor.csi5324.careerbridge.model.Offer;
+import baylor.csi5324.careerbridge.model.Lifecycles;
+import baylor.csi5324.careerbridge.model.OfferTerms;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.HexFormat;
@@ -90,8 +92,7 @@ class ReadsChangeNothingTest {
         String applicationId = String.valueOf(sampleApplication(posting).getApplicationId());
         String offerApplicationId = String.valueOf(sampleOfferApplication(offerPosting).getApplicationId());
         // Reopening a posting to edit it needs a Draft that the demo recruiter created (UC-11)
-        JobPosting draft = publishedPosting();
-        draft.setPostStatus(PostStatus.DRAFT);
+        JobPosting draft = posting(PostStatus.DRAFT);
         draft.setOrganization(organizationRepository.findByName("Waco Health Partners").orElseThrow());
         draft.setRecruiter(recruiterRepository.findByEmailIgnoreCase(RECRUITER).orElseThrow());
         String draftId = String.valueOf(jobPostingRepository.save(draft).getJobPostId());
@@ -147,13 +148,17 @@ class ReadsChangeNothingTest {
     }
 
     private JobPosting publishedPosting() {
+        return posting(PostStatus.PUBLISHED);
+    }
+
+    private JobPosting posting(PostStatus status) {
         JobPosting posting = new JobPosting();
         posting.setOrganization(organizationRepository.save(new Organization("Reads Change Nothing " + System.nanoTime())));
         posting.setTitle("Read-only Engineer");
         posting.setNumberOfOpenings(1);
         posting.setDatePosted(LocalDate.now());
         posting.setApplicationDeadline(LocalDate.now().plusDays(30));
-        posting.setPostStatus(PostStatus.PUBLISHED);
+        Lifecycles.inStatus(posting, status);
         return jobPostingRepository.save(posting);
     }
 
@@ -175,15 +180,13 @@ class ReadsChangeNothingTest {
                 posting,
                 new ResumeSnapshot("read-only.pdf", "application/pdf", 1024L),
                 LocalDate.now());
-        application.setApplicationStatus(ApplicationStatus.OFFER);
-        application.setOffer(new Offer(
-                application,
-                LocalDate.now(),
+        Lifecycles.atStage(application, ApplicationStatus.INTERVIEW);
+        application.extendOffer(new OfferTerms(
                 LocalDate.now().plusDays(30),
                 "$65,000 USD per year",
                 "Standard benefits.",
                 LocalDate.now().plusDays(14),
-                null));
+                null), Instant.now());
         return applicationRepository.save(application);
     }
 }

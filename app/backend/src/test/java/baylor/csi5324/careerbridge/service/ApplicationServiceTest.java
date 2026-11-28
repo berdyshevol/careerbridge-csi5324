@@ -2,17 +2,19 @@ package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.config.SampleDataLoader;
 import baylor.csi5324.careerbridge.model.AccountStatus;
+import baylor.csi5324.careerbridge.model.OfferRevisedException;
+import baylor.csi5324.careerbridge.model.ApplicationActionRefusedException;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.Interview;
 import baylor.csi5324.careerbridge.model.JobPosting;
-import baylor.csi5324.careerbridge.model.Offer;
+import baylor.csi5324.careerbridge.model.Lifecycles;
+import baylor.csi5324.careerbridge.model.OfferTerms;
 import baylor.csi5324.careerbridge.model.OfferStatus;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
-import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
 import jakarta.persistence.EntityManager;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
@@ -25,6 +27,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -191,7 +194,7 @@ class ApplicationServiceTest {
             JobPosting posting = save("Position " + i, PostStatus.PUBLISHED, today.plusDays(10));
             applicationService.submitApplication(posting.getJobPostId(), JORDAN);
         }
-        applicationRepository.findAll().get(0).setApplicationStatus(ApplicationStatus.REJECTED);
+        Lifecycles.atStage(applicationRepository.findAll().get(0), ApplicationStatus.REJECTED);
         JobPosting sixth = save("Position 6", PostStatus.PUBLISHED, today.plusDays(10));
 
         ApplicationStart start = applicationService.startApplication(sixth.getJobPostId(), JORDAN);
@@ -220,7 +223,7 @@ class ApplicationServiceTest {
         JobPosting posting = save("Software Engineer", PostStatus.PUBLISHED, today.plusDays(14));
         applicationService.submitApplication(posting.getJobPostId(), JORDAN);
         // Ended applications count too: a posting is applied to once (A5)
-        applicationRepository.findAll().get(0).setApplicationStatus(ApplicationStatus.WITHDRAWN);
+        Lifecycles.atStage(applicationRepository.findAll().get(0), ApplicationStatus.WITHDRAWN);
 
         ApplicationStart start = applicationService.startApplication(posting.getJobPostId(), JORDAN);
 
@@ -294,7 +297,7 @@ class ApplicationServiceTest {
             applicationService.submitApplication(posting.getJobPostId(), JORDAN);
         }
         Application ended = applicationRepository.findAll().get(0);
-        ended.setApplicationStatus(ApplicationStatus.REJECTED);
+        Lifecycles.atStage(ended, ApplicationStatus.REJECTED);
         JobPosting sixth = save("Position 6", PostStatus.PUBLISHED, today.plusDays(10));
 
         SubmittedApplication submitted = applicationService.submitApplication(sixth.getJobPostId(), JORDAN);
@@ -308,9 +311,9 @@ class ApplicationServiceTest {
         JobPosting ended = save("Ended", PostStatus.PUBLISHED, today.plusDays(10));
         applicationService.submitApplication(kept.getJobPostId(), JORDAN);
         applicationService.submitApplication(ended.getJobPostId(), JORDAN);
-        applicationRepository.findAll().stream()
+        Lifecycles.atStage(applicationRepository.findAll().stream()
                 .filter(a -> a.getJobPosting().getJobPostId().equals(ended.getJobPostId()))
-                .findFirst().orElseThrow().setApplicationStatus(ApplicationStatus.WITHDRAWN);
+                .findFirst().orElseThrow(), ApplicationStatus.WITHDRAWN);
 
         var result = applicationService.viewApplications(JORDAN);
 
@@ -334,16 +337,13 @@ class ApplicationServiceTest {
         JobPosting newerActiveJob = save("Newer Active Job", PostStatus.PUBLISHED, today.plusDays(10));
 
         Application closed = applicationService.submitApplication(closedJob.getJobPostId(), JORDAN).application();
-        closed.setApplicationStatus(ApplicationStatus.REJECTED);
-        closed.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.REJECTED, today.plusDays(5)));
+        closed.reject(ApplicationStatus.APPLIED, "Not a fit", null, Lifecycles.on(closed, today.plusDays(5)));
 
         Application active = applicationService.submitApplication(activeJob.getJobPostId(), JORDAN).application();
-        active.setApplicationStatus(ApplicationStatus.SCREENING);
-        active.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.SCREENING, today.plusDays(1)));
+        active.advance(ApplicationStatus.APPLIED, Lifecycles.on(active, today.plusDays(1)));
 
         Application newerActive = applicationService.submitApplication(newerActiveJob.getJobPostId(), JORDAN).application();
-        newerActive.setApplicationStatus(ApplicationStatus.OFFER);
-        newerActive.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.OFFER, today.plusDays(3)));
+        Lifecycles.atStage(newerActive, ApplicationStatus.OFFER, today.plusDays(3));
         entityManager.flush();
 
         var result = applicationService.viewApplications(JORDAN);
@@ -366,13 +366,11 @@ class ApplicationServiceTest {
     void viewsOwnApplicationWithStageHistoryAndInterviews() {
         JobPosting posting = save("Data Analyst", PostStatus.PUBLISHED, today.plusDays(14));
         Application submitted = applicationService.submitApplication(posting.getJobPostId(), JORDAN).application();
-        submitted.setApplicationStatus(ApplicationStatus.INTERVIEW);
-        submitted.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.SCREENING, today.plusDays(2)));
-        submitted.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.INTERVIEW, today.plusDays(5)));
-        Interview interview = new Interview(submitted, 1, today.plusDays(7).atTime(14, 0), "On-site", "1200 Austin Ave");
+        submitted.advance(ApplicationStatus.APPLIED, Lifecycles.on(submitted, today.plusDays(2)));
+        submitted.advance(ApplicationStatus.SCREENING, Lifecycles.on(submitted, today.plusDays(5)));
+        Interview interview = submitted.recordInterview(today.plusDays(7).atTime(14, 0), "On-site", "1200 Austin Ave");
         interview.setOutcome("Passed");
         interview.setNotes("Strong SQL");
-        submitted.getInterviews().add(interview);
         entityManager.flush();
         entityManager.clear();
 
@@ -381,7 +379,7 @@ class ApplicationServiceTest {
         assertEquals(3, loaded.getStatusHistory().size());
         assertEquals(1, loaded.getInterviews().size());
         assertEquals("On-site", loaded.getInterviews().get(0).getFormat());
-        assertEquals(java.util.List.of("WITHDRAW"), loaded.availableActions());
+        assertEquals(java.util.List.of("WITHDRAW"), loaded.availableActions(Instant.now()));
     }
 
     @Test
@@ -455,11 +453,11 @@ class ApplicationServiceTest {
     void refusesWithdrawalAtOfferOrTerminalStagesWithoutChangingData() {
         JobPosting offerPosting = save("Offer Role", PostStatus.PUBLISHED, today.plusDays(14));
         Application offerApp = applicationService.submitApplication(offerPosting.getJobPostId(), JORDAN).application();
-        offerApp.setApplicationStatus(ApplicationStatus.OFFER);
+        Lifecycles.atStage(offerApp, ApplicationStatus.OFFER);
 
         JobPosting rejectedPosting = save("Rejected Role", PostStatus.PUBLISHED, today.plusDays(14));
         Application rejectedApp = applicationService.submitApplication(rejectedPosting.getJobPostId(), JORDAN).application();
-        rejectedApp.setApplicationStatus(ApplicationStatus.REJECTED);
+        Lifecycles.atStage(rejectedApp, ApplicationStatus.REJECTED);
         entityManager.flush();
 
         assertThrows(ApplicationActionRefusedException.class,
@@ -532,8 +530,8 @@ class ApplicationServiceTest {
 
         JobPosting revisedPosting = save("Revised Offer Role", PostStatus.PUBLISHED, today.plusDays(14));
         Application revisedApp = submitWithOffer(revisedPosting, today.plusDays(7));
-        revisedApp.getOffer().setSalary("75,000 USD per year");
-        revisedApp.getOffer().setRevision(2);
+        revisedApp.reviseOffer(new OfferTerms(today.plusDays(30), "75,000 USD per year", "Hybrid after 90 days.",
+                today.plusDays(7), "Offer_Letter.pdf"), Instant.now());
         entityManager.flush();
 
         OfferRevisedException revised = assertThrows(OfferRevisedException.class,
@@ -546,8 +544,7 @@ class ApplicationServiceTest {
 
         JobPosting closedPosting = save("Closed Offer Role", PostStatus.PUBLISHED, today.plusDays(14));
         Application closedApp = submitWithOffer(closedPosting, today.plusDays(7));
-        closedPosting.setPostStatus(PostStatus.CLOSED);
-        closedPosting.setClosingReason("Filled");
+        closedPosting.fill(java.util.List.of(), Instant.now());
         entityManager.flush();
         assertThrows(ApplicationActionRefusedException.class,
                 () -> applicationService.acceptOffer(closedApp.getApplicationId(), JORDAN, 1));
@@ -655,16 +652,13 @@ class ApplicationServiceTest {
 
     private Application submitWithOfferFor(JobPosting posting, String email, LocalDate expirationDate) {
         Application application = applicationService.submitApplication(posting.getJobPostId(), email).application();
-        application.setApplicationStatus(ApplicationStatus.OFFER);
-        application.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.OFFER, today));
-        application.setOffer(new Offer(
-                application,
-                today,
+        Lifecycles.atStage(application, ApplicationStatus.INTERVIEW, today);
+        application.extendOffer(new OfferTerms(
                 today.plusDays(30),
                 "68,000 USD per year",
                 "Hybrid after 90 days.",
                 expirationDate,
-                "Offer_Letter.pdf"));
+                "Offer_Letter.pdf"), Lifecycles.on(application, today));
         entityManager.flush();
         return application;
     }
@@ -685,9 +679,8 @@ class ApplicationServiceTest {
         posting.setOrganization(organization);
         posting.setTitle(title);
         posting.setLocation("Remote");
-        posting.setPostStatus(status);
         posting.setDatePosted(today);
         posting.setApplicationDeadline(deadline);
-        return jobPostingRepository.save(posting);
+        return jobPostingRepository.save(Lifecycles.inStatus(posting, status));
     }
 }

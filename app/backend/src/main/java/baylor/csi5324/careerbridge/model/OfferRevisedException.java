@@ -1,6 +1,4 @@
-package baylor.csi5324.careerbridge.service;
-
-import baylor.csi5324.careerbridge.model.Offer;
+package baylor.csi5324.careerbridge.model;
 
 import java.time.Instant;
 import java.time.ZoneId;

@@ -7,9 +7,11 @@ import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 // Not @Transactional on purpose: the application starts the loader outside any transaction, and a
@@ -29,20 +31,25 @@ class SampleDataLoaderRestartTest {
     @Autowired
     private TransactionTemplate transactionTemplate;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @Test
     void aRestartOnADatabaseLoadedBeforeInterviewsExistedBackFillsThem() {
-        Long applicationId = transactionTemplate.execute(status -> {
-            Application interviewed = jordansApplicationAt(ApplicationStatus.INTERVIEW);
-            interviewed.getInterviews().clear();
-            interviewed.getStatusHistory().subList(1, interviewed.getStatusHistory().size()).clear();
-            return interviewed.getApplicationId();
-        });
+        Long applicationId = transactionTemplate.execute(status ->
+                jordansApplicationAt(ApplicationStatus.INTERVIEW).getApplicationId());
+        // The rows as an older start left them; the entity itself never lets stage and history part
+        jdbcTemplate.update("DELETE FROM interviews WHERE application_id = ?", applicationId);
+        jdbcTemplate.update("DELETE FROM application_status_history WHERE application_id = ? AND status_history_order > 0",
+                applicationId);
 
         assertDoesNotThrow(() -> sampleDataLoader.run());
 
         transactionTemplate.executeWithoutResult(status -> {
             Application interviewed = applicationRepository.findById(applicationId).orElseThrow();
             assertFalse(interviewed.getInterviews().isEmpty());
+            assertEquals(ApplicationStatus.INTERVIEW, interviewed.getStatusHistory()
+                    .get(interviewed.getStatusHistory().size() - 1).getStatus());
         });
     }
 

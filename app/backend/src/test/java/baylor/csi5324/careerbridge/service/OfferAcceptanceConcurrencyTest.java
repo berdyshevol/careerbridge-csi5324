@@ -1,16 +1,17 @@
 package baylor.csi5324.careerbridge.service;
 
 import baylor.csi5324.careerbridge.model.AccountStatus;
+import baylor.csi5324.careerbridge.model.ApplicationActionRefusedException;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
-import baylor.csi5324.careerbridge.model.Offer;
+import baylor.csi5324.careerbridge.model.Lifecycles;
+import baylor.csi5324.careerbridge.model.OfferTerms;
 import baylor.csi5324.careerbridge.model.OfferStatus;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
-import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -62,8 +64,7 @@ class OfferAcceptanceConcurrencyTest {
         posting.setNumberOfOpenings(1);
         posting.setDatePosted(LocalDate.now());
         posting.setApplicationDeadline(LocalDate.now().plusDays(14));
-        posting.setPostStatus(PostStatus.PUBLISHED);
-        posting = jobPostingRepository.save(posting);
+        posting = jobPostingRepository.save(Lifecycles.inStatus(posting, PostStatus.PUBLISHED));
 
         Applicant first = saveApplicant("first-" + suffix + "@example.com");
         Applicant second = saveApplicant("second-" + suffix + "@example.com");
@@ -145,16 +146,13 @@ class OfferAcceptanceConcurrencyTest {
                 posting,
                 new ResumeSnapshot("cv.pdf", "application/pdf", 512L),
                 today);
-        application.setApplicationStatus(ApplicationStatus.OFFER);
-        application.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.OFFER, today));
-        application.setOffer(new Offer(
-                application,
-                today,
+        Lifecycles.atStage(application, ApplicationStatus.INTERVIEW);
+        application.extendOffer(new OfferTerms(
                 today.plusDays(30),
                 "$70,000 USD per year",
                 "Standard terms.",
                 today.plusDays(7),
-                null));
+                null), Instant.now());
         return applicationRepository.save(application);
     }
 }

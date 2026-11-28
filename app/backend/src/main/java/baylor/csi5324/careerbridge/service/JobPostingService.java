@@ -7,6 +7,7 @@ import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
+import baylor.csi5324.careerbridge.model.PostingStateConflictException;
 import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
@@ -17,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Locale;
@@ -29,14 +29,7 @@ public class JobPostingService {
     private static final int MIN_DAYS_TO_DEADLINE = 1;
     private static final int MAX_DAYS_TO_DEADLINE = 90;
 
-    // UC-12, extension 6a
-    static final String DEADLINE_PASSED =
-            "The application deadline passed while the posting was waiting. Set a new deadline and submit it again.";
-
     private static final int MAX_COMMENT_LENGTH = 2000;
-
-    // UC-13 extension *a, the reason Close Job Posting records
-    public static final String CLOSED_BY_RECRUITER = "Closed by recruiter";
 
     private static final ZoneOffset LATEST_ZONE = ZoneOffset.ofHours(-12);
 
@@ -117,7 +110,6 @@ public class JobPostingService {
         posting.setOrganization(organization);
         posting.setRecruiter(recruiter);
         applyDetails(posting, request);
-        posting.setPostStatus(PostStatus.DRAFT);
         posting.setDatePosted(LocalDate.now());
 
         return jobPostingRepository.save(posting);
@@ -137,10 +129,7 @@ public class JobPostingService {
                     + MIN_DAYS_TO_DEADLINE + " and " + MAX_DAYS_TO_DEADLINE + " days away");
         }
 
-        posting.setPostStatus(PostStatus.PENDING_APPROVAL);
-        posting.setApprovedBy(null);
-        posting.setApprovedAt(null);
-        posting.setReviewComment(null);
+        posting.submit();
         return jobPostingRepository.save(posting);
     }
 
@@ -165,25 +154,13 @@ public class JobPostingService {
     // UC-13 extension *a, CO-13.2: the Recruiter who created a Published posting closes it early
     @Transactional
     public JobPosting closePosting(Long postingId, String recruiterEmail) {
-        JobPosting posting = findPosting(postingId);
+        JobPosting posting = findPostingForUpdate(postingId);
 
         if (!posting.wasCreatedBy(recruiterEmail)) {
             throw new PostingNotAllowedException("Only the recruiter who created this posting can close it");
         }
         requireActiveMember(recruiterEmail, posting.getOrganization());
-        if (posting.getPostStatus() != PostStatus.PUBLISHED) {
-            throw new PostingStateConflictException(
-                    "Only a published posting can be closed; this one is " + posting.getPostStatus().getLabel());
-        }
-        Instant now = clock.instant();
-        // Past its deadline the posting is UC-13's to close as Expired, at the next run
-        if (posting.isPastDeadline(now)) {
-            throw new PostingStateConflictException(
-                    "The application deadline has passed, so this posting is closing as Expired");
-        }
-
-        // Applications keep their stages (A3): only the posting changes
-        posting.close(CLOSED_BY_RECRUITER, now);
+        posting.closeByRecruiter(clock.instant());
         return jobPostingRepository.save(posting);
     }
 
@@ -194,29 +171,31 @@ public class JobPostingService {
 
     @Transactional
     public JobPosting approveJobPosting(Long postingId, String administrator, String comment) {
-        JobPosting posting = findPendingPosting(postingId);
-
-        if (posting.getApplicationDeadline() == null || posting.isPastDeadline(clock.instant())) {
-            recordDecision(posting, PostStatus.RETURNED, administrator, DEADLINE_PASSED);
-        } else {
+        JobPosting posting = findPostingForUpdate(postingId);
+        posting.requirePendingApproval();
+        Instant now = clock.instant();
+        // Past the deadline the posting goes back with its own comment, so the Administrator's is not checked
+        if (posting.canBePublished(now)) {
             requireStillActive(posting);
-            recordDecision(posting, PostStatus.PUBLISHED, administrator, comment);
-            posting.setDatePosted(LocalDate.now());
+            requireShortComment(comment);
         }
+        posting.approve(administrator, comment, now);
         return jobPostingRepository.save(posting);
     }
 
     @Transactional
     public JobPosting returnJobPosting(Long postingId, String administrator, String comment) {
-        JobPosting posting = findPendingPosting(postingId);
-        recordDecision(posting, PostStatus.RETURNED, administrator, requireComment(comment));
+        JobPosting posting = findPostingForUpdate(postingId);
+        posting.requirePendingApproval();
+        posting.returnToRecruiter(administrator, requireComment(comment), clock.instant());
         return jobPostingRepository.save(posting);
     }
 
     @Transactional
     public JobPosting rejectJobPosting(Long postingId, String administrator, String comment) {
-        JobPosting posting = findPendingPosting(postingId);
-        recordDecision(posting, PostStatus.REJECTED, administrator, requireComment(comment));
+        JobPosting posting = findPostingForUpdate(postingId);
+        posting.requirePendingApproval();
+        posting.reject(administrator, requireComment(comment), clock.instant());
         return jobPostingRepository.save(posting);
     }
 
@@ -258,7 +237,7 @@ public class JobPostingService {
             throw new PostingNotAllowedException("Only the recruiter who created this posting can " + verb + " it");
         }
         requireActiveMember(recruiterEmail, posting.getOrganization());
-        if (posting.getPostStatus() != PostStatus.DRAFT && posting.getPostStatus() != PostStatus.RETURNED) {
+        if (!posting.getPostStatus().isEditable()) {
             throw new PostingStateConflictException("Only a draft or a returned posting can be " + done
                     + "; this one is " + posting.getPostStatus().getLabel());
         }
@@ -270,24 +249,17 @@ public class JobPostingService {
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
     }
 
-    private JobPosting findPendingPosting(Long postingId) {
-        JobPosting posting = findPosting(postingId);
-        if (posting.getPostStatus() != PostStatus.PENDING_APPROVAL) {
-            throw new PostingStateConflictException(
-                    "This posting was already decided: it is " + posting.getPostStatus().getLabel());
-        }
-        return posting;
+    // A decision and a close lock the row, so an expiry run or a second Administrator waits instead of
+    // overwriting the status this one sets
+    private JobPosting findPostingForUpdate(Long postingId) {
+        return jobPostingRepository.findByIdForUpdate(postingId)
+                .orElseThrow(() -> new PostingNotFoundException(postingId));
     }
 
-    private static void recordDecision(
-            JobPosting posting, PostStatus decision, String administrator, String comment) {
+    private static void requireShortComment(String comment) {
         if (comment != null && comment.length() > MAX_COMMENT_LENGTH) {
             throw new InvalidPostingException("The comment is too long");
         }
-        posting.setPostStatus(decision);
-        posting.setApprovedBy(administrator);
-        posting.setApprovedAt(LocalDateTime.now());
-        posting.setReviewComment(comment == null || comment.isBlank() ? null : comment.trim());
     }
 
     private static String requireComment(String comment) {
@@ -295,6 +267,7 @@ public class JobPostingService {
             throw new InvalidPostingException(
                     "A reason is required to return or reject a posting");
         }
+        requireShortComment(comment);
         return comment;
     }
 

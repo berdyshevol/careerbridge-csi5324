@@ -41,10 +41,10 @@ public class Interview {
     @Column(length = 2000)
     private String notes;
 
-    public Interview() {
+    protected Interview() {
     }
 
-    public Interview(Application application, int roundNumber, LocalDateTime scheduledTime,
+    Interview(Application application, int roundNumber, LocalDateTime scheduledTime,
                      String format, String location) {
         this.application = application;
         this.roundNumber = roundNumber;

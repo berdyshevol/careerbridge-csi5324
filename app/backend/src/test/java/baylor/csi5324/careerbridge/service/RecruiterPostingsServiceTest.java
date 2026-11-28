@@ -5,6 +5,7 @@ import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
+import baylor.csi5324.careerbridge.model.Lifecycles;
 import baylor.csi5324.careerbridge.model.MembershipRequestType;
 import baylor.csi5324.careerbridge.model.MembershipStatus;
 import baylor.csi5324.careerbridge.model.Organization;
@@ -162,8 +163,7 @@ class RecruiterPostingsServiceTest {
         posting.setNumberOfOpenings(1);
         posting.setDatePosted(LocalDate.now());
         posting.setApplicationDeadline(LocalDate.now().plusDays(30));
-        posting.setPostStatus(status);
-        return jobPostingRepository.save(posting);
+        return jobPostingRepository.save(Lifecycles.inStatus(posting, status));
     }
 
     private void applicationAt(JobPosting posting, ApplicationStatus status) {
@@ -175,7 +175,6 @@ class RecruiterPostingsServiceTest {
         applicantRepository.save(applicant);
         Application application = new Application(applicant, posting,
                 new ResumeSnapshot("cv.pdf", "application/pdf", 1024L), LocalDate.now());
-        application.setApplicationStatus(status);
-        applicationRepository.save(application);
+        applicationRepository.save(Lifecycles.atStage(application, status));
     }
 }

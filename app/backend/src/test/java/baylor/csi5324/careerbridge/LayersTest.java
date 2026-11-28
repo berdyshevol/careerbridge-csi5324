@@ -1,9 +1,15 @@
 package baylor.csi5324.careerbridge;
 
+import baylor.csi5324.careerbridge.model.Application;
+import baylor.csi5324.careerbridge.model.JobPosting;
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaMethodCall;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+
+import java.util.Set;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
@@ -32,4 +38,22 @@ class LayersTest {
             .that().resideInAnyPackage("..service..", "..repository..", "..model..")
             .should().dependOnClassesThat()
             .resideInAnyPackage("org.springframework.web..", "org.springframework.http..", "jakarta.servlet..");
+
+    // ADR-0015: a lifecycle move runs inside the service's transaction, after its locks. Called from a
+    // controller on an entity the service returned, it would run unlocked and never be saved.
+    private static final Set<String> LIFECYCLE_MOVES = Set.of(
+            "advance", "reject", "recordInterview", "extendOffer", "reviseOffer", "withdraw", "acceptOffer",
+            "declineOffer", "submit", "approve", "returnToRecruiter", "closeByRecruiter", "fill", "expire",
+            "backfillLegacyHistory", "backfillLegacyOffer");
+
+    private static final DescribedPredicate<JavaMethodCall> aLifecycleMove = DescribedPredicate.describe(
+            "a lifecycle move of Application or JobPosting",
+            call -> LIFECYCLE_MOVES.contains(call.getName())
+                    && (call.getTargetOwner().isEquivalentTo(Application.class)
+                    || call.getTargetOwner().isEquivalentTo(JobPosting.class)));
+
+    @ArchTest
+    static final ArchRule onlyServicesMoveALifecycle = noClasses()
+            .that().resideOutsideOfPackages("..service..", "..config..", "..model..")
+            .should().callMethodWhere(aLifecycleMove);
 }

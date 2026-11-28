@@ -58,8 +58,7 @@ class ApplicationTest {
     private Application apply(JobPosting posting, ApplicationStatus status) {
         Application application = new Application(applicant, posting,
                 new ResumeSnapshot("cv.pdf", "PDF", 1024), TODAY);
-        application.setApplicationStatus(status);
-        return applicationRepository.saveAndFlush(application);
+        return applicationRepository.saveAndFlush(Lifecycles.atStage(application, status));
     }
 
     @Test

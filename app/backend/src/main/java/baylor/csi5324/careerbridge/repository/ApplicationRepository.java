@@ -6,7 +6,6 @@ import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import jakarta.persistence.LockModeType;
-import org.hibernate.Hibernate;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -31,7 +30,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     // The answers of UC-05 to UC-07 show the interviews. They are not in the graphs above: Hibernate
     // cannot fetch two lists (statusHistory and interviews) in one query, and a locked read fetches none
     default Application withInterviews(Application application) {
-        Hibernate.initialize(application.getInterviews());
+        // getInterviews() is a read-only view, which Hibernate.initialize does not see through
+        application.getInterviews().size();
         return application;
     }
 

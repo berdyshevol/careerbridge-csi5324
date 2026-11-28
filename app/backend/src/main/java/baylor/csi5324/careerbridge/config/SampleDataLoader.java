@@ -6,14 +6,13 @@ import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.Interview;
 import baylor.csi5324.careerbridge.model.JobPosting;
-import baylor.csi5324.careerbridge.model.Offer;
+import baylor.csi5324.careerbridge.model.OfferTerms;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.OrganizationStatus;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.model.Resume;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
-import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
@@ -32,6 +31,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,6 +52,12 @@ public class SampleDataLoader implements CommandLineRunner {
             new ResumeSnapshot("Jordan_Lee_Resume.pdf", "application/pdf", 184_320L);
     // Jordan's resume on file, so the demo applicant can apply at once (UC-04 2a refuses without one)
     private static final String SAMPLE_RESUME_FILE = "data/Jordan_Lee_Resume.pdf";
+    private static final OfferTerms SAMPLE_OFFER_TERMS = new OfferTerms(
+            LocalDate.of(2027, 7, 19),
+            "$54,000 USD per year",
+            "Full-time on-site in Waco. Health, dental, and 401(k) match from day one.",
+            LocalDate.of(2027, 6, 30),
+            "Waco_Health_Offer_Letter.pdf");
 
     private final JobPostingRepository jobPostingRepository;
     private final OrganizationRepository organizationRepository;
@@ -88,16 +94,22 @@ public class SampleDataLoader implements CommandLineRunner {
                 for (Application application : applicationRepository.findByApplicant(jordan)) {
                     ApplicationStatus status = application.getApplicationStatus();
                     boolean updated = false;
+                    LocalDate appliedDate = application.getDateApplied();
                     if (application.getStatusHistory().size() <= 1
                             && (status == ApplicationStatus.SCREENING
                                     || status == ApplicationStatus.INTERVIEW
                                     || status == ApplicationStatus.OFFER)) {
-                        seedStageHistoryAndInterviews(
-                                application, application.getDateApplied(), status);
+                        application.backfillLegacyHistory(stage -> sampleStageDate(appliedDate, stage));
+                        // An interview is recorded only at the Interview stage (CO-14.4), so a legacy
+                        // Offer row keeps its history without one
+                        if (status == ApplicationStatus.INTERVIEW && application.getInterviews().isEmpty()) {
+                            recordSampleInterview(application, appliedDate);
+                        }
                         updated = true;
                     }
                     if (status == ApplicationStatus.OFFER && application.getOffer() == null) {
-                        application.setOffer(sampleOffer(application, application.getDateApplied()));
+                        application.backfillLegacyOffer(SAMPLE_OFFER_TERMS,
+                                sampleStageDate(appliedDate, ApplicationStatus.OFFER));
                         updated = true;
                     }
                     if (updated) {
@@ -131,51 +143,47 @@ public class SampleDataLoader implements CommandLineRunner {
             LocalDate appliedDate = LocalDate.parse(record.get("dateApplied"));
             ApplicationStatus status = ApplicationStatus.valueOf(record.get("applicationStatus"));
             Application application = new Application(applicant, posting, SAMPLE_RESUME, appliedDate);
-            application.setApplicationStatus(status);
-            seedStageHistoryAndInterviews(application, appliedDate, status);
+            walkSampleApplicationTo(application, appliedDate, status);
             applicationRepository.save(application);
         }
     }
 
-    private static void seedStageHistoryAndInterviews(Application application, LocalDate appliedDate,
-                                                      ApplicationStatus status) {
-        if (status == ApplicationStatus.SCREENING || status == ApplicationStatus.INTERVIEW
-                || status == ApplicationStatus.OFFER) {
-            application.getStatusHistory().add(new StatusHistoryEntry(
-                    ApplicationStatus.SCREENING, appliedDate.plusDays(4)));
-        }
-        if (status == ApplicationStatus.INTERVIEW || status == ApplicationStatus.OFFER) {
-            application.getStatusHistory().add(new StatusHistoryEntry(
-                    ApplicationStatus.INTERVIEW, appliedDate.plusDays(9)));
-            Interview interview = new Interview(
-                    application,
-                    1,
-                    appliedDate.plusDays(12).atTime(14, 0),
-                    "On-site",
-                    "1200 Austin Ave, Waco");
-            // Recruiter-only fields seeded to verify applicant endpoints never expose them (A12)
-            interview.setOutcome("Passed");
-            interview.setNotes("Internal panel note");
-            application.getInterviews().add(interview);
-        }
-        if (status == ApplicationStatus.OFFER) {
-            application.getStatusHistory().add(new StatusHistoryEntry(
-                    ApplicationStatus.OFFER, appliedDate.plusDays(16)));
-            if (application.getOffer() == null) {
-                application.setOffer(sampleOffer(application, appliedDate));
+    // Jordan's desk: Screening four days after applying, Interview after nine, the offer after sixteen
+    private static void walkSampleApplicationTo(Application application, LocalDate appliedDate,
+                                                ApplicationStatus target) {
+        ZoneId zone = application.getJobPosting().getOrganization().getZoneId();
+        while (application.getApplicationStatus() != target) {
+            ApplicationStatus stage = application.getApplicationStatus();
+            if (stage == ApplicationStatus.INTERVIEW) {
+                recordSampleInterview(application, appliedDate);
+                application.extendOffer(SAMPLE_OFFER_TERMS,
+                        SeedLifecycle.on(sampleStageDate(appliedDate, ApplicationStatus.OFFER), zone));
+            } else {
+                ApplicationStatus next = stage.nextStage().orElseThrow(() -> new IllegalStateException(
+                        APPLICATIONS_FILE + " asks for a stage the sample desk does not walk to: " + target));
+                application.advance(stage, SeedLifecycle.on(sampleStageDate(appliedDate, next), zone));
             }
+        }
+        if (target == ApplicationStatus.INTERVIEW) {
+            recordSampleInterview(application, appliedDate);
         }
     }
 
-    private static Offer sampleOffer(Application application, LocalDate appliedDate) {
-        return new Offer(
-                application,
-                appliedDate.plusDays(16),
-                LocalDate.of(2027, 7, 19),
-                "$54,000 USD per year",
-                "Full-time on-site in Waco. Health, dental, and 401(k) match from day one.",
-                LocalDate.of(2027, 6, 30),
-                "Waco_Health_Offer_Letter.pdf");
+    private static LocalDate sampleStageDate(LocalDate appliedDate, ApplicationStatus stage) {
+        return switch (stage) {
+            case SCREENING -> appliedDate.plusDays(4);
+            case INTERVIEW -> appliedDate.plusDays(9);
+            case OFFER -> appliedDate.plusDays(16);
+            default -> appliedDate;
+        };
+    }
+
+    private static void recordSampleInterview(Application application, LocalDate appliedDate) {
+        Interview interview = application.recordInterview(
+                appliedDate.plusDays(12).atTime(14, 0), "On-site", "1200 Austin Ave, Waco");
+        // Recruiter-only fields seeded to verify applicant endpoints never expose them (A12)
+        interview.setOutcome("Passed");
+        interview.setNotes("Internal panel note");
     }
 
     private static String read(String file) throws Exception {
@@ -223,7 +231,9 @@ public class SampleDataLoader implements CommandLineRunner {
         posting.setNumberOfOpenings(Integer.parseInt(record.get("numberOfOpenings")));
         posting.setDatePosted(LocalDate.parse(record.get("datePosted")));
         posting.setApplicationDeadline(LocalDate.parse(record.get("applicationDeadline")));
-        posting.setPostStatus(PostStatus.fromLabel(record.get("postStatus")));
+        // A sample posting was approved on the day it was posted, by no one in particular
+        SeedLifecycle.walkPostingTo(posting, PostStatus.fromLabel(record.get("postStatus")), null, null,
+                SeedLifecycle.on(posting.getDatePosted(), organization.getZoneId()));
         String recruiterEmail = record.get("recruiterEmail");
         if (!recruiterEmail.isBlank()) {
             posting.setRecruiter(recruiterRepository.findByEmailIgnoreCase(recruiterEmail)
