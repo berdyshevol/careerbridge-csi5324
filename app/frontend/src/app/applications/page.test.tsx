@@ -63,7 +63,6 @@ const sampleDesk: Applications = {
     { ...offerApp, applicationStatus: "Offer" },
     { ...interviewApp, applicationStatus: "Interview" },
   ],
-  appliedPostingIds: [4, 3, 9],
   activeApplicationCount: 2,
   applicationLimit: 5,
 };
@@ -111,7 +110,6 @@ describe("ApplicationsPage", () => {
     vi.mocked(viewApplications).mockResolvedValue({
       all: [],
       active: [],
-      appliedPostingIds: [],
       activeApplicationCount: 0,
       applicationLimit: 5,
     });
@@ -162,7 +160,6 @@ describe("ApplicationsPage", () => {
     vi.mocked(viewApplications).mockResolvedValue({
       all: [offerApp],
       active: [{ ...offerApp, applicationStatus: "Offer" }],
-      appliedPostingIds: [4],
       activeApplicationCount: 1,
       applicationLimit: 5,
     });

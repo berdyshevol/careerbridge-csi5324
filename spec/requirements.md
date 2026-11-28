@@ -480,7 +480,7 @@ Table 4 traces each functional requirement to the use-case steps it cites, the S
 |FR-UC03.3|UC-03 step 6, Success Guarantee|uploadResume(file)|CO-03.3|
 |FR-UC04.1|UC-04 steps 1–2|startApplication(postingId)|query (no contract)|
 |FR-UC04.2|UC-04 step 3, extension 3b|submitApplication(postingId)|CO-04.1|
-|FR-UC04.3|UC-04 step 4, extensions 4a–4c|submitApplication(postingId)|CO-04.1|
+|FR-UC04.3|UC-04 step 4, extensions 1c, 4a–4c|startApplication(postingId),<br/>submitApplication(postingId)|query (no contract), CO-04.1|
 |FR-UC04.4|UC-04 step 5|submitApplication(postingId)|CO-04.1|
 |FR-UC04.5|UC-04 steps 6–7|submitApplication(postingId)|CO-04.1|
 |FR-UC04.6|UC-04 extension 2a|startApplication(postingId)|query (no contract)|

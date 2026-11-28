@@ -57,12 +57,7 @@ public class ApplicationService {
         List<Application> active = applicationRepository
                 .findByApplicantAndApplicationStatusIn(applicant, ApplicationStatus.ACTIVE);
 
-        ApplicationRefusal refusal = null;
-        if (resume == null) {
-            refusal = ApplicationRefusal.NO_RESUME;
-        } else if (active.size() >= APPLICATION_LIMIT) {
-            refusal = ApplicationRefusal.LIMIT_REACHED;
-        }
+        ApplicationRefusal refusal = refusal(posting, applicant, resume, clock.instant(), active.size());
         return new ApplicationStart(posting, applicant, resume, active, refusal);
     }
 
@@ -70,21 +65,12 @@ public class ApplicationService {
         JobPosting posting = jobPostingRepository.findById(postingId)
                 .orElseThrow(() -> new PostingNotFoundException(postingId));
         Instant now = clock.instant();
-        if (!posting.isOpen(now)) {
-            throw new ApplicationRefusedException(ApplicationRefusal.POSTING_CLOSED);
-        }
-
         Applicant applicant = applicant(applicantEmail);
         Resume resume = applicant.getResume();
-        if (resume == null) {
-            throw new ApplicationRefusedException(ApplicationRefusal.NO_RESUME);
-        }
-        if (applicationRepository.existsByApplicantAndJobPosting(applicant, posting)) {
-            throw new ApplicationRefusedException(ApplicationRefusal.ALREADY_APPLIED);
-        }
         long active = applicationRepository.countActiveByApplicant(applicant);
-        if (active >= APPLICATION_LIMIT) {
-            throw new ApplicationRefusedException(ApplicationRefusal.LIMIT_REACHED);
+        ApplicationRefusal refusal = refusal(posting, applicant, resume, now, active);
+        if (refusal != null) {
+            throw new ApplicationRefusedException(refusal);
         }
 
         try {
@@ -96,6 +82,24 @@ public class ApplicationService {
             // A double click: the other request passed the check above first
             throw new ApplicationRefusedException(ApplicationRefusal.ALREADY_APPLIED);
         }
+    }
+
+    // One place for the checks of UC-04, so the form and the submit can never disagree (SCRUM-266)
+    private ApplicationRefusal refusal(JobPosting posting, Applicant applicant, Resume resume,
+                                       Instant now, long activeApplications) {
+        if (!posting.isOpen(now)) {
+            return ApplicationRefusal.POSTING_CLOSED;
+        }
+        if (resume == null) {
+            return ApplicationRefusal.NO_RESUME;
+        }
+        if (applicationRepository.existsByApplicantAndJobPosting(applicant, posting)) {
+            return ApplicationRefusal.ALREADY_APPLIED;
+        }
+        if (activeApplications >= APPLICATION_LIMIT) {
+            return ApplicationRefusal.LIMIT_REACHED;
+        }
+        return null;
     }
 
     // CO-05.1: active applications first, ended ones included since they still block reapplying (A5)

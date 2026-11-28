@@ -69,10 +69,9 @@ function bearer(token: string): Record<string, string> {
   return { Authorization: `Bearer ${token}` };
 }
 
-export type StartRefusalReason = "NO_RESUME" | "LIMIT_REACHED";
+export type StartRefusalReason = "POSTING_CLOSED" | "NO_RESUME" | "ALREADY_APPLIED" | "LIMIT_REACHED";
 
-// GET /application: the summary the screen opens with. Closed and already-applied
-// postings are not flagged here; the backend decides those on submit (UC-04 4a, 4c).
+// GET /application: the summary the screen opens with, and the first refusal submit would give
 export type ApplicationStart = {
   posting: { postingId: number; title: string; organizationName: string };
   resume: Resume | null; // the resume on file, a copy of which goes with the application
@@ -360,11 +359,10 @@ export type DeskApplication = {
 };
 
 // CO-05.1. Active applications come first from the backend along with the active count;
-// ended ones stay in `all` and `appliedPostingIds` because a posting can be applied to once (A5).
+// ended ones stay in `all` because a posting can be applied to once (A5).
 export type Applications = {
   all: ApplicationSummary[];
   active: DeskApplication[];
-  appliedPostingIds: number[];
   activeApplicationCount: number;
   applicationLimit: number;
 };
@@ -388,7 +386,6 @@ export async function viewApplications(token: string): Promise<Applications> {
   const body: RawApplicationsResponse = await response.json();
   const all: ApplicationSummary[] = [];
   const active: DeskApplication[] = [];
-  const appliedPostingIds: number[] = [];
   for (const item of body.applications) {
     const label = stageLabel(item.applicationStatus);
     const isActive = ACTIVE_STAGES.has(label);
@@ -406,12 +403,10 @@ export async function viewApplications(token: string): Promise<Applications> {
     if (isActive) {
       active.push({ ...base, applicationStatus: label as Stage });
     }
-    appliedPostingIds.push(item.postingId);
   }
   return {
     all,
     active,
-    appliedPostingIds,
     activeApplicationCount: body.activeApplicationCount,
     applicationLimit: body.applicationLimit,
   };

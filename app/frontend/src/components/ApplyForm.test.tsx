@@ -37,7 +37,6 @@ const desk: Desk = {
       applicationStatus: "Interview",
     },
   ],
-  appliedPostingIds: [3, 7], // 7 was withdrawn
   refusal: null,
   applicationLimit: 5,
   resume: { fileName: "Jordan_Lee_Resume.pdf", uploadDate: "2026-09-30T14:00:00" },
@@ -148,14 +147,14 @@ describe("ApplyForm", () => {
   });
 
   it("refuses a posting whose earlier application has ended, since a posting is applied to once (A5)", () => {
-    render(<ApplyForm posting={{ ...posting, jobPostId: 7 }} session={{ token: "applicant-token", user: jordan }} desk={desk} />);
+    render(<ApplyForm posting={{ ...posting, jobPostId: 7 }} session={{ token: "applicant-token", user: jordan }} desk={{ ...desk, refusal: "ALREADY_APPLIED" }} />);
 
     expect(screen.getByRole("status")).toHaveTextContent("You already applied to this posting; that application has ended.");
     expect(screen.queryByRole("button", { name: "Submit application" })).not.toBeInTheDocument();
   });
 
   it("explains an earlier application to the same posting and offers no submit (extension 4c)", () => {
-    render(<ApplyForm posting={{ ...posting, jobPostId: 3 }} session={{ token: "applicant-token", user: jordan }} desk={desk} />);
+    render(<ApplyForm posting={{ ...posting, jobPostId: 3 }} session={{ token: "applicant-token", user: jordan }} desk={{ ...desk, refusal: "ALREADY_APPLIED" }} />);
 
     expect(screen.getByRole("status")).toHaveTextContent("You already applied to this posting");
     expect(screen.getByRole("status")).toHaveTextContent("Interview");
@@ -176,6 +175,13 @@ describe("ApplyForm", () => {
     render(<ApplyForm posting={posting} session={{ token: "applicant-token", user: jordan }} desk={desk} />);
 
     expect(screen.getByRole("link", { name: "Replace resume" })).toHaveAttribute("href", "/profile?next=%2Fjobs%2F2%2Fapply");
+  });
+
+  it("says the posting is closed when the backend names it, whatever the browser's clock (extension 1c)", () => {
+    render(<ApplyForm posting={posting} session={{ token: "applicant-token", user: jordan }} desk={{ ...desk, refusal: "POSTING_CLOSED" }} />);
+
+    expect(screen.getByRole("status")).toHaveTextContent("This posting no longer accepts applications.");
+    expect(screen.queryByRole("button", { name: "Submit application" })).not.toBeInTheDocument();
   });
 
   it("lists the active applications when the limit is reached (FR-UC04.7)", () => {

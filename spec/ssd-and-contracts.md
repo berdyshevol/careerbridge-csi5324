@@ -128,9 +128,9 @@ viewPosting(postingId) opens the one posting the Applicant applies to (step 1), 
 
 startApplication(postingId) only presents the application summary and changes nothing, so it has no contract. The system reads the Applicant's Resume on file itself (UC-03); the Applicant does not send one.
 
-startApplication returns an application start: the posting, the Applicant, the Resume, the Applicant's active Applications, and an optional refusal. A refusal is returned as data, not thrown, so the screen can show it beside the summary and the active list. There are two refusals: no Resume (extension 2a) and the limit of 5 active Applications (extension 2b).
+startApplication returns an application start: the posting, the Applicant, the Resume, the Applicant's active Applications, and an optional refusal. A refusal is returned as data, not thrown, so the screen can show it beside the summary and the active list. It makes the checks of submitApplication, in the same order, so the screen shows a refusal up front and never decides one itself: the posting is closed (extension 1c), no Resume (extension 2a), the Applicant already applied to the posting (extension 4c, shown before step 3), and the limit of 5 active Applications (extension 2b).
 
-startApplication does not check that the posting is open or that the Applicant has not already applied to it. Those checks happen only at submitApplication (extensions 4a and 4c).
+submitApplication checks them all again, because the posting can close or another application can be submitted while the form is open.
 
 #### CO-04.1: submitApplication
 

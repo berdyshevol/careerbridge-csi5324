@@ -35,19 +35,20 @@ function application(postingId: number): DeskApplication {
 
 const desk: Desk = {
   applications: [application(1), application(3), application(4)],
-  appliedPostingIds: [1, 3, 4, 7], // 7 was withdrawn
   refusal: null,
   applicationLimit: 5,
   resume: { fileName: "Jordan_Lee_Resume.pdf", uploadDate: "2026-09-30T14:00:00" },
 };
 
+// The backend names every refusal (SCRUM-266); the screen only shows it
 describe("checkApplication (FR-UC04.3, FR-UC04.6, FR-UC04.7)", () => {
-  it("allows an open posting the applicant has not applied to", () => {
+  it("allows the posting when the backend names no refusal", () => {
     expect(checkApplication(posting(), desk)).toEqual({ kind: "ok" });
   });
 
-  it("refuses a posting that is no longer open (extension 4a)", () => {
-    expect(checkApplication(posting({ postStatus: "CLOSED" }), desk).kind).toBe("closed");
+  it("does not decide a closed posting by itself (extension 1c)", () => {
+    expect(checkApplication(posting({ postStatus: "CLOSED", closesAt: "2000-01-01T00:00:00Z" }), desk)).toEqual({ kind: "ok" });
+    expect(checkApplication(posting(), { ...desk, refusal: "POSTING_CLOSED" }).kind).toBe("closed");
   });
 
   it("requires a resume on file (extension 2a)", () => {
@@ -55,7 +56,7 @@ describe("checkApplication (FR-UC04.3, FR-UC04.6, FR-UC04.7)", () => {
   });
 
   it("refuses a second application to the same posting, whatever its stage (extension 4c)", () => {
-    const check = checkApplication(posting({ jobPostId: 3 }), desk);
+    const check = checkApplication(posting({ jobPostId: 3 }), { ...desk, refusal: "ALREADY_APPLIED" });
     expect(check.kind).toBe("already-applied");
     if (check.kind === "already-applied") {
       expect(check.application?.postingId).toBe(3);
@@ -63,7 +64,10 @@ describe("checkApplication (FR-UC04.3, FR-UC04.6, FR-UC04.7)", () => {
   });
 
   it("refuses a posting whose earlier application has ended, such as a withdrawn one (A5)", () => {
-    expect(checkApplication(posting({ jobPostId: 7 }), desk)).toEqual({ kind: "already-applied" });
+    expect(checkApplication(posting({ jobPostId: 7 }), { ...desk, refusal: "ALREADY_APPLIED" })).toEqual({
+      kind: "already-applied",
+      application: undefined,
+    });
   });
 
   it("refuses a sixth active application and lists the five (extension 4b)", () => {
@@ -72,6 +76,7 @@ describe("checkApplication (FR-UC04.3, FR-UC04.6, FR-UC04.7)", () => {
     expect(check.kind).toBe("limit");
     if (check.kind === "limit") {
       expect(check.active).toHaveLength(5);
+      expect(check.limit).toBe(5);
     }
   });
 });

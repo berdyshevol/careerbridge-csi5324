@@ -482,7 +482,6 @@ describe("viewApplications", () => {
       ["Withdrawn", false],
       ["Offer Declined", false],
     ]);
-    expect(applications.appliedPostingIds).toEqual([1, 7, 8]);
   });
 
   it("fails when the backend does not answer well", async () => {
