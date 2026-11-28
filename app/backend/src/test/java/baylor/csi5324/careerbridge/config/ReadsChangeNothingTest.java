@@ -1,5 +1,7 @@
 package baylor.csi5324.careerbridge.config;
 
+import baylor.csi5324.careerbridge.lifecycle.ApplicationLifecycle;
+import baylor.csi5324.careerbridge.lifecycle.JobPostingLifecycle;
 import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
@@ -90,8 +92,7 @@ class ReadsChangeNothingTest {
         String applicationId = String.valueOf(sampleApplication(posting).getApplicationId());
         String offerApplicationId = String.valueOf(sampleOfferApplication(offerPosting).getApplicationId());
         // Reopening a posting to edit it needs a Draft that the demo recruiter created (UC-11)
-        JobPosting draft = publishedPosting();
-        draft.setPostStatus(PostStatus.DRAFT);
+        JobPosting draft = newPosting();
         draft.setOrganization(organizationRepository.findByName("Waco Health Partners").orElseThrow());
         draft.setRecruiter(recruiterRepository.findByEmailIgnoreCase(RECRUITER).orElseThrow());
         String draftId = String.valueOf(jobPostingRepository.save(draft).getJobPostId());
@@ -147,14 +148,17 @@ class ReadsChangeNothingTest {
     }
 
     private JobPosting publishedPosting() {
+        return jobPostingRepository.save(JobPostingLifecycle.restore(newPosting(), PostStatus.PUBLISHED));
+    }
+
+    private JobPosting newPosting() {
         JobPosting posting = new JobPosting();
         posting.setOrganization(organizationRepository.save(new Organization("Reads Change Nothing " + System.nanoTime())));
         posting.setTitle("Read-only Engineer");
         posting.setNumberOfOpenings(1);
         posting.setDatePosted(LocalDate.now());
         posting.setApplicationDeadline(LocalDate.now().plusDays(30));
-        posting.setPostStatus(PostStatus.PUBLISHED);
-        return jobPostingRepository.save(posting);
+        return posting;
     }
 
     private Application sampleApplication(JobPosting posting) {
@@ -175,7 +179,7 @@ class ReadsChangeNothingTest {
                 posting,
                 new ResumeSnapshot("read-only.pdf", "application/pdf", 1024L),
                 LocalDate.now());
-        application.setApplicationStatus(ApplicationStatus.OFFER);
+        ApplicationLifecycle.restore(application, ApplicationStatus.OFFER);
         application.setOffer(new Offer(
                 application,
                 LocalDate.now(),

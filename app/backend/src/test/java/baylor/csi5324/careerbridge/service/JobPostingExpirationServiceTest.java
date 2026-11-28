@@ -1,5 +1,6 @@
 package baylor.csi5324.careerbridge.service;
 
+import baylor.csi5324.careerbridge.lifecycle.JobPostingLifecycle;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
@@ -59,7 +60,7 @@ class JobPostingExpirationServiceTest {
         JobPosting posting = new JobPosting();
         posting.setJobPostId(nextPostingId++);
         posting.setOrganization(organization);
-        posting.setPostStatus(status);
+        JobPostingLifecycle.restore(posting, status);
         posting.setApplicationDeadline(deadline);
 
         return posting;

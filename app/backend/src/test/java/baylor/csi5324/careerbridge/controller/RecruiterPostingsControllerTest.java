@@ -1,5 +1,8 @@
 package baylor.csi5324.careerbridge.controller;
 
+import java.time.Instant;
+import baylor.csi5324.careerbridge.lifecycle.LifecycleFixtures;
+import baylor.csi5324.careerbridge.lifecycle.JobPostingLifecycle;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
@@ -31,8 +34,8 @@ class RecruiterPostingsControllerTest {
     void returnsThePostingsOfTheOrganizationWithTheirStatusAndStageCounts() throws Exception {
         Organization organization = new Organization("Waco Health Partners");
         JobPosting open = posting(7L, "Data Analyst", PostStatus.PUBLISHED, organization);
-        JobPosting filled = posting(8L, "Front Desk Coordinator", PostStatus.CLOSED, organization);
-        filled.setClosingReason("Filled");
+        JobPosting filled = posting(8L, "Front Desk Coordinator", PostStatus.PUBLISHED, organization);
+        LifecycleFixtures.closed(filled, JobPostingLifecycle.Event.FILL_POSTING, Instant.parse("2026-10-20T14:00:00Z"));
         Map<ApplicationStatus, Long> counts = new EnumMap<>(ApplicationStatus.class);
         counts.put(ApplicationStatus.APPLIED, 7L);
         counts.put(ApplicationStatus.SCREENING, 0L);
@@ -73,7 +76,7 @@ class RecruiterPostingsControllerTest {
         JobPosting posting = new JobPosting();
         posting.setJobPostId(id);
         posting.setTitle(title);
-        posting.setPostStatus(postStatus);
+        JobPostingLifecycle.restore(posting, postStatus);
         posting.setOrganization(organization);
         return posting;
     }

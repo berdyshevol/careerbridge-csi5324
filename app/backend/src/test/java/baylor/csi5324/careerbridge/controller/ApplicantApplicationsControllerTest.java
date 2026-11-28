@@ -1,15 +1,15 @@
 package baylor.csi5324.careerbridge.controller;
 
+import baylor.csi5324.careerbridge.lifecycle.LifecycleFixtures;
+import baylor.csi5324.careerbridge.lifecycle.ApplicationLifecycle;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 import baylor.csi5324.careerbridge.model.Interview;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Offer;
-import baylor.csi5324.careerbridge.model.OfferStatus;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
-import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
 import baylor.csi5324.careerbridge.service.ApplicantApplications;
 import baylor.csi5324.careerbridge.service.ApplicationActionRefusedException;
 import baylor.csi5324.careerbridge.service.ApplicationNotFoundException;
@@ -60,8 +60,7 @@ class ApplicantApplicationsControllerTest {
                 posting,
                 new ResumeSnapshot("cv.pdf", "application/pdf", 1024L),
                 LocalDate.of(2026, 10, 1));
-        application.setApplicationStatus(ApplicationStatus.OFFER);
-        application.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.OFFER, LocalDate.of(2026, 10, 28)));
+        ApplicationLifecycle.restore(application, ApplicationStatus.OFFER, LocalDate.of(2026, 10, 28));
 
         when(applicationService.viewApplications("jordan.lee@example.com"))
                 .thenReturn(new ApplicantApplications(List.of(application), 1));
@@ -93,9 +92,7 @@ class ApplicantApplicationsControllerTest {
                 posting,
                 new ResumeSnapshot("cv.pdf", "application/pdf", 1024L),
                 LocalDate.of(2026, 10, 1));
-        application.setApplicationStatus(ApplicationStatus.INTERVIEW);
-        application.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.SCREENING, LocalDate.of(2026, 10, 8)));
-        application.getStatusHistory().add(new StatusHistoryEntry(ApplicationStatus.INTERVIEW, LocalDate.of(2026, 10, 15)));
+        ApplicationLifecycle.restore(application, ApplicationStatus.INTERVIEW, LocalDate.of(2026, 10, 8), LocalDate.of(2026, 10, 15));
         Interview interview = new Interview(application, 1, LocalDateTime.of(2026, 10, 21, 14, 0),
                 "On-site", "1200 Austin Ave, Waco");
         interview.setOutcome("Passed");
@@ -147,8 +144,7 @@ class ApplicantApplicationsControllerTest {
 
         Application withdrawn = new Application(new Applicant(), posting,
                 new ResumeSnapshot("cv.pdf", "application/pdf", 1024L), LocalDate.of(2026, 10, 1));
-        withdrawn.setApplicationStatus(ApplicationStatus.WITHDRAWN);
-        withdrawn.setWithdrawnAt(Instant.parse("2026-10-10T15:00:00Z"));
+        LifecycleFixtures.withdrawn(withdrawn, Instant.parse("2026-10-10T15:00:00Z"));
         when(applicationService.withdrawApplication(12L, "jordan.lee@example.com", "No longer interested"))
                 .thenReturn(new WithdrawnApplication(withdrawn, 2));
 
@@ -188,7 +184,7 @@ class ApplicantApplicationsControllerTest {
 
         Application offered = new Application(new Applicant(), posting,
                 new ResumeSnapshot("cv.pdf", "application/pdf", 1024L), LocalDate.of(2026, 10, 1));
-        offered.setApplicationStatus(ApplicationStatus.OFFER);
+        ApplicationLifecycle.restore(offered, ApplicationStatus.OFFER);
         Offer offer = new Offer(offered, LocalDate.of(2026, 10, 28), LocalDate.of(2026, 12, 7),
                 "68,000 USD per year", "Hybrid after 90 days.", LocalDate.of(2026, 11, 5),
                 "Brazos_Health_Offer_Letter.pdf");
@@ -204,12 +200,9 @@ class ApplicantApplicationsControllerTest {
 
         Application hired = new Application(new Applicant(), posting,
                 new ResumeSnapshot("cv.pdf", "application/pdf", 1024L), LocalDate.of(2026, 10, 1));
-        hired.setApplicationStatus(ApplicationStatus.HIRED);
         Offer acceptedOffer = new Offer(hired, LocalDate.of(2026, 10, 28), LocalDate.of(2026, 12, 7),
                 "68,000 USD per year", "Hybrid after 90 days.", LocalDate.of(2026, 11, 5), null);
-        acceptedOffer.setStatus(OfferStatus.ACCEPTED);
-        acceptedOffer.setResponseDate(LocalDate.of(2026, 10, 30));
-        hired.setOffer(acceptedOffer);
+        LifecycleFixtures.hired(hired, acceptedOffer, Instant.parse("2026-10-30T15:00:00Z"));
         when(applicationService.acceptOffer(15L, "jordan.lee@example.com", 1))
                 .thenReturn(new OfferResponseResult(hired, 2, NOW));
 
@@ -224,7 +217,7 @@ class ApplicantApplicationsControllerTest {
 
         Offer revised = new Offer(offered, LocalDate.of(2026, 10, 28), LocalDate.of(2026, 12, 14),
                 "72,000 USD per year", "Updated terms.", LocalDate.of(2026, 11, 10), null);
-        revised.setRevision(2);
+        LifecycleFixtures.revised(revised, revised.getSalary());
         when(applicationService.declineOffer(15L, "jordan.lee@example.com", "Accepted another", 1))
                 .thenThrow(new OfferRevisedException(revised, NOW, ZoneOffset.UTC));
 

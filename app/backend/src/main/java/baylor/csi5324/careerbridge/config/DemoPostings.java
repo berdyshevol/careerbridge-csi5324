@@ -1,5 +1,8 @@
 package baylor.csi5324.careerbridge.config;
 
+import baylor.csi5324.careerbridge.lifecycle.ApplicationLifecycle;
+import baylor.csi5324.careerbridge.lifecycle.JobPostingLifecycle;
+import baylor.csi5324.careerbridge.lifecycle.JobPostingLifecycle.Event;
 import baylor.csi5324.careerbridge.model.AccountStatus;
 import baylor.csi5324.careerbridge.model.Applicant;
 import baylor.csi5324.careerbridge.model.Application;
@@ -9,13 +12,11 @@ import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.model.Recruiter;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
-import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
 import baylor.csi5324.careerbridge.repository.RecruiterRepository;
 import baylor.csi5324.careerbridge.service.ApplicationService;
-import baylor.csi5324.careerbridge.service.JobPostingService;
 import baylor.csi5324.careerbridge.service.RecruiterOrganization;
 import baylor.csi5324.careerbridge.util.CsvReader;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -127,10 +127,7 @@ public class DemoPostings implements CommandLineRunner {
         }
         LocalDate today = LocalDate.now(clock);
         Application application = new Application(applicant, posting, DEMO_RESUME, today);
-        if (stage == ApplicationStatus.SCREENING) {
-            application.setApplicationStatus(stage);
-            application.getStatusHistory().add(new StatusHistoryEntry(stage, today));
-        }
+        ApplicationLifecycle.restore(application, stage, today);
         applicationRepository.save(application);
     }
 
@@ -148,17 +145,23 @@ public class DemoPostings implements CommandLineRunner {
         posting.setNumberOfOpenings(1);
         posting.setDatePosted(today);
         posting.setApplicationDeadline(today.plusDays(DAYS_OPEN));
+        // The decisions go through the real events, so a demo posting carries who decided and why
         PostStatus status = PostStatus.fromLabel(record.get("postStatus"));
-        posting.setPostStatus(status);
-        if (status == PostStatus.RETURNED) {
-            posting.setReviewComment(record.get("reviewComment"));
-        }
-        if (status == PostStatus.PUBLISHED || status == PostStatus.CLOSED) {
-            posting.setApprovedBy(APPROVED_BY);
-            posting.setApprovedAt(LocalDateTime.now(clock));
-        }
-        if (status == PostStatus.CLOSED) {
-            posting.close(JobPostingService.CLOSED_BY_RECRUITER, clock.instant());
+        JobPostingLifecycle.Move decision = JobPostingLifecycle.Move.of(posting, clock.instant())
+                .decidedBy(APPROVED_BY, record.get("reviewComment"), true);
+        switch (status) {
+            case RETURNED -> {
+                JobPostingLifecycle.restore(posting, PostStatus.PENDING_APPROVAL);
+                JobPostingLifecycle.TABLE.fire(decision, Event.RETURN_JOB_POSTING);
+            }
+            case PUBLISHED, CLOSED -> {
+                JobPostingLifecycle.restore(posting, PostStatus.PENDING_APPROVAL);
+                JobPostingLifecycle.TABLE.fire(decision, Event.APPROVE_JOB_POSTING);
+                if (status == PostStatus.CLOSED) {
+                    JobPostingLifecycle.fire(posting, clock.instant(), Event.CLOSE_POSTING);
+                }
+            }
+            default -> JobPostingLifecycle.restore(posting, status);
         }
         return posting;
     }

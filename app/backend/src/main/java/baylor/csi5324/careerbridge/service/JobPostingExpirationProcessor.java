@@ -1,5 +1,6 @@
 package baylor.csi5324.careerbridge.service;
 
+import baylor.csi5324.careerbridge.lifecycle.JobPostingLifecycle;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.PostStatus;
 import baylor.csi5324.careerbridge.repository.JobPostingRepository;
@@ -27,19 +28,13 @@ public class JobPostingExpirationProcessor {
             return false;
         }
 
-        return switch (posting.getPostStatus()) {
-            case PUBLISHED -> {
-                posting.close("Expired", now);
-                jobPostingRepository.saveAndFlush(posting);
-                yield true;
-            }
-            // UC-13 extension 2b: never published, so it is marked Expired rather than Closed
-            case PENDING_APPROVAL, RETURNED -> {
-                posting.setPostStatus(PostStatus.EXPIRED);
-                jobPostingRepository.saveAndFlush(posting);
-                yield false;
-            }
-            default -> false;
-        };
+        // fig-04 decides where an expired posting goes: Published -> Closed, Pending/Returned -> Expired
+        JobPostingLifecycle.Move move = JobPostingLifecycle.Move.of(posting, now);
+        if (JobPostingLifecycle.TABLE.refusal(move, JobPostingLifecycle.Event.EXPIRE_POSTING).isPresent()) {
+            return false;
+        }
+        PostStatus reached = JobPostingLifecycle.TABLE.fire(move, JobPostingLifecycle.Event.EXPIRE_POSTING);
+        jobPostingRepository.saveAndFlush(posting);
+        return reached == PostStatus.CLOSED;
     }
 }

@@ -1,6 +1,7 @@
 
 package baylor.csi5324.careerbridge.service;
 
+import baylor.csi5324.careerbridge.lifecycle.JobPostingLifecycle;
 import baylor.csi5324.careerbridge.dto.CreateJobPostingRequest;
 import baylor.csi5324.careerbridge.dto.PostingSearchCriteria;
 import baylor.csi5324.careerbridge.config.SampleDataLoader;
@@ -382,7 +383,7 @@ class JobPostingServiceTest {
         posting.setOrganization(organization);
         posting.setTitle(title);
         posting.setLocation("Remote");
-        posting.setPostStatus(status);
+        JobPostingLifecycle.restore(posting, status);
         posting.setDatePosted(datePosted);
         posting.setApplicationDeadline(deadline);
 

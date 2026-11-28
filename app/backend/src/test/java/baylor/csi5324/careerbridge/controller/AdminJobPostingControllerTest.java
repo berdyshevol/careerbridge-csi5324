@@ -1,5 +1,6 @@
 package baylor.csi5324.careerbridge.controller;
 
+import baylor.csi5324.careerbridge.lifecycle.JobPostingLifecycle;
 import baylor.csi5324.careerbridge.model.JobPosting;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
@@ -95,7 +96,7 @@ class AdminJobPostingControllerTest {
     @Test
     void aPostingAlreadyDecidedIsAConflictThatNamesItsStatus() throws Exception {
         JobPosting pending = savePending();
-        pending.setPostStatus(PostStatus.PUBLISHED);
+        JobPostingLifecycle.restore(pending, PostStatus.PUBLISHED);
         jobPostingRepository.save(pending);
 
         mockMvc.perform(post("/api/admin/postings/{id}/approve", pending.getJobPostId())
@@ -127,7 +128,7 @@ class AdminJobPostingControllerTest {
         posting.setNumberOfOpenings(1);
         posting.setDatePosted(LocalDate.now());
         posting.setApplicationDeadline(LocalDate.now().plusDays(10));
-        posting.setPostStatus(PostStatus.PENDING_APPROVAL);
+        JobPostingLifecycle.restore(posting, PostStatus.PENDING_APPROVAL);
         posting.setOrganization(organization);
         return jobPostingRepository.save(posting);
     }

@@ -1,5 +1,6 @@
 package baylor.csi5324.careerbridge.model;
 
+import baylor.csi5324.careerbridge.lifecycle.JobPostingLifecycle;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -17,7 +18,7 @@ class JobPostingTest {
         organization.setTimeZone(timeZone);
         JobPosting posting = new JobPosting();
         posting.setOrganization(organization);
-        posting.setPostStatus(PostStatus.PUBLISHED);
+        JobPostingLifecycle.restore(posting, PostStatus.PUBLISHED);
         posting.setApplicationDeadline(deadline);
         return posting;
     }
@@ -40,7 +41,7 @@ class JobPostingTest {
     @Test
     void isNotOpenUnlessPublished() {
         JobPosting posting = published(LocalDate.of(2026, 10, 17), "UTC");
-        posting.setPostStatus(PostStatus.CLOSED);
+        JobPostingLifecycle.restore(posting, PostStatus.CLOSED);
 
         assertFalse(posting.isOpen(Instant.parse("2026-10-01T00:00:00Z")));
     }

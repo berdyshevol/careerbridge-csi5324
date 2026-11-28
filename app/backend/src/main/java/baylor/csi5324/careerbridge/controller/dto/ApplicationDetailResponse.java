@@ -1,5 +1,6 @@
 package baylor.csi5324.careerbridge.controller.dto;
 
+import baylor.csi5324.careerbridge.lifecycle.ApplicationLifecycle;
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.ApplicationStatus;
 
@@ -44,6 +45,6 @@ public record ApplicationDetailResponse(Long applicationId, Long postingId, Stri
                 application.getRejectedAtStage(),
                 application.getRejectionDate(),
                 application.getWithdrawnAt(),
-                application.availableActions(now));
+                ApplicationLifecycle.availableActions(application, now));
     }
 }
