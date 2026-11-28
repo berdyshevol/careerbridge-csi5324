@@ -29,11 +29,7 @@ public class JobPostingService {
     private static final int MIN_DAYS_TO_DEADLINE = 1;
     private static final int MAX_DAYS_TO_DEADLINE = 90;
 
-    static final String DEADLINE_PASSED = JobPosting.DEADLINE_PASSED;
-
     private static final int MAX_COMMENT_LENGTH = 2000;
-
-    public static final String CLOSED_BY_RECRUITER = JobPosting.CLOSED_BY_RECRUITER;
 
     private static final ZoneOffset LATEST_ZONE = ZoneOffset.ofHours(-12);
 

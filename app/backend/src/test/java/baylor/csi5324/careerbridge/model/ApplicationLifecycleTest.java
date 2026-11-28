@@ -53,7 +53,7 @@ class ApplicationLifecycleTest {
         assertEquals(12, arrows);
         assertEquals(EnumSet.of(ApplicationStatus.HIRED, ApplicationStatus.OFFER_DECLINED, ApplicationStatus.REJECTED),
                 ApplicationStatus.OFFER.allowedMoves());
-        assertTrue(ApplicationStatus.HIRED.isFinal());
+        assertTrue(ApplicationStatus.HIRED.allowedMoves().isEmpty());
         assertEquals(Optional.empty(), ApplicationStatus.INTERVIEW.nextStage());
     }
 

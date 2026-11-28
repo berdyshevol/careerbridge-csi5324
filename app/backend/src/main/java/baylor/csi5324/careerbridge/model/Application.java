@@ -143,7 +143,7 @@ public class Application {
 
     // CO-06.2
     public void withdraw(String reason, Instant now) {
-        refusalToWithdraw().ifPresent(this::refuse);
+        requireWithdrawable();
         withdrawnAt = now;
         moveTo(ApplicationStatus.WITHDRAWN, now, reason);
     }
@@ -152,7 +152,7 @@ public class Application {
     // acceptance fills the last opening, the service hands them to JobPosting.fill
     public void acceptOffer(int expectedRevision, long alreadyHired, Instant now) {
         requireAnswerableOffer(expectedRevision, now);
-        if (alreadyHired >= jobPosting.getNumberOfOpenings()) {
+        if (jobPosting.isFilledBy(alreadyHired)) {
             refuse("All openings for this posting have already been filled.");
         }
         offer.accept(today(now));
@@ -171,7 +171,12 @@ public class Application {
         endWithRejection(POSTING_CLOSED, null, now);
     }
 
-    // ---- Why an operation is refused: the same rules feed the guards and availableActions ----
+    // ---- Why an operation is refused; withdrawing and answering an offer also feed availableActions ----
+
+    // CO-06.1 shows the warning only when CO-06.2 would be accepted
+    public void requireWithdrawable() {
+        refusalToWithdraw().ifPresent(this::refuse);
+    }
 
     public Optional<String> refusalToWithdraw() {
         if (applicationStatus.canMoveTo(ApplicationStatus.WITHDRAWN)) {
@@ -198,7 +203,7 @@ public class Application {
         return Optional.empty();
     }
 
-    public Optional<String> refusalToAdvance() {
+    private Optional<String> refusalToAdvance() {
         if (applicationStatus.nextStage().isPresent()) {
             return Optional.empty();
         }
@@ -212,14 +217,14 @@ public class Application {
                 + " and can no longer be moved.");
     }
 
-    public Optional<String> refusalToReject() {
+    private Optional<String> refusalToReject() {
         return applicationStatus.canMoveTo(ApplicationStatus.REJECTED)
                 ? Optional.empty()
                 : Optional.of("This application is already " + applicationStatus.getLabel()
                         + " and can no longer be rejected.");
     }
 
-    public Optional<String> refusalToRecordInterview() {
+    private Optional<String> refusalToRecordInterview() {
         if (applicationStatus != ApplicationStatus.INTERVIEW) {
             return Optional.of("Interviews are arranged only at the Interview stage; this application is "
                     + applicationStatus.getLabel() + ".");
@@ -230,7 +235,7 @@ public class Application {
         return Optional.empty();
     }
 
-    public Optional<String> refusalToExtendOffer() {
+    private Optional<String> refusalToExtendOffer() {
         if (!applicationStatus.canMoveTo(ApplicationStatus.OFFER)) {
             return Optional.of("An offer is extended only at the Interview stage; this application is "
                     + applicationStatus.getLabel() + ".");
@@ -238,7 +243,7 @@ public class Application {
         return refusalBecausePostingFilled();
     }
 
-    public Optional<String> refusalToReviseOffer() {
+    private Optional<String> refusalToReviseOffer() {
         if (applicationStatus != ApplicationStatus.OFFER || offer == null || !offer.isOpen()) {
             return Optional.of("This offer can no longer be revised. Current stage: "
                     + applicationStatus.getLabel() + ".");

@@ -123,9 +123,7 @@ public class ApplicationService {
     @Transactional(readOnly = true)
     public WithdrawalPrompt requestWithdrawal(Long applicationId, String applicantEmail) {
         Application application = ownedApplication(applicationId, applicant(applicantEmail));
-        application.refusalToWithdraw().ifPresent(reason -> {
-            throw new ApplicationActionRefusedException(application.getApplicationStatus(), reason);
-        });
+        application.requireWithdrawable();
         return new WithdrawalPrompt(application, WithdrawalPrompt.WARNING, WithdrawalPrompt.REASONS);
     }
 

@@ -2,7 +2,6 @@ package baylor.csi5324.careerbridge;
 
 import baylor.csi5324.careerbridge.model.Application;
 import baylor.csi5324.careerbridge.model.JobPosting;
-import baylor.csi5324.careerbridge.model.Offer;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaMethodCall;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -48,11 +47,10 @@ class LayersTest {
             "backfillLegacyHistory", "backfillLegacyOffer");
 
     private static final DescribedPredicate<JavaMethodCall> aLifecycleMove = DescribedPredicate.describe(
-            "a lifecycle move of Application, JobPosting or Offer",
+            "a lifecycle move of Application or JobPosting",
             call -> LIFECYCLE_MOVES.contains(call.getName())
                     && (call.getTargetOwner().isEquivalentTo(Application.class)
-                    || call.getTargetOwner().isEquivalentTo(JobPosting.class)
-                    || call.getTargetOwner().isEquivalentTo(Offer.class)));
+                    || call.getTargetOwner().isEquivalentTo(JobPosting.class)));
 
     @ArchTest
     static final ArchRule onlyServicesMoveALifecycle = noClasses()

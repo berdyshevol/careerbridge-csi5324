@@ -201,7 +201,6 @@ public class JobPosting {
         }
     }
 
-    // They record whoever decided, also for a return or a rejection
     private void decide(PostStatus decision, String administrator, String comment, Instant now) {
         moveTo(decision, null);
         approvedBy = administrator;
@@ -312,7 +311,6 @@ public class JobPosting {
         return postStatus;
     }
 
-
     public Organization getOrganization() {
         return organization;
     }
@@ -337,21 +335,17 @@ public class JobPosting {
         return approvedBy;
     }
 
-
     public LocalDateTime getApprovedAt() {
         return approvedAt;
     }
-
 
     public String getReviewComment() {
         return reviewComment;
     }
 
-
     public String getClosingReason() {
         return closingReason;
     }
-
 
     public Instant getClosedAt() {
         return closedAt;

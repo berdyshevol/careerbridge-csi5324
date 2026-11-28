@@ -48,9 +48,6 @@ public enum ApplicationStatus {
         };
     }
 
-    public boolean isFinal() {
-        return allowedMoves().isEmpty();
-    }
 
     public String getLabel() {
         return switch (this) {

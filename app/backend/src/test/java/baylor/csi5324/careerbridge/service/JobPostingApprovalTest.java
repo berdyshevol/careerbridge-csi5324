@@ -95,7 +95,7 @@ class JobPostingApprovalTest {
         JobPosting closed = jobPostingService.closePosting(published.getJobPostId(), OWNER);
 
         assertEquals(PostStatus.CLOSED, closed.getPostStatus());
-        assertEquals(JobPostingService.CLOSED_BY_RECRUITER, closed.getClosingReason());
+        assertEquals(JobPosting.CLOSED_BY_RECRUITER, closed.getClosingReason());
         assertNotNull(closed.getClosedAt());
         assertTrue(jobPostingService.searchPostings(PostingSearchCriteria.ANY).stream()
                 .noneMatch(posting -> posting.getJobPostId().equals(published.getJobPostId())));
@@ -272,7 +272,7 @@ class JobPostingApprovalTest {
                 pending.getJobPostId(), "Admin", "Approved");
 
         assertEquals(PostStatus.RETURNED, result.getPostStatus());
-        assertEquals(JobPostingService.DEADLINE_PASSED, result.getReviewComment());
+        assertEquals(JobPosting.DEADLINE_PASSED, result.getReviewComment());
         assertEquals("Admin", result.getApprovedBy());
     }
 
