@@ -20,7 +20,8 @@ import StageBar from "./StageBar";
 // UC-14 steps 3-4: the applicants of one posting at its active stages
 export default function RecruiterPostingApplicants({ token, postingId }: { token: string; postingId: number }) {
   const [posting, setPosting] = useState<PostingApplicants | null>(null);
-  const [stage, setStage] = useState<Stage>("Applied");
+  // Until the recruiter picks one, the first stage that has applicants, so the page never opens on an empty list
+  const [chosen, setChosen] = useState<Stage | null>(null);
   const [ended, setEnded] = useState(false);
   const [missing, setMissing] = useState(false);
   const [error, setError] = useState("");
@@ -69,6 +70,7 @@ export default function RecruiterPostingApplicants({ token, postingId }: { token
     STAGES.map((name) => [name, posting?.applicants.filter((applicant) => applicant.stage === name.toUpperCase()) ?? []]),
   ) as Record<Stage, PostingApplicant[]>;
   const counts = Object.fromEntries(STAGES.map((name) => [name, byStage[name].length])) as Record<Stage, number>;
+  const stage = chosen ?? STAGES.find((name) => byStage[name].length > 0) ?? "Applied";
 
   return (
     <div className="flex flex-col gap-6">
@@ -88,7 +90,7 @@ export default function RecruiterPostingApplicants({ token, postingId }: { token
           ) : (
             <section aria-label="Applicants by stage" className="flex flex-col gap-4">
               <h2 className="font-display text-xl font-semibold">Applicants</h2>
-              <StageBar counts={counts} selected={stage} onSelect={setStage} />
+              <StageBar counts={counts} selected={stage} onSelect={setChosen} />
               <ul className="flex flex-col gap-2">
                 {byStage[stage].map((applicant) => (
                   <li

@@ -61,6 +61,17 @@ describe("RecruiterPostingApplicants", () => {
     expect(screen.getByRole("button", { name: /Applied/ })).not.toHaveAttribute("aria-current");
   });
 
+  it("opens on the first stage that has applicants when none is at Applied", async () => {
+    fetchMock.mockResolvedValueOnce(
+      reply(200, { ...answer, applicants: [{ applicationId: 34, name: "Grace Liu", stage: "OFFER" }] }),
+    );
+
+    render(<RecruiterPostingApplicants token="t" postingId={7} />);
+
+    expect(await screen.findByRole("button", { name: /^1\s*Offer$/ })).toHaveAttribute("aria-current", "true");
+    expect(screen.getAllByRole("listitem").map((row) => row.textContent)).toEqual(["Grace LiuOpen"]);
+  });
+
   it("opens the review of an applicant", async () => {
     fetchMock.mockResolvedValueOnce(reply(200, answer));
     render(<RecruiterPostingApplicants token="t" postingId={7} />);
