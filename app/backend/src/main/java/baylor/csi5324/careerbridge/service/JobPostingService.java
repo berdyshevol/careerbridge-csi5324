@@ -263,11 +263,11 @@ public class JobPostingService {
     }
 
     private static String requireComment(String comment) {
-        requireShortComment(comment);
         if (comment == null || comment.isBlank()) {
             throw new InvalidPostingException(
                     "A reason is required to return or reject a posting");
         }
+        requireShortComment(comment);
         return comment;
     }
 
