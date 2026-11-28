@@ -10,6 +10,7 @@ import baylor.csi5324.careerbridge.model.MembershipStatus;
 import baylor.csi5324.careerbridge.model.Offer;
 import baylor.csi5324.careerbridge.model.Organization;
 import baylor.csi5324.careerbridge.model.PostStatus;
+import baylor.csi5324.careerbridge.model.Resume;
 import baylor.csi5324.careerbridge.model.ResumeSnapshot;
 import baylor.csi5324.careerbridge.repository.ApplicantRepository;
 import baylor.csi5324.careerbridge.repository.ApplicationRepository;
@@ -18,6 +19,7 @@ import baylor.csi5324.careerbridge.repository.OrganizationMembershipRepository;
 import baylor.csi5324.careerbridge.repository.OrganizationRepository;
 import baylor.csi5324.careerbridge.repository.RecruiterRepository;
 import baylor.csi5324.careerbridge.service.MembershipFixtures;
+import baylor.csi5324.careerbridge.service.RecruiterOrganization;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,6 +32,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
@@ -80,6 +83,9 @@ class ReadsChangeNothingTest {
     @Autowired
     private OrganizationMembershipRepository membershipRepository;
 
+    @Autowired
+    private RecruiterOrganization recruiterOrganization;
+
     @Test
     void everyReadUnderApiLeavesTheDatabaseAsItWas() throws Exception {
         MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
@@ -95,6 +101,13 @@ class ReadsChangeNothingTest {
         draft.setOrganization(organizationRepository.findByName("Waco Health Partners").orElseThrow());
         draft.setRecruiter(recruiterRepository.findByEmailIgnoreCase(RECRUITER).orElseThrow());
         String draftId = String.valueOf(jobPostingRepository.save(draft).getJobPostId());
+        // A recruiter's reads of a posting and an application answer 404 unless they are of the organization
+        // the recruiter acts for (UC-14, BR-15), so these belong to the demo recruiter's
+        JobPosting recruiterPosting = publishedPosting();
+        recruiterPosting.setOrganization(recruiterOrganization.activeOrganizationOf(RECRUITER).orElseThrow());
+        jobPostingRepository.save(recruiterPosting);
+        String recruiterPostingId = String.valueOf(recruiterPosting.getJobPostId());
+        String recruiterApplicationId = String.valueOf(sampleApplicationWithResumeFile(recruiterPosting).getApplicationId());
         // The same for the Administrator's view of one recruiter request (UC-10)
         String requestId = String.valueOf(pendingRequest());
         List<String> reads = handlerMapping.getHandlerMethods().keySet().stream()
@@ -103,7 +116,10 @@ class ReadsChangeNothingTest {
                         || info.getMethodsCondition().getMethods().contains(RequestMethod.GET))
                 .flatMap(info -> info.getPatternValues().stream())
                 .filter(pattern -> pattern.startsWith("/api/"))
-                .map(pattern -> pattern
+                .map(pattern -> pattern.startsWith("/api/recruiter/")
+                        ? pattern.replace("{applicationId}", recruiterApplicationId)
+                                .replaceAll("\\{[^}]+}", recruiterPostingId)
+                        : pattern
                         .replace("{applicationId}", pattern.endsWith("/offer") ? offerApplicationId : applicationId)
                         .replaceAll("\\{[^}]+}", pattern.startsWith("/api/admin/requests/") ? requestId
                                 : pattern.endsWith("/edit") ? draftId : postingId))
@@ -113,7 +129,8 @@ class ReadsChangeNothingTest {
         var before = everyTable();
         for (String read : reads) {
             // A refused read never reaches the code that could write
-            var request = read.endsWith("/edit") ? get(read).with(user(RECRUITER).roles("RECRUITER")) : get(read);
+            var request = read.endsWith("/edit") || read.startsWith("/api/recruiter/")
+                    ? get(read).with(user(RECRUITER).roles("RECRUITER")) : get(read);
             int status = mockMvc.perform(request).andReturn().getResponse().getStatus();
             assertTrue(status < 400, "GET " + read + " answered " + status
                     + ": give this test a request that reaches the handler");
@@ -164,6 +181,16 @@ class ReadsChangeNothingTest {
                 jordan,
                 posting,
                 new ResumeSnapshot("read-only.pdf", "application/pdf", 1024L),
+                LocalDate.now()));
+    }
+
+    private Application sampleApplicationWithResumeFile(JobPosting posting) {
+        Applicant jordan = applicantRepository.findByEmailIgnoreCase(SampleDataLoader.SAMPLE_APPLICANT_EMAIL)
+                .orElseThrow();
+        // A copy with its file, so that the recruiter's download reaches its handler
+        return applicationRepository.save(new Application(jordan, posting,
+                ResumeSnapshot.of(new Resume("read-only.pdf", "application/pdf", 3L, new byte[]{1, 2, 3},
+                        LocalDateTime.now())),
                 LocalDate.now()));
     }
 
