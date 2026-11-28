@@ -20,6 +20,7 @@ import ResumeOnFile from "@/components/ResumeOnFile";
 import SummaryCards from "@/components/SummaryCards";
 import SlotMeter from "@/components/SlotMeter";
 import { StageBadge, StageProgress } from "@/components/StageBadge";
+import StageBar from "@/components/StageBar";
 import StageTimeline from "@/components/StageTimeline";
 import UserList from "@/components/UserList";
 import { formatDate, type JobPosting } from "@/lib/api";
@@ -227,6 +228,9 @@ export default function StyleguidePage() {
               <StageProgress key={stage} stage={stage} />
             ))}
           </div>
+        </Block>
+        <Block title="Stage bar" use='<StageBar counts={{ Applied: n, … }} selected={stage} onSelect={setStage} /> — the active stages with their counts; the selected one lists below it'>
+          <StageBar counts={{ Applied: 7, Screening: 5, Interview: 3, Offer: 1 }} selected="Applied" />
         </Block>
         <Block title="Stage timeline" use="<StageTimeline entries={…} interviews? />">
           <div className="max-w-sm rounded-2xl border border-base-300 bg-base-100 p-5">

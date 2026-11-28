@@ -880,6 +880,69 @@ export async function viewRecruiterPostings(token: string): Promise<RecruiterPos
   return response.json();
 }
 
+// UC-14 steps 3-4: another organization's posting or application, and one that does not exist, look alike (BR-15)
+export class RecruiterNotFound extends Error {}
+
+export type PostingApplicant = { applicationId: number; name: string; stage: ActiveStage };
+
+export type PostingApplicants = { postingId: number; title: string; applicants: PostingApplicant[] };
+
+export async function viewPostingApplicants(token: string, postingId: number): Promise<PostingApplicants> {
+  const response = await backendFetch(`/api/recruiter/postings/${postingId}`, { headers: bearer(token) });
+  return recruiterRead(response);
+}
+
+export type ApplicationReview = {
+  applicationId: number;
+  postingId: number;
+  postingTitle: string;
+  applicantName: string;
+  stage: ApplicationStage;
+  // downloadable is false for a copy taken before uploads existed: it has a name but no file
+  resume: { fileName: string; fileType: string; fileSize: number; downloadable: boolean };
+  profile: { email: string; phone: string | null; location: string | null; headline: string | null };
+  history: StatusHistoryEntry[];
+};
+
+// CO-14.1: this application only, never the applicant's other applications (BR-15)
+export async function reviewApplication(token: string, applicationId: number): Promise<ApplicationReview> {
+  const response = await backendFetch(`/api/recruiter/applications/${applicationId}`, { headers: bearer(token) });
+  const raw = await recruiterRead<
+    Omit<ApplicationReview, "stage" | "history"> & { stage: string; history: { stage: string; date: string }[] }
+  >(response);
+  return {
+    ...raw,
+    stage: stageLabel(raw.stage),
+    history: raw.history.map((entry) => ({ status: stageLabel(entry.stage), date: entry.date })),
+  };
+}
+
+// A link cannot carry the session token, so the file is fetched and handed to the browser as a blob
+export async function downloadApplicationResume(token: string, applicationId: number): Promise<Blob> {
+  const response = await backendFetch(`/api/recruiter/applications/${applicationId}/resume`, {
+    headers: bearer(token),
+  });
+  endedSession(response);
+  if (response.status === 404) {
+    throw new RecruiterNotFound();
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.blob();
+}
+
+async function recruiterRead<T>(response: Response): Promise<T> {
+  endedSession(response);
+  if (response.status === 404) {
+    throw new RecruiterNotFound();
+  }
+  if (!response.ok) {
+    throw new Error(`Backend answered ${response.status}`);
+  }
+  return response.json();
+}
+
 export type ReviewAction = "approve" | "return" | "reject";
 
 export async function reviewPosting(

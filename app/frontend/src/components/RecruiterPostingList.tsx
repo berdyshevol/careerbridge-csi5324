@@ -141,6 +141,16 @@ export default function RecruiterPostingList({ token }: { token: string }) {
                   closingReason={row.closingReason}
                   className="w-44 shrink-0 self-start md:self-center"
                 />
+                {/* Any recruiter of the organization reviews the applicants; only a posting that took applications has any */}
+                {(row.postStatus === "PUBLISHED" || row.postStatus === "CLOSED") && (
+                  <Link
+                    href={`/recruiter/postings/${row.postingId}`}
+                    aria-label={`Applicants of ${row.title}`}
+                    className="btn btn-sm self-start md:self-center"
+                  >
+                    Applicants
+                  </Link>
+                )}
                 {/* Only the recruiter who created a posting may change or close it (CO-11.2, CO-13.2) */}
                 {row.createdByYou && EDIT_ACTIONS[row.postStatus] && (
                   <Link href={editPostingPath(row.postingId)} className="btn btn-sm self-start md:self-center">

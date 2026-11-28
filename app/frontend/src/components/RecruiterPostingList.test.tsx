@@ -41,6 +41,18 @@ describe("RecruiterPostingList", () => {
     vi.unstubAllGlobals();
   });
 
+  it("links a posting that took applications to its applicants, and no other", async () => {
+    fetchMock.mockResolvedValueOnce(reply(200, answer));
+
+    render(<RecruiterPostingList token="t" />);
+
+    const link = await screen.findByRole("link", { name: "Applicants of Data Analyst" });
+    expect(link).toHaveAttribute("href", "/recruiter/postings/1");
+    // Published and Closed postings only: a draft or a posting waiting for approval has no applications
+    expect(screen.getAllByRole("link", { name: /^Applicants of/ })).toHaveLength(4);
+    expect(screen.queryByRole("link", { name: "Applicants of Clinical Data Engineer" })).not.toBeInTheDocument();
+  });
+
   it("lists each posting with its status and the applications at each stage", async () => {
     fetchMock.mockResolvedValueOnce(reply(200, answer));
 
@@ -208,7 +220,8 @@ describe("RecruiterPostingList", () => {
 
     const teammates = await findRow("Lab Courier");
     expect(within(teammates).queryByRole("button")).toBeNull();
-    expect(within(teammates).queryByRole("link")).toBeNull();
+    // Only the creator changes or closes a posting; every recruiter of the organization reads its applicants
+    expect(within(teammates).getAllByRole("link").map((link) => link.textContent)).toEqual(["Applicants"]);
   });
 
   it("puts focus in the confirmation, and back on Close after Escape", async () => {
