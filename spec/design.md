@@ -624,11 +624,12 @@ sequenceDiagram
     participant JC as JobPosting<br/>Controller
     participant JS as JobPosting<br/>Service
     participant JR as JobPosting<br/>Repository
+    participant L as JobPosting<br/>Lifecycle
     participant P as :JobPosting
 
     R->>JC: GET /api/postings/{postingId}/edit<br/>with the session token
     JC->>JS: openPostingForEdit(postingId, recruiterEmail)
-    JS->>JS: findOwnDraftOrReturned(postingId, recruiterEmail)
+    JS->>JS: findOwnPosting(postingId, recruiterEmail, "change")
     JS->>JR: findById(postingId)
     JR-->>JS: Optional<JobPosting>
     alt no such posting
@@ -637,7 +638,10 @@ sequenceDiagram
     else created by another recruiter, or by none
         JS-->>JC: throw PostingNotAllowedException(reason)
         JC-->>R: 403 and the reason
-    else not a Draft or Returned
+    end
+    JS->>L: refusal(Move.of(posting, now), UPDATE_POSTING)
+    L-->>JS: Optional<Refusal>
+    alt not a Draft or Returned
         JS-->>JC: throw PostingStateConflictException(current status)
         JC-->>R: 409 and the status
     else the recruiter's own Draft or Returned posting
@@ -647,7 +651,7 @@ sequenceDiagram
 
     R->>JC: PUT /api/postings/{postingId} (CreateJobPostingRequest)
     JC->>JS: updatePosting(postingId, request, recruiterEmail)
-    JS->>JS: findOwnDraftOrReturned(postingId, recruiterEmail)<br/>(the same refusals as above)
+    JS->>JS: findOwnPosting(postingId, recruiterEmail, "change"),<br/>refusal(move, UPDATE_POSTING) (the same refusals as above)
     JS->>JS: validateDetails(request) (ext. 5a, 5b)
     alt a field is missing or invalid
         JS-->>JC: throw InvalidPostingException(reason)
@@ -770,9 +774,11 @@ sequenceDiagram
             ES->>PR: expirePosting(postingId, now)<br/>(new transaction)
             PR->>JR: findByIdForUpdate(postingId)
             JR-->>PR: Optional<JobPosting>
-            PR->>L: refusal(Move.of(posting, now), EXPIRE_POSTING)
-            L-->>PR: Optional<Refusal>
-            alt no refusal
+            opt there, and still past its deadline
+                PR->>L: refusal(Move.of(posting, now), EXPIRE_POSTING)
+                L-->>PR: Optional<Refusal>
+            end
+            alt found, and no refusal
                 PR->>L: fire(move, EXPIRE_POSTING)
                 alt PUBLISHED
                     L->>P: enterStatus(CLOSED), recordClosing("Expired", now)
@@ -865,7 +871,7 @@ the DCD must contain each of them.
 | SD-10 | `ApplicantProfileController.uploadResume` | `ApplicantProfileService.uploadResume` | `ApplicantRepository.findByEmailIgnoreCase`, `save`; `ResumeRepository.save`, `delete` |
 | SD-4 | `JobPostingController.createPosting` | `JobPostingService.createPosting` | `OrganizationRepository.findById`; `RecruiterRepository.findByEmailIgnoreCase`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\*; `JobPostingRepository.save` |
 | SD-5 | `JobPostingController.submitJobPosting` | `JobPostingService.submitJobPosting`; `JobPosting.wasCreatedBy`; `JobPostingLifecycle.TABLE.refusal`, `fire` | `JobPostingRepository.findById`, `save`; `RecruiterRepository.findByEmailIgnoreCase`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\* |
-| SD-5b | `JobPostingController.openPostingForEdit`, `updatePosting` | `JobPostingService.openPostingForEdit`, `updatePosting`; `JobPosting.wasCreatedBy` | `JobPostingRepository.findById`, `save` |
+| SD-5b | `JobPostingController.openPostingForEdit`, `updatePosting` | `JobPostingService.openPostingForEdit`, `updatePosting`; `JobPosting.wasCreatedBy`; `JobPostingLifecycle.TABLE.refusal` | `JobPostingRepository.findById`, `save` |
 | SD-6 | `AdminJobPostingController.openPostingApprovalQueue` | `JobPostingService.openPostingApprovalQueue` | `JobPostingRepository.findByPostStatusOrderByDatePostedAscJobPostIdAsc` |
 | SD-7 | `AdminJobPostingController.approveJobPosting`, `returnJobPosting`, `rejectJobPosting` | `JobPostingService.approveJobPosting`, `returnJobPosting`, `rejectJobPosting`; `JobPostingLifecycle.TABLE.refusal`, `fire` | `JobPostingRepository.findByIdForUpdate`, `save`; `OrganizationMembershipRepository.findByRecruiterAndStatus`\* |
 | SD-11 | none: `JobPostingExpirationScheduler.runScheduledExpiration` | `JobPostingExpirationService.runExpirationJob`; `JobPostingExpirationProcessor.expirePosting`; `JobPosting.isPastDeadline`; `JobPostingLifecycle.TABLE.refusal`, `fire` | `JobPostingRepository.findByPostStatusInAndApplicationDeadlineLessThanEqual`, `findByIdForUpdate`, `saveAndFlush` |

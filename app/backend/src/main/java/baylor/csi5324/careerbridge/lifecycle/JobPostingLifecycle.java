@@ -72,19 +72,19 @@ public final class JobPostingLifecycle {
                                     + m.posting().getOrganization().getName() + ", so the posting stays pending")
                     .refuseIf(INVALID_COMMENT, Move::commentTooLong, m -> "The comment is too long")
                     .then(m -> {
-                        m.posting().recordDecision(m.decidedBy(), m.decidedAt(), m.comment());
+                        m.posting().recordDecision(m.decidedBy(), m.decidedAt(), m.reviewComment());
                         m.posting().setDatePosted(m.decidedAt().toLocalDate());
                     })
             .from(PENDING_APPROVAL).on(Event.RETURN_JOB_POSTING).to(RETURNED)
-                    .refuseIf(INVALID_COMMENT, m -> m.comment() == null,
+                    .refuseIf(INVALID_COMMENT, m -> m.reviewComment() == null,
                             m -> "A reason is required to return or reject a posting")
                     .refuseIf(INVALID_COMMENT, Move::commentTooLong, m -> "The comment is too long")
-                    .then(m -> m.posting().recordDecision(m.decidedBy(), m.decidedAt(), m.comment()))
+                    .then(m -> m.posting().recordDecision(m.decidedBy(), m.decidedAt(), m.reviewComment()))
             .from(PENDING_APPROVAL).on(Event.REJECT_JOB_POSTING).to(REJECTED)
-                    .refuseIf(INVALID_COMMENT, m -> m.comment() == null,
+                    .refuseIf(INVALID_COMMENT, m -> m.reviewComment() == null,
                             m -> "A reason is required to return or reject a posting")
                     .refuseIf(INVALID_COMMENT, Move::commentTooLong, m -> "The comment is too long")
-                    .then(m -> m.posting().recordDecision(m.decidedBy(), m.decidedAt(), m.comment()))
+                    .then(m -> m.posting().recordDecision(m.decidedBy(), m.decidedAt(), m.reviewComment()))
 
             // Published -> Closed, "filled or expired" in fig-04, and early by the recruiter (UC-13 extension *a)
             .from(PUBLISHED).on(Event.CLOSE_POSTING).to(CLOSED)
@@ -122,13 +122,17 @@ public final class JobPostingLifecycle {
             return new Move(posting, now, null, null, true);
         }
 
-        public Move decidedBy(String administrator, String reviewComment, boolean submitterActive) {
-            String trimmed = reviewComment == null || reviewComment.isBlank() ? null : reviewComment.trim();
-            return new Move(posting, now, administrator, trimmed, submitterActive);
+        public Move decidedBy(String administrator, String comment, boolean submitterActive) {
+            return new Move(posting, now, administrator, comment, submitterActive);
         }
 
+        // The limit is on what the Administrator typed, before trimming, as before this table existed
         boolean commentTooLong() {
             return comment != null && comment.length() > MAX_COMMENT_LENGTH;
+        }
+
+        String reviewComment() {
+            return comment == null || comment.isBlank() ? null : comment.trim();
         }
 
         boolean deadlinePassed() {

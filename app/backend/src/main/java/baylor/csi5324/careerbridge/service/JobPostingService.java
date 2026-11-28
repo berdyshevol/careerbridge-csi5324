@@ -26,9 +26,6 @@ import java.util.Locale;
 @Service
 public class JobPostingService {
 
-    static final String DEADLINE_PASSED = JobPostingLifecycle.DEADLINE_PASSED;
-    public static final String CLOSED_BY_RECRUITER = JobPostingLifecycle.CLOSED_BY_RECRUITER;
-
     private static final ZoneOffset LATEST_ZONE = ZoneOffset.ofHours(-12);
 
     private final JobPostingRepository jobPostingRepository;

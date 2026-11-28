@@ -12,8 +12,8 @@ import baylor.csi5324.careerbridge.model.StatusHistoryEntry;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.function.Predicate;
 
+import static java.util.function.Predicate.not;
 import static baylor.csi5324.careerbridge.model.ApplicationStatus.APPLIED;
 import static baylor.csi5324.careerbridge.model.ApplicationStatus.HIRED;
 import static baylor.csi5324.careerbridge.model.ApplicationStatus.INTERVIEW;
@@ -227,9 +227,5 @@ public final class ApplicationLifecycle {
 
     private static int lastRound(Move move) {
         return move.application().getInterviews().stream().mapToInt(Interview::getRoundNumber).max().orElse(0);
-    }
-
-    private static <T> Predicate<T> not(Predicate<T> predicate) {
-        return predicate.negate();
     }
 }

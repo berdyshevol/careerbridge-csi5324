@@ -95,7 +95,7 @@ class JobPostingApprovalTest {
         JobPosting closed = jobPostingService.closePosting(published.getJobPostId(), OWNER);
 
         assertEquals(PostStatus.CLOSED, closed.getPostStatus());
-        assertEquals(JobPostingService.CLOSED_BY_RECRUITER, closed.getClosingReason());
+        assertEquals(JobPostingLifecycle.CLOSED_BY_RECRUITER, closed.getClosingReason());
         assertNotNull(closed.getClosedAt());
         assertTrue(jobPostingService.searchPostings(PostingSearchCriteria.ANY).stream()
                 .noneMatch(posting -> posting.getJobPostId().equals(published.getJobPostId())));
@@ -272,7 +272,7 @@ class JobPostingApprovalTest {
                 pending.getJobPostId(), "Admin", "Approved");
 
         assertEquals(PostStatus.RETURNED, result.getPostStatus());
-        assertEquals(JobPostingService.DEADLINE_PASSED, result.getReviewComment());
+        assertEquals(JobPostingLifecycle.DEADLINE_PASSED, result.getReviewComment());
         assertEquals("Admin", result.getApprovedBy());
     }
 
@@ -285,7 +285,17 @@ class JobPostingApprovalTest {
                 pending.getJobPostId(), "Admin", "x".repeat(2001));
 
         assertEquals(PostStatus.RETURNED, result.getPostStatus());
-        assertEquals(JobPostingService.DEADLINE_PASSED, result.getReviewComment());
+        assertEquals(JobPostingLifecycle.DEADLINE_PASSED, result.getReviewComment());
+    }
+
+    @Test
+    void theCommentLimitCountsWhatTheAdministratorTyped() {
+        JobPosting pending = createPosting(
+                PostStatus.PENDING_APPROVAL, LocalDate.now().plusDays(10));
+        String padded = "x".repeat(1990) + " ".repeat(20);
+
+        assertThrows(InvalidPostingException.class,
+                () -> jobPostingService.returnJobPosting(pending.getJobPostId(), "Admin", padded));
     }
 
     @Test
